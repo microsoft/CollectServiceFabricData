@@ -1,0 +1,8 @@
+// sf table query 
+
+declare query_parameters (T:string, Query:string = ".", Limit:long = 10000);
+TableView(table(T))
+| where TaskName == "RA"
+| order by Timestamp asc
+| limit Limit
+| project Timestamp, PartitionKey, partitionId, column_ifexists("reasonActivityDescription_activityId_index","") , nodeInstance_id, column_ifexists("epoch_dataLossVersion","") , replicaId, TaskName, EventType, RelativeUri, RowKey

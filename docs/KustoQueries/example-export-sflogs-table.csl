@@ -1,0 +1,21 @@
+// currently supports blob and sql as targets
+// https://docs.microsoft.com/en-us/azure/kusto/api/connection-strings/storage
+// https://docs.microsoft.com/en-us/azure/kusto/management/data-export/export-data-to-storage
+
+.export
+  //async compressed
+  to csv (
+    h@"https://sfkustotemp.blob.core.windows.net/tempcontainer;xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxqNOOGHf0wk1vjr1iZJwIkDiOAHsfARTBtkq4//TX2Hw=="
+  ) with (
+    sizeLimit=100000000, // size of file export in bytes before creating new file
+    namePrefix=export,
+    includeHeaders=all,
+    encoding =UTF8NoBOM
+  )
+<| ['118110519307735'] 
+| where Timestamp > todatetime("2018-11-06T14:50:00")
+| where Timestamp < todatetime("2018-11-06T15:10:00")
+| order by Timestamp asc
+
+// if async take operation id result from above use following command to check status
+// .show operations | where OperationId == "7d41540f-c687-4692-93b8-1360a7b859a1"

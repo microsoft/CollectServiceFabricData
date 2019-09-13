@@ -1,0 +1,8 @@
+// fabricdca etl -> dtr format errors
+
+declare query_parameters (T:string);
+table(T)
+| where Text contains "ETW" and Text contains "not present"
+| facet by Text
+
+
