@@ -1,0 +1,9 @@
+// query for application exceptions
+
+declare query_parameters (T:string, Limit:long = 10000);
+let results = (TableName:string) {
+    table(TableName)
+    | where Type contains "exception" or Text contains "exception"
+};
+results(T) | distinct Type, Level
+| limit Limit

@@ -1,0 +1,4 @@
+// example kusto query to list previous ingestion failures over the last 24 hours
+
+.show ingestion failures
+| where FailedOn > ago(1d)

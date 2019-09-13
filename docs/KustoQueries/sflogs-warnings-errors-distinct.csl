@@ -1,0 +1,10 @@
+// query for distinct warnings and errors
+
+declare query_parameters (T:string, Limit:long = 10000);
+table(T)
+| where Level !contains "info" and Level !contains "unknown" and Level !contains "verbose"
+| where Type !contains "chaos" and Text !contains "chaos"
+| summarize count(Type), First = arg_min(Timestamp, *), Last = arg_max(Timestamp, *) by Type, Level
+| order by Type asc
+| project Type, Level, Count = count_Type, ['First occurrence'] = tostring(First), ['Last occurrence'] = iif(First == Last, "", tostring(Last))
+| limit Limit

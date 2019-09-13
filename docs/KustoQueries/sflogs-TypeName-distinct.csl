@@ -1,0 +1,8 @@
+// query for distinct TypeName
+
+declare query_parameters (T:string, Limit:long = 10000);
+TraceTypeNameAndIdView(table(T))
+| summarize count(TypeName), First = arg_min(Timestamp, *), Last = arg_max(Timestamp, *) by TypeName, Level
+| order by Level asc, TypeName asc
+| project TypeName, Level, Count = count_TypeName, ['First occurence'] = tostring(First), ['Last occurrence'] = iif(First == Last, "", tostring(Last))
+| limit Limit

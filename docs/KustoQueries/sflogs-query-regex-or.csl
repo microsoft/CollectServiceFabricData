@@ -1,0 +1,29 @@
+// sflogs general query of Type or Text using regex
+
+declare query_parameters (T:string, 
+        nodeName:string = ".",
+        fileType:string = ".",
+        tid:string = ".",
+        pid:string = ".", 
+        level:string = ".", 
+        type:string = ".", 
+        text:string = ".", 
+        StartTimeUtc:datetime = datetime("0001-01-01T00:00:00"), 
+        EndTimeUtc:datetime = datetime("9999-12-31T23:59:59"), 
+        Limit:long = 10000);
+let itype = strcat('(?i:', type,')'); 
+let itext = strcat('(?i:', text,')'); 
+let ilevel = strcat('(?i:', level,')'); 
+let ifileType = strcat('(?i:', fileType,')'); 
+let inodeName = strcat('(?i:', nodeName,')'); 
+table(T)
+| where Timestamp between (StartTimeUtc .. EndTimeUtc)
+| where Type matches regex itype 
+    or Text matches regex itext
+    or Level matches regex ilevel
+    or tostring(TID) matches regex tid
+    or tostring(PID) matches regex pid
+    or FileType matches regex ifileType
+    or NodeName matches regex inodeName
+| limit Limit
+| order by Timestamp asc
