@@ -1,0 +1,10 @@
+// query for fabric_e_ events that are not noise and count and render timechart
+
+declare query_parameters (T:string);
+table(T)
+| where Text contains "FABRIC_E"
+| where Text !contains "FABRIC_E_CONNECTION_CLOSED_BY_REMOTE_END"
+| extend fabric_error = extractall(@"(?P<fabric_error>FABRIC_E\w+)", dynamic(['fabric_error']), Text).tostring()
+| summarize count(fabric_error) by xtime=bin(Timestamp,1m), NodeName
+| order by xtime asc 
+| render timechart
