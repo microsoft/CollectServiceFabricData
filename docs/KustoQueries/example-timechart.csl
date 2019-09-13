@@ -1,0 +1,5 @@
+| where Timestamp between (datetime(2018-12-15 18:30) .. datetime(2018-12-15 19:30))
+| where Text contains "FABRIC_E_" and Text !contains "FABRIC_E_CONNECTION_CLOSED_BY_REMOTE_END"
+| order by Timestamp asc 
+| summarize count(Timestamp) by xtime=bin(Timestamp,1m), NodeName
+| render timechart

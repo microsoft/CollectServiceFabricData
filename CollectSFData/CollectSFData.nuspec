@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+    <metadata>
+    <id>Microsoft.ServiceFabric.CollectSFData</id>
+    <version>0.0.0</version>
+    <title>CollectSFData</title>
+    <authors>Microsoft, sedwards, jagilber</authors>
+    <owners>Microsoft servicefabric</owners>
+    <license type="expression">MIT</license>
+    <projectUrl>https://github.com/microsoft/CollectServiceFabricData</projectUrl>
+    <iconUrl>http://raw.githubusercontent.com/microsoft/CollectServiceFabricData/master/FabricSupport.ico</iconUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>standalone .net framework exe utility to manage service fabric support logs.</description>
+    <releaseNotes>initial release.</releaseNotes>
+    <copyright>Copyright 2019</copyright>
+    <tags>service fabric</tags>
+  </metadata>
+  <files>
+      <file src="**\lib\**\Release\*.dll" target="" />
+      <file src="**\lib\**\Release\*.exe" target="" />
+  </files>
+</package>

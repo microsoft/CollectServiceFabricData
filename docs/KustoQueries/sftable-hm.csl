@@ -1,0 +1,8 @@
+// sf table query 
+
+declare query_parameters (T:string, Query:string = ".", Limit:long = 10000);
+TableView(table(T))
+| where TaskName == "HM"
+| order by Timestamp asc
+| limit Limit
+| project Timestamp, PartitionKey, TaskName, property, description, healthState, partitionId, sourceId, category, eventName, eventInstanceId, removeWhenExpired , RowKey, RelativeUri, EventVersion
