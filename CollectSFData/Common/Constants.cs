@@ -29,6 +29,7 @@ namespace CollectSFData
         public const string PerfCsvExtension = ".perf.csv";
         public const string PerfCtrExtension = ".blg";
         public const int RetryCount = 10;
+        public const string SchemaFile = "https://raw.githubusercontent.com/microsoft/CollectServiceFabricData/master/configurationFiles/collectsfdata.schema.json";
         public const string SetupExtension = ".trace";
         public const string TableExtension = ".table.csv";
         public const int TableMaxResults = 50000;
