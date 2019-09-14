@@ -1,0 +1,9 @@
+// sf table query
+
+declare query_parameters (T:string, Query:string = ".", Limit:long = 10000);
+TableView(table(T))
+| where TaskName == "FM"
+| where * matches regex Query
+| order by Timestamp asc
+| limit Limit
+| project Timestamp, PartitionKey, TaskName, EventType, category, eventName, nodeName, column_ifexists("batchId", ""), column_ifexists("deactivateIntent",""), column_ifexists("nodeInstance",""), column_ifexists("startTime",""), dca_version, eventInstanceId, RowKey, RelativeUri, EventVersion

@@ -1,0 +1,6 @@
+// example kusto query to liste previous successful queries over the last 24 hours
+
+.show queries
+| where StartedOn > ago(1d)
+| where State == "Completed"
+| project Text,Database,StartedOn
