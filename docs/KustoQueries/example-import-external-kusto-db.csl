@@ -1,0 +1,8 @@
+//https://docs.microsoft.com/en-us/azure/kusto/management/data-ingestion/
+
+.drop table TestTable
+.set-or-append TestTable <| cluster("sfjagilberkusto1.eastus.kusto.windows.net").database("kusto1").table("***REMOVED***")
+| where NodeName == "_nt0_0"
+
+// can show operation status using operationid outputted from above
+.show operations | where OperationId == "7614bb45-dc4a-4feb-843b-3e9de4d09a3e"

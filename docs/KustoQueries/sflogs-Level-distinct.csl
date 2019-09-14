@@ -1,0 +1,6 @@
+// query for distinct Type
+
+declare query_parameters (T:string);
+table(T)
+| facet by Level
+| order by Level asc

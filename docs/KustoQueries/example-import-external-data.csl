@@ -1,0 +1,8 @@
+.create table jagilber_disk (Record:string)
+.ingest async into jagilber_disk 
+(@'https://sgnkustorage***REMOVED***.blob.core.windows.net/temp/4099_diskspace03_2ac2a925b9d14004b8b348b4f8f2ccf4_0b7518c0f2cb41759c37f0187848a080.zip?' '******') 
+with @'{"format":"txt","ValidationPolicy":"{\"ValidationOptions\":\"ValidateCsvInputConstantColumns\",\"ValidationImplications\":\"BestEffort\"}"}'
+
+
+// can show operation status using operationid outputted from above
+.show operations | where OperationId == "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
