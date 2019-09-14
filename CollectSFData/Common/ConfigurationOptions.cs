@@ -154,8 +154,6 @@ namespace CollectSFData
 
         public string SaveConfiguration { get; set; }
 
-        public string Schema { get; set; }
-
         public string StartTimeStamp
         {
             get => _startTime;
@@ -357,17 +355,19 @@ namespace CollectSFData
 
             // remove options that shouldnt be in saved in file
             JObject options = JObject.FromObject(this);
-            options["ConfigurationFile"].Parent.Remove();
-            options["EndTimeUtc"].Parent.Remove();
-            options["Examples"].Parent.Remove();
-            options["FileType"].Parent.Remove();
-            options["SasEndpointInfo"].Parent.Remove();
-            options["SaveConfiguration"].Parent.Remove();
-            options["StartTimeUtc"].Parent.Remove();
+            options.AddFirst(new JProperty("$schema", SchemaFile));
+            options.Remove("ConfigurationFile");
+            options.Remove("DeleteCache");
+            options.Remove("EndTimeUtc");
+            options.Remove("Examples");
+            options.Remove("FileType");
+            options.Remove("SasEndpointInfo");
+            options.Remove("SaveConfiguration");
+            options.Remove("StartTimeUtc");
 
             if (!IsCacheLocationPreConfigured())
             {
-                options["CacheLocation"].Parent.Remove();
+                options.Remove("CacheLocation");
             }
 
             Log.Info($"options results:", options);
