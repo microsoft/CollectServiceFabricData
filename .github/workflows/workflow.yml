@@ -1,0 +1,39 @@
+# https://github.com/actions
+# https://help.github.com/en/articles/workflow-syntax-for-github-actions
+# https://help.github.com/en/articles/workflow-syntax-for-github-actions#about-yaml-syntax-for-workflows
+# https://help.github.com/en/articles/about-continuous-integration
+# https://help.github.com/en/articles/virtual-environments-for-github-actions#default-environment-variables
+
+name: CollectSFData CI
+
+on: [push]
+
+jobs:
+  Windows:
+    name: Run Windows job
+    runs-on: windows-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@master
+      env:
+        ACTIONS_RUNNER_DEBUG: ${{secrets.ACTIONS_RUNNER_DEBUG}}
+        ACTIONS_STEP_DEBUG: ${{secrets.ACTIONS_STEP_DEBUG}}
+    - name: 
+  build:
+
+    runs-on: windows-latest
+    
+    steps:
+    - uses: actions/checkout@v1
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 2.2.108
+    - name: Build with dotnet
+      run: dotnet build --configuration Release
+    - name: Run a one-line script
+      run: echo Hello, world!
+    - name: Run a multi-line script
+      run: |
+        echo Add other actions to build,
+        echo test, and deploy your project.
