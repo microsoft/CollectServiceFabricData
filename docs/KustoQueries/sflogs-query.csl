@@ -1,0 +1,24 @@
+// ***REMOVED*** general query of Type and Text
+
+declare query_parameters (T:string, 
+        nodeName:string = "",
+        fileType:string = "",
+        tid:long = 0,
+        pid:long = 0, 
+        level:string = "", 
+        type:string = "", 
+        text:string = "", 
+        StartTimeUtc:datetime = datetime("0001-01-01T00:00:00"), 
+        EndTimeUtc:datetime = datetime("9999-12-31T23:59:59"), 
+        Limit:long = 10000);
+table(T)
+| where Timestamp between (StartTimeUtc .. EndTimeUtc)
+| where Type contains type 
+    and Text contains text
+    and Level contains level
+    and iif(tid != 0, TID == tid, TID != 0)
+    and iif(pid !=0, PID == pid, PID != 0)
+    and FileType contains fileType
+    and NodeName contains nodeName
+| limit Limit
+| order by Timestamp asc

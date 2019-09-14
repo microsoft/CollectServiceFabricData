@@ -1,0 +1,97 @@
+// ***REMOVED*** issue query of Type and/or Text or Any
+
+declare query_parameters (T:string, Limit:long = 100);
+// format results
+let FormatResults = (T:(Timestamp:datetime,
+            Level:string,
+            TID:int,
+            PID:int,
+            Type:string,
+            Text:string,
+            NodeName:string,
+            FileType:string,
+            RelativeUri:string), issue:string)
+{
+    T
+    | extend Issue = issue
+    | summarize Count = count(), First = arg_min(Timestamp, *), Last = arg_max(Timestamp, *) by Issue
+    | extend Results = iif(Count != 0, "true", "false")
+    | order by Issue asc
+    | project Issue, Results, Count, ['First Occurrence'] = iif(Count > 0, tostring(First), ""), ['Last Occurrence'] = iif(Count > 1, tostring(Last), "")
+};
+// search any column using string contains
+let AnyContains = (tableName:string, issue:string, query:string)
+{
+    table(tableName) | where * contains query | invoke FormatResults(issue)
+};
+// search any column using regex sensitive match
+let AnyMatches = (tableName:string, issue:string, query:string)
+{
+    table(tableName) | where * matches regex query | invoke FormatResults(issue)
+};
+// search any column using regex insensitive match
+let AnyIMatches = (tableName:string, issue:string, query:string)
+{
+    let iQuery = strcat('(?i:',query,')'); // re2 case insensitive
+    table(tableName) | where * matches regex iQuery | invoke FormatResults(issue)
+};
+// search Text column using string contains
+let TextContains = (tableName:string, issue:string, query:string)
+{
+    table(tableName) | where Text contains query | invoke FormatResults(issue)
+};
+// search Text column using regex sensitive match
+let TextMatches = (tableName:string, issue:string, query:string)
+{
+    table(tableName) | where Text matches regex query | invoke FormatResults(issue)
+};
+// search Text column using regex insensitive match
+let TextIMatches = (tableName:string, issue:string, query:string)
+{
+    let iQuery = strcat('(?i:',query,')'); // re2 case insensitive
+    table(tableName) | where Text matches regex iQuery | invoke FormatResults(issue)
+};
+// search Type column using string contains
+let TypeContains = (tableName:string, issue:string, query:string)
+{
+    table(tableName) | where Type contains query | invoke FormatResults(issue)
+};
+// search Type column using regex sensitive match
+let TypeMatches = (tableName:string, issue:string, query:string)
+{
+    table(tableName) | where Type matches regex query | invoke FormatResults(issue)
+};
+// search Type column using regex insensitive match
+let TypeIMatches = (tableName:string, issue:string, query:string)
+{
+    let iQuery = strcat('(?i:',query,')'); // re2 case insensitive
+    table(tableName) | where Type matches regex iQuery | invoke FormatResults(issue)
+};
+// search Type or Text columns using string contains
+let TypeOrTextContains = (tableName:string, issue:string, query:string)
+{
+    table(tableName) | where Type contains query or Text contains query | invoke FormatResults(issue)
+};
+// search Type or Text columns using regex sensitive match
+let TypeOrTextMatches = (tableName:string, issue:string, query:string)
+{
+    table(tableName) | where Type matches regex query or Text matches regex query | invoke FormatResults(issue)
+};
+// search Type or Text columns using regex insensitive match
+let TypeOrTextIMatches = (tableName:string, issue:string, query:string)
+{
+    let iQuery = strcat('(?i:',query,')'); // re2 case insensitive
+    table(tableName) | where Type matches regex iQuery or Text matches regex iQuery | invoke FormatResults(issue)
+};
+union 
+// add known issue signatures here using one of the provided functions in format table, issue description, string pattern
+// use *Matches (regex) only when needed as it is remarkably slower
+// use Any* only when needed
+TextContains(T, "disk space", "does not have enough disk space to operate"),
+TextContains(T, "replica performance 0x80071cf7", "0x80071cf7"),
+TextContains(T, "communication errors", "failed with status -107374"),
+TextContains(T, "port exhaustion", "failed to bind to local port for connecting: 0x80072747"),
+TextContains(T, "rolling back", "rollingback"),
+TextContains(T, "health check fail", "health check failed"),
+TypeContains(T, "crash dumps in storage account", "crashdumpfound"),
+TypeOrTextContains(T, "exception", "exception")

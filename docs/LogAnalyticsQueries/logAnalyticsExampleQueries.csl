@@ -1,0 +1,167 @@
+// sf la examples
+search *
+|count
+
+'%log analytics custom log name%'
+| distinct NodeName_s
+
+// 
+// SF TRACE LOGS
+//
+
+
+// display events by time range
+let startTime = datetime('2019-04-14T00:00');
+let endTime = datetime('2019-05-14T00:30');
+'%log analytics custom log name%'
+| where Text contains "slow"
+| where Text !contains "FaultedDueToSlowProgress=False"
+| where Text !contains "SlowApiThreshold = 10.000"
+| where Text !contains "SlowApiMonitoringInterval = 2:00.000"
+| where Text !contains "Loaded property"
+| where Text !contains "ReplicatorConfig"
+| order by Timestamp_t asc
+| where Timestamp_t between (startTime .. endTime)
+| project Timestamp_t , TID_d , PID_d , Level , Type_s , Text , NodeName_s , FileType_s , Type
+| summarize count() by xtime=bin(Timestamp_t,1s), NodeName_s
+
+// display events that are not informational
+let exclusion1 = "chaos";
+'%log analytics custom log name%'
+| order by Timestamp_t asc
+| where Level !contains "info" and Level !contains "unknown" and Level !contains "verbose"
+| where Type_s !contains exclusion1 and Text !contains exclusion1
+| project Timestamp_t , TID_d , PID_d , Level , Type_s , Text , NodeName_s , FileType_s , Type
+| limit 5000
+//| summarize count() by xtime=bin(Timestamp_t,1m), NodeName
+//| render timechart;
+
+
+// display 'fabric_e_*' events
+let filterPattern = "FABRIC_E_";
+let excludePattern = "FABRIC_E_CONNECTION_CLOSED"; // normal tcp connection close
+let excludePattern2 = "FABRIC_E_INVALID_SUBJECT_NAME"; // noise bug to be fixed in 6.5
+'%log analytics custom log name%'
+| order by Timestamp_t asc
+| where Type_s matches regex filterPattern or Text matches regex filterPattern
+| where Type_s !contains excludePattern and Text !contains excludePattern
+| where Type_s !contains excludePattern2 and Text !contains excludePattern2
+| project Timestamp_t , TID_d , PID_d , Level , Type_s , Text , NodeName_s , FileType_s, Type
+| limit 10000
+
+// regex example with match extraction / extend case insensitive
+// display DNS response times in new column
+let filterPattern = @'Dns.+Duration \((?P<ms> \d{2,5}) ms \)';
+'%log analytics custom log name%'
+| where Type_s matches regex filterPattern or Text matches regex filterPattern
+| extend durationMs = extract(filterPattern, 1, Text, typeof(long))
+| project Timestamp_t , TID_d , PID_d , NodeName_s , Level , Type_s , Text , FileType_s, durationMs
+| where durationMs > 30
+| order by Timestamp_t asc
+//| order by durationMs desc
+| limit 10000
+
+// regex example with match case insensitive
+let filterPattern = @'lease';
+let regexPattern = strcat('(?i:',filterPattern,')'); // re2 case insensitive
+'%log analytics custom log name%'
+| where Type_s matches regex regexPattern or Text matches regex regexPattern
+//| where Type_s contains filterPattern or Text contains filterPattern
+//| where Type_s matches regex filterPattern or Text matches regex filterPattern
+| project Timestamp_t , TID_d , PID_d , NodeName_s , Level , Type_s , Text , FileType_s
+| order by Timestamp_t asc
+| limit 10000
+
+// 
+// SF STORAGE TABLES
+//
+
+// gives similar view as storage explorer with each property split out into a separate column
+let T = '%log analytics custom log name%';
+let DistinctEvents = T | distinct Timestamp_t, PartitionKey_s, RowKey_s;
+DistinctEvents
+    | join T on $left.Timestamp_t==$right.Timestamp_t and $left.PartitionKey_s==$right.PartitionKey_s and $left.RowKey_s==$right.RowKey_s
+    | extend propertyPack = pack(PropertyName_s, PropertyValue_s)
+    | summarize bag = make_bag(propertyPack) by Timestamp_t, PartitionKey_s, RowKey_s, RelativeUri_s
+    | evaluate bag_unpack(bag) 
+    | order by Timestamp_t asc
+
+// blob table distinct keys
+'%log analytics custom log name%'
+| count
+// | distinct PartitionKey_s
+
+// blob table join example
+'%log analytics custom log name%'
+| where PartitionKey_s contains "cm" //todatetime('2019-02-01T22:37:59.425')
+//| where Timstamp_t between(todatetime('2019-02-04T04:57') .. todatetime('2019-02-04T05:01'))
+//| where * contains "cm"
+//| where PropertyValue_s contains "W9492DevG_3"
+| order by Timestamp_t asc
+| project Timestamp_t, TypeTimeStamp_s, ETag_s, PartitionKey_s, RowKey_s, PropertyName_s, PropertyValue_s, Table_s
+
+// blob table join example
+// queries sf table for cluster manager 'cm' entries
+let t = [''%log analytics custom log name%''];
+let e = t| where PropertyValue_s contains "cm"; // "nodeadded";
+e | join (t) on RowKey_s, $left.RowKey_s == $right.RowKey_s
+//e | join (t |where PropertyName contains "nodeName") on RowKey,$left.RowKey == $right.RowKey
+| project Timestamp_t, PartitionKey_s, PropertyValue_s, PropertyName_s1, PropertyValue_s1
+| order by Timestamp_t desc, PropertyName_s1 asc
+
+// blob table example
+// searches log analytics _table property value for string
+// joins matching node name record based on RowKey
+let t = [''%log analytics custom log name%''];
+//let Types = t;
+let e = t|where PropertyValue_s contains "The Data Collection Agent (DCA) does not have enough disk space to operate.";
+e | join (t |where PropertyName_s contains "nodeName") on RowKey_s, $left.RowKey_s == $right.RowKey_s
+|project Timestamp_t, PropertyValue_s, PropertyValue_s1
+| order by Timestamp_t asc
+| summarize count() by xtime=bin(Timestamp_t,1m), PropertyValue_s1
+| render timechart
+
+
+// 
+// SF PERFORMANCE COUNTERS
+//
+
+// perf counter table query
+let startTime = datetime('2019-04-14T17:00');
+let endTime = datetime('2019-05-14T00:30');
+'%log analytics custom log name%'
+| where Timestamp_t between (startTime .. endTime)
+//| where CounterName_s contains "Avg. Disk Queue Length" and CounterName_s contains "c:"
+| where CounterName_s contains "% Idle Time" and CounterName_s contains "c:"
+//| where CounterName_s contains "Avg. Disk Queue Length" and CounterName_s contains "d:"
+//| where CounterName_s contains "% Idle Time" and CounterName_s contains "d:"
+//| where CounterName_s contains "TCP" and CounterName_s contains "reset"
+//| where CounterName_s contains "TCP" and CounterName_s contains "fail"
+//| where CounterName_s contains "TCP" and CounterName_s contains "segments received"
+//| where CounterName_s contains "TCP" and CounterName_s contains "segments sent"
+//| where CounterName_s contains "TCP" and CounterName_s contains "connections active"
+//| where CounterName_s contains "TCP" and CounterName_s contains "connections passive"
+//| where CounterName_s contains "Processor(_Total)"
+//| where CounterName_s contains "Paging File(_Total)\\% Usage"
+//| where CounterName_s contains "Available Mbytes"
+//| where CounterName_s contains "Pool Paged Bytes"
+//| where CounterName_s contains "Pool NonPaged Bytes"
+//| where CounterName_s contains "Process(Fabric)\\% Processor Time"
+//| where CounterName_s contains "Process(FabricDCA)\\% Processor Time"
+//| where CounterName_s contains "Items/Second inserted into the job queue"
+//| where CounterName_s contains "Items/Second failed to be inserted into the job queue"
+//| where CounterName_s  contains "Avg. time in ms an item spends in the queue/Operation" 
+//| where CounterName_s contains "#InBuild Replicas" 
+//| where CounterName_s contains "#Replicas" 
+//| where CounterName_s contains "#Service Types" 
+//| where CounterName_s contains "# of Active Callback"
+//| where CounterName_s contains "" 
+//| where CounterName_s contains "Items in the job queue"
+//| where NodeName_s == "_t1eu_5"
+//| where Timestamp_t between(todatetime("12/08/2018 23:00:00.000")..todatetime("12/09/2018 00:30:00.000"))
+//| extend disk = extract(@"PhysicalDisk\(\d (?P<disk>.+:)\)\\Avg. Disk Queue Length", 1, CounterName_s)
+//| summarize percentiles(CounterValue_d,5,50,95) by xtime=bin(Timestamp_t,1m), NodeName_s //CounterName_s, disk
+//| where CounterValue_d > 75
+| sample 5000
+| summarize avg(CounterValue_d) by xtime=bin(Timestamp_t,1m), NodeName_s //CounterName_s, NodeName_s, disk
+| render timechart;

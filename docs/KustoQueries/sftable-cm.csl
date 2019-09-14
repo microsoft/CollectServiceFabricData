@@ -1,0 +1,11 @@
+// sf table query
+
+declare query_parameters (T:string, Query:string = ".", Limit:long = 10000);
+TableView(table(T))
+| where TaskName == "CM"
+| where * matches regex Query
+| order by Timestamp asc
+| limit Limit
+| project Timestamp, PartitionKey, TaskName, EventType, dca_version, eventInstanceId, column_ifexists("rollingUpgradeMode",""), category, eventName, column_ifexists("upgradeType",""), column_ifexists("currentClusterVersion", ""), column_ifexists("failureAction",""), column_ifexists("targetClusterVersion",""), column_ifexists("overallUpgradeElapsedTimeInMs",""), column_ifexists("failureReason",""), RowKey, RelativeUri, EventVersion
+
+
