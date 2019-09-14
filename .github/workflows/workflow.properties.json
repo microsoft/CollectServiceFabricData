@@ -1,0 +1,5 @@
+{
+    "name": "CollectSFData CI",
+    "description": "Continuous Integration for CollectSFData",
+    "iconName": "./dotnet.svg"
+}
