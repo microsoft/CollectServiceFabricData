@@ -1,8 +1,7 @@
 # overview
 
-[project root](https://dev.azure.com/ServiceFabricSupport/Tools)  
-[builds / downloads](https://dev.azure.com/ServiceFabricSupport/Tools/_wiki/wikis/Tools.wiki?pagePath=%2Fbuilds)  
 [requirements](../docs/requirements.md)  
+[releases](https://github.com/microsoft/CollectServiceFabricData/releases/tag/CollectSFData-latest)  
 [setup](../docs/setup.md)  
 [configuration](../docs/configuration.md)  
 [examples](../docs/examples.md)  
@@ -17,4 +16,3 @@ Service Fabric diagnostic data that can be enumerated / downloaded from configur
 - service fabric counter .blg files. (fabriccounters-*)
 - service fabric fabric exceptions .dmp files. (fabriccrashdump-*)
 - service fabric events stored in Azure blob tables.
-

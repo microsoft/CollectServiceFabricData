@@ -1,13 +1,11 @@
 # examples
 
-[project root](https://dev.azure.com/ServiceFabricSupport/Tools)  
-[overview](../docs/overview.md)  
 [log analytics example queries](../docs/logAnalyticsExampleQueries.md)  
 
 ```text
 Example Usage #1 to download performance counter .blg files
 
-CollectSFData.exe -from "1/12/19 11:41:35 -05:00" -to "1/12/19 13:41:35 -05:00" -c "C:\Cases\123245\perfcounters" -s "https://sflgaccountname.blob.core.windows.net/fabriclogs-6b...E%3D"
+CollectSFData.exe -from "1/12/19 11:41:35 -05:00" -to "1/12/19 13:41:35 -05:00" -cache  "C:\Cases\123245\perfcounters" -s "https://sflgaccountname.blob.core.windows.net/fabriclogs-6b...E%3D"
 
           Gathering: counter
          Start Time: 1/12/19 11:41:35 -05:00
@@ -133,7 +131,7 @@ CollectSFData.exe --cacheLocation "C:\Cases\123245\traceLogs" --join 100 --gathe
 
 Example Usage #7 kusto: download service fabric trace files, unzip, join into 100 MB .csv output files, format for kusto, queue for kusto ingest.
 
-CollectSFData.exe -from "1/12/19 11:41:35 -05:00" -to "1/12/19 13:41:35 -05:00" -c "C:\Cases\123245\traceLogs" -j 100 -type trace -s "https://sflgaccountname.blob.core.windows.net/fabriclogs-6b...E%3D" -kc "https://ingest-kustoclusterinstance.eastus.kusto.windows.net/kustoDB" -krt -kt "kustoTable-trace"
+CollectSFData.exe -from "1/12/19 11:41:35 -05:00" -to "1/12/19 13:41:35 -05:00" -cache  "C:\Cases\123245\traceLogs" -j 100 -type trace -s "https://sflgaccountname.blob.core.windows.net/fabriclogs-6b...E%3D" -kc "https://ingest-kustoclusterinstance.eastus.kusto.windows.net/kustoDB" -krt -kt "kustoTable-trace"
 
           Gathering: trace
          Start Time: 1/12/19 11:41:35 -05:00
@@ -154,7 +152,7 @@ CollectSFData.exe -from "1/12/19 11:41:35 -05:00" -to "1/12/19 13:41:35 -05:00" 
 
 Example Usage #8 kusto: download performance counter .blg files, convert to .csv files, format for kusto, queue for kusto ingest.
 
-CollectSFData.exe -from "1/12/19 11:41:35 -05:00" -to "1/12/19 13:41:35 -05:00" -c "C:\Cases\123245\traceLogs" -c -type counter -s "https://sflgaccountname.blob.core.windows.net/fabriclogs-6b...E%3D" -kc "https://ingest-kustoclusterinstance.eastus.kusto.windows.net/kustoDB" -krt -kt "kustoTable-perf"
+CollectSFData.exe -from "1/12/19 11:41:35 -05:00" -to "1/12/19 13:41:35 -05:00" -cache  "C:\Cases\123245\traceLogs" -type counter -s "https://sflgaccountname.blob.core.windows.net/fabriclogs-6b...E%3D" -kc "https://ingest-kustoclusterinstance.eastus.kusto.windows.net/kustoDB" -krt -kt "kustoTable-perf"
 
           Gathering: counter
          Start Time: 1/12/19 11:41:35 -05:00

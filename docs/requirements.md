@@ -1,18 +1,15 @@
 # requirements
 
-[project root](https://dev.azure.com/ServiceFabricSupport/Tools)  
-[overview](../docs/overview.md)  
-
 ## Base requirements
 
-Service Fabric diagnostic data can be large depending on utilization and size of cluster. CollectSFData is a multithreaded utilty designed to process data as quickly as possible.
+Service Fabric diagnostic data can be large depending on utilization and size of cluster. CollectSFData is a multi-threaded utility designed to process data as quickly as possible.
 Depending on configuration, resource usage of cpu, memory, network, disk, and disk space can be high. Below are general resource guidelines for execution of utility.
 
 - Windows 10 image x64
 - .net 4.5.2+
 - 16+ GB RAM
 - 4+ cpu
-- 100 GB free drive space preferably on ssd for fabriclogs
+- 100 GB free drive space preferably on ssd for fabriclogs if storing / caching to local disk.
 
 ## Kusto option requirements
 

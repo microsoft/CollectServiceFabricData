@@ -1,7 +1,5 @@
 # Example Log Analytics queries
 
-[project root](https://dev.azure.com/ServiceFabricSupport/Tools)  
-[overview](../docs/overview.md)  
 [log analytics quickstart](../docs/logAnalyticsQuickStart.md)  
 [log analytic queries in csl query format](../docs/LogAnalyticsQueries/logAnalyticsExampleQueries.md.csl)  
 
