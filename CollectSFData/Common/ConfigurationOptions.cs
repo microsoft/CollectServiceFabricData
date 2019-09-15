@@ -770,6 +770,12 @@ namespace CollectSFData
                 retval = false;
             }
 
+            if (!IsKustoConfigured() & !IsLogAnalyticsConfigured() & UseMemoryStream)
+            {
+                Log.Error($"kusto or log analytics must be configured for UseMemoryStream.");
+                retval = false;
+            }
+
             return retval;
         }
 
