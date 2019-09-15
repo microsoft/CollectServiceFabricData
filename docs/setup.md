@@ -1,7 +1,5 @@
 # setup
 
-[project root](https://dev.azure.com/ServiceFabricSupport/Tools)  
-[overview](../docs/overview.md)  
 [log analytics quickstart](../docs/logAnalyticsQuickStart.md)  
 
 ## CollectSFData Setup
@@ -10,7 +8,7 @@ CollectSFData is a console only utility that has no install.
 Use the below steps to setup environment for use with CollectSFData.
 
 1. ensure machine executing utility has comparable [requirements](../docs/requirements.md)
-2. download latest build [builds / downloads](https://dev.azure.com/ServiceFabricSupport/Tools/_wiki/wikis/Tools.wiki?pagePath=%2Fbuilds)  
+2. download latest release [releases](https://github.com/microsoft/CollectServiceFabricData/releases/tag/CollectSFData-latest)  
 3. extract zip to working directory
 4. from extracted directory, use command prompt / powershell to execute utility
 5. [configuration](../docs/configuration.md) can be passed as command line arguments or in json files.
