@@ -5,24 +5,36 @@
 # https://help.github.com/en/articles/virtual-environments-for-github-actions#default-environment-variables
 
 name: CollectSFData CI
-
-on: [push]
-
+on:
+  push:
+    branches:
+      - workflow
+  pull_request:
+    branches:
+      - workflow
 jobs:
-  Windows:
-    name: Run Windows job
+  init:
+    name: CollectSFData CI
+    runs-on: windows-latest
+    steps:
+    - name: initialize
+      env:
+        MY_VAR: CollectSFData CI
+      run: |
+        echo $MY_VAR.
+  checkout_job:
+    name: checkout latest commit
     runs-on: windows-latest
     steps:
     - name: Checkout
-      uses: actions/checkout@master
+      uses: actions/checkout@v1
       env:
         ACTIONS_RUNNER_DEBUG: ${{secrets.ACTIONS_RUNNER_DEBUG}}
         ACTIONS_STEP_DEBUG: ${{secrets.ACTIONS_STEP_DEBUG}}
-    - name: 
-  build:
-
+  build_job:
+    name: build latest commit
+    needs: checkout_job
     runs-on: windows-latest
-    
     steps:
     - uses: actions/checkout@v1
     - name: Setup .NET Core
