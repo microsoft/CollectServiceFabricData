@@ -191,8 +191,10 @@ namespace CollectSFData
             {
                 Log.Warning($"there may have been errors during kusto import. {Config.CacheLocation} has *not* been deleted.");
             }
-
-            Log.Min($"https://dataexplorer.azure.com/clusters/{Kusto.Endpoint.ClusterName}/databases/{Kusto.Endpoint.DatabaseName}");
+            else if (Config.IsKustoConfigured())
+            {
+                Log.Min($"https://dataexplorer.azure.com/clusters/{Kusto.Endpoint.ClusterName}/databases/{Kusto.Endpoint.DatabaseName}");
+            }
         }
 
         private bool InitializeKusto()
