@@ -94,40 +94,6 @@ bool argument values on command line should either be (true|1|on) or (false|0|of
 https://github.com/microsoft/CollectServiceFabricData
 ```
 
-### Example command line
-
-Some basic examples on how to use arguments and configuration files. For additional examples, see [examples](../docs/examples.md) or type 'collectsfdata.exe -ex'
-
-example command line to download traces with minimal arguments
-
-```text
-collectsfdata.exe -type trace -cache  c:\temp\***REMOVED*** -s "<% sasKey %>"
-```
-
-example command line to download traces with full arguments
-
-```text
-collectsfdata.exe -type trace -cache  c:\temp\***REMOVED*** -s "<% sasKey %>" -from "01/12/2019 09:40:08 -05:00" -to "01/12/2019 13:40:00 -05:00" -j 100 -u
-```
-
-example command line with existing default configuration file 'collectsfdata.options.json' populated
-
-```text
-collectsfdata.exe
-```
-
-example command line with existing default configuration file 'collectsfdata.options.json' and existing custom configuration file.
-
-```text
-collectsfdata.exe -config collectsfdata.counters.json
-```
-
-example command line with existing custom configuration file and command line argument.
-
-```text
-collectsfdata.exe -config collectsfdata.counters.json -s "<% sasKey %>"
-```
-
 ## JSON config file options
 
 Instead of or in addition to using command line arguments, default and specified json configuration files can be used. Arguments in the json configuration files are not case sensitive but execution of utility will fail if an unknown argument is specified. For additional json configuration files see [configurationFiles](../configurationFiles).
