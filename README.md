@@ -2,17 +2,14 @@
 
 # CollectSFData
 
-## Overview
-
 [current download](/releases/tag/CollectSFData-latest)  
-[releases](/releases)  
 [requirements](#requirements)  
 [setup](#setup)  
 [configuration](#configuration)  
-[additional configurations](/docs/configuration.md)  
 [examples](#examples)  
-[additional examples](/docs/examples.md)  
 [contributing](#contributing)  
+
+## Overview
 
 CollectSFData is a .net command-line utility to assist with the download of Azure Service Fabric diagnostic data from the configured Azure storage account.
 Optionally, CollectSFData can be configured to ingest downloaded data into a configured [Azure Data Explorer](https://docs.microsoft.com/en-us/azure/data-explorer/) (Kusto) database or Log Analytics (OMS) for analysis.
@@ -82,6 +79,8 @@ If using Log Analytics (OMS), an existing or new workspace is required.
 - [Log Analytics Pricing](https://azure.microsoft.com/en-us/pricing/details/monitor/).
 
 ## Configuration
+
+[Additional configurations](/docs/configuration.md)  
 
 To configure CollectSFData, either command line or json or both can be used.
 If exists, default configuration file 'collectsfdata.options.json' will always be read first.
