@@ -1,11 +1,8 @@
 # configuration
 
-[project root](https://dev.azure.com/ServiceFabricSupport/Tools)  
-[overview](../docs/overview.md)  
-
 To configure CollectSFData, either command line or json or both can be used.
 If exists, default configuration file 'collectsfdata.options.json' will always be read first.
-Any additional configuration files specified on command line with -c will be loaded next.
+Any additional configuration files specified on command line with -config will be loaded next.
 Finally any additional arguments passed on command line will be loaded last.
 
 ## Command line options
@@ -15,74 +12,86 @@ For help with command line options, type 'collectsfdata.exe -?'.
 
 ```text
 G:\github\Tools\CollectSFData\CollectSFData\bin\x64\Debug>CollectSFData.exe /?
-2.1.0.39276
+2.5.7197.14241
 
 Usage: CollectSFData.exe [options]
 
 Options:
-  -v|--version                 Show version information
-  -?|--?                       Show help information
-  -tenant|--azureTenantId      [string] azure tenant id for use with kusto AAD authentication
-  -cf|--containerFilter        [string] string / regex to filter container names
-  -dc|--deleteCache    [switch] delete downloaded blobs from local disk at end of execution
-  -to|--stop                   [DateTime] end time range to collect data to. default is now. example: "01/12/2019 11:40:08 -05:00"
-  -ex|--examples               [switch] show example commands
-  -type|--gatherType           [string] Gather data type "counter" or "trace" or "exception" or "table" or "any"
-  -kid|--AzureClientId         [string] azure application id / client id for use with kusto authentication for non interactive. default is to use integrated AAD auth token and leave this blank.
-  -ks|--AzureClientSecret      [string] azure application id / client id secret for use with kusto authentication for non interactive. default is to use integrated AAD auth token and leave this blank.
-  -kc|--kustoCluster           [string] ingest url for kusto. ex: https://ingest-{clusterName}.{location}.kusto.windows.net/{databaseName}
-  -krt|--kustoRecreateTable    [switch] drop and recreate kusto table. default is to append
-  -kt|--kustoTable             [string] name of kusto table to create / use.
-  -kbs|--kustoUseBlobAsSource  [switch] for blob -> kusto direct ingest. requires .dtr (.csv) files to be csv compliant. sf > 6.4
-  -laid|--logAnalyticsId       [string] Log Analytics workspace ID
-  -lak|--logAnalyticsKey       [string] Log Analytics shared key
-  -lan|--logAnalyticsName      [string] Log Analytics name to use for import
-  -debug|--logDebug            [switch] output debug statements to console
-  -log|--logFile               [string] file name and path to save console output
-  -l|--list                    [switch] list files instead of downloading
-  -nf|--nodeFilter              [string] Filter on node name or any string in blob url (case-insensitive comparison)
-  -c|--optionsFile             [string] json file containing configuration options. see collectsfdata.example.json. if CollectSFData.options.json exists, it will be used for configuration.
-  -c|--cacheLocation          [string] Write files to this output location. e.g. "C:\Perfcounters\Output"
-  -s|--sasKey                  [string] source blob SAS key required to access service fabric ***REMOVED*** blob storage.
-  -from|--start                [DateTime] start time range to collect data from. default is -2 hours. example: "01/12/2019 09:40:08 -05:00"
-  -t|--threads                 [int] number of threads
-  -uf|--UriFilter          [string] storage account blob prefix for server side searching / filtering
+  -v|--version                       Show version information
+  -?|--?                             Show help information
+  -client|--azureClientId            [string] azure application id / client id for use with authentication
+                                         for non interactive to kusto. default is to use integrated AAD auth token
+                                         and leave this blank.
+  -secret|--azureClientSecret        [string] azure application id / client id secret for use with authentication
+                                         for non interactive to kusto. default is to use integrated AAD auth token
+                                         and leave this blank.
+  -rg|--azureResourceGroup           [string] azure resource group name / used for log analytics actions.
+  -loc|--azureResourceGroupLocation  [string] azure resource group location / used for log analytics actions.
+  -sub|--azureSubscriptionId         [string] azure subscription id / used for log analytics actions.
+  -tenant|--azureTenantId            [string] azure tenant id for use with kusto AAD authentication
+  -cache|--cacheLocation             [string] Write files to this output location. e.g. "C:\Perfcounters\Output"
+  -config|--configurationFile        [string] json file containing configuration options.
+                                         type collectsfdata.exe -save default.json to create a default file.
+                                         if collectsfdata.options.json exists, it will be used for configuration.
+  -cf|--containerFilter              [string] string / regex to filter container names
+  -dc|--deleteCache                  [bool] delete downloaded blobs from local disk at end of execution.
+  -to|--stop                         [DateTime] end time range to collect data to. default is now.
+                                         example: "09/15/2019 08:04:06 -04:00"
+  -ex|--examples                     [bool] show example commands
+  -type|--gatherType                 [string] Gather data type:
+                                        counter
+                                        trace
+                                        exception
+                                        table
+                                        setup
+                                        any
+  -kz|--kustoCompressed              [bool] compress upload to kusto ingest.
+  -kc|--kustoCluster                 [string] ingest url for kusto.
+                                         ex: https://ingest-{clusterName}.{location}.kusto.windows.net/{databaseName}
+  -kp|--KustoPurge                   [string] 'true' to purge 'KustoTable' table from Kusto
+                                         or 'list' to list tables from Kusto.
+                                         or {tableName} to drop from Kusto.
+  -krt|--kustoRecreateTable          [bool] drop and recreate kusto table.
+                                         default is to append. All data in table will be deleted!
+  -kt|--kustoTable                   [string] name of kusto table to create / use.
+  -kbs|--kustoUseBlobAsSource        [bool] for blob -> kusto direct ingest.
+                                         requires .dtr (.csv) files to be csv compliant.
+                                         service fabric 6.5+ dtr files are compliant.
+  -l|--list                          [bool] list files instead of downloading
+  -lac|--logAnalyticsCreate          [bool] create new log analytics workspace.
+                                         requires LogAnalyticsWorkspaceName, AzureResourceGroup,
+                                         AzureResourceGroupLocation, and AzureSubscriptionId
+  -lak|--logAnalyticsKey             [string] Log Analytics shared key
+  -laid|--logAnalyticsId             [string] Log Analytics workspace ID
+  -lan|--logAnalyticsName            [string] Log Analytics name to use for import
+  -lap|--logAnalyticsPurge           [string] 'true' to purge 'LogAnalyticsName' data from Log Analytics
+                                         or %purge operation id% of active purge.
+  -lar|--logAnalyticsRecreate        [bool] recreate workspace based on existing workspace resource information.
+                                         requires LogAnalyticsName, LogAnalyticsId, LogAnalyticsKey,
+                                         and AzureSubscriptionId. All data in workspace will be deleted!
+  -lawn|--logAnalyticsWorkspaceName  [string] Log Analytics Workspace Name to use when creating
+                                         new workspace with LogAnalyticsCreate
+  -laws|--logAnalyticsWorkspaceSku   [string] Log Analytics Workspace Sku to use when creating new
+                                         workspace with LogAnalyticsCreate. default is PerGB2018
+  -debug|--logDebug                  [bool] output debug statements to console
+  -log|--logFile                     [string] file name and path to save console output
+  -nf|--nodeFilter                   [string] string / regex Filter on node name or any string in blob url
+                                         (case-insensitive comparison)
+  -ruri|--resourceUri                [string] resource uri / resource id used by microsoft internal support for tracking.
+  -s|--sasKey                        [string] source blob SAS key required to access service fabric ***REMOVED***
+                                         blob storage.
+  -save|--saveConfiguration          [string] file name and path to save current configuration
+  -from|--start                      [DateTime] start time range to collect data from.
+                                         default is -2 hours.
+                                         example: "09/15/2019 06:04:06 -04:00"
+  -t|--threads                       [int] override default number of threads equal to processor count.
+  -u|--unique                        [bool] default true to query for fileuri before ingestion to prevent duplicates
+  -uf|--uriFilter                    [string] string / regex filter for storage account blob uri.
+  -stream|--useMemoryStream          [bool] default true to use memory stream instead of disk during format.
 
-arguments *are* case sensitive
-```
-
-### Example command line
-
-Some basic examples on how to use arguments and configuration files. For additional examples, see [examples](../docs/examples.md) or type 'collectsfdata.exe -ex'
-
-example command line to download traces with minimal arguments
-
-```text
-collectsfdata.exe -type trace -c c:\temp\***REMOVED*** -s "<% sasKey %>"
-```
-
-example command line to download traces with full arguments
-
-```text
-collectsfdata.exe -type trace -c c:\temp\***REMOVED*** -s "<% sasKey %>" -from "01/12/2019 09:40:08 -05:00" -to "01/12/2019 13:40:00 -05:00" -j 100 -u
-```
-
-example command line with existing default configuration file 'collectsfdata.options.json' populated
-
-```text
-collectsfdata.exe
-```
-
-example command line with existing default configuration file 'collectsfdata.options.json' and existing custom configuration file.
-
-```text
-collectsfdata.exe -c collectsfdata.counters.json
-```
-
-example command line with existing custom configuration file and command line argument.
-
-```text
-collectsfdata.exe -c collectsfdata.counters.json -s "<% sasKey %>"
+argument names on command line *are* case sensitive.
+bool argument values on command line should either be (true|1|on) or (false|0|off|null).
+https://github.com/microsoft/CollectServiceFabricData
 ```
 
 ## JSON config file options
