@@ -1,6 +1,57 @@
-# examples
+# Examples
 
-[log analytics example queries](../docs/logAnalyticsExampleQueries.md)  
+Some basic examples on how to use arguments and configuration files.  
+For additional examples, type 'collectsfdata.exe -ex'
+
+## Kusto
+
+### example command to ingest into kusto with minimal arguments
+
+```text
+collectsfdata.exe -type trace -s "<% sasKey %>" -kc "https://<% kusto ingest name %>.<% location %>.kusto.windows.net/<% kusto database %>" -kt "<% kusto table name %>"
+collectsfdata.exe -type trace -s "https://sflogsxxxxxxxxxxxxx.blob.core.windows.net/?sv=2017-11-09&ss=bfqt&srt=sco&sp=rwdlacup&se=2018-12-05T23:51:08Z&st=2018-11-05T15:51:08Z&spr=https&sig=VYT1J9Ene1NktyCgsu1gEH%2FN%2BNH9zRhJO05auUPQkSA%3D" -kc https://ingest-kustodb.eastus.kusto.windows.net/serviceFabricDB -kt "fabric_traces"
+```
+
+## Log Analytics
+
+### example command to ingest into log analytics with minimal arguments
+
+```text
+collectsfdata.exe -type trace -s "<% sasKey %>" -laid  -lak -lan
+collectsfdata.exe -type trace -s "<% sasKey %>" -laid  -lak -lan
+```
+
+## Local
+
+### example command line to download traces with minimal arguments
+
+```text
+collectsfdata.exe -type trace -cache  c:\temp\sflogs -s "<% sasKey %>"
+```
+
+### example command line to download traces with full arguments
+
+```text
+collectsfdata.exe -type trace -cache  c:\temp\sflogs -s "<% sasKey %>" -from "01/12/2019 09:40:08 -05:00" -to "01/12/2019 13:40:00 -05:00"
+```
+
+### example command line with existing default configuration file 'collectsfdata.options.json' populated
+
+```text
+collectsfdata.exe
+```
+
+### example command line with existing default configuration file 'collectsfdata.options.json' and existing custom configuration file.
+
+```text
+collectsfdata.exe -config collectsfdata.counters.json
+```
+
+### example command line with existing custom configuration file and command line argument.
+
+```text
+collectsfdata.exe -config collectsfdata.counters.json -s "<% sasKey %>"
+```
 
 ```text
 Example Usage #1 to download performance counter .blg files
@@ -131,7 +182,7 @@ CollectSFData.exe --cacheLocation "C:\Cases\123245\traceLogs" --join 100 --gathe
 
 Example Usage #7 kusto: download service fabric trace files, unzip, join into 100 MB .csv output files, format for kusto, queue for kusto ingest.
 
-CollectSFData.exe -from "1/12/19 11:41:35 -05:00" -to "1/12/19 13:41:35 -05:00" -cache  "C:\Cases\123245\traceLogs" -j 100 -type trace -s "https://sflgaccountname.blob.core.windows.net/fabriclogs-6b...E%3D" -kc "https://ingest-kustoclusterinstance.eastus.kusto.windows.net/kustoDB" -krt -kt "kustoTable-trace"
+CollectSFData.exe -from "1/12/19 11:41:35 -05:00" -to "1/12/19 13:41:35 -05:00" -cache  "C:\Cases\123245\traceLogs" -type trace -s "https://sflgaccountname.blob.core.windows.net/fabriclogs-6b...E%3D" -kc "https://ingest-kustoclusterinstance.eastus.kusto.windows.net/kustoDB" -krt -kt "kustoTable-trace"
 
           Gathering: trace
          Start Time: 1/12/19 11:41:35 -05:00
