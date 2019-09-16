@@ -262,8 +262,6 @@ namespace CollectSFData
                       + $" -from \"{exampleDate.ToString(DefaultDatePattern)}\""
                       + $" -to \"{exampleDate.AddHours(2).ToString(DefaultDatePattern)}\""
                       + " -cache \"C:\\Cases\\123245\\traceLogs\""
-                      + " -j 100"
-                      + " -u"
                       + " -type trace"
                       + " -s \"https://sflgaccountname.blob.core.windows.net/fabriclogs-6b...E%3D\""
                       + " -kc \"https://ingest-kustoclusterinstance.eastus.kusto.windows.net/kustoDB\""
