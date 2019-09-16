@@ -57,8 +57,6 @@ These steps will assist with getting started using collectsfdata and azure log a
     - downside of recreating workspaces however is that any queries that have been saved *will* be lost
     - to work around query saving, an arm template of the queries to be reused across workspaces can be made and applied easily
 - log analytics ingest is not free 
-    - first 5gb per month free (which is not very much)
-    - from initial testing the cost is around $0.70 per million records in MS chargeback dollars
     - querying is free
 	
 ## Reference
