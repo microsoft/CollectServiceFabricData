@@ -1,7 +1,5 @@
 # Log Analytics QuickStart
 
-[project root](https://dev.azure.com/ServiceFabricSupport/Tools)  
-[overview](../docs/overview.md)  
 [log analytics example queries](../docs/logAnalyticsExampleQueries.md)  
 [log analytic queries in csl query format](../docs/LogAnalyticsQueries/logAnalyticsExampleQueries.md.csl)  
 
@@ -10,7 +8,7 @@
 These steps will assist with getting started using collectsfdata and azure log analytics. This example is configured for service fabric .dtr logs used by traceviewer. collectsfdata can import performance and table data from the 'sflogs' customer storage accounts as well with a different configuration. Time from setup of utility to querying a small set of data is around 15 min. This includes, utility download, configuration, log analytics workspace creation, log analytics time to ingest, and returning data from a query.
 
 ## Steps
-1. download latest version of collectsfdata and extract from [builds](https://dev.azure.com/ServiceFabricSupport/Tools/_wiki/wikis/Tools.wiki?pagePath=%2Fbuilds).
+1. download latest version of collectsfdata and extract from [releases](https://github.com/microsoft/CollectServiceFabricData/releases/tag/CollectSFData-latest).
 2. create log analytics workspace in [portal](https://portal.azure.com).  
 
     ![log analytics workspace](../media/la-workspace-1.png)
@@ -30,20 +28,19 @@ These steps will assist with getting started using collectsfdata and azure log a
 
 ```json
     {
-        "DeleteCache": true, // deletes <outputlocation> download cache on success
-        "GatherType": "trace", // trace, counter, table, exception, any
+        "GatherType": "trace", // trace, counter, table, exception, setup, any
         "NodeFilter": null, // regex or string to match blob uri for example node name
         "CacheLocation": "c:\\temp\\trace_latest", // temp storage location. 
         "SasKey": "", // customer 'sflogs' storage account sas
-        "StartTimeStamp": "02/16/2019 14:00:00 +00:00",
-        "EndTimeStamp": "02/16/2019 18:30:00 +00:00",
+        "StartTimeStamp": "02/16/2019 14:00 +00:00",
+        "EndTimeStamp": "02/16/2019 18:30 +00:00",
         "LogAnalyticsId" : "", // log analytics workspace id
         "LogAnalyticsKey" : "", // log analytics workspace primary / secondary key
         "LogAnalyticsName" : "trace_latest" // log analytics custom log 'type' name / tag
     }
 ```
 
-5. from command prompt in working directory run: **collectsfdata -c collectsfdata.loganalytics.json**
+5. from command prompt in working directory run: **collectsfdata -config collectsfdata.loganalytics.json**
 6. open workspace 'custom logs'. in this example, the ingest or custom log 'type' name is 'trace_latest_CL' (_CL is for custom log and is automatically appended by log analytics).
 7. verify record count with output.  
 	NOTE: this may take a while to complete ingestion even after utility has completed and this does vary regardless of size of ingest
@@ -60,13 +57,10 @@ These steps will assist with getting started using collectsfdata and azure log a
     - downside of recreating workspaces however is that any queries that have been saved *will* be lost
     - to work around query saving, an arm template of the queries to be reused across workspaces can be made and applied easily
 - log analytics ingest is not free 
-    - first 5gb per month free (which is not very much)
-    - from initial testing the cost is around $0.70 per million records in MS chargeback dollars
     - querying is free
 	
 ## Reference
 
-[collectsfdata documentation, configuration, and examples](https://dev.azure.com/ServiceFabricSupport/_git/Tools?path=%2FCollectSFData%2Fdocs%2Foverview.md)  
 [vscode extension](https://marketplace.visualstudio.com/items?itemName=josin.kusto-syntax-highlighting)  
 [log analytics external pricing](https://azure.microsoft.com/en-us/pricing/details/monitor/)  
 [pluralsight KQL](https://www.pluralsight.com/courses/kusto-query-language-kql-from-scratch)
@@ -79,7 +73,3 @@ Log analytics is based on kusto technology. Many but *not* all query commands ar
 	
 ### Log analytics (now azure monitor)
 [Azure Monitor Documentation](https://docs.microsoft.com/en-us/azure/azure-monitor/)
-	
-## Quickstart install. clip time: 7 min,  actual time: 14 min
-
-![log analytics quickstart](../media/logAnalyticsQuickStart.gif)
