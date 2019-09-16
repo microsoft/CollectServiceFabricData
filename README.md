@@ -2,7 +2,7 @@
 
 # CollectSFData
 
-[current download](/releases/tag/CollectSFData-latest)  
+[current download](https://github.com/microsoft/CollectServiceFabricData/releases/latest)  
 [requirements](#requirements)  
 [setup](#setup)  
 [configuration](#configuration)  
