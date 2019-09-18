@@ -1,0 +1,7 @@
+// sf table query
+
+declare query_parameters (T:string, taskName:string = "", Limit:long = 10000);
+TableView(table(T)) | where TaskName contains taskName
+
+
+
