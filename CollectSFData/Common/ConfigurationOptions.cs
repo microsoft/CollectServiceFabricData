@@ -357,7 +357,6 @@ namespace CollectSFData
             JObject options = JObject.FromObject(this);
             options.AddFirst(new JProperty("$schema", SchemaFile));
             options.Remove("ConfigurationFile");
-            options.Remove("DeleteCache");
             options.Remove("EndTimeUtc");
             options.Remove("Examples");
             options.Remove("FileType");
@@ -766,6 +765,12 @@ namespace CollectSFData
             if (!IsKustoConfigured() & !IsLogAnalyticsConfigured() & !IsCacheLocationPreConfigured())
             {
                 Log.Error($"kusto or log analytics or cacheLocation must be configured for file destination.");
+                retval = false;
+            }
+
+            if (!IsKustoConfigured() & !IsLogAnalyticsConfigured() & UseMemoryStream)
+            {
+                Log.Error($"kusto or log analytics must be configured for UseMemoryStream.");
                 retval = false;
             }
 

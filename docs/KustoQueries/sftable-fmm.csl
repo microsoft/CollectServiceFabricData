@@ -1,0 +1,9 @@
+// sf table query
+
+declare query_parameters (T:string, Query:string = ".", Limit:long = 10000);
+TableView(table(T))
+| where TaskName == "FMM"
+| where * matches regex Query
+| order by Timestamp asc
+| limit Limit
+| project Timestamp, PartitionKey, TaskName, EventType, partitionId, primary, secondaries, RowKey, RelativeUri
