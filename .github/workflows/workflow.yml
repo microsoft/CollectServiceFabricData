@@ -1,51 +1,29 @@
-# https://github.com/actions
-# https://help.github.com/en/articles/workflow-syntax-for-github-actions
-# https://help.github.com/en/articles/workflow-syntax-for-github-actions#about-yaml-syntax-for-workflows
-# https://help.github.com/en/articles/about-continuous-integration
-# https://help.github.com/en/articles/virtual-environments-for-github-actions#default-environment-variables
+name: CI
 
-name: CollectSFData CI
-on:
-  push:
-    branches:
-      - workflow
-  pull_request:
-    branches:
-      - workflow
+on: [push]
+
 jobs:
-  init:
-    name: CollectSFData CI
-    runs-on: windows-latest
-    steps:
-    - name: initialize
-      env:
-        MY_VAR: CollectSFData CI
-      run: |
-        echo $MY_VAR.
-  checkout_job:
-    name: checkout latest commit
-    runs-on: windows-latest
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v1
-      env:
-        ACTIONS_RUNNER_DEBUG: ${{secrets.ACTIONS_RUNNER_DEBUG}}
-        ACTIONS_STEP_DEBUG: ${{secrets.ACTIONS_STEP_DEBUG}}
-  build_job:
-    name: build latest commit
-    needs: checkout_job
+  build:
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v1
-    - name: Setup .NET Core
+      env:
+          ACTIONS_RUNNER_DEBUG: ${{secrets.ACTIONS_RUNNER_DEBUG}}
+          ACTIONS_STEP_DEBUG: ${{secrets.ACTIONS_STEP_DEBUG}}
+
+    - name: setup .net core
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: 2.2.108
-    - name: Build with dotnet
+
+    - name: build with dotnet
       run: dotnet build --configuration Release
-    - name: Run a one-line script
-      run: echo Hello, world!
-    - name: Run a multi-line script
-      run: |
-        echo Add other actions to build,
-        echo test, and deploy your project.
+
+    - name: build output
+      run: dir * /s
+
+    - name: upload artifacts
+      uses: actions/upload-artifact@master
+      with:
+        name: Release
+        path: obj/Release
