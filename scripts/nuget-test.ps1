@@ -1,21 +1,30 @@
 # script to test nuget package from azure devops build artifacts
 
 param(
-    $projectName = "Microsoft.ServiceFabric.CollectSFData",
-    $nugetSource = "https://pkgs.dev.azure.com/ServiceFabricSupport/_packaging/CollectSFData/nuget/v3/index.json",
+    $projectName = "Microsoft.ServiceFabric.Support.CollectSFData",
+    $nugetSource = "https://api.nuget.org/v3/index.json",
     $outputDirectory = "$($env:USERPROFILE)\downloads\$($ProjectName)"
 )
 
+$currentLocation = get-location
 set-location $PSScriptRoot
-Invoke-WebRequest "https://raw.githubusercontent.com/jagilber/powershellScripts/master/download-nuget.ps1" -UseBasicParsing | Invoke-Expression
+
+if(![io.file]::exists("$pwd\nuget.exe"))
+{
+    (new-object net.webclient).downloadFile("https://dist.nuget.org/win-x86-commandline/latest/nuget.exe", "$pwd\nuget.exe")
+}
 
 # nuget pack "..\$($projectName)\$($projectName).nuspec" -OutputDirectory $outputDirectory
 # nuget sources Add -Name $projectName -Source $nugetSource
-.\nuget.exe install $projectName -Source $nugetSource -outputdirectory $outputDirectory -verbosity detailed
+[io.directory]::createDirectory($outputDirectory)
+write-host ".\nuget install $projectName -Source $nugetSource -outputdirectory $outputDirectory -verbosity detailed -prerelease"
+.\nuget install $projectName -Source $nugetSource -outputdirectory $outputDirectory -verbosity detailed -prerelease
+
 # nuget sources Remove -Name $projectName -Source $nugetSource
 tree /a /f $outputDirectory
-$exePath = @((get-childitem -Path $outputDirectory -Filter collectsfdata.exe -Recurse).DirectoryName)
-. "$($exePath[-1])\collectsfdata.exe"
+$exePath = @((get-childitem -Path $outputDirectory -Filter "collectsfdata.exe" -Recurse | ? FullName -match "bin.+release").FullName)[-1]
+. $exePath
+set-location $currentLocation
 write-host "install / output dir: $($outputDirectory)" -ForegroundColor Green
 
 
