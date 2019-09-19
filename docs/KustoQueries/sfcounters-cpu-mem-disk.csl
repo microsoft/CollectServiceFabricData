@@ -1,6 +1,6 @@
 // sfcounters
 
-['sflogs']
+['***REMOVED***']
 //| where CounterName contains "Avg. Disk Queue Length" and CounterName contains "d:"
 | where CounterName contains "Processor(_Total)"
 //| where CounterName contains "Available Mbytes"

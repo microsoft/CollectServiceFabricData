@@ -5,7 +5,7 @@
 
 ## Overview
 
-These steps will assist with getting started using collectsfdata and azure log analytics. This example is configured for service fabric .dtr logs used by traceviewer. collectsfdata can import performance and table data from the 'sflogs' customer storage accounts as well with a different configuration. Time from setup of utility to querying a small set of data is around 15 min. This includes, utility download, configuration, log analytics workspace creation, log analytics time to ingest, and returning data from a query.
+These steps will assist with getting started using collectsfdata and azure log analytics. This example is configured for service fabric .dtr logs used by traceviewer. collectsfdata can import performance and table data from the '***REMOVED***' customer storage accounts as well with a different configuration. Time from setup of utility to querying a small set of data is around 15 min. This includes, utility download, configuration, log analytics workspace creation, log analytics time to ingest, and returning data from a query.
 
 ## Steps
 1. download latest version of collectsfdata and extract from [releases](https://github.com/microsoft/CollectServiceFabricData/releases/tag/CollectSFData-latest).
@@ -31,7 +31,7 @@ These steps will assist with getting started using collectsfdata and azure log a
         "GatherType": "trace", // trace, counter, table, exception, setup, any
         "NodeFilter": null, // regex or string to match blob uri for example node name
         "CacheLocation": "c:\\temp\\trace_latest", // temp storage location. 
-        "SasKey": "", // customer 'sflogs' storage account sas
+        "SasKey": "", // customer '***REMOVED***' storage account sas
         "StartTimeStamp": "02/16/2019 14:00 +00:00",
         "EndTimeStamp": "02/16/2019 18:30 +00:00",
         "LogAnalyticsId" : "", // log analytics workspace id

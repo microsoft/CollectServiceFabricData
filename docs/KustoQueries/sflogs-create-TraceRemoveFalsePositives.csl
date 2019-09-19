@@ -1,4 +1,4 @@
-.create function ifnotexists with (docstring = 'function to remove known false positive events', folder = 'sflogs')
+.create function ifnotexists with (docstring = 'function to remove known false positive events', folder = '***REMOVED***')
     TraceRemoveFalsePositives(T:string, Limit:long = 10000)
     {
         table(T)

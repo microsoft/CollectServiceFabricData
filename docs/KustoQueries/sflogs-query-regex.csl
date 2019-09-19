@@ -1,4 +1,4 @@
-// sflogs general query of Type and Text using regex
+// ***REMOVED*** general query of Type and Text using regex
 
 declare query_parameters (T:string, 
         nodeName:string = ".",
