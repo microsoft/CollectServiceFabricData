@@ -483,7 +483,7 @@ namespace CollectSFData
                     CommandOptionType.SingleValue);
 
             SasKey = CmdLineApp.Option("-s|--sasKey",
-                    $"[string] source blob SAS key required to access service fabric ***REMOVED***" +
+                    $"[string] source blob SAS key required to access service fabric sflogs" +
                     $"{newLine} blob storage.",
                     CommandOptionType.SingleValue);
 

@@ -1,4 +1,4 @@
-// ***REMOVED*** general query count
+// sflogs general query count
 
 declare query_parameters (T:string, 
         nodeName:string = "",
