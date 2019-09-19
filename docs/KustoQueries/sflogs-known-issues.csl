@@ -1,4 +1,4 @@
-// sflogs issue query of Type and/or Text or Any
+// ***REMOVED*** issue query of Type and/or Text or Any
 
 declare query_parameters (T:string, Limit:long = 100);
 // format results

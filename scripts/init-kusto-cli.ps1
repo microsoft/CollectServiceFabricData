@@ -3,7 +3,7 @@ script to setup microsoft.azure.kusto.tools nuget package for kusto interactive 
 #>
 param(
     $scriptDir = "$([io.path]::GetDirectoryName($MyInvocation.MyCommand.Path))\..\docs\KustoQueries",
-    $kustoEngineUrl = "https://sflogs.kusto.windows.net/incidentlogs",
+    $kustoEngineUrl = "https://***REMOVED***.kusto.windows.net/***REMOVED***",
     $kustoToolsPackage = "microsoft.azure.kusto.tools",
     $kustoConnectionString = "$kustoEngineUrl;Fed=True",
     $location = "$($env:USERPROFILE)\.nuget\packages", #global-packages", # local
