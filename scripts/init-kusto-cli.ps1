@@ -2,12 +2,11 @@
 script to setup microsoft.azure.kusto.tools nuget package for kusto interactive console in code, powershell, cmd, ...
 #>
 param(
-    $scriptDir = "$([io.path]::GetDirectoryName($MyInvocation.MyCommand.Path))\..\docs\KustoQueries",
-    $kustoEngineUrl = "https://sflogs.kusto.windows.net/incidentlogs",
+    $scriptDir = "$PSScriptRoot\..\docs\KustoQueries",
+    $kustoEngineUrl = "", #"https://{{cluster}}.{{location}}kusto.windows.net/{{database}}",
     $kustoToolsPackage = "microsoft.azure.kusto.tools",
     $kustoConnectionString = "$kustoEngineUrl;Fed=True",
     $location = "$($env:USERPROFILE)\.nuget\packages", #global-packages", # local
-    $nugetInstallScript = "https://raw.githubusercontent.com/jagilber/powershellScripts/master/download-nuget.ps1",
     $nugetIndex = "https://api.nuget.org/v3/index.json",
     $transcriptFile = "$($env:temp)\kusto.cli.csv",
     [switch]$noTranscript
@@ -28,15 +27,18 @@ function main()
         if ($error)
         {
             $error.Clear()
-            invoke-webrequest $nugetInstallScript -UseBasicParsing | invoke-expression
+            invoke-WebRequest 'https://dist.nuget.org/win-x86-commandline/latest/nuget.exe' -outfile .\nuget.exe
+            .\nuget install $kustoToolsPackage -Source $nugetIndex -OutputDirectory $location
         }
-
-        nuget install $kustoToolsPackage -Source $nugetIndex -OutputDirectory $location
+        else 
+        {
+            nuget install $kustoToolsPackage -Source $nugetIndex -OutputDirectory $location
+        }
     }
 
     $kustoExe = $kustoToolsDir + @(get-childitem -recurse -path $kustoToolsDir -Name kusto.cli.exe)[-1]
     
-    if($noTranscript)
+    if ($noTranscript)
     {
         $global:kustoCli = "$kustoExe `"$kustoConnectionString`""
     }
@@ -59,7 +61,7 @@ function main()
     write-host "kustoCli syntax exit: q" -ForegroundColor Green
     write-host "to restart cli: $($global:kustoCli)" -ForegroundColor Green
     
-    if(!$noTranscript)
+    if (!$noTranscript)
     {
         code $transcriptFile
     }
