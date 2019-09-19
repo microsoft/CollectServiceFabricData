@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
     <metadata>
-    <id>Microsoft.ServiceFabric.CollectSFData</id>
-    <version>1.0.0</version>
+    <id>Microsoft.ServiceFabric.Support.CollectSFData</id>
+    <version>0.0.0-prerelease</version>
     <title>CollectSFData</title>
     <authors>Microsoft, sedwards, jagilber</authors>
     <owners>Microsoft servicefabric</owners>

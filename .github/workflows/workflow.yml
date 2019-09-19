@@ -1,7 +1,6 @@
 name: CI
 
 on: [push]
-
 jobs:
   build:
     runs-on: windows-latest
@@ -12,21 +11,39 @@ jobs:
       run: curl https://dist.nuget.org/win-x86-commandline/latest/nuget.exe --output nuget.exe
 
     - name: nuget restore
-      run: nuget.exe restore
+      run: nuget.exe restore -Verbosity Detailed
 
     - name: setup msbuild
+      shell: powershell
       run: |
-        curl https://github.com/microsoft/vswhere/releases/download/2.7.1/vswhere.exe -L --output vswhere.exe
-        powershell.exe -command "& {$newPath=([io.path]::GetDirectoryName((.\vswhere.exe -latest -requires Microsoft.Component.MSBuild -find MSBuild\**\Bin\MSBuild.exe))); out-file -encoding ascii -filepath .\msbuildpath -inputobject $newPath;}"
-        set /p MSBUILD_PATH= < msbuildpath
-        set Path=%path%;%msbuild_path%
-        msbuild.exe CollectSFData.sln -v:diag -p:Configuration=Release;Platform=x64
+        $currentVswhere = invoke-webrequest 'https://api.github.com/repos/microsoft/vswhere/releases/latest'
+        invoke-webrequest (convertfrom-json $currentVswhere).assets.browser_download_url -outfile .\vswhere.exe
+        $msbuild = .\vswhere.exe -latest -requires Microsoft.Component.MSBuild -find MSBuild\**\Bin\MSBuild.exe
+        . $msbuild -v:diag -p:Configuration=Release -p:Platform=x64
 
     - name: build output
       run: dir CollectSFData\bin\x64\Release /s
 
+    - name: increment build number
+      shell: powershell
+      run: | 
+            # script to update build number
+            $xmlfile = '.\CollectSFData\CollectSFData.nuspec'
+            $xml = (new-object xml)
+            $xml.Load($xmlfile)
+            # remove string if any
+            $version = [version]($xml.package.metadata.version -replace '[a-zA-Z-]','')
+            $newVersion = new-object version($version.Major, $version.Minor, ($version.Build + 1))
+            # restore string if any
+            $xml.package.metadata.version = "$($newVersion)$($xml.package.metadata.version -replace '\d|\.','')"
+            $xml.Save($xmlfile)
+            type $xmlfile
+            write-host 'finished:' + ($error | out-string)
+      env:
+        todoNotWorking: '.\CollectSFData\CollectSFData.nuspec'
+
     - name: nuget pack
-      run: nuget.exe pack CollectSFData\CollectSFData.csproj -Verbosity Detailed -outputdirectory CollectSFData\bin\x64\artifacts -Properties Configuration=Release
+      run: nuget.exe pack CollectSFData\CollectSFData.nuspec -Verbosity Detailed -outputdirectory CollectSFData\bin\x64\artifacts -Properties Configuration=Release
 
     - name: copy artifacts
       run: |
@@ -35,6 +52,11 @@ jobs:
 
     - name: artifacts output
       run: dir CollectSFData\bin\x64\artifacts /s
+
+    - name: nuget push
+      run: nuget.exe push CollectSFData\bin\x64\artifacts\*.nupkg ${nuget_api_key} -Verbosity Detailed -Source https://api.nuget.org/v3/index.json -SkipDuplicate
+      env: 
+        nuget_api_key: ${{ secrets.ACTIONS_NUGET_PUSH_API_KEY }}
 
     - name: upload artifacts
       uses: actions/upload-artifact@master
