@@ -11,7 +11,7 @@ jobs:
       run: curl https://dist.nuget.org/win-x86-commandline/latest/nuget.exe --output nuget.exe
 
     - name: nuget restore
-      run: nuget.exe restore -Verbosity Detailed
+      run: nuget.exe restore -Verbosity Detailed -NonInteractive
 
     - name: setup msbuild
       shell: powershell
@@ -24,26 +24,8 @@ jobs:
     - name: build output
       run: dir CollectSFData\bin\x64\Release /s
 
-    - name: increment build number
-      shell: powershell
-      run: | 
-            # script to update build number
-            $xmlfile = '.\CollectSFData\CollectSFData.nuspec'
-            $xml = (new-object xml)
-            $xml.Load($xmlfile)
-            # remove string if any
-            $version = [version]($xml.package.metadata.version -replace '[a-zA-Z-]','')
-            $newVersion = new-object version($version.Major, $version.Minor, ($version.Build + 1))
-            # restore string if any
-            $xml.package.metadata.version = "$($newVersion)$($xml.package.metadata.version -replace '\d|\.','')"
-            $xml.Save($xmlfile)
-            type $xmlfile
-            write-host 'finished:' + ($error | out-string)
-      env:
-        todoNotWorking: '.\CollectSFData\CollectSFData.nuspec'
-
     - name: nuget pack
-      run: nuget.exe pack CollectSFData\CollectSFData.nuspec -Verbosity Detailed -outputdirectory CollectSFData\bin\x64\artifacts -Properties Configuration=Release
+      run: nuget.exe pack CollectSFData\CollectSFData.nuspec -Verbosity Detailed -outputdirectory CollectSFData\bin\x64\artifacts  -NonInteractive -Properties Configuration=Release
 
     - name: copy artifacts
       run: |
@@ -54,7 +36,7 @@ jobs:
       run: dir CollectSFData\bin\x64\artifacts /s
 
     - name: nuget push
-      run: nuget.exe push CollectSFData\bin\x64\artifacts\*.nupkg ${nuget_api_key} -Verbosity Detailed -Source https://api.nuget.org/v3/index.json -SkipDuplicate
+      run: nuget.exe push CollectSFData\bin\x64\artifacts\*.nupkg ${nuget_api_key} -Verbosity Detailed -Source https://api.nuget.org/v3/index.json -SkipDuplicate -NonInteractive
       env: 
         nuget_api_key: ${{ secrets.ACTIONS_NUGET_PUSH_API_KEY }}
 
