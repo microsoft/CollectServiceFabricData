@@ -7,23 +7,37 @@ jobs:
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v1
-      env:
-          ACTIONS_RUNNER_DEBUG: ${{secrets.ACTIONS_RUNNER_DEBUG}}
-          ACTIONS_STEP_DEBUG: ${{secrets.ACTIONS_STEP_DEBUG}}
 
-    - name: setup .net core
-      uses: actions/setup-dotnet@v1
-      with:
-        dotnet-version: 2.2.108
+    - name: nuget download
+      run: curl https://dist.nuget.org/win-x86-commandline/latest/nuget.exe --output nuget.exe
 
-    - name: build with dotnet
-      run: dotnet build --configuration Release
+    - name: nuget restore
+      run: nuget.exe restore
+
+    - name: setup msbuild
+      run: |
+        curl https://github.com/microsoft/vswhere/releases/download/2.7.1/vswhere.exe -L --output vswhere.exe
+        powershell.exe -command "& {$newPath=([io.path]::GetDirectoryName((.\vswhere.exe -latest -requires Microsoft.Component.MSBuild -find MSBuild\**\Bin\MSBuild.exe))); out-file -encoding ascii -filepath .\msbuildpath -inputobject $newPath;}"
+        set /p MSBUILD_PATH= < msbuildpath
+        set Path=%path%;%msbuild_path%
+        msbuild.exe CollectSFData.sln -v:diag -p:Configuration=Release;Platform=x64
 
     - name: build output
-      run: dir * /s
+      run: dir CollectSFData\bin\x64\Release /s
+
+    - name: nuget pack
+      run: nuget.exe pack CollectSFData\CollectSFData.csproj -Verbosity Detailed -outputdirectory CollectSFData\bin\x64\artifacts -Properties Configuration=Release
+
+    - name: copy artifacts
+      run: |
+        copy CollectSFData\bin\x64\Release\*.exe CollectSFData\bin\x64\artifacts
+        copy CollectSFData\bin\x64\Release\*.dll CollectSFData\bin\x64\artifacts
+
+    - name: artifacts output
+      run: dir CollectSFData\bin\x64\artifacts /s
 
     - name: upload artifacts
       uses: actions/upload-artifact@master
       with:
         name: Release
-        path: obj/Release
+        path: CollectSFData\bin\x64\artifacts
