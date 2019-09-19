@@ -1,4 +1,4 @@
-// ***REMOVED*** table meta information
+// sflogs table meta information
 
 declare query_parameters (T:string);
 print d=dynamic({})
