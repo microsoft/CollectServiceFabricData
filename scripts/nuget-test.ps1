@@ -9,7 +9,7 @@ param(
 $currentLocation = get-location
 set-location $PSScriptRoot
 
-if(![io.file]::exists("$pwd\nuget.exe"))
+if(![io.file]::exists("$PSScriptRoot\nuget.exe"))
 {
     (new-object net.webclient).downloadFile("https://dist.nuget.org/win-x86-commandline/latest/nuget.exe", "$pwd\nuget.exe")
 }
