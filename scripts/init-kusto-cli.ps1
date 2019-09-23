@@ -2,18 +2,20 @@
 script to setup microsoft.azure.kusto.tools nuget package for kusto interactive console in code, powershell, cmd, ...
 #>
 param(
-    $scriptDir = "$([io.path]::GetDirectoryName($MyInvocation.MyCommand.Path))\..\docs\KustoQueries",
-    $kustoEngineUrl = "https://***REMOVED***.kusto.windows.net/***REMOVED***",
+    $scriptDir = "$PSScriptRoot\..\docs\KustoQueries",
+    $kustoEngineUrl = "https://{{kusto cluster}}.{{ location }}.kusto.windows.net/{{ kusto database }}",
     $kustoToolsPackage = "microsoft.azure.kusto.tools",
     $kustoConnectionString = "$kustoEngineUrl;Fed=True",
     $location = "$($env:USERPROFILE)\.nuget\packages", #global-packages", # local
-    $nugetInstallScript = "https://raw.githubusercontent.com/jagilber/powershellScripts/master/download-nuget.ps1",
     $nugetIndex = "https://api.nuget.org/v3/index.json",
+    $nugetDownloadUrl = "https://dist.nuget.org/win-x86-commandline/latest/nuget.exe",
     $transcriptFile = "$($env:temp)\kusto.cli.csv",
     [switch]$noTranscript
 )
 
 $ErrorActionPreference = "continue"
+$env:path += ";$pwd;$psscriptroot"
+
 function main()
 {
     $kustoToolsDir = "$env:USERPROFILE\.nuget\packages\$kustoToolsPackage\"
@@ -22,13 +24,10 @@ function main()
 
     if (!(test-path $kustoToolsDir))
     {
-        $error.clear()
-        (nuget) | out-null
 
-        if ($error)
+        if(!(test-path nuget))
         {
-            $error.Clear()
-            invoke-webrequest $nugetInstallScript -UseBasicParsing | invoke-expression
+            (new-object net.webclient).downloadFile($nugetDownloadUrl, "$pwd\nuget.exe")
         }
 
         nuget install $kustoToolsPackage -Source $nugetIndex -OutputDirectory $location
