@@ -3,16 +3,19 @@ script to setup microsoft.azure.kusto.tools nuget package for kusto interactive 
 #>
 param(
     $scriptDir = "$PSScriptRoot\..\docs\KustoQueries",
-    $kustoEngineUrl = "", #"https://{{cluster}}.{{location}}kusto.windows.net/{{database}}",
+    $kustoEngineUrl = "https://{{kusto cluster}}.{{ location }}.kusto.windows.net/{{ kusto database }}",
     $kustoToolsPackage = "microsoft.azure.kusto.tools",
     $kustoConnectionString = "$kustoEngineUrl;Fed=True",
     $location = "$($env:USERPROFILE)\.nuget\packages", #global-packages", # local
     $nugetIndex = "https://api.nuget.org/v3/index.json",
+    $nugetDownloadUrl = "https://dist.nuget.org/win-x86-commandline/latest/nuget.exe",
     $transcriptFile = "$($env:temp)\kusto.cli.csv",
     [switch]$noTranscript
 )
 
 $ErrorActionPreference = "continue"
+$env:path += ";$pwd;$psscriptroot"
+
 function main()
 {
     $kustoToolsDir = "$env:USERPROFILE\.nuget\packages\$kustoToolsPackage\"
@@ -21,24 +24,18 @@ function main()
 
     if (!(test-path $kustoToolsDir))
     {
-        $error.clear()
-        (nuget) | out-null
 
-        if ($error)
+        if(!(test-path nuget))
         {
-            $error.Clear()
-            invoke-WebRequest 'https://dist.nuget.org/win-x86-commandline/latest/nuget.exe' -outfile .\nuget.exe
-            .\nuget install $kustoToolsPackage -Source $nugetIndex -OutputDirectory $location
+            (new-object net.webclient).downloadFile($nugetDownloadUrl, "$pwd\nuget.exe")
         }
-        else 
-        {
-            nuget install $kustoToolsPackage -Source $nugetIndex -OutputDirectory $location
-        }
+
+        nuget install $kustoToolsPackage -Source $nugetIndex -OutputDirectory $location
     }
 
     $kustoExe = $kustoToolsDir + @(get-childitem -recurse -path $kustoToolsDir -Name kusto.cli.exe)[-1]
     
-    if ($noTranscript)
+    if($noTranscript)
     {
         $global:kustoCli = "$kustoExe `"$kustoConnectionString`""
     }
@@ -61,7 +58,7 @@ function main()
     write-host "kustoCli syntax exit: q" -ForegroundColor Green
     write-host "to restart cli: $($global:kustoCli)" -ForegroundColor Green
     
-    if (!$noTranscript)
+    if(!$noTranscript)
     {
         code $transcriptFile
     }
