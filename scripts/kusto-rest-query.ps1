@@ -1,40 +1,46 @@
 # script to query kusto with AAD client id and secret
-
+# > ..\..\jagilber-pr\graph\draft-graph-test.ps1 -tenant 72f988bf-86f1-41af-91ab-2d7cd011db47 -resourceUrl "https://sflogs.kusto.windows.net"
+[cmdletbinding()]
 param(
-    [parameter(Mandatory = $true)]
-    $kustoCluster = "",
-    [parameter(Mandatory = $true)]
-    $kustoDb = "",
     $query = "search * | count",
+    [ValidateNotNullorEmpty()]
+    $kustoCluster = $global:kustoCluster,
+    [ValidateNotNullorEmpty()]
+    $kustoDb = $global:kustoDb,
     $resultFile = ".\result.json",
-    [switch]$viewResults,
+    [switch]$viewResults = $global:viewResults,
     [ValidateSet("rm", "az")]
-    [string]$armModuleType = "az"
+    [string]$armModuleType = "az",
+    $nugetDownloadUrl = "https://dist.nuget.org/win-x86-commandline/latest/nuget.exe",
+    $token = $global:token,
+    $kustoLogonScript = "$PSScriptRoot\kusto-rest-logon.ps1",
+    $limit = $global:limit
 )
-Write-Warning "not currently working!!!"
+
 $ErrorActionPreference = "continue"
-$DebugPreference = $VerbosePreference = "continue"
+#$DebugPreference = $VerbosePreference = "continue"
+$global:kustoCluster = $kustoCluster
+$global:kustoDb = $kustoDb
+$global:viewResults = $viewResults
+$global:token = $token
+$global:limit = $limit
 
-function main() {
+function main() 
+{
+    if(!$global:limit)
+    {
+        $global:limit = 10000
+    }
 
-
-    Invoke-WebRequest "https://raw.githubusercontent.com/jagilber/powershellScripts/master/download-nuget.ps1" -UseBasicParsing | Invoke-Expression
+    write-warning "current limit set to $global:limit"
 
     # authenticate to aad first to get token
     $kustoHost = "$kustoCluster.kusto.windows.net"
     $kustoResource = "https://$kustoHost"
-    $restLogon = "azure-$armModuleType-rest-logon.ps1"
-    $restLogonSource = "https://raw.githubusercontent.com/jagilber/powershellScripts/master/$restLogon"
     $uri = "$kustoResource/v2/rest/query"
+    . $kustoLogonScript -resourceUrl $kustoResource
 
-    if (!(test-path ".\$restLogon")) {
-        write-host "downloading $restLogonSource"
-        (New-Object System.Net.WebClient).DownloadFile($restLogonSource, "$PSScriptRoot\$restLogon")
-    }
-
-    Invoke-Expression ".\$restLogon -logonType graph -resource $kustoResource"
-
-    if (!$global:token.access_token) {
+    if (!$global:token) {#.access_token) {
         write-error "unable to acquire token. exiting"
         return
     }
@@ -44,7 +50,7 @@ function main() {
 
     $header = @{
         "Accept"                 = "application/json"
-        "Authorization"          = "Bearer $($global:token.access_token)"
+        "Authorization"          = "Bearer $($global:token)"
         "Content-Type"           = "application/json"
         "Host"                   = $kustoHost
         "x-ms-app"               = [io.path]::GetFileName($MyInvocation.ScriptName)
@@ -52,11 +58,11 @@ function main() {
         "x-ms-client-request-id" = $requestId
     } 
 
-    $header | convertto-json
+    write-verbose $header | convertto-json
 
     $body = @{
         db         = $kustoDb
-        csl        = $query
+        csl        = "$query | limit $global:limit"
         properties = @{
             Options = @{
                 queryconsistency = "strongconsistency"
@@ -65,43 +71,53 @@ function main() {
         }
     } | ConvertTo-Json
 
-    $body
+    write-verbose $body
 
     $ret = Invoke-WebRequest -Method Post -Uri $uri -Headers $header -Body $body -Verbose -Debug
-    $ret
-    $resultObject = $ret.content | convertfrom-json
-    $global:result = $resultObject | convertto-json -Depth 99
+    write-verbose $ret
+    $global:resultObject = $ret.content | convertfrom-json
+    $global:result = $global:resultObject | convertto-json -Depth 99
 
-    if ($viewResults) {
-        $results = [collections.arraylist]@()
+    if ($global:viewResults) {
+        $global:resultTable = [collections.arraylist]@()
         $columns = @{ }
     
-        foreach ($column in ($resultObject.tables[0].columns))
+        foreach ($column in ($global:resultObject.tables[0].columns))
         {
-            [void]$columns.Add($column.name, $null)
+            [void]$columns.Add($column.ColumnName, $null)
         }
 
         $resultModel = New-Object -TypeName PsObject -Property $columns
 
-        foreach ($row in ($resultObject.tables[0].rows)) 
+        foreach ($row in ($global:resultObject.tables[0].rows)) 
         {
             $count = 0
             $result = $resultModel.PsObject.Copy()
 
-            foreach ($column in ($resultObject.tables[0].columns)) {
-                $result.($column.name) = $row[$count++]
+            foreach ($column in ($global:resultObject.tables[0].columns)) {
+                $result.($column.ColumnName) = $row[$count++]
             }
 
-            [void]$results.add($result)
+            [void]$global:resultTable.add($result)
         }
 
-        $results | format-table -AutoSize
-        write-host "results count: $($results.Count)"
+        $global:resultTable | format-table -AutoSize
+        write-host "results count: $($global:resultTable.Count)"
     }
 
+    write-host "output stored in `$global:resultObject and `$global:resultTable" -foregroundcolor green
     out-file -FilePath $resultFile -InputObject $global:result
-    write-host "output stored in $resultFile and `$global:result"
-    $DebugPreference = $VerbosePreference = "silentlycontinue"
+
+    $primaryResult = $global:resultObject| where-object TableKind -eq PrimaryResult
+    
+    if($primaryResult)
+    {
+        $primaryResult.columns
+        $primaryResult.Rows
+    }
+
+    write-host "output json stored in $resultFile and `$global:result" -foregroundcolor green
+    #$DebugPreference = $VerbosePreference = "silentlycontinue"
 }
 
 main

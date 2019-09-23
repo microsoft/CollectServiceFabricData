@@ -154,8 +154,6 @@ namespace CollectSFData
 
         public string SaveConfiguration { get; set; }
 
-        public string Schema { get; set; }
-
         public string StartTimeStamp
         {
             get => _startTime;
