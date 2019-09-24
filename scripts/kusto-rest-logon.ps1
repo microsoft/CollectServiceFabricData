@@ -9,44 +9,39 @@ param(
     $tenant = "common",
     $wellknownClientId = "1950a258-227b-4e31-a9cf-717495945fc2", 
     $redirectUri = "urn:ietf:wg:oauth:2.0:oob",
-    [ValidateNotNullorEmpty()]
     $resourceUrl, # = "https://{{kusto cluster}}.kusto.windows.net"
     [switch]$force
 )
 
-Function GetAuthToken
+$ErrorActionPreference = "continue"
+
+function main()
 {
+    if(!$resourceUrl)
+    {
+        write-warning "-resourceUrl required. example: https://{{kusto cluster}}.kusto.windows.net"
+        exit
+    }
+
     if(!$force -and $global:kustoAuthenticationResult.expireson -gt (get-date))
     {
-        write-host "token still valid. use -force to force logon" -ForegroundColor cyan
-        write-host "$global:kustoAuthenticationResult"
+        write-host "token valid: $($global:kustoAuthenticationResult.expireson). use -force to force logon" -ForegroundColor cyan
+        #write-host "$global:kustoAuthenticationResult"
         exit
     }
 
     $error.Clear()
     $env:path += ";$pwd;$psscriptroot"
     $ADauthorityURL = "https://login.microsoftonline.com/$tenant"
-    $authenticationContext = New-Object AuthenticationContext($ADAuthorityURL)
 
-    if($error)
+    try 
     {
-        $error.Clear()
-
-        if(!(test-path nuget))
-        {
-            write-warning "installing nuget"
-            (new-object net.webclient).downloadFile($nugetDownloadUrl, "$pwd\nuget.exe")
-        }
-
-        write-warning "installing Microsoft.IdentityModel.Clients.ActiveDirectory"
-        nuget install Microsoft.IdentityModel.Clients.ActiveDirectory -outputdirectory "$($env:USERPROFILE)\.nuget\packages", 
-        $authenticationContext = New-Object AuthenticationContext($ADAuthorityURL)
-
-        if($error)
-        {
-            write-error "unable to find / load Microsoft.IdentityModel.Clients.ActiveDirectory"
-            exit
-        }
+        $authenticationContext = New-Object AuthenticationContext($ADAuthorityURL)    
+    }
+    catch 
+    {
+        check-adal
+        $authenticationContext = New-Object AuthenticationContext($ADAuthorityURL)    
     }
 
     if ($clientid -and $clientSecret)
@@ -78,11 +73,53 @@ Function GetAuthToken
     $global:token = $authenticationResult.AccessToken;
     $global:token
 
-    $VerbosePreference = $DebugPreference = $ErrorActionPreference = "silentlycontinue"
-    return $authenticationResult
+    $global:kustoAuthenticationResult = $authenticationResult
+    $global:kustoAuthenticationResult
+    write-host "results saved in `$global:kustoAuthenticationResult `$global:tenantid and `$global:token" -ForegroundColor green
 }
 
-$global:kustoAuthenticationResult = GetAuthToken $tenant
-$global:kustoAuthenticationResult
-write-host "results saved in `$global:kustoAuthenticationResult `$global:tenantid and `$global:token" -ForegroundColor green
+function check-adal()
+{
 
+    param(
+        $projectName = "Microsoft.IdentityModel.Clients.ActiveDirectory",
+        $outputDirectory = "$($env:USERPROFILE)\.nuget\packages", #\$($ProjectName)",
+        $nugetSource = "https://api.nuget.org/v3/index.json",
+        $nugetDownloadUrl = "https://dist.nuget.org/win-x86-commandline/latest/nuget.exe",
+        [switch]$force
+    )
+
+    $env:path += ";$pwd;$psscriptroot;$env:temp"
+
+    if(!(test-path nuget))
+    {
+        (new-object net.webclient).downloadFile($nugetDownloadUrl, "$pwd\nuget.exe")
+    }
+
+    [io.directory]::createDirectory($outputDirectory)
+    $localPackages = nuget list -Source $outputDirectory
+
+    if(!$force -and !($localPackages -imatch $projectName))
+    {
+        write-host ".\nuget install $projectName -Source $nugetSource -outputdirectory $outputDirectory -verbosity detailed -prerelease"
+        nuget install $projectName -Source $nugetSource -outputdirectory $outputDirectory -verbosity detailed #-prerelease
+    }
+    else 
+    {
+        write-host "$projectName already installed" -ForegroundColor green
+    }
+
+    $projectDirectory = "$outputDirectory\$projectName"
+    tree /a /f $projectDirectory
+    $adalDll = @(get-childitem -Path $projectDirectory -Recurse | where-object FullName -match "net45\\$projectName\.dll" | select-object FullName)[-1]
+
+    write-host "install / output dir: $($projectDirectory)" -ForegroundColor Green
+    $adalDll
+    $adalDll.FullName
+    #$global:adal = Add-Type -Path $adalDll.FullName
+    $global:adalDll = [Reflection.Assembly]::LoadFile($adalDll.FullName) # Microsoft.IdentityModel.Clients.ActiveDirectory
+
+    $global:adalDll
+}
+
+main
