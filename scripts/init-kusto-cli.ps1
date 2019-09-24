@@ -14,7 +14,7 @@ param(
 )
 
 $ErrorActionPreference = "continue"
-$env:path += ";$pwd;$psscriptroot"
+if(!($env:path -contains ";$pwd;$psscriptroot")) { $env:path += ";$pwd;$psscriptroot" } 
 
 function main()
 {

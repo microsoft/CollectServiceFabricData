@@ -16,27 +16,28 @@ param(
 )
 
 $ErrorActionPreference = "continue"
-#$DebugPreference = $VerbosePreference = "continue"
-$global:kustoCluster = $kustoCluster
-$global:kustoDb = $kustoDb
-$global:viewResults = $viewResults
-$global:gridViewResults = $gridViewResults
-$global:token = $token
-$global:limit = $limit
-$global:script = $script
-$global:query = $query
-
-write-host "kustoCluster = $kustoCluster"
-write-host "kustoDb = $kustoDb"
-write-host "viewResults = $viewResults"
-write-host "gridViewResults = $gridViewResults"
-#write-host "token = $token"
-write-host "limit = $limit"
-write-host "script = $script"
-write-host "query = $query"
 
 function main() 
 {
+    $startTime = get-date
+    $global:kustoCluster = $kustoCluster
+    $global:kustoDb = $kustoDb
+    $global:viewResults = $viewResults
+    $global:gridViewResults = $gridViewResults
+    $global:token = $token
+    $global:limit = $limit
+    $global:script = $script
+    $global:query = $query
+
+    write-host "kustoCluster = $kustoCluster"
+    write-host "kustoDb = $kustoDb"
+    write-host "viewResults = $viewResults"
+    write-host "gridViewResults = $gridViewResults"
+    #write-host "token = $token"
+    write-host "limit = $limit"
+    write-host "script = $script"
+    write-host "query = $query"
+
     if(!$global:limit)
     {
         $global:limit = 10000
@@ -178,7 +179,6 @@ function main()
         write-host "results count: $($global:resultTable.Count)"
     }
 
-    write-host "output stored in `$global:resultObject and `$global:resultTable" -foregroundcolor green
     out-file -FilePath $resultFile -InputObject $global:result
 
     $primaryResult = $global:resultObject| where-object TableKind -eq PrimaryResult
@@ -189,10 +189,12 @@ function main()
         $primaryResult.Rows
     }
 
-    write-host "output json stored in $resultFile and `$global:result" -foregroundcolor green
     set-alias kq $MyInvocation.ScriptName -Scope global
+
+    write-host "output stored in `$global:resultObject and `$global:resultTable" -foregroundcolor green
+    write-host "output json stored in $resultFile and `$global:result" -foregroundcolor green
     write-host "use alias 'kq' to run queries. example kq '.show tables'" -ForegroundColor Green
-    #$DebugPreference = $VerbosePreference = "silentlycontinue"
+    write-host "$(((get-date) - $startTime).TotalSeconds) seconds to execute"
 }
 
 main
