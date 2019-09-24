@@ -2,19 +2,17 @@
 # > ..\..\jagilber-pr\graph\draft-graph-test.ps1 -tenant ***REMOVED*** -resourceUrl "https://***REMOVED***.kusto.windows.net"
 [cmdletbinding()]
 param(
-    $query = "search * | count",
-    [ValidateNotNullorEmpty()]
+    $query = $global:query,
     $kustoCluster = $global:kustoCluster,
-    [ValidateNotNullorEmpty()]
     $kustoDb = $global:kustoDb,
     $resultFile = ".\result.json",
-    [switch]$viewResults = $global:viewResults,
-    [ValidateSet("rm", "az")]
-    [string]$armModuleType = "az",
-    $nugetDownloadUrl = "https://dist.nuget.org/win-x86-commandline/latest/nuget.exe",
+    $viewResults = $global:viewResults,
+    $gridViewResults = $global:gridViewResults,
     $token = $global:token,
     $kustoLogonScript = "$PSScriptRoot\kusto-rest-logon.ps1",
-    $limit = $global:limit
+    $limit = $global:limit,
+    $script = $global:script,
+    [hashtable]$parameters = @{} #@{'clusterName' = $resourceGroup; 'dnsName' = $resourceGroup;}
 )
 
 $ErrorActionPreference = "continue"
@@ -22,8 +20,20 @@ $ErrorActionPreference = "continue"
 $global:kustoCluster = $kustoCluster
 $global:kustoDb = $kustoDb
 $global:viewResults = $viewResults
+$global:gridViewResults = $gridViewResults
 $global:token = $token
 $global:limit = $limit
+$global:script = $script
+$global:query = $query
+
+write-host "kustoCluster = $kustoCluster"
+write-host "kustoDb = $kustoDb"
+write-host "viewResults = $viewResults"
+write-host "gridViewResults = $gridViewResults"
+#write-host "token = $token"
+write-host "limit = $limit"
+write-host "script = $script"
+write-host "query = $query"
 
 function main() 
 {
@@ -32,15 +42,65 @@ function main()
         $global:limit = 10000
     }
 
-    write-warning "current limit set to $global:limit"
+    if(!$script -and !$query)
+    {
+        Write-Warning "-script and / or -query should be set. exiting"
+        return
+    }
+
+    if(!$kustoCluster -or !$kustoDb)
+    {
+        Write-Warning "-kustoCluster and -kustoDb have to be set once. exiting"
+        return
+    }
+
+    if($script)
+    {
+        if ($script.startswith('http'))
+        {
+            $destFile = "$pwd\$([io.path]::GetFileName($script))" -replace '\?.*', ''
+            
+            if(!(test-path $destFile))
+            {
+                Write-host "downloading $script" -foregroundcolor green
+                (new-object net.webclient).DownloadFile($script, $destFile)
+            }
+            else 
+            {
+                Write-host "using cached script $script"
+            }
+
+            $script = $destFile
+        }
+        
+        if((test-path $script))
+        {
+            $query = (Get-Content -raw -Path $script).trimend([environment]::newLine) + [environment]::newLine + $query
+        }
+        else 
+        {
+            write-error "unknown script:$script"
+            return
+        }
+    }
 
     # authenticate to aad first to get token
     $kustoHost = "$kustoCluster.kusto.windows.net"
     $kustoResource = "https://$kustoHost"
-    $uri = "$kustoResource/v2/rest/query"
+    
+    if($query.startswith('.show') -or !$query.startswith('.'))
+    {
+        $uri = "$kustoResource/v1/rest/query"
+    }
+    else 
+    {
+        $uri = "$kustoResource/v1/rest/mgmt"
+    }
+
     . $kustoLogonScript -resourceUrl $kustoResource
 
-    if (!$global:token) {#.access_token) {
+    if (!$global:token)
+    {
         write-error "unable to acquire token. exiting"
         return
     }
@@ -66,15 +126,22 @@ function main()
         properties = @{
             Options = @{
                 queryconsistency = "strongconsistency"
-                #Parameters       = @{ }
             }
+            Parameters = $parameters
         }
     } | ConvertTo-Json
 
     write-verbose $body
 
+    $error.clear()
     $ret = Invoke-WebRequest -Method Post -Uri $uri -Headers $header -Body $body -Verbose -Debug
     write-verbose $ret
+    
+    if($error)
+    {
+        return
+    }
+
     $global:resultObject = $ret.content | convertfrom-json
     $global:result = $global:resultObject | convertto-json -Depth 99
 
@@ -102,6 +169,12 @@ function main()
         }
 
         $global:resultTable | format-table -AutoSize
+
+        if($gridViewResults)
+        {
+            $global:resultTable | select-object * | out-gridview
+        }
+
         write-host "results count: $($global:resultTable.Count)"
     }
 
@@ -117,6 +190,8 @@ function main()
     }
 
     write-host "output json stored in $resultFile and `$global:result" -foregroundcolor green
+    set-alias kq $MyInvocation.ScriptName -Scope global
+    write-host "use alias 'kq' to run queries. example kq '.show tables'" -ForegroundColor Green
     #$DebugPreference = $VerbosePreference = "silentlycontinue"
 }
 
