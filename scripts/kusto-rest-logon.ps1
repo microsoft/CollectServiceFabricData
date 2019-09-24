@@ -31,7 +31,7 @@ function main()
     }
 
     $error.Clear()
-    $env:path += ";$pwd;$psscriptroot"
+    if(!($env:path -contains ";$pwd;$psscriptroot")) { $env:path += ";$pwd;$psscriptroot" } 
     $ADauthorityURL = "https://login.microsoftonline.com/$tenant"
 
     try 
@@ -89,7 +89,7 @@ function check-adal()
         [switch]$force
     )
 
-    $env:path += ";$pwd;$psscriptroot;$env:temp"
+    if(!($env:path -contains ";$pwd;$psscriptroot;$env:temp")) { $env:path += ";$pwd;$psscriptroot;$env:temp" } 
 
     if(!(test-path nuget))
     {
