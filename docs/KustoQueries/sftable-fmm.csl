@@ -6,4 +6,4 @@ TableView(table(T))
 | where * matches regex Query
 | order by Timestamp asc
 | limit Limit
-| project Timestamp, PartitionKey, TaskName, EventType, partitionId, primary, secondaries, RowKey, RelativeUri
+| project Timestamp, PartitionKey, TaskName, EventType, partitionId, column_ifexists("primary", ""), column_ifexists("secondaries", ""), RowKey, RelativeUri
