@@ -1,4 +1,96 @@
-# script to query kusto with AAD client id and secret or user and password
+<#
+.SYNOPSIS
+    script to query kusto with AAD client id and secret or user and password
+
+.DESCRIPTION
+    this script will setup Microsoft.IdentityModel.Clients.ActiveDirectory using nuget for AAD MFA authentication into azure kusto
+    KustoObj will be created as $global:kusto to hold properties and run methods from
+
+.NOTES
+    Author : servicefabric support
+    File Name  : kusto-rest.ps1
+    Version    : 190926 orig
+    History    : 
+
+.EXAMPLE
+    .\kusto-rest.ps1 -cluster kustocluster -database kustodatabase
+
+.EXAMPLE
+    .\kusto-rest.ps1 -cluster kustocluster -database kustodatabase
+    $kusto.Exec('.show tables')
+
+.EXAMPLE
+    $kusto.viewresults = $true
+    $kusto.SetTable($table)
+    $kusto.SetDatabase($database)
+    $kusto.SetCluster($cluster)
+    $kusto.parameters = @{'T'= $table}
+    $kusto.ExecScript("..\docs\kustoqueries\***REMOVED***-table-info.csl", $kusto.parameters)
+
+.EXAMPLE 
+    $kusto.SetTable("test_$env:USERNAME").Import()
+
+.EXAMPLE
+    $kusto.SetPipe($true).SetCluster('azure').SetDatabase('azure').Exec("EventEtwTable | where TIMESTAMP > ago(1d) | where TenantName == $tenantId")
+
+.EXAMPLE
+    .\kusto-rest.ps1 -cluster kustocluster -database kustodatabase
+    $kusto.Exec('.show tables')
+    $kusto.ExportCsv("$env:temp\test.csv")
+    type $env:temp\test.csv
+
+.PARAMETER query
+    query string or command to execute against a kusto database
+
+.PARAMETER cluster
+    [string]kusto cluster name. (host name not fqdn)
+        example: kustocluster
+        example: azurekusto.eastus
+
+.PARAMETER database 
+    [string]kusto database name
+
+.PARAMETER table
+    [string]optional kusto table for import
+
+.PARAMETER resultFile
+    [string]optional json file name and path to store raw result content
+
+.PARAMETER viewResults
+    [bool]option if enabled will display results in console output
+
+.PARAMETER token
+    [string]optional token to connect to kusto. if not provided, script will attempt to authorize user to given cluster and database
+
+.PARAMETER limit
+    [int]optional result limit. default 10,000
+
+.PARAMETER script
+    [string]optional path and name of kusto script file (.csl|.kusto) to execute
+
+.PARAMETER clientSecret
+    [string]optional azure client secret to connect to kusto. if not provided, script will attempt to authorize user to given cluster and database
+    requires clientId
+
+.PARAMETER clientId
+    [string]optional azure client id to connect to kusto. if not provided, script will attempt to authorize user to given cluster and database
+    requires clientSecret
+
+.PARAMETER tenantId
+    [guid]optional tenantId to use for authorization. default is 'common'
+
+.PARAMETER force
+    [bool]enable to force authentication regardless if token is valid
+
+.PARAMETER parameters
+    [hashtable]optional hashtable of parameters to pass to kusto script (.csl|kusto) file
+
+.OUTPUTS
+    KustoObj
+    
+.LINK
+    https://github.com/microsoft/CollectServiceFabricData
+ #>
 
 using namespace Microsoft.IdentityModel.Clients.ActiveDirectory
 [cmdletbinding()]
@@ -14,7 +106,8 @@ param(
     [string]$script,
     [string]$clientSecret,
     [string]$clientId,
-    [string]$tenant = "common",
+    [string]$tenantId = "common",
+    [bool]$pipeLine,
     [string]$wellknownClientId = "1950a258-227b-4e31-a9cf-717495945fc2", 
     [string]$redirectUri = "urn:ietf:wg:oauth:2.0:oob",
     #[string]$resourceUrl, # = "https://{{kusto cluster}}.kusto.windows.net"
@@ -35,6 +128,7 @@ class KustoObj {
     [bool]$force = $force
     [int]$limit = $limit
     [hashtable]$parameters = $parameters
+    [bool]$pipeLine = $null
     [string]$query = $query
     [string]$redirectUri = $redirectUri
     [object]$result = $null
@@ -43,7 +137,7 @@ class KustoObj {
     [string]$resultFile = $resultFile
     [string]$script = $script
     [string]$table = $table
-    [string]$tenant = $tenant
+    [string]$tenantId = $tenantId
     [string]$token = $token
     [bool]$viewResults = $viewResults
     [string]$wellknownClientId = $wellknownClientId
@@ -51,9 +145,9 @@ class KustoObj {
     KustoObj() { }
     static KustoObj() { }
 
-    [void] CheckAdal() {
+    hidden [void] CheckAdal() {
         [object]$kusto = $this
-        [string]$projectName = "Microsoft.IdentityModel.Clients.ActiveDirectory"
+        [string]$packageName = "Microsoft.IdentityModel.Clients.ActiveDirectory"
         [string]$outputDirectory = "$($env:USERPROFILE)\.nuget\packages"
         [string]$nugetSource = "https://api.nuget.org/v3/index.json"
         [string]$nugetDownloadUrl = "https://dist.nuget.org/win-x86-commandline/latest/nuget.exe"
@@ -69,27 +163,26 @@ class KustoObj {
         [io.directory]::createDirectory($outputDirectory)
         [string]$localPackages = nuget list -Source $outputDirectory
 
-        if (!$kusto.force -and !($localPackages -imatch $projectName)) {
-            write-host ".\nuget install $projectName -Source $nugetSource -outputdirectory $outputDirectory -verbosity detailed"
-            nuget install $projectName -Source $nugetSource -outputdirectory $outputDirectory -verbosity detailed
+        if ($kusto.force -or !($localPackages -imatch $packageName)) {
+            write-host "nuget install $packageName -Source $nugetSource -outputdirectory $outputDirectory -verbosity detailed"
+            nuget install $packageName -Source $nugetSource -outputdirectory $outputDirectory -verbosity detailed
         }
         else {
-            write-host "$projectName already installed" -ForegroundColor green
+            write-host "$packageName already installed" -ForegroundColor green
         }
 
-        [string]$projectDirectory = "$outputDirectory\$projectName"
+        [string]$projectDirectory = "$outputDirectory\$packageName"
         tree /a /f $projectDirectory
-        $kusto.adalDll = @(get-childitem -Path $projectDirectory -Recurse | where-object FullName -match "net45\\$projectName\.dll" | select-object FullName)[-1]
+        $kusto.adalDll = @(get-childitem -Path $projectDirectory -Recurse | where-object FullName -match "net45\\$packageName\.dll" | select-object FullName)[-1]
 
         write-host "install / output dir: $($projectDirectory)" -ForegroundColor Green
         $kusto.adalDll
         $kusto.adalDll.FullName
-        #$kusto.adalDll = Add-Type -Path $adalDll.FullName
-        $kusto.adalDll = [Reflection.Assembly]::LoadFile($kusto.adalDll.FullName) # Microsoft.IdentityModel.Clients.ActiveDirectory
+        $kusto.adalDll = [Reflection.Assembly]::LoadFile($kusto.adalDll.FullName) 
         $kusto.adalDll
     }
 
-    [void] CreateResultTable() {
+    [KustoObj] CreateResultTable() {
         # not currently handling duplicate column names with case insensitive
         [object]$kusto = $this
         $kusto.resultTable = [collections.arraylist]@()
@@ -97,7 +190,7 @@ class KustoObj {
 
         if (!$kusto.resultObject.tables[0]) {
             write-warning "run query first"
-            return
+            return $this.Pipe()
         }
 
         foreach ($column in ($kusto.resultObject.tables[0].columns)) {
@@ -116,15 +209,26 @@ class KustoObj {
 
             [void]$kusto.resultTable.add($kusto.result)
         }
+
+        return $this.Pipe()
     }
 
-    [void] Exec([string]$query) {
+    [KustoObj] Pipe() {
+        if ($this.pipeLine) {
+            return $this
+        }
+
+        return $null
+    }
+
+    [KustoObj] Exec([string]$query) {
         $this.query = $query
         $this.Exec()
         $this.query = $null
+        return $this.Pipe()
     }
 
-    [void] Exec() {
+    [KustoObj] Exec() {
         [object]$kusto = $this
         $startTime = get-date
         $kusto
@@ -135,12 +239,12 @@ class KustoObj {
 
         if (!$kusto.script -and !$kusto.query) {
             Write-Warning "-script and / or -query should be set. exiting"
-            return
+            return $this.Pipe()
         }
 
         if (!$kusto.cluster -or !$kusto.database) {
             Write-Warning "-cluster and -database have to be set once. exiting"
-            return
+            return $this.Pipe()
         }
 
         if ($kusto.query) {
@@ -170,22 +274,25 @@ class KustoObj {
         }
 
         write-host "results: $($kusto.resultObject.tables[0].rows.count) / $(((get-date) - $startTime).TotalSeconds) seconds to execute" -ForegroundColor DarkCyan
+        return $this.Pipe()
     }
 
-    [void] ExecScript([string]$script, [hashtable]$parameters) {
+    [KustoObj] ExecScript([string]$script, [hashtable]$parameters) {
         $this.script = $script
         $this.parameters = $parameters
         $this.ExecScript()
         $this.script = $null
+        return $this.Pipe()
     }
 
-    [void] ExecScript([string]$script) {
+    [KustoObj] ExecScript([string]$script) {
         $this.script = $script
         $this.ExecScript()
         $this.script = $null
+        return $this.Pipe()
     }
 
-    [void] ExecScript() {
+    [KustoObj] ExecScript() {
         [object]$kusto = $this
         if ($kusto.script.startswith('http')) {
             $destFile = "$pwd\$([io.path]::GetFileName($kusto.script))" -replace '\?.*', ''
@@ -202,14 +309,15 @@ class KustoObj {
         }
     
         if ((test-path $kusto.script)) {
-            $kusto.query = (Get-Content -raw -Path $kusto.script)#.trimend([environment]::newLine) + [environment]::newLine + $kusto.query
+            $kusto.query = (Get-Content -raw -Path $kusto.script)
         }
         else {
             write-error "unknown script:$($kusto.script)"
-            return
+            return $this.Pipe()
         }
 
         $this.Exec()
+        return $this.Pipe()
     }
 
     [void] ExportCsv([string]$exportFile) {
@@ -232,10 +340,10 @@ class KustoObj {
         }
     }
 
-    [void] Import([string]$table) {
+    [KustoObj] Import([string]$table) {
         if (!$this.resultObject.Tables) {
             write-warning 'no results to import'
-            return
+            return $this.Pipe()
         }
 
         [object]$results = $this.resultObject.Tables[0]
@@ -255,26 +363,23 @@ class KustoObj {
         }
 
         $this.Exec(".drop table ['$table'] ifexists")
-        $this.Exec(".create table ['$table'] $formattedHeaders") #(TableName:string, DatabaseName:string, Folder:string, Docstring:string)")
+        $this.Exec(".create table ['$table'] $formattedHeaders")
         $this.Exec(".ingest inline into table ['$table'] <| $($csv.tostring())")
 
-        return
-        $tempFile = "$pwd\import.csv"
-        $this.ExportCsv($tempFile)
-        $this.ImportCsv($tempFile, $table)
-        remove-item $tempFile
+        return $this.Pipe()
     }
 
-    [void] ImportCsv([string]$importFile, [string]$table) {
+    [KustoObj] ImportCsv([string]$importFile, [string]$table) {
         [object]$kusto = $this
         $kusto.table = $table
         $this.ImportCsv($importFile)
+        return $this.Pipe()
     }
 
-    [void] ImportCsv([string]$importFile) {
+    [KustoObj] ImportCsv([string]$importFile) {
         if (!(test-path $importFile) -or !$this.table) {
             write-warning "verify importfile: $importFile and import table: $($this.table)"
-            return
+            return $this.Pipe()
         }
         
         # not working
@@ -282,7 +387,7 @@ class KustoObj {
         #[string]$csv = Get-Content -Raw $importFile -encoding utf8
         #$this.Post($csv)
 
-        $sr = new-object io.streamreader($importFile) # [io.file]::ReadAllLines($importFile)
+        $sr = new-object io.streamreader($importFile) 
         [string]$headers = $sr.ReadLine()
         [text.StringBuilder]$csv = New-Object text.StringBuilder
 
@@ -301,18 +406,19 @@ class KustoObj {
         $formattedHeaders += ")"
 
         $this.Exec(".drop table ['$($this.table)'] ifexists")
-        $this.Exec(".create table ['$($this.table)'] $formattedHeaders") #(TableName:string, DatabaseName:string, Folder:string, Docstring:string)")
+        $this.Exec(".create table ['$($this.table)'] $formattedHeaders") 
         $this.Exec(".ingest inline into table ['$($this.table)'] <| $($csv.tostring())")
+        return $this.Pipe()
     }
 
     [void] Logon($resourceUrl) {
         [object]$kusto = $this
         [object]$authenticationContext = $Null
         [object]$promptBehavior = 0 # 0 auto 1 always
-        [string]$ADauthorityURL = "https://login.microsoftonline.com/$($kusto.tenant)"
+        [string]$ADauthorityURL = "https://login.microsoftonline.com/$($kusto.tenantId)"
 
         if (!$resourceUrl) {
-            write-warning "-resourceUrl required. example: https://{{kusto cluster}}.kusto.windows.net"
+            write-warning "-resourceUrl required. example: https://{{ kusto cluster }}.kusto.windows.net"
             exit
         }
 
@@ -360,12 +466,12 @@ class KustoObj {
         write-verbose "results saved in `$kusto.authenticationResult and `$kusto.token"
     }
 
-    [object] Post([string]$body = "") {
-        # authenticate to aad first to get token
+    hidden [object] Post([string]$body = "") {
+        # authorize aad to get token
         [object]$kusto = $this
         [string]$kustoHost = "$($kusto.cluster).kusto.windows.net"
         [string]$kustoResource = "https://$kustoHost"
-        [string]$csl = "$($kusto.query)"# | limit $($kusto.limit)"
+        [string]$csl = "$($kusto.query)"
     
         if ($body -and ($kusto.table)) {
             $uri = "$kustoResource/v1/rest/ingest/$($kusto.database)/$($kusto.table)?streamFormat=Csv&mappingName=CsvMapping"
@@ -430,21 +536,26 @@ class KustoObj {
 
     [KustoObj] SetCluster([string]$cluster) {
         $this.cluster = $cluster
-        return $this
+        return $this.Pipe()
     }
 
     [KustoObj] SetDatabase([string]$database) {
         $this.database = $database
-        return $this
+        return $this.Pipe()
+    }
+
+    [KustoObj] SetPipe([bool]$enable) {
+        $this.pipeLine = $enable
+        return $this.Pipe()
     }
 
     [KustoObj] SetTable([string]$table) {
         $this.table = $table
-        return $this
+        return $this.Pipe()
     }
-
 }
 
 $global:kusto = [KustoObj]::new()
 $kusto.Exec()
+$kusto | Get-Member
 write-host "use `$kusto object to set properties and run queries. example: `$kusto.Exec('.show operations')" -ForegroundColor Green
