@@ -14,6 +14,7 @@ param(
     [string]$script,
     [string]$clientSecret,
     [string]$clientId,
+    [bool]$pipeLine,
     [string]$tenant = "common",
     [string]$wellknownClientId = "1950a258-227b-4e31-a9cf-717495945fc2", 
     [string]$redirectUri = "urn:ietf:wg:oauth:2.0:oob",
@@ -35,6 +36,7 @@ class KustoObj {
     [bool]$force = $force
     [int]$limit = $limit
     [hashtable]$parameters = $parameters
+    [bool]$pipeLine = $null
     [string]$query = $query
     [string]$redirectUri = $redirectUri
     [object]$result = $null
@@ -89,7 +91,7 @@ class KustoObj {
         $kusto.adalDll
     }
 
-    [void] CreateResultTable() {
+    [KustoObj] CreateResultTable() {
         # not currently handling duplicate column names with case insensitive
         [object]$kusto = $this
         $kusto.resultTable = [collections.arraylist]@()
@@ -97,7 +99,7 @@ class KustoObj {
 
         if (!$kusto.resultObject.tables[0]) {
             write-warning "run query first"
-            return
+            return $this.Pipe()
         }
 
         foreach ($column in ($kusto.resultObject.tables[0].columns)) {
@@ -116,15 +118,26 @@ class KustoObj {
 
             [void]$kusto.resultTable.add($kusto.result)
         }
+
+        return $this.Pipe()
     }
 
-    [void] Exec([string]$query) {
+    [KustoObj] Pipe() {
+        if ($this.pipeLine) {
+            return $this
+        }
+
+        return $null
+    }
+
+    [KustoObj] Exec([string]$query) {
         $this.query = $query
         $this.Exec()
         $this.query = $null
+        return $this.Pipe()
     }
 
-    [void] Exec() {
+    [KustoObj] Exec() {
         [object]$kusto = $this
         $startTime = get-date
         $kusto
@@ -135,12 +148,12 @@ class KustoObj {
 
         if (!$kusto.script -and !$kusto.query) {
             Write-Warning "-script and / or -query should be set. exiting"
-            return
+            return $this.Pipe()
         }
 
         if (!$kusto.cluster -or !$kusto.database) {
             Write-Warning "-cluster and -database have to be set once. exiting"
-            return
+            return $this.Pipe()
         }
 
         if ($kusto.query) {
@@ -170,22 +183,25 @@ class KustoObj {
         }
 
         write-host "results: $($kusto.resultObject.tables[0].rows.count) / $(((get-date) - $startTime).TotalSeconds) seconds to execute" -ForegroundColor DarkCyan
+        return $this.Pipe()
     }
 
-    [void] ExecScript([string]$script, [hashtable]$parameters) {
+    [KustoObj] ExecScript([string]$script, [hashtable]$parameters) {
         $this.script = $script
         $this.parameters = $parameters
         $this.ExecScript()
         $this.script = $null
+        return $this.Pipe()
     }
 
-    [void] ExecScript([string]$script) {
+    [KustoObj] ExecScript([string]$script) {
         $this.script = $script
         $this.ExecScript()
         $this.script = $null
+        return $this.Pipe()
     }
 
-    [void] ExecScript() {
+    [KustoObj] ExecScript() {
         [object]$kusto = $this
         if ($kusto.script.startswith('http')) {
             $destFile = "$pwd\$([io.path]::GetFileName($kusto.script))" -replace '\?.*', ''
@@ -206,10 +222,11 @@ class KustoObj {
         }
         else {
             write-error "unknown script:$($kusto.script)"
-            return
+            return $this.Pipe()
         }
 
         $this.Exec()
+        return $this.Pipe()
     }
 
     [void] ExportCsv([string]$exportFile) {
@@ -430,19 +447,23 @@ class KustoObj {
 
     [KustoObj] SetCluster([string]$cluster) {
         $this.cluster = $cluster
-        return $this
+        return $this.Pipe()
     }
 
     [KustoObj] SetDatabase([string]$database) {
         $this.database = $database
-        return $this
+        return $this.Pipe()
+    }
+
+    [KustoObj] SetPipe([bool]$enable) {
+        $this.pipeLine = $enable
+        return $this.Pipe()
     }
 
     [KustoObj] SetTable([string]$table) {
         $this.table = $table
-        return $this
+        return $this.Pipe()
     }
-
 }
 
 $global:kusto = [KustoObj]::new()
