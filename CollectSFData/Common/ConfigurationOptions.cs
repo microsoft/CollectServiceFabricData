@@ -154,8 +154,6 @@ namespace CollectSFData
 
         public string SaveConfiguration { get; set; }
 
-        public string Schema { get; set; }
-
         public string StartTimeStamp
         {
             get => _startTime;
@@ -767,6 +765,12 @@ namespace CollectSFData
             if (!IsKustoConfigured() & !IsLogAnalyticsConfigured() & !IsCacheLocationPreConfigured())
             {
                 Log.Error($"kusto or log analytics or cacheLocation must be configured for file destination.");
+                retval = false;
+            }
+
+            if (!IsKustoConfigured() & !IsLogAnalyticsConfigured() & UseMemoryStream)
+            {
+                Log.Error($"kusto or log analytics must be configured for UseMemoryStream.");
                 retval = false;
             }
 
