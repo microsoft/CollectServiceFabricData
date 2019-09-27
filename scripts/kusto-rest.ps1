@@ -108,7 +108,6 @@ param(
     [string]$clientId,
     [string]$tenantId = "common",
     [bool]$pipeLine,
-    [string]$tenant = "common",
     [string]$wellknownClientId = "1950a258-227b-4e31-a9cf-717495945fc2", 
     [string]$redirectUri = "urn:ietf:wg:oauth:2.0:oob",
     #[string]$resourceUrl, # = "https://{{kusto cluster}}.kusto.windows.net"
