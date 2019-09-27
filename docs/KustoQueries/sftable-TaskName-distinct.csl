@@ -1,0 +1,7 @@
+// sf table query
+
+declare query_parameters (T:string);
+TableView(table(T))
+| facet by TaskName
+
+
