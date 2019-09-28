@@ -11,7 +11,7 @@ param(
     $apiKey = "gprkey"
 )
 
-if(!($env:path -contains ";$pwd;$psscriptroot")) { $env:path += ";$pwd;$psscriptroot" } 
+if(!($env:path.contains(";$pwd;$psscriptroot"))) { $env:path += ";$pwd;$psscriptroot" } 
 
 if(!(test-path nuget))
 {
