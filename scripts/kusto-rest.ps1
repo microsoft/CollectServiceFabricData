@@ -166,8 +166,11 @@
          [io.directory]::createDirectory($outputDirectory)
          [string]$packageDirectory = "$outputDirectory\$packageName"
          [string]$edition = "net45"
+         
          if($global:PSVersionTable.PSEdition -eq "Core") {
-            $edition = "netstandard1.3"
+            write-error "not working with core"
+            exit
+            #$edition = "netstandard1.3"
          }
          $kusto.adalDllLocation = @(get-childitem -Path $packageDirectory -Recurse | where-object FullName -match "$edition\\$packageName\.dll" | select-object FullName)[-1].FullName
  
@@ -608,7 +611,7 @@
             return $sourceContent
         }
         $columnList = (Get-Member -InputObject $sourceContent[0] -View Extended).Name
-        write-host "checking column list $columnList"
+        write-verbose "checking column list $columnList"
         $populatedColumnList = [collections.arraylist]@()
 
         foreach($column in $columnList) {
@@ -616,8 +619,6 @@
                 $populatedColumnList += $column
             }
         }
-
-        #return $sourceContent
         return ($sourceContent | select-object $populatedColumnList)
      }
 
