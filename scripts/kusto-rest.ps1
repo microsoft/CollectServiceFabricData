@@ -97,6 +97,8 @@
      [string]$query = '.show tables',
      [string]$cluster,
      [string]$database,
+     [bool]$fixDuplicateColumns,
+     [bool]$removeEmptyColumns,
      [string]$table,
      [string]$adalDllLocation,
      [string]$resultFile, # = ".\result.json",
@@ -126,12 +128,14 @@
      hidden [string]$clientSecret = $clientSecret
      [string]$cluster = $cluster
      [string]$database = $database
+     [bool]$fixDuplicateColumns = $fixDuplicateColumns
      [bool]$force = $force
      [int]$limit = $limit
      [hashtable]$parameters = $parameters
      [bool]$pipeLine = $null
      [string]$query = $query
      hidden [string]$redirectUri = $redirectUri
+     [bool]$removeEmptyColumns = $removeEmptyColumns
      [object]$result = $null
      [object]$resultObject = $null
      [object]$resultTable = $null
@@ -159,13 +163,13 @@
              return
          }
  
-         if(!(test-path $outputDirectory))
-         {
-             [io.directory]::createDirectory($outputDirectory)
-         }
- 
+         [io.directory]::createDirectory($outputDirectory)
          [string]$packageDirectory = "$outputDirectory\$packageName"
-         $kusto.adalDllLocation = @(get-childitem -Path $packageDirectory -Recurse | where-object FullName -match "net45\\$packageName\.dll" | select-object FullName)[-1].FullName
+         [string]$edition = "net45"
+         if($global:PSVersionTable.PSEdition -eq "Core") {
+            $edition = "netstandard1.3"
+         }
+         $kusto.adalDllLocation = @(get-childitem -Path $packageDirectory -Recurse | where-object FullName -match "$edition\\$packageName\.dll" | select-object FullName)[-1].FullName
  
          if(!$kusto.adalDllLocation) {
              if (!($env:path.contains(";$pwd;$env:temp"))) { 
@@ -230,6 +234,7 @@
  
              [void]$kusto.resultTable.add($resultCopy)
          }
+         $kusto.resultTable = $this.RemoveEmptyResults($kusto.resultTable)
          return $this.Pipe()
      }
  
@@ -346,15 +351,21 @@
  
      [void] ExportCsv([string]$exportFile) {
          $this.CreateResultTable()
+         [io.directory]::createDirectory([io.path]::getDirectoryName($exportFile))
          $this.resultTable | export-csv -notypeinformation $exportFile
      }
  
      [void] ExportJson([string]$exportFile) {
          $this.CreateResultTable()
+         [io.directory]::createDirectory([io.path]::getDirectoryName($exportFile))
          $this.resultTable | convertto-json -depth 99 | out-file $exportFile
      }
  
      [string] FixColumns([string]$sourceContent) {
+        if(!($this.fixDuplicateColumns)) {
+            return $sourceContent
+        }
+
         [hashtable]$tempTable = @{}
         $matches = [regex]::Matches($sourceContent, '"ColumnName":"(?<columnName>.+?)"', 1)
 
@@ -381,6 +392,7 @@
                 catch {
                     $count++
                     $newColumn = "$($column)_$($count)"
+                    $error.Clear()
                 }
             }
         }
@@ -582,11 +594,33 @@
              return ($this.FixColumns($kusto.result.content) | convertfrom-json)
          }
          catch {
-             write-warning "error converting json result to object. unparsed results in `$kusto.result"
+             write-warning "error converting json result to object. unparsed results in `$kusto.result`r`n$error"
+             
+             if(!$this.fixDuplicateColumns) {
+                 write-warning "$kusto.fixDuplicateColumns = $true may resolve."
+             }
              return ($kusto.result.content)
          }
      }
  
+     [collections.arrayList] RemoveEmptyResults([collections.arrayList]$sourceContent) {
+        if(!$this.removeEmptyColumns -or !$sourceContent -or $sourceContent.count -eq 0) {
+            return $sourceContent
+        }
+        $columnList = (Get-Member -InputObject $sourceContent[0] -View Extended).Name
+        write-host "checking column list $columnList"
+        $populatedColumnList = [collections.arraylist]@()
+
+        foreach($column in $columnList) {
+            if(@($sourceContent | where-object $column -ne "").Count -gt 0) {
+                $populatedColumnList += $column
+            }
+        }
+
+        #return $sourceContent
+        return ($sourceContent | select-object $populatedColumnList)
+     }
+
      [KustoObj] SetCluster([string]$cluster) {
          $this.cluster = $cluster
          return $this.Pipe()
