@@ -1,10 +1,16 @@
 name: CI
 
+env:
+  artifacts_path: CollectSFData\bin\x64\artifacts
+  release_path: CollectSFData\bin\x64\release
+  project_name: CollectSFData
+  github_owner: jagilber # todo: set to: microsoft
+
 on:
   push:
     branches:
       - master
-      - jagilber
+      - jagilber # todo: set to: develop
 jobs:
   build:
     runs-on: windows-latest
@@ -12,17 +18,7 @@ jobs:
     - uses: actions/checkout@v1
 
     - name: environment
-      run: |
-        set
-        echo #not working
-        echo #https://help.github.com/en/articles/development-tools-for-github-actions#set-an-environment-variable-set-env
-        echo ::set-env release_path=%release_path%
-        echo ::set-env artifacts_path=%artifacts_path%
-        echo ::set-env project_name=%project_name%
-      env:
-        artifacts_path: CollectSFData\bin\x64\artifacts
-        release_path: CollectSFData\bin\x64\release
-        project_name: CollectSFData
+      run: set
       
     - name: nuget download
       run: curl https://dist.nuget.org/win-x86-commandline/latest/nuget.exe --output nuget.exe
@@ -31,47 +27,47 @@ jobs:
       run: nuget.exe restore -Verbosity Detailed -NonInteractive -DirectDownload
 
     - name: nuget build / pack
-      run: nuget.exe pack CollectSFData\CollectSFData.csproj -Verbosity Detailed -outputdirectory CollectSFData\bin\x64\artifacts -NonInteractive -Build -Properties Configuration=Release
+      run: nuget.exe pack ${{ project_name }}\${{ project_name }}.csproj -Verbosity Detailed -outputdirectory ${{ artifacts_path }} -NonInteractive -Build -Properties Configuration=Release
 
     - name: build output
-      run: dir CollectSFData\bin\x64\Release /s
+      run: dir ${{ release_path }} /s
 
     - name: copy artifacts
       run: |
-        copy CollectSFData\bin\x64\Release\*.exe CollectSFData\bin\x64\artifacts
-        copy CollectSFData\bin\x64\Release\*.dll CollectSFData\bin\x64\artifacts
+        copy ${{ release_path }}\*.exe ${{ artifacts_path }}
+        copy ${{ release_path }}\*.dll ${{ artifacts_path }}
 
     - name: artifacts output
-      run: dir CollectSFData\bin\x64\artifacts /s
+      run: dir ${{ artifacts_path }} /s
 
     - name: nuget push
       run: |
         echo #not working needs codesign
-        echo nuget.exe push CollectSFData\bin\x64\artifacts\*.nupkg %nuget_api_key% -Verbosity Detailed -Source https://api.nuget.org/v3/index.json -SkipDuplicate -NonInteractive
+        echo nuget.exe push ${{ artifacts_path }}\*.nupkg %nuget_api_key% -Verbosity Detailed -Source https://api.nuget.org/v3/index.json -SkipDuplicate -NonInteractive
         echo # working
         echo nuget.exe sources add -Name 'GPR' -Verbosity Detailed -Source https://nuget.pkg.github.com/%github_owner%/index.json -NonInteractive -UserName %GITHUB_ACTOR% -Password %GITHUB_TOKEN%
         echo nuget.exe setapikey %nuget_api_key% -Source 'GPR' -Verbosity Detailed -NonInteractive
-        echo nuget.exe push CollectSFData\bin\x64\artifacts\*.nupkg -Verbosity Detailed -Source 'GPR' -SkipDuplicate -NonInteractive -apikey %nuget_api_key%
+        echo nuget.exe push ${{ artifacts_path }}\*.nupkg -Verbosity Detailed -Source 'GPR' -SkipDuplicate -NonInteractive -apikey %nuget_api_key%
         
       env: 
         nuget_api_key: ${{ secrets.ACTIONS_NUGET_PUSH_API_KEY }}
         nuget_token: ${{ secrets.ACTIONS_NUGET_PUSH_TOKEN }}
-        github_owner: jagilber # microsoft
+        github_owner: ${{ github_owner }}
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     - name: upload artifacts
       uses: actions/upload-artifact@master
       with:
         name: Release
-        path: CollectSFData\bin\x64\artifacts
+        path: ${{ artifacts_path }}
 
     - name: upload release
       shell: powershell
       run: | 
-        md CollectSFData\bin\x64\release_upload
-        copy CollectSFData\bin\x64\Release\*.exe CollectSFData\bin\x64\release_upload
-        copy CollectSFData\bin\x64\Release\*.dll CollectSFData\bin\x64\release_upload
-        compress-archive -path CollectSFData\bin\x64\release_upload -destinationpath CollectSFData\bin\x64\release.zip -force
-        scripts\git-upload-release.ps1 -token $env:GITHUB_TOKEN -releaseName CollectSFData -file CollectSFData\bin\x64\release.zip
+        md ${{ release_path }}_upload
+        copy ${{ release_path }}\*.exe ${{ release_path }}_upload
+        copy ${{ release_path }}\*.dll ${{ release_path }}_upload
+        compress-archive -path ${{ release_path }}_upload -destinationpath ${{ release_path }}.zip -force
+        scripts\git-upload-release.ps1 -token $env:GITHUB_TOKEN -releaseName ${{ project_name }} -file ${{ release_path }}.zip
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
