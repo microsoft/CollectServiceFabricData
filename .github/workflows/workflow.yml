@@ -4,7 +4,7 @@ env:
   artifacts_path: CollectSFData\bin\x64\artifacts
   release_path: CollectSFData\bin\x64\release
   project_name: CollectSFData
-  github_owner: jagilber # todo: set to: microsoft
+  github_owner: ${{ github.event.repository.owner.name }}
 
 on:
   push:
@@ -45,9 +45,9 @@ jobs:
         echo #not working needs codesign
         echo nuget.exe push %artifacts_path%\*.nupkg %nuget_api_key% -Verbosity Detailed -Source https://api.nuget.org/v3/index.json -SkipDuplicate -NonInteractive
         echo # working
-        echo nuget.exe sources add -Name 'GPR' -Verbosity Detailed -Source https://nuget.pkg.github.com/%github_owner%/index.json -NonInteractive -UserName %GITHUB_ACTOR% -Password %GITHUB_TOKEN%
-        echo nuget.exe setapikey %nuget_api_key% -Source 'GPR' -Verbosity Detailed -NonInteractive
-        echo nuget.exe push %artifacts_path%\*.nupkg -Verbosity Detailed -Source 'GPR' -SkipDuplicate -NonInteractive -apikey %nuget_api_key%
+        nuget.exe sources add -Name 'GPR' -Verbosity Detailed -Source https://nuget.pkg.github.com/%github_owner%/index.json -NonInteractive -UserName %GITHUB_ACTOR% -Password %GITHUB_TOKEN%
+        nuget.exe setapikey %nuget_api_key% -Source 'GPR' -Verbosity Detailed -NonInteractive
+        nuget.exe push %artifacts_path%\*.nupkg -Verbosity Detailed -Source 'GPR' -SkipDuplicate -NonInteractive -apikey %nuget_api_key%
         
       env: 
         nuget_api_key: ${{ secrets.ACTIONS_NUGET_PUSH_API_KEY }}
