@@ -9,7 +9,7 @@ For additional examples, type 'collectsfdata.exe -ex'
 
 ```text
 collectsfdata.exe -type trace -s "<% sasKey %>" -kc "https://<% kusto ingest name %>.<% location %>.kusto.windows.net/<% kusto database %>" -kt "<% kusto table name %>"
-collectsfdata.exe -type trace -s "https://sflogsxxxxxxxxxxxxx.blob.core.windows.net/?sv=2017-11-09&ss=bfqt&srt=sco&sp=rwdlacup&se=2018-12-05T23:51:08Z&st=2018-11-05T15:51:08Z&spr=https&sig=VYT1J9Ene1NktyCgsu1gEH%2FN%2BNH9zRhJO05auUPQkSA%3D" -kc https://ingest-kustodb.eastus.kusto.windows.net/serviceFabricDB -kt "fabric_traces"
+collectsfdata.exe -type trace -s "https://***REMOVED***xxxxxxxxxxxxx.blob.core.windows.net/?sv=2017-11-09&ss=bfqt&srt=sco&sp=rwdlacup&se=2018-12-05T23:51:08Z&st=2018-11-05T15:51:08Z&spr=https&sig=VYT1J9Ene1NktyCgsu1gEH%2FN%2BNH9zRhJO05auUPQkSA%3D" -kc https://ingest-kustodb.eastus.kusto.windows.net/serviceFabricDB -kt "fabric_traces"
 ```
 
 ## Log Analytics
@@ -26,13 +26,13 @@ collectsfdata.exe -type trace -s "<% sasKey %>" -laid  -lak -lan
 ### example command line to download traces with minimal arguments
 
 ```text
-collectsfdata.exe -type trace -cache  c:\temp\sflogs -s "<% sasKey %>"
+collectsfdata.exe -type trace -cache  c:\temp\***REMOVED*** -s "<% sasKey %>"
 ```
 
 ### example command line to download traces with full arguments
 
 ```text
-collectsfdata.exe -type trace -cache  c:\temp\sflogs -s "<% sasKey %>" -from "01/12/2019 09:40:08 -05:00" -to "01/12/2019 13:40:00 -05:00"
+collectsfdata.exe -type trace -cache  c:\temp\***REMOVED*** -s "<% sasKey %>" -from "01/12/2019 09:40:08 -05:00" -to "01/12/2019 13:40:00 -05:00"
 ```
 
 ### example command line with existing default configuration file 'collectsfdata.options.json' populated

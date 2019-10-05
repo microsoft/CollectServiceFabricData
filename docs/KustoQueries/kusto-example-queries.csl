@@ -192,7 +192,8 @@ let endTime = datetime('2019-11-14T00:30');
 //| where CounterName contains "#Replicas" 
 //| where CounterName contains "#Service Types" 
 //| where CounterName contains "# of Active Callback"
-//| where CounterName contains "" 
+//| where CounterName contains "exceptions"
+//| where CounterName contains "Invocations/Sec"
 //| where CounterName contains "Items in the job queue"
 //| where NodeName == "_t1eu_5"
 //| where Timestamp between(todatetime("12/08/2018 23:00:00.000")..todatetime("12/09/2018 00:30:00.000"))
