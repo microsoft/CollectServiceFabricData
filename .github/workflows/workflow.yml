@@ -43,7 +43,7 @@ jobs:
     - name: nuget push
       run: |
         echo #not working needs codesign
-        echo nuget.exe push %artifacts_path%\*.nupkg %nuget_api_key% -Verbosity Detailed -Source https://api.nuget.org/v3/index.json -SkipDuplicate -NonInteractive
+        nuget.exe push %artifacts_path%\*.nupkg %nuget_api_key% -Verbosity Detailed -Source https://api.nuget.org/v3/index.json -SkipDuplicate -NonInteractive
         echo # working in jagilber
         echo nuget.exe sources add -Name 'GPR' -Verbosity Detailed -Source https://nuget.pkg.github.com/%github_owner%/index.json -NonInteractive -UserName %GITHUB_ACTOR% -Password %GITHUB_TOKEN%
         echo nuget.exe setapikey %nuget_api_key% -Source 'GPR' -Verbosity Detailed -NonInteractive
