@@ -10,7 +10,7 @@ on:
   push:
     branches:
       - master
-      - jagilber # todo: set to: develop
+      - preview
 jobs:
   build:
     runs-on: windows-latest
