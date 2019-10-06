@@ -67,6 +67,6 @@ jobs:
         copy "$($env:release_path)\*.exe" "$($env:release_path)_upload"
         copy "$($env:release_path)\*.dll" "$($env:release_path)_upload"
         compress-archive -path "$($env:release_path)_upload" -destinationPath "$($env:release_path).zip" -force
-        scripts\git-upload-release.ps1 -token $env:GITHUB_TOKEN -releaseName $env:project_name -file "$($env:release_path).zip"
+        scripts\git-upload-release.ps1 -token $env:GITHUB_TOKEN -releaseName $env:project_name -file "$($env:release_path)\$($env:project_name).zip"
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
