@@ -56,7 +56,7 @@ CollectSFData is a console only utility that has no install.
 Use the below steps to setup environment for use with CollectSFData.
 
 1. ensure machine executing utility has comparable [requirements](#requirements)
-2. download latest build [collectsfdata.zip](/releases/tag/CollectSFData-latest)  
+2. download latest build [collectsfdata.zip](https://github.com/microsoft/CollectServiceFabricData/releases/latest)  
 3. extract zip to working directory
 4. from extracted directory, use command prompt / powershell to execute utility
 5. [configuration](#configuration) can be passed as command line arguments or in json files.
