@@ -1,5 +1,5 @@
-// ***REMOVED*** issue query of Type and/or Text or Any
-.create function ifnotexists with (docstring = '[T:string] where T=table name. function to search service fabric ***REMOVED*** for known issues. good place to start', folder = '***REMOVED***/_start-here')
+// sflogs issue query of Type and/or Text or Any
+.create function ifnotexists with (docstring = '[T:string] where T=table name. function to search service fabric sflogs for known issues. good place to start', folder = 'sflogs/_start-here')
     KnownIssues (T:string) {
         // format results
         let FormatResults = (T:(Timestamp:datetime,

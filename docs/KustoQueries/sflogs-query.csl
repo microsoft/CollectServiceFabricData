@@ -1,4 +1,4 @@
-// ***REMOVED*** general query of Type and Text
+// sflogs general query of Type and Text
 
 declare query_parameters (T:string, 
         nodeName:string = "",
