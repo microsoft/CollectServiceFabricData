@@ -215,9 +215,9 @@ example clean configuration with Kusto
   "SasKey": "[account sas uri|service sas uri|sas uri connection string]",
   "StartTimeStamp": null,
   "EndTimeStamp": null,
-  "KustoCluster": "https://<kusto ingest url>.<location>.kusto.windows.net/<kusto database>",
+  "KustoCluster": "https://<% kusto ingest name%>.<location>.kusto.windows.net/<% kusto database %>",
   "KustoRecreateTable": false,
-  "KustoTable": "<%kusto table name%>"
+  "KustoTable": "<% kusto table name %>"
 }
 ```
 
