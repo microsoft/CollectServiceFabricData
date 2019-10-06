@@ -43,8 +43,8 @@ jobs:
     - name: nuget push
       run: |
         echo #not working needs codesign
-        nuget.exe push %artifacts_path%\*.nupkg %nuget_api_key% -Verbosity Detailed -Source https://api.nuget.org/v3/index.json -SkipDuplicate -NonInteractive
-        echo # working in jagilber
+        echo nuget.exe push %artifacts_path%\*.nupkg %nuget_api_key% -Verbosity Detailed -Source https://api.nuget.org/v3/index.json -SkipDuplicate -NonInteractive
+        echo # working in fork, GPR blocked on upstream 
         echo nuget.exe sources add -Name 'GPR' -Verbosity Detailed -Source https://nuget.pkg.github.com/%github_owner%/index.json -NonInteractive -UserName %GITHUB_ACTOR% -Password %GITHUB_TOKEN%
         echo nuget.exe setapikey %nuget_api_key% -Source 'GPR' -Verbosity Detailed -NonInteractive
         echo nuget.exe push %artifacts_path%\*.nupkg -Verbosity Detailed -Source 'GPR' -SkipDuplicate -NonInteractive -apikey %nuget_api_key%
@@ -66,7 +66,7 @@ jobs:
         md "$($env:release_path)_upload"
         copy "$($env:release_path)\*.exe" "$($env:release_path)_upload"
         copy "$($env:release_path)\*.dll" "$($env:release_path)_upload"
-        compress-archive -path "$($env:release_path)_upload" -destinationPath "$($env:release_path).zip" -force
-        scripts\git-upload-release.ps1 -token $env:GITHUB_TOKEN -releaseName $env:project_name -file "$($env:release_path).zip"
+        compress-archive -path "$($env:release_path)_upload" -destinationPath "$($env:release_path)\$($env:project_name).zip" -force
+        scripts\git-upload-release.ps1 -token $env:GITHUB_TOKEN -releaseName $env:project_name -file "$($env:release_path)\$($env:project_name).zip"
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

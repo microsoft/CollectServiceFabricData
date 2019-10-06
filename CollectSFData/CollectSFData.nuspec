@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
     <metadata>
     <id>Microsoft.ServiceFabric.Support.CollectSFData</id>
-    <version>0.0.1</version>
+    <version>0.0.1-prerelease</version>
     <title>CollectSFData</title>
     <authors>Microsoft, sedwards, jagilber</authors>
     <owners>Microsoft servicefabric</owners>
