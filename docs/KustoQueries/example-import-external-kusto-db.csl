@@ -1,8 +1,8 @@
 //https://docs.microsoft.com/en-us/azure/kusto/management/data-ingestion/
 
 .drop table TestTable
-.set-or-append TestTable <| cluster("kustodb.eastus.kusto.windows.net").database("kusto1").table("***REMOVED***")
+.set-or-append TestTable <| cluster("kustoCluster.eastus.kusto.windows.net").database("serviceFabricDatabase").table("trace_serviceFabricLogs")
 | where NodeName == "_nt0_0"
 
 // can show operation status using operationid outputted from above
-.show operations | where OperationId == "7614bb45-dc4a-4feb-843b-3e9de4d09a3e"
+.show operations | where OperationId == "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"

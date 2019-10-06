@@ -1,0 +1,47 @@
+name: CI
+
+env:
+  artifacts_path: CollectSFData\bin\x64\artifacts
+  release_path: CollectSFData\bin\x64\release
+  project_name: CollectSFData
+  github_owner: ${{ github.event.repository.owner.name }}
+
+on:
+  push:
+    branches:
+      - dev
+      - jagilber
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v1
+
+    - name: environment
+      run: set
+      
+    - name: nuget download
+      run: curl https://dist.nuget.org/win-x86-commandline/latest/nuget.exe --output nuget.exe
+
+    - name: nuget restore
+      run: nuget.exe restore -Verbosity Detailed -NonInteractive -DirectDownload
+
+    - name: nuget build / pack
+      run: nuget.exe pack %project_name%\%project_name%.csproj -Verbosity Detailed -outputdirectory %artifacts_path% -NonInteractive -Build -Properties Configuration=Release
+
+    - name: build output
+      run: dir %release_path% /s
+
+    - name: copy artifacts
+      run: |
+        copy %release_path%\*.exe %artifacts_path%
+        copy %release_path%\*.dll %artifacts_path%
+
+    - name: artifacts output
+      run: dir %artifacts_path% /s
+
+    - name: upload artifacts
+      uses: actions/upload-artifact@v1
+      with:
+        name: Release
+        path: CollectSFData\bin\x64\artifacts
