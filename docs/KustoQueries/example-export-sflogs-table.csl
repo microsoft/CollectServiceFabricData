@@ -12,7 +12,7 @@
     includeHeaders=all,
     encoding =UTF8NoBOM
   )
-<| ['118110519307735'] 
+<| ['trace_serviceFabricLogs'] 
 | where Timestamp > todatetime("2018-11-06T14:50:00")
 | where Timestamp < todatetime("2018-11-06T15:10:00")
 | order by Timestamp asc

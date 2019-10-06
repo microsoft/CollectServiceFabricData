@@ -13,7 +13,7 @@
 
 CollectSFData is a .net command-line utility to assist with the download of Azure Service Fabric diagnostic data from the configured Azure storage account.
 Optionally, CollectSFData can be configured to ingest downloaded data into a configured [Azure Data Explorer](https://docs.microsoft.com/en-us/azure/data-explorer/) (Kusto) database or Log Analytics (OMS) for analysis.
-See [requirements](../docs/requirements.md), [setup](../docs/setup.md) and [configuration](../docs/configuration.md) for additional information.
+See [docs](/docs) and [configurationFiles](/configurationFiles) for additional information.
 
 Service Fabric diagnostic data that can be enumerated / downloaded from configured storage account:
 
@@ -68,7 +68,8 @@ If using Kusto, an existing online Kusto database with authentication is require
 
 - Existing online Kusto database. See [Create an Azure Data Explorer cluster](https://docs.microsoft.com/en-us/azure/data-explorer/create-cluster-database-portal) if creating a new cluster.
 - Authentication to Kusto database. This can be interactive or non-interactive using an Azure application id / spn.
-- Resource id should be your Kusto cluster URL, e.g. https://mycluster.kusto.windows.net or https://mycluster.kustomfa.windows.net.
+- Resource id should be your Kusto cluster URL, e.g. https://mycluster.kusto.windows.net or https://mycluster.kustomfa.windows.net.  
+- [Azure Data Explorer Pricing](https://azure.microsoft.com/en-us/pricing/details/data-explorer/).
 
 ### CollectSFData Setup with Log Analytics
 
@@ -160,7 +161,7 @@ Options:
   -nf|--nodeFilter                   [string] string / regex Filter on node name or any string in blob url
                                          (case-insensitive comparison)
   -ruri|--resourceUri                [string] resource uri / resource id used by microsoft internal support for tracking.
-  -s|--sasKey                        [string] source blob SAS key required to access service fabric ***REMOVED***
+  -s|--sasKey                        [string] source blob SAS key required to access service fabric sflogs
                                          blob storage.
   -save|--saveConfiguration          [string] file name and path to save current configuration
   -from|--start                      [DateTime] start time range to collect data from.
@@ -179,7 +180,7 @@ https://github.com/microsoft/CollectServiceFabricData
 ### Configuration File options
 
 Instead of or in addition to using command line arguments, default and specified json configuration files can be used. Arguments in the json configuration files are not case sensitive.  
-For additional json configuration files see [configurationFiles](../configurationFiles).
+For additional json configuration files see [configurationFiles](/configurationFiles).
 
 ### Default JSON configuration file
 
@@ -195,14 +196,14 @@ Some basic examples on how to use arguments and configuration files. For additio
 
 ```text
 collectsfdata.exe -type trace -s "<% sasKey %>" -kc "https://<% kusto ingest name %>.<% location %>.kusto.windows.net/<% kusto database %>" -kt "<% kusto table name %>"
-collectsfdata.exe -type trace -s "https://***REMOVED***xxxxxxxxxxxxx.blob.core.windows.net/?sv=2017-11-09&ss=bfqt&srt=sco&sp=rwdlacup&se=2018-12-05T23:51:08Z&st=2018-11-05T15:51:08Z&spr=https&sig=VYT1J9Ene1NktyCgsu1gEH%2FN%2BNH9zRhJO05auUPQkSA%3D" -kc https://ingest-kustodb.eastus.kusto.windows.net/serviceFabricDB -kt "fabric_traces"
+collectsfdata.exe -type trace -s "https://sflogsxxxxxxxxxxxxx.blob.core.windows.net/?sv=2017-11-09&ss=bfqt&srt=sco&sp=rwdlacup&se=2018-12-05T23:51:08Z&st=2018-11-05T15:51:08Z&spr=https&sig=VYT1J9Ene1NktyCgsu1gEH%2FN%2BNH9zRhJO05auUPQkSA%3D" -kc https://ingest-kustodb.eastus.kusto.windows.net/serviceFabricDB -kt "fabric_traces"
 ```
 
 ### Example Log Analytics with minimal arguments
 
 ```text
 collectsfdata.exe -type trace -s "<% sasKey %>" -kc "https://<% kusto ingest name %>.<% location %>.kusto.windows.net/<% kusto database %>" -kt "<% kusto table name %>"
-collectsfdata.exe -type trace -s "https://***REMOVED***xxxxxxxxxxxxx.blob.core.windows.net/?sv=2017-11-09&ss=bfqt&srt=sco&sp=rwdlacup&se=2018-12-05T23:51:08Z&st=2018-11-05T15:51:08Z&spr=https&sig=VYT1J9Ene1NktyCgsu1gEH%2FN%2BNH9zRhJO05auUPQkSA%3D" -kc https://ingest-kustodb.eastus.kusto.windows.net/serviceFabricDB -kt "fabric_traces"
+collectsfdata.exe -type trace -s "https://sflogsxxxxxxxxxxxxx.blob.core.windows.net/?sv=2017-11-09&ss=bfqt&srt=sco&sp=rwdlacup&se=2018-12-05T23:51:08Z&st=2018-11-05T15:51:08Z&spr=https&sig=VYT1J9Ene1NktyCgsu1gEH%2FN%2BNH9zRhJO05auUPQkSA%3D" -kc https://ingest-kustodb.eastus.kusto.windows.net/serviceFabricDB -kt "fabric_traces"
 ```
 
 ### Example JSON configuration file options

@@ -25,7 +25,7 @@
     $kusto.SetDatabase($database)
     $kusto.SetCluster($cluster)
     $kusto.parameters = @{'T'= $table}
-    $kusto.ExecScript("..\docs\kustoqueries\***REMOVED***-table-info.csl", $kusto.parameters)
+    $kusto.ExecScript("..\docs\kustoqueries\sflogs-table-info.csl", $kusto.parameters)
 
 .EXAMPLE 
     $kusto.SetTable("test_$env:USERNAME").Import()
