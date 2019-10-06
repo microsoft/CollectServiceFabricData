@@ -2,10 +2,10 @@
 // SF PERFORMANCE COUNTERS
 //
 
-// perf counter table query
-let startTime = datetime('2019-04-14T17:00');
-let endTime = datetime('2019-11-14T00:30');
-'%kusto table name%'
+let startTime = ago(7d);
+let endTime = now();
+let T = ['counter_serviceFabricLogs'];
+T
 | where Timestamp between (startTime .. endTime)
 | where CounterName contains "Avg. Disk Queue Length" and CounterName contains "c:"
 //| where CounterName contains "% Idle Time" and CounterName contains "c:"
@@ -34,8 +34,7 @@ let endTime = datetime('2019-11-14T00:30');
 //| where CounterName contains "exceptions"
 //| where CounterName contains "Invocations/Sec"
 //| where CounterName contains "Items in the job queue"
-//| where NodeName == "_t1eu_5"
-//| where Timestamp between(todatetime("12/08/2018 23:00:00.000")..todatetime("12/09/2018 00:30:00.000"))
+//| where NodeName == "_nt0_0"
 //| extend disk = extract(@"PhysicalDisk\(\d (?P<disk>.+:)\)\\Avg. Disk Queue Length", 1, CounterName)
 //| summarize percentiles(CounterValue,5,50,95) by xtime=bin(Timestamp,1m), NodeName //CounterName, disk
 //| where CounterValue > 75

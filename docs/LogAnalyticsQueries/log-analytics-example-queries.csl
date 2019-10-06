@@ -157,11 +157,9 @@ let endTime = datetime('2019-05-14T00:30');
 //| where CounterName_s contains "# of Active Callback"
 //| where CounterName_s contains "" 
 //| where CounterName_s contains "Items in the job queue"
-//| where NodeName_s == "_t1eu_5"
-//| where Timestamp_t between(todatetime("12/08/2018 23:00:00.000")..todatetime("12/09/2018 00:30:00.000"))
+//| where NodeName_s == "_nt0_0"
 //| extend disk = extract(@"PhysicalDisk\(\d (?P<disk>.+:)\)\\Avg. Disk Queue Length", 1, CounterName_s)
 //| summarize percentiles(CounterValue_d,5,50,95) by xtime=bin(Timestamp_t,1m), NodeName_s //CounterName_s, disk
-//| where CounterValue_d > 75
 | sample 5000
 | summarize avg(CounterValue_d) by xtime=bin(Timestamp_t,1m), NodeName_s //CounterName_s, NodeName_s, disk
 | render timechart;
