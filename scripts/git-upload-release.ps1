@@ -10,7 +10,7 @@ param(
     $branch = $null,
     $releaseName = "",
     $releaseDescription = "$releaseName $(get-date)",
-    $tagName = "$releaseName",
+    $tagName = "$releaseName-$((get-date -Format o).replace(":","-").replace(".","-"))",
     $prerelease = $branch -ne "master",
     $file = $null
 )
