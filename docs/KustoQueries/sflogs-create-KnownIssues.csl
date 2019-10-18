@@ -99,5 +99,6 @@
         TextContains(T, "health check fail", "health check failed"),
         TypeContains(T, "crash dumps in storage account", "crashdumpfound"),
         TypeOrTextContains(T, "exception", "exception"),
-        TextContains(T, "cancellation token issue? (not confirmed)", "RunAsync is taking longer then expected time (15s) to cancel.")
+        TextContains(T, "cancellation token issue? (not confirmed)", "RunAsync is taking longer then expected time (15s) to cancel."),
+        TypeAndTextContains(T, "container activation issues", "ManagedHosting.ActivateContainerOperation", "Failed to start Container")
     }
