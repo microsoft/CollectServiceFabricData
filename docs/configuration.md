@@ -7,7 +7,7 @@ Finally any additional arguments passed on command line will be loaded last.
 
 ## Command line options
 
-For help with command line options, type 'collectsfdata.exe -?'.
+For help with command line options, type 'collectsfdata.exe -?'.  
 **NOTE:** command line options **are** case sensitive.
 
 ```text
@@ -100,7 +100,7 @@ Instead of or in addition to using command line arguments, default and specified
 
 ### Default JSON configuration file
 
-To use a default configuration file without having to specify on the command line, create a file named **'collectsfdata.options.json'** in the working directory using example file or json below.
+To use a default configuration file without having to specify on the command line, create a file named **'collectsfdata.options.json'** in the working directory using example file or json below. A clean configuration can be generated with command *collectsfdata.exe -save collectsfdata.options.json*.
 
 ### config file argument definitions
 
@@ -139,7 +139,7 @@ To use a default configuration file without having to specify on the command lin
 
 ### Example JSON configuration files
 
-example clean configuration without Kusto
+#### example clean configuration without Kusto
 
 ```json
 {
@@ -159,7 +159,7 @@ example clean configuration without Kusto
 }
 ```
 
-example clean configuration with Kusto
+#### example clean configuration with Kusto
 
 ```json
 {
@@ -185,7 +185,7 @@ example clean configuration with Kusto
 }
 ```
 
-example clean configuration with Log Analytics
+#### example clean configuration with Log Analytics
 
 ```json
 {
@@ -211,7 +211,7 @@ example clean configuration with Log Analytics
 }
 ```
 
-example configuration for downloading service fabric diagnostic trace logs
+#### example configuration for downloading service fabric diagnostic trace logs
 
 ```json
 {
@@ -231,7 +231,7 @@ example configuration for downloading service fabric diagnostic trace logs
 }
 ```
 
-example configuration for downloading service fabric diagnostic trace logs and uploading to kusto.
+#### example configuration for downloading service fabric diagnostic trace logs and uploading to kusto.
 
 ```json
 {
@@ -251,5 +251,50 @@ example configuration for downloading service fabric diagnostic trace logs and u
   "KustoCluster": "https://ingest-kustodb.eastus.kusto.windows.net/serviceFabricDB",
   "KustoRecreateTable": true,
   "KustoTable": "_00000000000001"
+}
+```
+
+#### default configuration generated from collectsfdata -save collectsfdata.options.json
+
+```json
+{
+  "$schema": "https://raw.githubusercontent.com/microsoft/CollectServiceFabricData/master/configurationFiles/collectsfdata.schema.json",
+  "AzureClientId": null,
+  "AzureClientSecret": null,
+  "AzureResourceGroup": null,
+  "AzureResourceGroupLocation": null,
+  "AzureSubscriptionId": null,
+  "AzureTenantId": null,
+  "CacheLocation": "C:/Users/user/AppData/Local/Temp",
+  "ContainerFilter": null,
+  "DeleteCache": false,
+  "EndTimeStamp": "10/25/2019 08:05 -04:00",
+  "GatherType": "unknown",
+  "KustoCluster": null,
+  "KustoCompressed": false,
+  "KustoPurge": null,
+  "KustoRecreateTable": false,
+  "KustoTable": null,
+  "KustoUseBlobAsSource": false,
+  "List": false,
+  "LogAnalyticsCreate": false,
+  "LogAnalyticsId": null,
+  "LogAnalyticsKey": null,
+  "LogAnalyticsName": null,
+  "LogAnalyticsPurge": null,
+  "LogAnalyticsRecreate": false,
+  "LogAnalyticsWorkspaceName": null,
+  "LogAnalyticsWorkspaceSku": "PerGB2018",
+  "LogDebug": false,
+  "LogFile": null,
+  "NodeFilter": null,
+  "ResourceUri": null,
+  "SasKey": "",
+  "Schema": null,
+  "StartTimeStamp": "10/25/2019 06:05 -04:00",
+  "Threads": 8,
+  "Unique": true,
+  "UriFilter": null,
+  "UseMemoryStream": true
 }
 ```
