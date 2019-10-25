@@ -7,6 +7,7 @@
 [setup](#setup)  
 [configuration](#configuration)  
 [examples](#examples)  
+[reporting issues and feedback](#Reporting-Issues-and-Feedback)  
 [contributing](#contributing)  
 
 ## Overview
@@ -90,7 +91,7 @@ Finally any additional arguments passed on command line will be loaded last.
 
 ### Command line options
 
-For help with command line options, type 'collectsfdata.exe -?'.
+For help with command line options, type 'collectsfdata.exe -?'.  
 **NOTE:** command line options **are** case sensitive.
 
 ```text
@@ -208,7 +209,7 @@ collectsfdata.exe -type trace -s "https://sflogsxxxxxxxxxxxxx.blob.core.windows.
 
 ### Example JSON configuration file options
 
-example clean configuration with Kusto
+#### example clean configuration with Kusto
 
 ```json
 {
@@ -222,7 +223,7 @@ example clean configuration with Kusto
 }
 ```
 
-example clean configuration with Log Analytics
+#### example clean configuration with Log Analytics
 
 ```json
 {
@@ -235,6 +236,10 @@ example clean configuration with Log Analytics
   "LogAnalyticsName" : "<% oms tag / name for ingest %>"
 }
 ```
+
+## Reporting Issues and Feedback
+
+If you find any bugs when using CollectSFData, search and if not found, please create a new issue on [issues](../../issues) page. Provide relevant configuration, error, and steps to reproduce.
 
 ## Contributing
 
