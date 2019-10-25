@@ -26,13 +26,13 @@ collectsfdata.exe -type trace -s "<% sasKey %>" -laid  -lak -lan
 ### example command line to download traces with minimal arguments
 
 ```text
-collectsfdata.exe -type trace -cache  c:\temp\sflogs -s "<% sasKey %>"
+collectsfdata.exe -type trace -cache c:\temp\sflogs -s "<% sasKey %>"
 ```
 
 ### example command line to download traces with full arguments
 
 ```text
-collectsfdata.exe -type trace -cache  c:\temp\sflogs -s "<% sasKey %>" -from "01/12/2019 09:40:08 -05:00" -to "01/12/2019 13:40:00 -05:00"
+collectsfdata.exe -type trace -cache c:\temp\sflogs -s "<% sasKey %>" -from "01/12/2019 09:40:08 -05:00" -to "01/12/2019 13:40:00 -05:00"
 ```
 
 ### example command line with existing default configuration file 'collectsfdata.options.json' populated
@@ -51,6 +51,24 @@ collectsfdata.exe -config collectsfdata.counters.json
 
 ```text
 collectsfdata.exe -config collectsfdata.counters.json -s "<% sasKey %>"
+```
+
+### example command lines with node filter
+
+```text
+collectsfdata.exe -type trace -s "<% sasKey %>" --nodeFilter "_nt0_0"
+collectsfdata.exe -type trace -s "<% sasKey %>" --nodeFilter "_nt0_[1-3]"
+collectsfdata.exe -type trace -s "<% sasKey %>" --nodeFilter "_nt0_0|_nt0_1|_nt0_2"
+```
+
+### example command lines with uri filter  
+
+This can be used for filtering 'trace' file types as well as any other pattern in the storage file uri. There are currently two 'trace' types, 'fabric' and 'lease'.
+example uri: fabriclogs-b353af95-27a2-450e-9393-39953778b47f/_nt0_0/Fabric/f1369b98e045ced5eeac5e0d75a49f9b_fabric_traces_6.5.658.9590_132134919985415767_65_00637047454049360029_2147483647.dtr
+
+```text
+collectsfdata.exe -type trace -s "<% sasKey %>" --uriFilter "lease_"
+collectsfdata.exe -type trace -s "<% sasKey %>" --uriFilter "fabric_"
 ```
 
 ```text
