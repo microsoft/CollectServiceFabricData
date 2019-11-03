@@ -1,88 +1,71 @@
 // sflogs issue query of Type and/or Text or Any
 .create function ifnotexists with (docstring = '[T:string] where T=table name. function to search service fabric sflogs for known issues. good place to start', folder = 'sflogs/_start-here')
-    KnownIssues (T:string) {
-        // format results
-        let FormatResults = (T:(Timestamp:datetime,
-                    Level:string,
-                    TID:int,
-                    PID:int,
-                    Type:string,
-                    Text:string,
-                    NodeName:string,
-                    FileType:string,
-                    RelativeUri:string), issue:string) {
-            T
-            | extend Issue = issue
-            | summarize Count = count(), First = arg_min(Timestamp, *), Last = arg_max(Timestamp, *) by Issue
-            | extend Results = iif(Count != 0, "true", "false")
-            | order by Issue asc
-            | project Issue, Results, Count, ['First Occurrence'] = iif(Count > 0, tostring(First), ""), ['Last Occurrence'] = iif(Count > 1, tostring(Last), "")
-        };
+    TraceKnownIssue (T:string) {
         // search any column using string contains
         let AnyContains = (tableName:string, issue:string, query:string) {
-            table(tableName) | where * contains query | invoke FormatResults(issue)
+            table(tableName) | extend Reason = issue | extend FalsePositive = iif((* contains query), true, false)
         };
         // search any column using regex sensitive match
         let AnyMatches = (tableName:string, issue:string, query:string) {
-            table(tableName) | where * matches regex query | invoke FormatResults(issue)
+            table(tableName) | extend Reason = issue | extend FalsePositive = iif((* matches regex query), true, false)
         };
         // search any column using regex insensitive match
         let AnyIMatches = (tableName:string, issue:string, query:string) {
             let iQuery = strcat('(?i:',query,')'); // re2 case insensitive
-            table(tableName) | where * matches regex iQuery | invoke FormatResults(issue)
+            table(tableName) | extend Reason = issue | extend FalsePositive = iif((* matches regex iQuery), true, false)
         };
         // search Type And Text column using string contains
         let TypeAndTextContains = (tableName:string, issue:string, typeQuery:string, textQuery:string) {
-            table(tableName) | where Type contains typeQuery and Text contains textQuery | invoke FormatResults(issue)
+            table(tableName) | extend Reason = issue | extend FalsePositive = iif((Type contains typeQuery and Text contains textQuery), true, false)
         };
         // search Type And Text column using regex sensitive match
         let TypeAndTextMatches = (tableName:string, issue:string, typeQuery:string, textQuery:string) {
-            table(tableName) | where Type matches regex typeQuery and Text matches regex textQuery | invoke FormatResults(issue)
+            table(tableName) | extend Reason = issue | extend FalsePositive = iif((Type matches regex typeQuery and Text matches regex textQuery), true, false)
         };
         // search Type And Text column using regex insensitive match
         let TypeAndTextIMatches = (tableName:string, issue:string, typeQuery:string, textQuery:string) {
             let itypeQuery = strcat('(?i:',typeQuery,')'); // re2 case insensitive
             let itextQuery = strcat('(?i:',textQuery,')'); // re2 case insensitive
-            table(tableName) | where Type matches regex itypeQuery and Text matches regex itextQuery | invoke FormatResults(issue)
+            table(tableName) | extend Reason = issue | extend FalsePositive = iif((Type matches regex itypeQuery and Text matches regex itextQuery), true, false)
         };
         // search Text column using string contains
         let TextContains = (tableName:string, issue:string, query:string) {
-            table(tableName) | where Text contains query | invoke FormatResults(issue)
+            table(tableName) | extend Reason = issue | extend FalsePositive = iif((Text contains query), true, false)
         };
         // search Text column using regex sensitive match
         let TextMatches = (tableName:string, issue:string, query:string) {
-            table(tableName) | where Text matches regex query | invoke FormatResults(issue)
+            table(tableName) | extend Reason = issue | extend FalsePositive = iif((Text matches regex query), true, false)
         };
         // search Text column using regex insensitive match
         let TextIMatches = (tableName:string, issue:string, query:string) {
             let iQuery = strcat('(?i:',query,')'); // re2 case insensitive
-            table(tableName) | where Text matches regex iQuery | invoke FormatResults(issue)
+            table(tableName) | extend Reason = issue | extend FalsePositive = iif((Text matches regex iQuery), true, false)
         };
         // search Type column using string contains
         let TypeContains = (tableName:string, issue:string, query:string) {
-            table(tableName) | where Type contains query | invoke FormatResults(issue)
+            table(tableName) | extend Reason = issue | extend FalsePositive = iif((Type contains query), true, false)
         };
         // search Type column using regex sensitive match
         let TypeMatches = (tableName:string, issue:string, query:string) {
-            table(tableName) | where Type matches regex query | invoke FormatResults(issue)
+            table(tableName) | extend Reason = issue | extend FalsePositive = iif((Type matches regex query), true, false)
         };
         // search Type column using regex insensitive match
         let TypeIMatches = (tableName:string, issue:string, query:string) {
             let iQuery = strcat('(?i:',query,')'); // re2 case insensitive
-            table(tableName) | where Type matches regex iQuery | invoke FormatResults(issue)
+            table(tableName) | extend Reason = issue | extend FalsePositive = iif((Type matches regex iQuery), true, false)
         };
         // search Type or Text columns using string contains
         let TypeOrTextContains = (tableName:string, issue:string, query:string) {
-            table(tableName) | where Type contains query or Text contains query | invoke FormatResults(issue)
+            table(tableName) | extend Reason = issue | extend FalsePositive = iif((Type contains query or Text contains query), true, false)
         };
         // search Type or Text columns using regex sensitive match
         let TypeOrTextMatches = (tableName:string, issue:string, query:string) {
-            table(tableName) | where Type matches regex query or Text matches regex query | invoke FormatResults(issue)
+            table(tableName) | extend Reason = issue | extend FalsePositive = iif((Type matches regex query or Text matches regex query), true, false)
         };
         // search Type or Text columns using regex insensitive match
         let TypeOrTextIMatches = (tableName:string, issue:string, query:string) {
             let iQuery = strcat('(?i:',query,')'); // re2 case insensitive
-            table(tableName) | where Type matches regex iQuery or Text matches regex iQuery | invoke FormatResults(issue)
+            table(tableName) | extend Reason = issue | extend FalsePositive = iif((Type matches regex iQuery or Text matches regex iQuery), true, false)
         };
         union 
         // add known issue signatures here using one of the provided functions in format table, issue description, string pattern
@@ -100,5 +83,6 @@
         TypeContains(T, "crash dumps in storage account", "crashdumpfound"),
         TypeOrTextContains(T, "exception", "exception"),
         TextContains(T, "cancellation token issue? (not confirmed)", "RunAsync is taking longer then expected time (15s) to cancel."),
-        TypeAndTextContains(T, "container activation issues", "ManagedHosting.ActivateContainerOperation", "Failed to start Container")
+        TypeAndTextContains(T, "container activation issues", "ManagedHosting.ActivateContainerOperation", "Failed to start Container"),
+        TypeContains(T, "node open failure", "FabricNode._NodesOps_NodeOpenedFailed")
     }
