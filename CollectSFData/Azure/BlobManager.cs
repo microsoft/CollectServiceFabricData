@@ -268,7 +268,7 @@ namespace CollectSFData
                 {
                     if (!string.IsNullOrEmpty(Config.NodeFilter) && !Regex.IsMatch(blob.Uri.ToString(), Config.NodeFilter, RegexOptions.IgnoreCase))
                     {
-                        Log.Warning($"blob:{blob.Uri} does not match nodeFilter pattern:{Config.NodeFilter}, skipping...", ConsoleColor.Yellow);
+                        Log.Debug($"blob:{blob.Uri} does not match nodeFilter pattern:{Config.NodeFilter}, skipping...");
                         continue;
                     }
 
@@ -282,7 +282,7 @@ namespace CollectSFData
                 if (!string.IsNullOrEmpty(Config.UriFilter) && !Regex.IsMatch(blob.Uri.ToString(), Config.UriFilter, RegexOptions.IgnoreCase))
                 {
                     Interlocked.Increment(ref TotalFilesSkipped);
-                    Log.Warning($"blob:{blob.Uri} does not match uriFilter pattern:{Config.UriFilter}, skipping...", ConsoleColor.Yellow);
+                    Log.Debug($"blob:{blob.Uri} does not match uriFilter pattern:{Config.UriFilter}, skipping...");
                     continue;
                 }
 
