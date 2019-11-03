@@ -1,0 +1,6 @@
+// sflogs remove 'TraceFalsePositive()' function true results
+.create function ifnotexists with (docstring = '[T:string] where T=table name. function to search service fabric sflogs for known issues. good place to start', folder = 'sflogs/_start-here')
+    TraceFalsePositiveRemove (T:string) {
+            TraceFalsePositive(T)
+            | where FalsePositive == false
+        }
