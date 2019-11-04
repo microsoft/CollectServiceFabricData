@@ -131,10 +131,10 @@
       <Version>3.0.3</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.Azure.Kusto.Data">
-      <Version>6.1.8</Version>
+      <Version>8.0.1</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.Azure.Kusto.Ingest">
-      <Version>6.1.8</Version>
+      <Version>8.0.1</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.Azure.Storage.Blob">
       <Version>10.0.3</Version>
@@ -152,7 +152,7 @@
       <Version>1.1.1</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.IdentityModel.Clients.ActiveDirectory">
-      <Version>4.5.1</Version>
+      <Version>5.2.3</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.Rest.ClientRuntime">
       <Version>2.3.20</Version>
