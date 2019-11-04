@@ -194,6 +194,7 @@
              if ($kusto.force -or !($localPackages -imatch $packageName)) {
                  write-host "nuget install $packageName -Source $nugetSource -outputdirectory $outputDirectory -verbosity detailed"
                  nuget install $packageName -Source $nugetSource -outputdirectory $outputDirectory -verbosity detailed
+                 $kusto.adalDllLocation = @(get-childitem -Path $packageDirectory -Recurse | where-object FullName -match "$edition\\$packageName\.dll" | select-object FullName)[-1].FullName
              }
              else {
                  write-host "$packageName already installed" -ForegroundColor green
