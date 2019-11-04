@@ -1,7 +1,6 @@
 # Example Log Analytics queries
 
 [log analytics quickstart](../docs/logAnalyticsQuickStart.md)  
-[log analytic queries in csl query format](../docs/LogAnalyticsQueries/logAnalyticsExampleQueries.md.csl)  
 
 For examples below, 'search *' can be replaced with the LogAnalyticsName parameter specified when ingesting data or use.
 This parameter gets stored in field 'Type' and will have '_CL' suffix appended.
