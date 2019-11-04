@@ -84,5 +84,6 @@
         TypeOrTextContains(T, "exception", "exception"),
         TextContains(T, "cancellation token issue? (not confirmed)", "RunAsync is taking longer then expected time (15s) to cancel."),
         TypeAndTextContains(T, "container activation issues", "ManagedHosting.ActivateContainerOperation", "Failed to start Container"),
-        TypeContains(T, "node open failure", "FabricNode._NodesOps_NodeOpenedFailed")
+        TypeContains(T, "node open failure", "FabricNode._NodesOps_NodeOpenedFailed"),
+        TextContains(T, "expired certificate. use TSG: https://github.com/Azure/Service-Fabric-Troubleshooting-Guides/blob/master/Security/How%20to%20recover%20from%20an%20Expired%20Cluster%20Certificate.md", "SFRP poll: Exception encountered: System.InvalidOperationException: Could not load primary and secondary certificate")
     }
