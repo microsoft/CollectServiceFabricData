@@ -42,7 +42,7 @@ namespace CollectSFData
 
         public string Parent { get; private set; }
 
-        public string RelativeUri => FileUri?.TrimStart(BaseUri?.ToCharArray());
+        public string RelativeUri { get; private set; }
 
         public StreamManager Stream { get; set; }
 
@@ -80,8 +80,12 @@ namespace CollectSFData
 
             if (!string.IsNullOrEmpty(BaseUri))
             {
-                fileUri = fileUri.TrimStart(BaseUri.ToCharArray()).TrimStart('/');
-                fileUri = BaseUri.TrimEnd('/') + "/" + fileUri;
+                if (!fileUri.StartsWith(BaseUri)) 
+                { 
+                    fileUri = BaseUri.TrimEnd('/') + "/" + fileUri.TrimStart('/'); 
+                }
+
+                RelativeUri = fileUri.TrimStart(BaseUri.ToCharArray());
             }
 
             _fileUri = fileUri;
