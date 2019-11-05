@@ -102,7 +102,7 @@ param(
     [string]$table,
     [string]$adalDllLocation,
     [string]$resultFile, # = ".\result.json",
-    [bool]$viewResults,
+    [bool]$viewResults = $true,
     [string]$token,
     [int]$limit,
     [string]$script,
@@ -518,8 +518,9 @@ class KustoObj {
                 Expand-Archive "$filePath.zip" $filePath
             }
 
-            [string]$resultJsonText = (. "$filePath\$fileName.exe" --resource "https://$($kusto.cluster).kusto.windows.net" --scope "https://$($kusto.cluster).kusto.windows.net/kusto.read,https://$($kusto.cluster).kusto.windows.net/kusto.write")
-            write-host $resultJsonText
+            [string]$resultJsonText = (. "$filePath\$fileName.exe" --resource "https://$($kusto.cluster).kusto.windows.net")
+            write-host "preauth: $resultJsonText" -foregroundcolor green
+            $resultJsonText = (. "$filePath\$fileName.exe" --resource "https://$($kusto.cluster).kusto.windows.net" --scope "https://$($kusto.cluster).kusto.windows.net/kusto.read,https://$($kusto.cluster).kusto.windows.net/kusto.write")
             $kusto.authenticationResult = $resultJsonText | convertfrom-json
             $kusto.token = $kusto.authenticationResult.AccessToken
             write-host ($kusto.authenticationResult | convertto-json)
