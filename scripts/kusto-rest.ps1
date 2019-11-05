@@ -505,19 +505,25 @@ class KustoObj {
         }
 
         if ($global:PSVersionTable.PSEdition -eq "Core") {
-            write-warning ".net core microsoft.identity requires form/webui. downloading .net core msal exe"
-            [string]$fileName = "netCoreMsalTokenCacheCli"
+            [string]$msalRelease = "https://api.github.com/repos/jagilber/netCore/releases/latest"
+            [string]$fileName = "netCoreMsalCliTokenCache"
             [string]$filePath = "$env:TEMP\$fileName"
-            
+            write-warning ".net core microsoft.identity requires form/webui. checking for $filePath"
+           
             if (!(test-path $filePath)) {
-                [psobject]$apiResults = convertfrom-json (Invoke-WebRequest "https://api.github.com/repos/jagilber/netCore/releases/latest" -UseBasicParsing)
+                write-warning "downloading .net core $fileName from $msalRelease to $filePath"
+                [psobject]$apiResults = convertfrom-json (Invoke-WebRequest $msalRelease -UseBasicParsing)
                 [string]$downloadUrl = @($apiResults.assets.browser_download_url)[0]
                 (new-object net.webclient).downloadFile($downloadUrl, "$filePath.zip")
                 Expand-Archive "$filePath.zip" $filePath
             }
-            [string]$result = [regex]::Matches((. "$filePath\$fileName.exe" -resource "https://$($kusto.cluster).kusto.windows.net"), '(\S+)')
-            $kusto.token = $result[$result.count -1]
-            
+
+            [string]$resultJsonText = (. "$filePath\$fileName.exe" --resource "https://$($kusto.cluster).kusto.windows.net" --scope "https://$($kusto.cluster).kusto.windows.net/kusto.read,https://$($kusto.cluster).kusto.windows.net/kusto.write")
+            write-host $resultJsonText
+            $kusto.authenticationResult = $resultJsonText | convertfrom-json
+            $kusto.token = $kusto.authenticationResult.AccessToken
+            write-host ($kusto.authenticationResult | convertto-json)
+
             if($kusto.token){
                 return $true
             }
