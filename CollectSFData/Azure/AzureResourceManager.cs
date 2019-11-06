@@ -95,7 +95,7 @@ namespace CollectSFData
                     AdalException ad = ae.GetBaseException() as AdalException;
                     Log.Exception($"adal exception:{ad}");
 
-                    if (ad.ErrorCode.Equals("user_interaction_required") && prompt == PromptBehavior.Never)
+                    if (ad.ErrorCode.Contains("interaction_required") && prompt == PromptBehavior.Never)
                     {
                         return Authenticate(throwOnError, resource, PromptBehavior.Auto);
                     }
