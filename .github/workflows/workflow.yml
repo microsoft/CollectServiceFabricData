@@ -7,10 +7,13 @@ env:
   github_owner: ${{ github.event.repository.owner.name }}
 
 on:
-  push:
+  pull_request:
+    types: [closed, opened] 
+    paths-ignore:
+    - 'docs/**'
+    - 'configurationFiles/**'
     branches:
       - master
-      - preview
 jobs:
   build:
     runs-on: windows-latest
@@ -70,6 +73,7 @@ jobs:
 
     - name: upload release
       shell: powershell
+      if: success() && github.event.pull_request.merged == true && github.event.action == 'closed'
       run: | 
         md "$($env:release_path)_upload"
         copy "$($env:release_path)\*.exe" "$($env:release_path)_upload"
