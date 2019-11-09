@@ -1,0 +1,16 @@
+Document:
+  - docs/*.*
+
+Configuration File:
+  - configurationFiles/**
+
+Kusto Query Language:
+  - docs/KustoQueries/*
+
+Log Analytics Language:
+  - docs/LogAnalyticsQueries/*
+
+Executable: 
+  - CollectSFData/**/*
+  - CollectSFData.sln
+
