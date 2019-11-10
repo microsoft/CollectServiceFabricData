@@ -10,7 +10,6 @@ Kusto Query Language:
 Log Analytics Language:
   - docs/LogAnalyticsQueries/*
 
-Executable: 
+Executable:
   - CollectSFData/**/*
   - CollectSFData.sln
-
