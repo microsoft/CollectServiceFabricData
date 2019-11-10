@@ -73,6 +73,7 @@ jobs:
 
     - name: upload release
       shell: powershell
+      # workflows do not have same permissions across forks. pr from same repo (branch to branch)
       if: success() && github.event.pull_request.merged == true && github.event.action == 'closed' && contains(github.event.pull_request.labels.*.name, 'Release')
       run: | 
         md "$($env:release_path)_upload"
