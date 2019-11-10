@@ -331,6 +331,9 @@ namespace CollectSFData
                     MergeCmdLine();
                 }
 
+                EndTimeUtc = EndTimeUtc.AddHours(WarningTimeSpanMinHours);
+                Log.Highlight($"adding {WarningTimeSpanMinHours * 60} minutes to EndTimeUtc to compensate for sf file upload timer. New EndTimeUtc: ({EndTimeUtc.ToString("o")})");
+
                 if (Validate())
                 {
                     Log.Info($"options:", ShallowCopy());
