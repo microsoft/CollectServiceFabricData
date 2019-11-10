@@ -8,77 +8,77 @@ env:
 
 on:
   pull_request:
-    types: [closed, opened]
+    types: [closed, opened] 
     paths-ignore:
-      - "docs/**"
-      - "configurationFiles/**"
+    - 'docs/**'
+    - 'configurationFiles/**'
     branches:
       - master
 jobs:
   build:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v1
+    - uses: actions/checkout@v1
 
-      - name: environment
-        shell: cmd
-        run: set
+    - name: environment
+      shell: cmd
+      run: set
+      
+    - name: nuget download
+      shell: cmd
+      run: curl https://dist.nuget.org/win-x86-commandline/latest/nuget.exe --output nuget.exe
 
-      - name: nuget download
-        shell: cmd
-        run: curl https://dist.nuget.org/win-x86-commandline/latest/nuget.exe --output nuget.exe
+    - name: nuget restore
+      shell: cmd
+      run: nuget.exe restore -Verbosity Detailed -NonInteractive -DirectDownload
 
-      - name: nuget restore
-        shell: cmd
-        run: nuget.exe restore -Verbosity Detailed -NonInteractive -DirectDownload
+    - name: nuget build / pack
+      shell: cmd
+      run: nuget.exe pack %project_name%\%project_name%.csproj -Verbosity Detailed -outputdirectory %artifacts_path% -NonInteractive -Build -Properties Configuration=Release
 
-      - name: nuget build / pack
-        shell: cmd
-        run: nuget.exe pack %project_name%\%project_name%.csproj -Verbosity Detailed -outputdirectory %artifacts_path% -NonInteractive -Build -Properties Configuration=Release
+    - name: build output
+      shell: cmd
+      run: dir %release_path% /s
 
-      - name: build output
-        shell: cmd
-        run: dir %release_path% /s
+    - name: copy artifacts
+      shell: cmd
+      run: |
+        copy %release_path%\*.exe %artifacts_path%
+        copy %release_path%\*.dll %artifacts_path%
 
-      - name: copy artifacts
-        shell: cmd
-        run: |
-          copy %release_path%\*.exe %artifacts_path%
-          copy %release_path%\*.dll %artifacts_path%
+    - name: artifacts output
+      shell: cmd
+      run: dir %artifacts_path% /s
 
-      - name: artifacts output
-        shell: cmd
-        run: dir %artifacts_path% /s
+    - name: nuget push
+      shell: cmd
+      run: |
+        echo #not working needs codesign
+        echo nuget.exe push %artifacts_path%\*.nupkg %nuget_api_key% -Verbosity Detailed -Source https://api.nuget.org/v3/index.json -SkipDuplicate -NonInteractive
+        echo # working in fork, GPR blocked on upstream 
+        echo nuget.exe sources add -Name 'GPR' -Verbosity Detailed -Source https://nuget.pkg.github.com/%github_owner%/index.json -NonInteractive -UserName %GITHUB_ACTOR% -Password %GITHUB_TOKEN%
+        echo nuget.exe setapikey %nuget_api_key% -Source 'GPR' -Verbosity Detailed -NonInteractive
+        echo nuget.exe push %artifacts_path%\*.nupkg -Verbosity Detailed -Source 'GPR' -SkipDuplicate -NonInteractive -apikey %nuget_api_key%
+        
+      env: 
+        nuget_api_key: ${{ secrets.ACTIONS_NUGET_PUSH_API_KEY }}
+        nuget_token: ${{ secrets.ACTIONS_NUGET_PUSH_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: nuget push
-        shell: cmd
-        run: |
-          echo #not working needs codesign
-          echo nuget.exe push %artifacts_path%\*.nupkg %nuget_api_key% -Verbosity Detailed -Source https://api.nuget.org/v3/index.json -SkipDuplicate -NonInteractive
-          echo # working in fork, GPR blocked on upstream 
-          echo nuget.exe sources add -Name 'GPR' -Verbosity Detailed -Source https://nuget.pkg.github.com/%github_owner%/index.json -NonInteractive -UserName %GITHUB_ACTOR% -Password %GITHUB_TOKEN%
-          echo nuget.exe setapikey %nuget_api_key% -Source 'GPR' -Verbosity Detailed -NonInteractive
-          echo nuget.exe push %artifacts_path%\*.nupkg -Verbosity Detailed -Source 'GPR' -SkipDuplicate -NonInteractive -apikey %nuget_api_key%
+    - name: upload artifacts
+      uses: actions/upload-artifact@v1
+      with:
+        name: Release
+        path: CollectSFData\bin\x64\artifacts
 
-        env:
-          nuget_api_key: ${{ secrets.ACTIONS_NUGET_PUSH_API_KEY }}
-          nuget_token: ${{ secrets.ACTIONS_NUGET_PUSH_TOKEN }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: upload artifacts
-        uses: actions/upload-artifact@v1
-        with:
-          name: Release
-          path: CollectSFData\bin\x64\artifacts
-
-      - name: upload release
-        shell: powershell
-        if: success() && github.event.pull_request.merged == true && github.event.action == 'closed' && contains(github.event.pull_request.labels.*.name, 'Release')
-        run: |
-          md "$($env:release_path)_upload"
-          copy "$($env:release_path)\*.exe" "$($env:release_path)_upload"
-          copy "$($env:release_path)\*.dll" "$($env:release_path)_upload"
-          compress-archive -path "$($env:release_path)_upload\*" -destinationPath "$($env:release_path)\$($env:project_name).zip" -force
-          scripts\git-upload-release.ps1 -token $env:GITHUB_TOKEN -releaseName $env:project_name -file "$($env:release_path)\$($env:project_name).zip"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: upload release
+      shell: powershell
+      if: success() && github.event.pull_request.merged == true && github.event.action == 'closed' && contains(github.event.pull_request.labels.*.name, 'Release')
+      run: | 
+        md "$($env:release_path)_upload"
+        copy "$($env:release_path)\*.exe" "$($env:release_path)_upload"
+        copy "$($env:release_path)\*.dll" "$($env:release_path)_upload"
+        compress-archive -path "$($env:release_path)_upload\*" -destinationPath "$($env:release_path)\$($env:project_name).zip" -force
+        scripts\git-upload-release.ps1 -token $env:GITHUB_TOKEN -releaseName $env:project_name -file "$($env:release_path)\$($env:project_name).zip"
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
