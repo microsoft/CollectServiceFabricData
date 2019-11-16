@@ -1,8 +1,9 @@
 Configuration File:
   - configurationFiles/**
 
-documentation:
-  - docs/*.*
+Executable:
+  - CollectSFData/**/*
+  - CollectSFData.sln
 
 Kusto Query Language:
   - docs/KustoQueries/*
@@ -10,9 +11,8 @@ Kusto Query Language:
 Log Analytics Language:
   - docs/LogAnalyticsQueries/*
 
-Executable:
-  - CollectSFData/**/*
-  - CollectSFData.sln
-
 WorkFlow:
   - .github/**
+
+documentation:
+  - docs/*.*
