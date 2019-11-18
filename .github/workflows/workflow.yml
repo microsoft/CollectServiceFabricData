@@ -44,6 +44,7 @@ jobs:
       - name: copy artifacts
         shell: cmd
         run: |
+          md %artifacts_path%
           copy %release_path%\*.exe %artifacts_path%
           copy %release_path%\*.dll %artifacts_path%
 
