@@ -513,7 +513,7 @@ class KustoObj {
             if (!(test-path $filePath)) {
                 write-warning "downloading .net core $fileName from $msalRelease to $filePath"
                 [psobject]$apiResults = convertfrom-json (Invoke-WebRequest $msalRelease -UseBasicParsing)
-                [string]$downloadUrl = @($apiResults.assets.browser_download_url) -imatch "/$fileName-"
+                [string]$downloadUrl = @($apiResults.assets.browser_download_url -imatch "/$fileName-")[0]
                 (new-object net.webclient).downloadFile($downloadUrl, "$filePath.zip")
                 Expand-Archive "$filePath.zip" $filePath
             }
