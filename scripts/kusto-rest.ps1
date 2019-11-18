@@ -516,7 +516,7 @@
          }
  
          if ($global:PSVersionTable.PSEdition -eq "Core") {
-             [string]$msalRelease = "https://api.github.com/repos/jagilber/netCore/releases/latest"
+             [string]$msalRelease = "https://api.github.com/repos/jagilber/netCore/releases"
              [string]$fileName = "netCoreMsal"
              [string]$filePath = "$env:TEMP\$fileName"
              write-warning ".net core microsoft.identity requires form/webui. checking for $filePath"
