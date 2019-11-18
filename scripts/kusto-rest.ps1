@@ -506,14 +506,14 @@ class KustoObj {
 
         if ($global:PSVersionTable.PSEdition -eq "Core") {
             [string]$msalRelease = "https://api.github.com/repos/jagilber/netCore/releases/latest"
-            [string]$fileName = "netCoreMsalCliTokenCache"
+            [string]$fileName = "netCoreMsal"
             [string]$filePath = "$env:TEMP\$fileName"
             write-warning ".net core microsoft.identity requires form/webui. checking for $filePath"
            
             if (!(test-path $filePath)) {
                 write-warning "downloading .net core $fileName from $msalRelease to $filePath"
                 [psobject]$apiResults = convertfrom-json (Invoke-WebRequest $msalRelease -UseBasicParsing)
-                [string]$downloadUrl = @($apiResults.assets.browser_download_url)[0]
+                [string]$downloadUrl = @($apiResults.assets.browser_download_url) -imatch "/$fileName-"
                 (new-object net.webclient).downloadFile($downloadUrl, "$filePath.zip")
                 Expand-Archive "$filePath.zip" $filePath
             }
