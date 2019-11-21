@@ -101,6 +101,7 @@ jobs:
         # workflows do not have same permissions across forks. pr from same repo (branch to branch)
         run: |
           md "$($env:release_path)_upload"
+          copy "$($env:release_path)\*.config" "$($env:release_path)_upload"
           copy "$($env:release_path)\*.exe" "$($env:release_path)_upload"
           copy "$($env:release_path)\*.dll" "$($env:release_path)_upload"
           compress-archive -path "$($env:release_path)_upload\*" -destinationPath "$($env:release_path)\$($env:project_name).zip" -force
