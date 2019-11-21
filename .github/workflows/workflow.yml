@@ -1,4 +1,4 @@
-name: CI
+name: CI CollectSFData
 
 env:
   artifacts_path: CollectSFData\bin\x64\artifacts
@@ -45,6 +45,7 @@ jobs:
         shell: cmd
         run: |
           md %artifacts_path%
+          copy %release_path%\*.config %artifacts_path%
           copy %release_path%\*.exe %artifacts_path%
           copy %release_path%\*.dll %artifacts_path%
 
