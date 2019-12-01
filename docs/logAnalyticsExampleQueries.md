@@ -129,6 +129,7 @@ counter_2153_0214_6_CL
 //| where CounterName_s contains "TCP" and CounterName_s contains "reset"
 //| where CounterName_s contains "TCP" and CounterName_s contains "fail"
 //| where CounterName_s contains "TCP" and CounterName_s contains "segments received"
+//| where CounterName_s contains "TCP" and CounterName_s contains "segments retransmitted"
 //| where CounterName_s contains "TCP" and CounterName_s contains "segments sent"
 //| where CounterName_s contains "TCP" and CounterName_s contains "connections active"
 //| where CounterName_s contains "TCP" and CounterName_s contains "connections passive"
