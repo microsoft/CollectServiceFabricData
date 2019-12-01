@@ -87,5 +87,6 @@
         TypeContains(T, "node open failure", "FabricNode._NodesOps_NodeOpenedFailed"),
         TextContains(T, "expired certificate. use TSG: https://github.com/Azure/Service-Fabric-Troubleshooting-Guides/blob/master/Security/How%20to%20recover%20from%20an%20Expired%20Cluster%20Certificate.md", "SFRP poll: Exception encountered: System.InvalidOperationException: Could not load primary and secondary certificate"),
         TypeContains(T, "reverse proxy errors", "ReverseProxy.SendResponseError"),
-        TypeAndTextContains(T, "reverse proxy errors possible port / app issue", "ReverseProxy.SendResponseError","SendResponseChunk, error = 3489660929")
+        TypeAndTextContains(T, "reverse proxy errors possible port / app issue", "ReverseProxy.SendResponseError","SendResponseChunk, error = 3489660929"),
+        TypeContains(T, "lease slow send warning","Lease.SlowSendCompletion")
     }
