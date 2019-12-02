@@ -420,19 +420,10 @@ namespace CollectSFData
                 }
             }
 
-            if (DeleteCache)
+            if (DeleteCache & !SasEndpointInfo.IsPopulated())
             {
-                if (FileType == FileTypesEnum.exception)
-                {
-                    Log.Warning($"setting 'DeleteCache' to false for configured 'GatherType' exception");
-                    DeleteCache = false;
-                }
-
-                if (!SasEndpointInfo.IsPopulated())
-                {
-                    Log.Warning($"setting 'DeleteCache' is set to true but no sas information provided.\r\nfiles will be deleted at exit!\r\nctrl-c now if this incorrect.");
-                    Thread.Sleep(ThreadSleepMsWarning);
-                }
+                Log.Warning($"setting 'DeleteCache' is set to true but no sas information provided.\r\nfiles will be deleted at exit!\r\nctrl-c now if this incorrect.");
+                Thread.Sleep(ThreadSleepMsWarning);
             }
         }
 
