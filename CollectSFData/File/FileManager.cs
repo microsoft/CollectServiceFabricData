@@ -57,7 +57,7 @@ namespace CollectSFData
                 Log.Info($"downloaded:{fileObject.FileUri}", ConsoleColor.DarkCyan, ConsoleColor.DarkBlue);
             }
 
-            if (fileObject.Stream.Get().Length < 1 && !fileObject.Exists)
+            if (fileObject.DownloadAction != null && fileObject.Stream.Get().Length < 1 && !fileObject.Exists)
             {
                 string error = $"memoryStream does not exist and file does not exist {fileObject.FileUri}";
                 Log.Error(error);
@@ -91,7 +91,7 @@ namespace CollectSFData
                     {
                         if (fileObject.FileExtensionType.Equals(FileExtensionTypesEnum.dmp))
                         {
-                            SaveToCache(fileObject, !fileObject.Exists);
+                            return FormatExceptionFile(fileObject);
                         }
 
                         break;
@@ -351,6 +351,19 @@ namespace CollectSFData
             return FormatTraceFile<DtrTraceRecord>(fileObject);
         }
 
+        private FileObjectCollection FormatExceptionFile(FileObject fileObject)
+        {
+            Log.Debug($"enter:{fileObject.FileUri}");
+            IList<CsvExceptionRecord> records = new List<CsvExceptionRecord>
+            {
+                new CsvExceptionRecord($"{fileObject.FileUri}{Config.SasEndpointInfo.SasToken}", fileObject, Config.ResourceUri)
+            };
+
+            TotalFilesFormatted++;
+            TotalRecords += records.Count;
+            return PopulateCollection(fileObject, records);
+        }
+
         private FileObjectCollection FormatSetupFile(FileObject fileObject)
         {
             return FormatTraceFile<CsvSetupRecord>(fileObject);
@@ -366,7 +379,7 @@ namespace CollectSFData
             return PopulateCollection(fileObject, records);
         }
 
-        private FileObjectCollection FormatTraceFile<T>(FileObject fileObject) where T : IRecord, new()
+        private FileObjectCollection FormatTraceFile<T>(FileObject fileObject) where T : ITraceRecord, new()
         {
             Log.Debug($"enter:{fileObject.FileUri}");
             IList<IRecord> records = new List<IRecord>();
