@@ -358,9 +358,10 @@ namespace CollectSFData
                 return;
             }
 
-            // remove options that shouldnt be in saved in file
+            // remove options that should not be saved in configuration file
             JObject options = JObject.FromObject(this);
             options.AddFirst(new JProperty("$schema", SchemaFile));
+            options.Remove("Schema");
             options.Remove("ConfigurationFile");
             options.Remove("EndTimeUtc");
             options.Remove("Examples");
