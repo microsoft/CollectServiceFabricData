@@ -3,6 +3,8 @@
 // Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
+using System;
+
 namespace CollectSFData
 {
     public interface IRecord
@@ -11,7 +13,9 @@ namespace CollectSFData
 
         string ResourceUri { get; set; }
 
-        ITraceRecord Populate(FileObject fileObject, string dtrRecord, string resourceUri = null);
+        DateTime Timestamp { get; set; }
+
+        IRecord Populate(FileObject fileObject, string record, string resourceUri = null);
 
         string ToString();
     }

@@ -41,6 +41,21 @@ namespace CollectSFData
             return AddConstants(mapping);
         }
 
+        public IEnumerable<KustoCsvSchema> ExceptionSchema()
+        {
+            int count = 0;
+
+            List<KustoCsvSchema> mapping = new List<KustoCsvSchema>()
+            {
+                new KustoCsvSchema() { Name = "Timestamp", DataType = "datetime", Ordinal = count++ },
+                new KustoCsvSchema() { Name = "PID", DataType = "int", Ordinal = count++ },
+                new KustoCsvSchema() { Name = "Type", DataType = "string", Ordinal = count++ },
+                new KustoCsvSchema() { Name = "Text", DataType = "string", Ordinal = count }
+            };
+
+            return AddConstants(mapping);
+        }
+
         public IEnumerable<KustoCsvSchema> SetupSchema()
         {
             int count = 0;
