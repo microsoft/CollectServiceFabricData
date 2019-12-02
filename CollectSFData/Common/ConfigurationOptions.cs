@@ -353,14 +353,28 @@ namespace CollectSFData
 
         public void SaveConfigFile()
         {
+            string kustoTable = KustoTable;
+            string logAnalyticsName = LogAnalyticsName;
+
             if (string.IsNullOrEmpty(SaveConfiguration))
             {
                 return;
             }
 
-            // remove options that shouldnt be in saved in file
+            if (IsKustoConfigured())
+            {
+                KustoTable = Regex.Replace(KustoTable, $"^{GatherType}_", "");
+            }
+
+            if (IsLogAnalyticsConfigured())
+            {
+                LogAnalyticsName = Regex.Replace(LogAnalyticsName, $"^{GatherType}_", "");
+            }
+
+            // remove options that should not be saved in configuration file
             JObject options = JObject.FromObject(this);
             options.AddFirst(new JProperty("$schema", SchemaFile));
+            options.Remove("Schema");
             options.Remove("ConfigurationFile");
             options.Remove("EndTimeUtc");
             options.Remove("Examples");
@@ -372,6 +386,16 @@ namespace CollectSFData
             if (!IsCacheLocationPreConfigured())
             {
                 options.Remove("CacheLocation");
+            }
+
+            if (IsKustoConfigured())
+            {
+                KustoTable = kustoTable;
+            }
+
+            if (IsLogAnalyticsConfigured())
+            {
+                LogAnalyticsName = logAnalyticsName;
             }
 
             Log.Info($"options results:", options);
@@ -710,6 +734,11 @@ namespace CollectSFData
                 if (IsKustoPurgeRequested())
                 {
                     retval = IsKustoConfigured();
+                }
+
+                if (!KustoCluster.ToLower().Contains("//ingest-"))
+                {
+                    Log.Warning($"KustoCluster url does not contain 'ingest-' {KustoCluster}");
                 }
             }
 
