@@ -157,6 +157,7 @@ T
 //| where CounterName contains "TCP" and CounterName contains "reset"
 //| where CounterName contains "TCP" and CounterName contains "fail"
 //| where CounterName contains "TCP" and CounterName contains "segments received"
+//| where CounterName contains "TCP" and CounterName contains "segments retransmitted"
 //| where CounterName contains "TCP" and CounterName contains "segments sent"
 //| where CounterName contains "TCP" and CounterName contains "connections active"
 //| where CounterName contains "TCP" and CounterName contains "connections passive"
