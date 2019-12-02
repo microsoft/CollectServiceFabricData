@@ -35,11 +35,13 @@ namespace CollectSFData
 
         public string Text { get; set; }
 
+        public int TID { get; set; }
+
         public DateTime Timestamp { get; set; }
 
         public string Type { get; set; }
 
-        public ITraceRecord Populate(FileObject fileObject, string traceRecord, string resourceUri = null)
+        public IRecord Populate(FileObject fileObject, string traceRecord, string resourceUri = null)
         {
             string[] fields = ParseRecord(traceRecord);
 

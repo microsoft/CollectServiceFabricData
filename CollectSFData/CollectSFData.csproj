@@ -70,6 +70,7 @@
     <Compile Include="Azure\GenericResourceResult.cs" />
     <Compile Include="Azure\SubscriptionRecordResult.cs" />
     <Compile Include="Common\Http.cs" />
+    <Compile Include="File\CsvExceptionRecord.cs" />
     <Compile Include="File\CsvSetupRecord.cs" />
     <Compile Include="File\StreamManager.cs" />
     <Compile Include="File\IRecord.cs" />
