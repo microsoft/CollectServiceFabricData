@@ -28,9 +28,9 @@ namespace CollectSFData
 
         public DateTime Timestamp { get; set; }
 
-        public ITraceRecord Populate(FileObject fileObject, string dtrRecord, string resourceUri = null)
+        public IRecord Populate(FileObject fileObject, string dtrRecord, string resourceUri = null)
         {
-            return this as ITraceRecord;
+            return this;
         }
 
         public override string ToString()
