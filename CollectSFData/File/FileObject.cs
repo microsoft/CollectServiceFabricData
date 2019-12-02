@@ -36,6 +36,8 @@ namespace CollectSFData
 
         public string FileUri { get => _fileUri; set => ExtractProperties(value); }
 
+        public DateTimeOffset LastModified { get; set; }
+
         public long Length { get; set; }
 
         public string NodeName { get; private set; } = FileDataTypesEnum.unknown.ToString();
@@ -45,7 +47,7 @@ namespace CollectSFData
         public string RelativeUri { get; private set; }
 
         public StreamManager Stream { get; set; }
-
+        
         private void ExtractNodeName(string fileUri)
         {
             // ARM nodename should be surrounded by / or _ or trailing $ and have _  and digit in name
@@ -80,12 +82,12 @@ namespace CollectSFData
 
             if (!string.IsNullOrEmpty(BaseUri))
             {
-                if (!fileUri.StartsWith(BaseUri)) 
-                { 
-                    fileUri = BaseUri.TrimEnd('/') + "/" + fileUri.TrimStart('/'); 
+                if (!fileUri.StartsWith(BaseUri))
+                {
+                    fileUri = BaseUri.TrimEnd('/') + "/" + fileUri.TrimStart('/');
                 }
 
-                RelativeUri = fileUri.TrimStart(BaseUri.ToCharArray());
+                RelativeUri = fileUri.Replace(BaseUri,"").TrimStart('/');
             }
 
             _fileUri = fileUri;

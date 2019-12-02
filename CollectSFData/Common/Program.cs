@@ -175,7 +175,7 @@ namespace CollectSFData
                 BlobManager blobMgr = new BlobManager()
                 {
                     IngestCallback = (sourceFileUri) => { QueueForIngest(sourceFileUri); },
-                    ReturnSourceFileLink = Config.IsKustoConfigured() & Config.KustoUseBlobAsSource
+                    ReturnSourceFileLink = (Config.IsKustoConfigured() & Config.KustoUseBlobAsSource) | Config.FileType == FileTypesEnum.exception
                 };
 
                 if (blobMgr.Connect())

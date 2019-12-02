@@ -332,11 +332,15 @@ namespace CollectSFData
 
                         if (ReturnSourceFileLink)
                         {
-                            IngestCallback?.Invoke(new FileObject(blob.Uri.AbsolutePath, Config.SasEndpointInfo.BlobEndpoint) { Length = blobRef.Properties.Length });
+                            IngestCallback?.Invoke(new FileObject(blob.Uri.AbsolutePath, Config.SasEndpointInfo.BlobEndpoint) 
+                            { 
+                                Length = blobRef.Properties.Length,
+                                LastModified = lastModified
+                            });
                             continue;
                         }
 
-                        FileObject fileObject = new FileObject(blob.Uri.AbsolutePath, Config.CacheLocation);
+                        FileObject fileObject = new FileObject(blob.Uri.AbsolutePath, Config.CacheLocation) { LastModified = lastModified };
                         Log.Info($"queueing blob with timestamp: {lastModified}\r\n file: {blob.Uri.AbsolutePath}");
 
                         if (!fileObject.Exists)

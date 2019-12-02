@@ -415,6 +415,15 @@ namespace CollectSFData
                     }.CounterSchema());
 
                     break;
+                
+                case FileTypesEnum.exception:
+                    ingestionJsonString = JsonConvert.SerializeObject(new KustoIngestionMappings(fileObject)
+                    {
+                        ResourceUri = Config.ResourceUri,
+                        SetConstants = Config.KustoUseBlobAsSource,
+                    }.ExceptionSchema());
+
+                    break;
 
                 case FileTypesEnum.setup:
                     ingestionJsonString = JsonConvert.SerializeObject(new KustoIngestionMappings(fileObject)
