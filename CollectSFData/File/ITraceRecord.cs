@@ -10,11 +10,17 @@ namespace CollectSFData
     public interface ITraceRecord : IRecord
     {
         string FileType { get; set; }
+
         string Level { get; set; }
+
         string NodeName { get; set; }
+
+        int TID { get; set; }
+
         int PID { get; set; }
+
         string Text { get; set; }
-        DateTime Timestamp { get; set; }
+
         string Type { get; set; }
     }
 }
