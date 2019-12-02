@@ -82,7 +82,7 @@ namespace CollectSFData
 
             if (!string.IsNullOrEmpty(BaseUri))
             {
-                if (!fileUri.StartsWith(BaseUri))
+                if (!fileUri.ToLower().StartsWith(BaseUri.ToLower()))
                 {
                     fileUri = BaseUri.TrimEnd('/') + "/" + fileUri.TrimStart('/');
                 }

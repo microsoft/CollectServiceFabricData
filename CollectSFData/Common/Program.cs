@@ -100,14 +100,21 @@ namespace CollectSFData
         {
             Log.Debug("enter");
 
-            if (Config.IsKustoConfigured())
+            if (Config.IsKustoConfigured() | Config.IsLogAnalyticsConfigured())
             {
-                TaskManager.QueueTaskAction(() => Kusto.AddFile(fileObject));
-            }
+                if (Config.IsKustoConfigured())
+                {
+                    TaskManager.QueueTaskAction(() => Kusto.AddFile(fileObject));
+                }
 
-            if (Config.IsLogAnalyticsConfigured())
+                if (Config.IsLogAnalyticsConfigured())
+                {
+                    TaskManager.QueueTaskAction(() => LogAnalytics.AddFile(fileObject));
+                }
+            }
+            else
             {
-                TaskManager.QueueTaskAction(() => LogAnalytics.AddFile(fileObject));
+                TaskManager.QueueTaskAction(() => FileMgr.Format(fileObject));
             }
         }
 
