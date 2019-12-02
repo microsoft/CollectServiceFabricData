@@ -72,14 +72,15 @@ namespace CollectSFData
 
             string[] newLine = record.Split(new string[] { "," }, _fieldCount, StringSplitOptions.None);
             string additionalCommas = string.Empty;
+            string newText = newLine[newLine.Length - 1];
 
             if (newLine.Length < _fieldCount)
             {
                 additionalCommas = new string(',', _fieldCount - newLine.Length);
             }
 
-            newLine[newLine.Length - 1] = newLine[newLine.Length - 1].Replace("\"", "'").TrimEnd('\r', '\n');
-            newLine[newLine.Length - 1] = $"{additionalCommas}\"{newLine[newLine.Length - 1]}\"";
+            newText = newText.TrimStart('\"').TrimEnd('\"', '\r', '\n').Replace("\"", "'");
+            newLine[newLine.Length - 1] = $"{additionalCommas}\"{newText}\"";
             return newLine;
         }
     }
