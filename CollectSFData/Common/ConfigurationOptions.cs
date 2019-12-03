@@ -353,22 +353,9 @@ namespace CollectSFData
 
         public void SaveConfigFile()
         {
-            string kustoTable = KustoTable;
-            string logAnalyticsName = LogAnalyticsName;
-
             if (string.IsNullOrEmpty(SaveConfiguration))
             {
                 return;
-            }
-
-            if (IsKustoConfigured())
-            {
-                KustoTable = Regex.Replace(KustoTable, $"^{GatherType}_", "");
-            }
-
-            if (IsLogAnalyticsConfigured())
-            {
-                LogAnalyticsName = Regex.Replace(LogAnalyticsName, $"^{GatherType}_", "");
             }
 
             // remove options that should not be saved in configuration file
@@ -383,19 +370,19 @@ namespace CollectSFData
             options.Remove("SaveConfiguration");
             options.Remove("StartTimeUtc");
 
-            if (!IsCacheLocationPreConfigured())
-            {
-                options.Remove("CacheLocation");
-            }
-
             if (IsKustoConfigured())
             {
-                KustoTable = kustoTable;
+                options.Property("KustoTable").Value = Regex.Replace(KustoTable, $"^{GatherType}_", "");
             }
 
             if (IsLogAnalyticsConfigured())
             {
-                LogAnalyticsName = logAnalyticsName;
+                options.Property("LogAnalyticsName").Value = Regex.Replace(LogAnalyticsName, $"^{GatherType}_", "");
+            }
+
+            if (!IsCacheLocationPreConfigured())
+            {
+                options.Remove("CacheLocation");
             }
 
             Log.Info($"options results:", options);
