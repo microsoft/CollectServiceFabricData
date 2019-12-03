@@ -238,7 +238,7 @@ namespace CollectSFData
                     TotalRecords++;
                     results.Add(new CsvTableRecord()
                     {
-                        Timestamp = result.Timestamp.DateTime,
+                        Timestamp = result.Timestamp.DateTime.ToUniversalTime(),
                         EventTimeStamp = actualTimeStamp,
                         ETag = result.ETag,
                         PartitionKey = $"\"{result.PartitionKey}\"",
