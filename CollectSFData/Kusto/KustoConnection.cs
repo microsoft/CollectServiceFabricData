@@ -415,7 +415,7 @@ namespace CollectSFData
                     }.CounterSchema());
 
                     break;
-                
+
                 case FileTypesEnum.exception:
                     ingestionJsonString = JsonConvert.SerializeObject(new KustoIngestionMappings(fileObject)
                     {
