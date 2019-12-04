@@ -45,7 +45,7 @@ namespace CollectSFData
         public string RelativeUri { get; private set; }
 
         public StreamManager Stream { get; set; }
-        
+
         private void ExtractNodeName(string fileUri)
         {
             // ARM nodename should be surrounded by / or _ or trailing $ and have _  and digit in name
@@ -84,7 +84,7 @@ namespace CollectSFData
                     fileUri = BaseUri.TrimEnd('/') + "/" + fileUri.TrimStart('/');
                 }
 
-                RelativeUri = fileUri.Replace(BaseUri,"").TrimStart('/');
+                RelativeUri = fileUri.Replace(BaseUri, "").TrimStart('/');
             }
 
             _fileUri = fileUri;

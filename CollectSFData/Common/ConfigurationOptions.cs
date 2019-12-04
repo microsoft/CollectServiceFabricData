@@ -810,7 +810,7 @@ namespace CollectSFData
                 Log.Warning($"setting UseMemoryStream to true for FileType 'exception'");
                 UseMemoryStream = true;
             }
-                
+
             return retval;
         }
 
