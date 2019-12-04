@@ -4,12 +4,14 @@
 // ------------------------------------------------------------
 
 using System;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace CollectSFData
 {
     public class Instance : Constants
     {
+        public static SynchronizedList<string> DisplayMessages = new SynchronizedList<string>();
         public static ConfigurationOptions Config = new ConfigurationOptions();
         public static FileManager FileMgr = new FileManager();
         public static KustoConnection Kusto = null;

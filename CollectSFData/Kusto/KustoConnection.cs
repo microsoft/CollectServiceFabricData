@@ -49,7 +49,7 @@ namespace CollectSFData
             }
             else
             {
-                IngestMultipleFiles(FileMgr.Format(fileObject));
+                IngestMultipleFiles(FileMgr.ProcessFile(fileObject));
             }
         }
 

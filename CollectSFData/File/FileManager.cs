@@ -45,8 +45,8 @@ namespace CollectSFData
 
             return path;
         }
-
-        public FileObjectCollection Format(FileObject fileObject)
+        
+        public FileObjectCollection ProcessFile(FileObject fileObject)
         {
             Log.Debug($"enter:{fileObject.FileUri}");
 
@@ -356,9 +356,10 @@ namespace CollectSFData
             Log.Debug($"enter:{fileObject.FileUri}");
             IList<CsvExceptionRecord> records = new List<CsvExceptionRecord>
             {
-                new CsvExceptionRecord($"{fileObject.FileUri}{Config.SasEndpointInfo.SasToken}", fileObject, Config.ResourceUri)
+                new CsvExceptionRecord($"{fileObject.FileUri}", fileObject, Config.ResourceUri)
             };
 
+            DisplayMessages.Add($"{fileObject.LastModified} {fileObject.FileUri}{Config.SasEndpointInfo.SasToken}");
             TotalFilesFormatted++;
             TotalRecords += records.Count;
             return PopulateCollection(fileObject, records);
@@ -454,9 +455,16 @@ namespace CollectSFData
 
         private void SaveToCache(FileObject fileObject, bool force = false)
         {
-            if (force || (!Config.UseMemoryStream & !fileObject.Exists))
+            try
             {
-                fileObject.Stream.SaveToFile();
+                if (force || (!Config.UseMemoryStream & !fileObject.Exists))
+                {
+                    fileObject.Stream.SaveToFile();
+                }
+            }
+            catch (Exception e)
+            {
+                Log.Exception($"{e}", fileObject);
             }
         }
     }
