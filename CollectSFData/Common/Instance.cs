@@ -11,6 +11,7 @@ namespace CollectSFData
     public class Instance : Constants
     {
         public static ConfigurationOptions Config = new ConfigurationOptions();
+        public static SynchronizedList<string> DisplayMessages = new SynchronizedList<string>();
         public static FileManager FileMgr = new FileManager();
         public static KustoConnection Kusto = null;
         public static LogAnalyticsConnection LogAnalytics = null;
