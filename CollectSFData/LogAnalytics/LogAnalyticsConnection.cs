@@ -42,7 +42,7 @@ namespace CollectSFData
                 return;
             }
 
-            ImportJson(FileMgr.Format(fileObject));
+            ImportJson(FileMgr.ProcessFile(fileObject));
         }
 
         public bool Connect()

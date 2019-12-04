@@ -42,8 +42,6 @@ namespace CollectSFData
 
         public string NodeName { get; private set; } = FileDataTypesEnum.unknown.ToString();
 
-        public string Parent { get; private set; }
-
         public string RelativeUri { get; private set; }
 
         public StreamManager Stream { get; set; }
@@ -67,7 +65,6 @@ namespace CollectSFData
             if (!string.IsNullOrEmpty(fileUri))
             {
                 fileUri = FileManager.NormalizePath(fileUri);
-                Parent = Path.GetDirectoryName(fileUri);
                 ExtractNodeName(fileUri);
                 FileDataType = FileTypes.MapFileDataTypeUri(fileUri);
 
