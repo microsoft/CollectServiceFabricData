@@ -199,7 +199,7 @@ namespace CollectSFData
             return fileType;
         }
 
-        public void DisplayStatus()
+        public void DisplayStatus(SynchronizedList<string> displayMessages = null)
         {
             Log.Min($"      Gathering: {FileType.ToString()}", ConsoleColor.White);
             Log.Min($"         Source: {(SasEndpointInfo?.StorageAccountName ?? CacheLocation)}", ConsoleColor.White);
@@ -235,6 +235,12 @@ namespace CollectSFData
                     Log.Min($"AzureResourceGroup: {AzureResourceGroup}", ConsoleColor.Yellow);
                     Log.Min($"AzureResourceGroupLocation: {AzureResourceGroupLocation}", ConsoleColor.Yellow);
                 }
+            }
+
+            if (displayMessages != null)
+            {
+                displayMessages.Sort((x, y) => -y.CompareTo(x));
+                Log.Min(string.Join(Environment.NewLine, displayMessages), ConsoleColor.Cyan);
             }
         }
 
@@ -353,22 +359,9 @@ namespace CollectSFData
 
         public void SaveConfigFile()
         {
-            string kustoTable = KustoTable;
-            string logAnalyticsName = LogAnalyticsName;
-
             if (string.IsNullOrEmpty(SaveConfiguration))
             {
                 return;
-            }
-
-            if (IsKustoConfigured())
-            {
-                KustoTable = Regex.Replace(KustoTable, $"^{GatherType}_", "");
-            }
-
-            if (IsLogAnalyticsConfigured())
-            {
-                LogAnalyticsName = Regex.Replace(LogAnalyticsName, $"^{GatherType}_", "");
             }
 
             // remove options that should not be saved in configuration file
@@ -383,19 +376,19 @@ namespace CollectSFData
             options.Remove("SaveConfiguration");
             options.Remove("StartTimeUtc");
 
-            if (!IsCacheLocationPreConfigured())
-            {
-                options.Remove("CacheLocation");
-            }
-
             if (IsKustoConfigured())
             {
-                KustoTable = kustoTable;
+                options.Property("KustoTable").Value = Regex.Replace(KustoTable, $"^{GatherType}_", "");
             }
 
             if (IsLogAnalyticsConfigured())
             {
-                LogAnalyticsName = logAnalyticsName;
+                options.Property("LogAnalyticsName").Value = Regex.Replace(LogAnalyticsName, $"^{GatherType}_", "");
+            }
+
+            if (!IsCacheLocationPreConfigured())
+            {
+                options.Remove("CacheLocation");
             }
 
             Log.Info($"options results:", options);
@@ -810,6 +803,12 @@ namespace CollectSFData
             {
                 Log.Warning($"invalid -type|--gatherType argument, value can be:", Enum.GetNames(typeof(FileTypesEnum)).Skip(2));
                 retval = false;
+            }
+
+            if (FileType == FileTypesEnum.exception && !UseMemoryStream)
+            {
+                Log.Warning($"setting UseMemoryStream to true for FileType 'exception'");
+                UseMemoryStream = true;
             }
 
             return retval;

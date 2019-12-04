@@ -228,6 +228,7 @@
              $resultCopy = $resultModel.PsObject.Copy()
              
              foreach ($column in ($kusto.resultObject.tables[0].columns)) {
+                 #write-verbose "createResultTable: procesing column $count"
                  $resultCopy.($column.ColumnName) = $row[$count++]
              }
 
@@ -274,7 +275,7 @@
          }
    
          if ($kusto.query) {
-             write-host "query:$($kusto.table) $($kusto.query.substring(0, [math]::min($kusto.query.length,512)))" -ForegroundColor Cyan
+             write-host "table:$($kusto.table) query:$($kusto.query.substring(0, [math]::min($kusto.query.length,512)))" -ForegroundColor Cyan
          }
    
          if ($kusto.script) {

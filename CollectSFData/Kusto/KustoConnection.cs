@@ -49,7 +49,7 @@ namespace CollectSFData
             }
             else
             {
-                IngestMultipleFiles(FileMgr.Format(fileObject));
+                IngestMultipleFiles(FileMgr.ProcessFile(fileObject));
             }
         }
 
@@ -415,7 +415,7 @@ namespace CollectSFData
                     }.CounterSchema());
 
                     break;
-                
+
                 case FileTypesEnum.exception:
                     ingestionJsonString = JsonConvert.SerializeObject(new KustoIngestionMappings(fileObject)
                     {
