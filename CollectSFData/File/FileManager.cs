@@ -45,7 +45,7 @@ namespace CollectSFData
 
             return path;
         }
-        
+
         public FileObjectCollection ProcessFile(FileObject fileObject)
         {
             Log.Debug($"enter:{fileObject.FileUri}");
