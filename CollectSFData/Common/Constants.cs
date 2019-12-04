@@ -12,6 +12,7 @@ namespace CollectSFData
         public const string ArmApiVersion = "api-version=2018-05-01";
         public const string CodeRepository = "https://github.com/microsoft/CollectServiceFabricData";
         public const string CsvExtension = ".csv";
+        public const string DataExplorer = "https://dataexplorer.azure.com";
         public const string DateTimeFormat = "yyyy-MM-ddTHH:mm:ss.ffffffZ";
         public const string DefaultDatePattern = "MM/dd/yyyy HH:mm zzz";
         public const string DefaultOptionsFile = "collectsfdata.options.json";

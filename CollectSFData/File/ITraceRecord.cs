@@ -3,8 +3,6 @@
 // Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
-using System;
-
 namespace CollectSFData
 {
     public interface ITraceRecord : IRecord
@@ -15,12 +13,12 @@ namespace CollectSFData
 
         string NodeName { get; set; }
 
-        int TID { get; set; }
-
         int PID { get; set; }
-
+        
         string Text { get; set; }
 
+        int TID { get; set; }
+        
         string Type { get; set; }
     }
 }

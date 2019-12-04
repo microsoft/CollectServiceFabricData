@@ -332,8 +332,8 @@ namespace CollectSFData
 
                         if (ReturnSourceFileLink)
                         {
-                            IngestCallback?.Invoke(new FileObject(blob.Uri.AbsolutePath, Config.SasEndpointInfo.BlobEndpoint) 
-                            { 
+                            IngestCallback?.Invoke(new FileObject(blob.Uri.AbsolutePath, Config.SasEndpointInfo.BlobEndpoint)
+                            {
                                 Length = blobRef.Properties.Length,
                                 LastModified = lastModified
                             });
