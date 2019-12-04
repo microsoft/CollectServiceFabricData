@@ -71,7 +71,7 @@ namespace CollectSFData
                     }
                 }
 
-                Config.DisplayStatus();
+                Config.DisplayStatus(DisplayMessages);
                 Config.SaveConfigFile();
 
                 Log.Info($"{TotalFilesEnumerated} files enumerated.");
@@ -114,7 +114,7 @@ namespace CollectSFData
             }
             else
             {
-                TaskManager.QueueTaskAction(() => FileMgr.Format(fileObject));
+                TaskManager.QueueTaskAction(() => FileMgr.ProcessFile(fileObject));
             }
         }
 
@@ -200,7 +200,7 @@ namespace CollectSFData
             }
             else if (Config.IsKustoConfigured())
             {
-                Log.Min($"https://dataexplorer.azure.com/clusters/{Kusto.Endpoint.ClusterName}/databases/{Kusto.Endpoint.DatabaseName}");
+                DisplayMessages.Add($"{DataExplorer}/clusters/{Kusto.Endpoint.ClusterName}/databases/{Kusto.Endpoint.DatabaseName}");
             }
         }
 
