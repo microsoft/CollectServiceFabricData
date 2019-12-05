@@ -1,6 +1,4 @@
-// sflogs issue query of Type and/or Text or Any
-.create-or-alter function with (docstring = '[T:string] where T=table name. function to search service fabric sflogs for known issues. good place to start', folder = 'sflogs/_start-here')
-    TraceKnownIssue (T:string) {
+.create-or-alter function with (docstring = "[T:string] where T=table name. function to search service fabric sflogs for known issues. good place to start",folder = "sflogs/_start-here") TraceKnownIssue(T:string) {
         // search any column using string contains
         let AnyContains = (tableName:string, issue:string, query:string) {
             table(tableName) | extend KnownIssue = iif((* contains query), true, false) | extend Reason = iif(KnownIssue, issue, "")
@@ -88,5 +86,11 @@
         TextContains(T, "expired certificate. use TSG: https://github.com/Azure/Service-Fabric-Troubleshooting-Guides/blob/master/Security/How%20to%20recover%20from%20an%20Expired%20Cluster%20Certificate.md", "SFRP poll: Exception encountered: System.InvalidOperationException: Could not load primary and secondary certificate"),
         TypeContains(T, "reverse proxy errors", "ReverseProxy.SendResponseError"),
         TypeAndTextContains(T, "reverse proxy errors possible port / app issue", "ReverseProxy.SendResponseError","SendResponseChunk, error = 3489660929"),
-        TypeContains(T, "lease slow send warning","Lease.SlowSendCompletion")
+        TypeAndTextMatches(T, "quorum loss reported", "FM.FailoverUnitCounts", "QuorumLoss=[^0]"),
+        TypeAndTextMatches(T, "unhealthy nodes reported", "FM.FailoverUnitCounts", "Unhealthy=[^0]"),
+        TypeAndTextMatches(T, "offline nodes reported", "FM.FailoverUnitCounts", "Offline=[^0]"),
+        TypeAndTextMatches(T, "deactivated nodes reported", "FM.NodeCounts", "Deactivated=[^0]"),
+        TypeAndTextMatches(T, "down nodes reported", "FM.NodeCounts", "Down=[^0]"),
+        TypeAndTextMatches(T, "removed nodes reported", "FM.NodeCounts", "Removed=[^0]"),
+        TypeAndTextMatches(T, "cm upgrade error", "CM.UpgradeReply","Error = [^S_OK]")
     }
