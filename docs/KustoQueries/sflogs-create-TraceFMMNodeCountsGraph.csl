@@ -29,6 +29,6 @@
         avg(toint(removed)),
         avg(toint(pendingDeactivate)),
         avg(toint(pendingUpgrade))
-        by xtime=bin(Timestamp,5s)
-    | render timechart  with  (xcolumn=xtime)
+        by bin(Timestamp,5s)
+    | render timechart
 }

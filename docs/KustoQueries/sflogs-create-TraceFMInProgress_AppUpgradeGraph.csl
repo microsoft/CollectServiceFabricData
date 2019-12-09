@@ -1,0 +1,29 @@
+.create-or-alter function with (docstring = "function to graph FM.InProgress_AppUpgrade at default 5 second intervals",folder = "sflogs") TraceFMInProgress_AppUpgradeGraph(T:string) {
+    table(T)
+    | where Type contains "FM.InProgress_AppUpgrade"
+    | order by Timestamp asc 
+    | project Timestamp,Text
+    | parse kind=regex flags=i Text with * 
+        @'domain' domain 
+        @'still in progress:' notUsed
+        @' IsContextCompleted=' isContextCompleted
+        @', Unprocessed=' unprocessed
+        @', Ready=' ready
+        @', Pending=' pending
+        @', Waiting=' waiting
+        @', Cancel=' ['cancel']
+        @', NotReady=' notReady
+        @', PLBSafetyCheckStatus=' plbSafetyCheckStatus
+    | summarize 
+        avg(toint(domain)), 
+        avg(toint(tobool(isContextCompleted))),
+        avg(toint(unprocessed)), 
+        avg(toint(ready)),
+        avg(toint(pending)),
+        avg(toint(waiting)),
+        avg(toint(['cancel'])),
+        avg(toint(notReady)),
+        avg(toint(tobool(plbSafetyCheckStatus)))
+        by bin(Timestamp,5s)
+    | render timechart
+}
