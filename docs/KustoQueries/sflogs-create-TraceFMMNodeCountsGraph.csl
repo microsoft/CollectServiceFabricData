@@ -1,5 +1,4 @@
 .create-or-alter function with (docstring = "function to graph FMM.NodeCounts at default 5 second intervals",folder = "sflogs") TraceFMMNodeCountsGraph(T:string) {
-    let extractPattern = @"(?P<name>.+?)=(?P<value>\d+?)(?:\s|$)";
     table(T)
     | where Type contains "FMM.NodeCounts"
     | order by Timestamp asc 
