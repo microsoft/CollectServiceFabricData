@@ -14,7 +14,9 @@
         };
         // search Type And Text column using string contains
         let TypeAndTextContains = (tableName:string, issue:string, typeQuery:string, textQuery:string) {
-            table(tableName) | extend KnownIssue = iif((Type contains typeQuery and Text contains textQuery), true, false) | extend Reason = iif(KnownIssue, issue, "")
+            table(tableName) 
+            | extend KnownIssue = iif((Type contains typeQuery and Text contains textQuery), true, false) 
+            | extend Reason = iif(KnownIssue, strcat(issue,' ::type contains: ', typeQuery, ' ::text contains: ', textQuery ), "")
         };
         // search Type And Text column using regex sensitive match
         let TypeAndTextMatches = (tableName:string, issue:string, typeQuery:string, textQuery:string) {
@@ -24,11 +26,15 @@
         let TypeAndTextIMatches = (tableName:string, issue:string, typeQuery:string, textQuery:string) {
             let itypeQuery = strcat('(?i:',typeQuery,')'); // re2 case insensitive
             let itextQuery = strcat('(?i:',textQuery,')'); // re2 case insensitive
-            table(tableName) | extend KnownIssue = iif((Type matches regex itypeQuery and Text matches regex itextQuery), true, false) | extend Reason = iif(KnownIssue, issue, "")
+            table(tableName) 
+            | extend KnownIssue = iif((Type matches regex itypeQuery and Text matches regex itextQuery), true, false) 
+            | extend Reason = iif(KnownIssue, strcat(issue,' ::type matches: ', typeQuery, ' ::text matches: ', textQuery ), "")
         };
         // search Text column using string contains
         let TextContains = (tableName:string, issue:string, query:string) {
-            table(tableName) | extend KnownIssue = iif((Text contains query), true, false) | extend Reason = iif(KnownIssue, issue, "")
+            table(tableName) 
+            | extend KnownIssue = iif((Text contains query), true, false) 
+            | extend Reason = iif(KnownIssue, strcat(issue,' ::text contains: ', query ), "")
         };
         // search Text column using regex sensitive match
         let TextMatches = (tableName:string, issue:string, query:string) {
@@ -76,7 +82,7 @@
         TextContains(T, "replica performance 0x80071cf7", "0x80071cf7"),
         TextContains(T, "communication errors", "failed with status -107374"),
         TextContains(T, "port exhaustion", "failed to bind to local port for connecting: 0x80072747"),
-        TextContains(T, "rolling back", "rollingback"),
+        TypeAndTextContains(T, "rolling back", "CM.UpgradeRequest", "state=RollingBack"),
         TextContains(T, "health check fail", "health check failed"),
         TypeContains(T, "crash dumps in storage account", "crashdumpfound"),
         TypeOrTextContains(T, "exception", "exception"),
@@ -92,5 +98,6 @@
         TypeAndTextMatches(T, "deactivated nodes reported", "FM.NodeCounts", "Deactivated=[^0]"),
         TypeAndTextMatches(T, "down nodes reported", "FM.NodeCounts", "Down=[^0]"),
         TypeAndTextMatches(T, "removed nodes reported", "FM.NodeCounts", "Removed=[^0]"),
-        TypeAndTextMatches(T, "cm upgrade error", "CM.UpgradeReply","Error = [^S_OK]")
+        TypeAndTextMatches(T, "cm upgrade error", "CM.UpgradeReply","Error = [^S_OK]"),
+        TextContains(T, "docker health error", "Docker HEALTHCHECK reported health_status=unhealthy")
     }
