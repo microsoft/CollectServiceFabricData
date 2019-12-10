@@ -1,0 +1,37 @@
+.create-or-alter function with (docstring = "function to graph CM.UpgradeReply at default 5 second intervals",folder = "sflogs") TraceCMUpgradeReplyGraph(T:string) {
+    table(T)
+    | where Type contains "CM.UpgradeReply"
+    | order by Timestamp asc 
+    | project Timestamp,Text
+    | parse kind=regex flags=Ui Text with * 
+        @'Error = ' error_S_OK
+        @'Completed = \[\s?' completed
+        @'\s?\]\s+?Pending = \[\s?' pending
+        @'\s?\]\s+?Skipped = \[\s?' skipped
+        @'\s?\]\s+?CurrentUpgradeDomain=' currentUpgradeDomain
+        @'[^\d]'
+    | summarize 
+        Error = avg(toint(error_S_OK !contains "S_OK")),
+        currentUpgradeDomain = avg(toint(currentUpgradeDomain)),
+        completed_0 = avg(toint(completed contains "0")), 
+        completed_1 = avg(toint(completed contains "1")), 
+        completed_2 = avg(toint(completed contains "2")), 
+        completed_3 = avg(toint(completed contains "3")), 
+        completed_4 = avg(toint(completed contains "4")),
+        pending_0 = avg(toint(pending contains "0")), 
+        pending_1 = avg(toint(pending contains "1")), 
+        pending_2 = avg(toint(pending contains "2")), 
+        pending_3 = avg(toint(pending contains "3")), 
+        pending_4 = avg(toint(pending contains "4")),
+        skipped_0 = avg(toint(skipped contains "0")), 
+        skipped_1 = avg(toint(skipped contains "1")), 
+        skipped_2 = avg(toint(skipped contains "2")), 
+        skipped_3 = avg(toint(skipped contains "3")), 
+        skipped_4 = avg(toint(skipped contains "4"))
+        by bin(Timestamp,5s)
+    | extend completedTotal = (completed_0 + completed_1 + completed_2 + completed_3 + completed_4)
+    | extend pendingTotal = (pending_0 + pending_1 + pending_2 + pending_3 + pending_4)
+    | extend skippedTotal = (skipped_0 + skipped_1 + skipped_2 + skipped_3 + skipped_4)
+    | project-away completed_0, completed_1, completed_2, completed_3, completed_4, pending_0, pending_1, pending_2, pending_3, pending_4, skipped_0, skipped_1, skipped_2, skipped_3, skipped_4
+    | render timechart
+}
