@@ -1,9 +1,10 @@
-.create-or-alter function with (docstring = "function to graph FM.InProgress_AppUpgrade at default 5 second intervals",folder = "sflogs") TraceFMInProgress_AppUpgradeGraph(T:string) {
+.create-or-alter function with (docstring = "function to graph FM.InProgress_AppUpgrade at default 5 second intervals",folder = "sflogs") TraceFMInProgress_AppUpgradeGraph(T:string, appName:string=".") {
     table(T)
     | where Type contains "FM.InProgress_AppUpgrade"
     | order by Timestamp asc 
     | project Timestamp,Text
     | parse kind=regex flags=i Text with * 
+        @'Upgrade for ' app
         @'domain' domain 
         @'still in progress:' notUsed
         @' IsContextCompleted=' isContextCompleted
@@ -14,16 +15,17 @@
         @', Cancel=' ['cancel']
         @', NotReady=' notReady
         @', PLBSafetyCheckStatus=' plbSafetyCheckStatus
+    | where app matches regex strcat('(?i:',appName,')')
     | summarize 
-        avg(toint(domain)), 
-        avg(toint(tobool(isContextCompleted))),
-        avg(toint(unprocessed)), 
-        avg(toint(ready)),
-        avg(toint(pending)),
-        avg(toint(waiting)),
-        avg(toint(['cancel'])),
-        avg(toint(notReady)),
-        avg(toint(tobool(plbSafetyCheckStatus)))
-        by bin(Timestamp,5s)
+        max(toint(domain)), 
+        max(toint(tobool(isContextCompleted))),
+        max(toint(unprocessed)), 
+        max(toint(ready)),
+        max(toint(pending)),
+        max(toint(waiting)),
+        max(toint(['cancel'])),
+        max(toint(notReady)),
+        max(toint(tobool(plbSafetyCheckStatus)))
+        by bin(Timestamp,5s), app
     | render timechart
 }

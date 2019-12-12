@@ -1,16 +1,22 @@
 .create-or-alter function with (docstring = "[T:string] where T=table name. function to search service fabric sflogs for known issues. good place to start",folder = "sflogs/_start-here") TraceKnownIssue(T:string) {
         // search any column using string contains
         let AnyContains = (tableName:string, issue:string, query:string) {
-            table(tableName) | extend KnownIssue = iif((* contains query), true, false) | extend Reason = iif(KnownIssue, issue, "")
+            table(tableName) 
+            | extend KnownIssue = iif((* contains query), true, false) 
+            | extend Reason = iif(KnownIssue, issue, "")
         };
         // search any column using regex sensitive match
         let AnyMatches = (tableName:string, issue:string, query:string) {
-            table(tableName) | extend KnownIssue = iif((* matches regex query), true, false) | extend Reason = iif(KnownIssue, issue, "")
+            table(tableName) 
+            | extend KnownIssue = iif((* matches regex query), true, false) 
+            | extend Reason = iif(KnownIssue, issue, "")
         };
         // search any column using regex insensitive match
         let AnyIMatches = (tableName:string, issue:string, query:string) {
             let iQuery = strcat('(?i:',query,')'); // re2 case insensitive
-            table(tableName) | extend KnownIssue = iif((* matches regex iQuery), true, false) | extend Reason = iif(KnownIssue, issue, "")
+            table(tableName) 
+            | extend KnownIssue = iif((* matches regex iQuery), true, false) 
+            | extend Reason = iif(KnownIssue, issue, "")
         };
         // search Type And Text column using string contains
         let TypeAndTextContains = (tableName:string, issue:string, typeQuery:string, textQuery:string) {
@@ -76,9 +82,12 @@
         // use *Matches (regex) only when needed as it is remarkably slower
         // use Any* only when needed
         TextContains(T, "out of disk space", "does not have enough disk space to operate"),
+        TextContains(T, "disk full", "80070070"),
         TextContains(T, "stuck replica", "is stuck"),
         TypeContains(T,"api slow", "api.slow"),
         TextContains(T,"slow progress", "DueToSlowProgress=True"),
+        TypeContains(T, "node performance issues lease slow send", "Lease.SlowSendCompletion"),
+        TypeContains(T, "node performance issues lease send queue full", "Lease.SendQueueFull"),
         TextContains(T, "replica performance 0x80071cf7", "0x80071cf7"),
         TextContains(T, "communication errors", "failed with status -107374"),
         TextContains(T, "port exhaustion", "failed to bind to local port for connecting: 0x80072747"),
@@ -99,5 +108,7 @@
         TypeAndTextMatches(T, "down nodes reported", "FM.NodeCounts", "Down=[^0]"),
         TypeAndTextMatches(T, "removed nodes reported", "FM.NodeCounts", "Removed=[^0]"),
         TypeAndTextMatches(T, "cm upgrade error", "CM.UpgradeReply","Error = [^S_OK]"),
-        TextContains(T, "docker health error", "Docker HEALTHCHECK reported health_status=unhealthy")
+        TextContains(T, "docker health error", "Docker HEALTHCHECK reported health_status=unhealthy"),
+        TextContains(T, ".net exception", "3762504530"),
+        TypeAndTextContains(T, "docker container not responsive", "ManagedHosting.ContainerEventManager", "Failed to connect to DockerService at named pipe 'docker_engine'")
     }
