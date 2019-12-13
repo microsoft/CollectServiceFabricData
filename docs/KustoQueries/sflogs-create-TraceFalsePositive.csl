@@ -1,107 +1,113 @@
 // sflogs extend 'FalsePositive' false positive query of Type and/or Text or Any
 .create-or-alter function with (docstring = '[T:string] where T=table name. function to create FalsePositives column by searching service fabric sflogs for false warning / error traces. good place to start', folder = 'sflogs/_start-here')
     TraceFalsePositive (T:string) {
-        // search any column using string contains
-        let AnyContains = (tableName:(Type:string,Text:string,FalsePositive:bool), issue:string, query:string) {
-            let wasFalsePositive = tobool(toscalar(tableName | where FalsePositive == true));
-            tableName
-            | extend FalsePositive = iif((* contains query), true, FalsePositive) 
-            | extend Reason = iif(not(wasFalsePositive) and FalsePositive, strcat(issue,' ::any contains: ', query ), "")
-        };
         // search Type And Text column using string contains
-        let TypeAndTextContains = (tableName:(Type:string,Text:string,FalsePositive:bool), issue:string, typeQuery:string, textQuery:string) {
-            let wasFalsePositive = tobool(toscalar(tableName | where FalsePositive == true));
+        let TypeAndTextContains = (tableName:(Type:string,Text:string,FalsePositive:bool,Reason:string), issue:string, typeQuery:string, textQuery:string) {
             tableName
-            | extend FalsePositive = iif((Type contains typeQuery and Text contains textQuery), true, FalsePositive) 
-            | extend Reason = iif(not(wasFalsePositive) and FalsePositive, strcat(issue,' ::type contains: ', typeQuery, ' ::text contains: ', textQuery ), "")
+            | extend isFalsePositive = iif((Type contains typeQuery and Text contains textQuery),true,false)
+            | extend Reason = iif(isFalsePositive, strcat(issue,' ::type contains: ', typeQuery, ' ::text contains: ', textQuery ), Reason)
+            | extend FalsePositive = isFalsePositive or FalsePositive
+            | project-away isFalsePositive
         };
         // search Type And Text column using regex sensitive match
-        let TypeAndTextMatches = (tableName:(Type:string,Text:string,FalsePositive:bool), issue:string, typeQuery:string, textQuery:string) {
-            let wasFalsePositive = tobool(toscalar(tableName | where FalsePositive == true));
+        let TypeAndTextMatches = (tableName:(Type:string,Text:string,FalsePositive:bool,Reason:string), issue:string, typeQuery:string, textQuery:string) {
             tableName
-            | extend FalsePositive = iif((Type matches regex typeQuery and Text matches regex textQuery), true, FalsePositive) 
-            | extend Reason = iif(not(wasFalsePositive) and FalsePositive, strcat(issue,' ::type matches: ', typeQuery, ' ::text matches: ', textQuery ), "")
+            | extend isFalsePositive = iif((Type matches regex typeQuery and Text matches regex textQuery),true,false)
+            | extend Reason = iif(isFalsePositive, strcat(issue,' ::type matches: ', typeQuery, ' ::text matches: ', textQuery ), Reason)
+            | extend FalsePositive = isFalsePositive or FalsePositive
+            | project-away isFalsePositive
         };
         // search Type And Text column using regex insensitive match
-        let TypeAndTextIMatches = (tableName:(Type:string,Text:string,FalsePositive:bool),issue:string, typeQuery:string, textQuery:string) {
+        let TypeAndTextIMatches = (tableName:(Type:string,Text:string,FalsePositive:bool,Reason:string),issue:string, typeQuery:string, textQuery:string) {
             let itypeQuery = strcat('(?i:',typeQuery,')'); // re2 case insensitive
             let itextQuery = strcat('(?i:',textQuery,')'); // re2 case insensitive
-            let wasFalsePositive = tobool(toscalar(tableName | where FalsePositive == true));
             tableName
-            | extend FalsePositive = iif((Type matches regex itypeQuery and Text matches regex itextQuery), true, FalsePositive) 
-            | extend Reason = iif(not(wasFalsePositive) and FalsePositive, strcat(issue,' ::type matches: ', typeQuery, ' ::text matches: ', textQuery ), "")
+            | extend isFalsePositive = iif((Type matches regex itypeQuery and Text matches regex itextQuery),true,false)
+            | extend Reason = iif(isFalsePositive, strcat(issue,' ::type matches: ', typeQuery, ' ::text matches: ', textQuery ), Reason)
+            | extend FalsePositive = isFalsePositive or FalsePositive
+            | project-away isFalsePositive
         };
         // search Text column using string contains
-        let TextContains = (tableName:(Type:string,Text:string,FalsePositive:bool), issue:string, query:string) {
-            let wasFalsePositive = tobool(toscalar(tableName | where FalsePositive == true));
+        let TextContains = (tableName:(Type:string,Text:string,FalsePositive:bool,Reason:string), issue:string, query:string) {
             tableName
-            | extend FalsePositive = iif((Text contains query), true, FalsePositive) 
-            | extend Reason = iif(not(wasFalsePositive) and FalsePositive, strcat(issue,' ::text contains: ', query ), "")
+            | extend isFalsePositive = iif((Text contains query),true,false)
+            | extend Reason = iif(isFalsePositive, strcat(issue,' ::text contains: ', query ), Reason)
+            | extend FalsePositive = isFalsePositive or FalsePositive
+            | project-away isFalsePositive
         };
         // search Text column using regex sensitive match
-        let TextMatches = (tableName:(Type:string,Text:string,FalsePositive:bool), issue:string, query:string) {
-            let wasFalsePositive = tobool(toscalar(tableName | where FalsePositive == true));
+        let TextMatches = (tableName:(Type:string,Text:string,FalsePositive:bool,Reason:string), issue:string, query:string) {
             tableName
-            | extend FalsePositive = iif((Text matches regex query), true, FalsePositive) 
-            | extend Reason = iif(not(wasFalsePositive) and FalsePositive, strcat(issue,' ::text matches: ', query ), "")
+            | extend isFalsePositive = iif((Text matches regex query),true,false)
+            | extend Reason = iif(isFalsePositive, strcat(issue,' ::text matches: ', query ), Reason)
+            | extend FalsePositive = isFalsePositive or FalsePositive
+            | project-away isFalsePositive
         };
         // search Text column using regex insensitive match
-        let TextIMatches = (tableName:(Type:string,Text:string,FalsePositive:bool), issue:string, query:string) {
+        let TextIMatches = (tableName:(Type:string,Text:string,FalsePositive:bool,Reason:string), issue:string, query:string) {
             let iQuery = strcat('(?i:',query,')'); // re2 case insensitive
-            let wasFalsePositive = tobool(toscalar(tableName | where FalsePositive == true));
             tableName
-            | extend FalsePositive = iif((Text matches regex iQuery), true, FalsePositive) 
-            | extend Reason = iif(not(wasFalsePositive) and FalsePositive, strcat(issue,' ::text matches: ', query ), "")
+            | extend isFalsePositive = iif((Text matches regex iQuery),true,false)
+            | extend Reason = iif(isFalsePositive, strcat(issue,' ::text matches: ', query ), Reason)
+            | extend FalsePositive = isFalsePositive or FalsePositive
+            | project-away isFalsePositive
         };
         // search Type column using string contains
-        let TypeContains = (tableName:(Type:string,Text:string,FalsePositive:bool), issue:string, query:string) {
-            let wasFalsePositive = tobool(toscalar(tableName | where FalsePositive == true));
+        let TypeContains = (tableName:(Type:string,Text:string,FalsePositive:bool,Reason:string), issue:string, query:string) {
             tableName
-            | extend FalsePositive = iif((Type contains query), true, FalsePositive) 
-            | extend Reason = iif(not(wasFalsePositive) and FalsePositive, strcat(issue,' ::type contains: ', query ), "")
+            | extend isFalsePositive = iif((Type contains query),true,false)
+            | extend Reason = iif(isFalsePositive, strcat(issue,' ::type contains: ', query ), Reason)
+            | extend FalsePositive = isFalsePositive or FalsePositive
+            | project-away isFalsePositive
         };
         // search Type column using regex sensitive match
-        let TypeMatches = (tableName:(Type:string,Text:string,FalsePositive:bool), issue:string, query:string) {
-            let wasFalsePositive = tobool(toscalar(tableName | where FalsePositive == true));
+        let TypeMatches = (tableName:(Type:string,Text:string,FalsePositive:bool,Reason:string), issue:string, query:string) {
             tableName
-            | extend FalsePositive = iif((Type matches regex query), true, FalsePositive) 
-            | extend Reason = iif(not(wasFalsePositive) and FalsePositive, strcat(issue,' ::type matches: ', query ), "")
+            | extend isFalsePositive = iif((Type matches regex query),true,false)
+            | extend Reason = iif(isFalsePositive, strcat(issue,' ::type matches: ', query ), Reason)
+            | extend FalsePositive = isFalsePositive or FalsePositive
+            | project-away isFalsePositive
         };
         // search Type column using regex insensitive match
-        let TypeIMatches = (tableName:(Type:string,Text:string,FalsePositive:bool), issue:string, query:string) {
+        let TypeIMatches = (tableName:(Type:string,Text:string,FalsePositive:bool,Reason:string), issue:string, query:string) {
             let iQuery = strcat('(?i:',query,')'); // re2 case insensitive
-            let wasFalsePositive = tobool(toscalar(tableName | where FalsePositive == true));
             tableName
-            | extend FalsePositive = iif((Type matches regex iQuery), true, FalsePositive) 
-            | extend Reason = iif(not(wasFalsePositive) and FalsePositive, strcat(issue,' ::type matches: ', query ), "")
+            | extend isFalsePositive = iif((Type matches regex iQuery),true,false)
+            | extend Reason = iif(isFalsePositive, strcat(issue,' ::type matches: ', query ), Reason)
+            | extend FalsePositive = isFalsePositive or FalsePositive
+            | project-away isFalsePositive
         };
         // search Type or Text columns using string contains
-        let TypeOrTextContains = (tableName:(Type:string,Text:string,FalsePositive:bool), issue:string, query:string) {
-            let wasFalsePositive = tobool(toscalar(tableName | where FalsePositive == true));
+        let TypeOrTextContains = (tableName:(Type:string,Text:string,FalsePositive:bool,Reason:string), issue:string, query:string) {
             tableName
-            | extend FalsePositive = iif((Type contains query or Text contains query), true, FalsePositive) 
-            | extend Reason = iif(not(wasFalsePositive) and FalsePositive, strcat(issue,' ::type or text contains: ', query ), "")
+            | extend isFalsePositive = iif((Type contains query or Text contains query),true,false)
+            | extend Reason = iif(isFalsePositive, strcat(issue,' ::type or text contains: ', query ), Reason)
+            | extend FalsePositive = isFalsePositive or FalsePositive
+            | project-away isFalsePositive
         };
         // search Type or Text columns using regex sensitive match
-        let TypeOrTextMatches = (tableName:(Type:string,Text:string,FalsePositive:bool), issue:string, query:string) {
-            let wasFalsePositive = tobool(toscalar(tableName | where FalsePositive == true));
+        let TypeOrTextMatches = (tableName:(Type:string,Text:string,FalsePositive:bool,Reason:string), issue:string, query:string) {
             tableName
-            | extend FalsePositive = iif((Type matches regex query or Text matches regex query), true, FalsePositive) 
-            | extend Reason = iif(not(wasFalsePositive) and FalsePositive, strcat(issue,' ::type or text matches: ', query ), "")
+            | extend isFalsePositive = iif((Type matches regex query or Text matches regex query),true,false)
+            | extend Reason = iif(isFalsePositive, strcat(issue,' ::type or text matches: ', query ), Reason)
+            | extend FalsePositive = isFalsePositive or FalsePositive
+            | project-away isFalsePositive
         };
         // search Type or Text columns using regex insensitive match
-        let TypeOrTextIMatches = (tableName:(Type:string,Text:string,FalsePositive:bool), issue:string, query:string) {
+        let TypeOrTextIMatches = (tableName:(Type:string,Text:string,FalsePositive:bool,Reason:string), issue:string, query:string) {
             let iQuery = strcat('(?i:',query,')'); // re2 case insensitive
-            let wasFalsePositive = tobool(toscalar(tableName | where FalsePositive == true));
             tableName
-            | extend FalsePositive = iif((Type matches regex iQuery or Text matches regex iQuery), true, FalsePositive) 
-            | extend Reason = iif(not(wasFalsePositive) and FalsePositive, strcat(issue,' ::type or text matches: ', query ), "")
+            | extend isFalsePositive = iif((Type matches regex iQuery or Text matches regex iQuery),true,false)
+            | extend Reason = iif(isFalsePositive, strcat(issue,' ::type or text matches: ', query ), Reason)
+            | extend FalsePositive = isFalsePositive or FalsePositive
+            | project-away isFalsePositive
         };
         // add false positive signatures here using one of the provided functions in format table, issue description, string pattern
         // use *Matches (regex) only when needed as it is remarkably slower
         // use Any* only when needed
         table(T)
             | extend FalsePositive = false
+            | extend Reason = ""
             | invoke TypeAndTextIMatches("normal application / process exit by service fabric abort", "Hosting", "exitcode\\s?=?\\s?7148")
             | invoke TypeAndTextIMatches("normal application / process exit by service fabric deactivate", "Hosting", "ExitCode\\s?=\\s?7147")
             | invoke TextContains("normal connection close", "FABRIC_E_CONNECTION_CLOSED_BY_REMOTE_END")
