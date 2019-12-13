@@ -1,0 +1,38 @@
+.create-or-alter function with (docstring = "function to graph Distinct UD CM.UpgradeReply at default 5 second intervals",folder = "sflogs") TraceCMUpgradeReplyGraphDistinct(T:string) {
+    table(T)
+    | where Type contains "CM.UpgradeReply"
+    | order by Timestamp asc 
+    | project Timestamp,Text
+    | parse kind=regex flags=Ui Text with * 
+        @'\+' id
+        @'\] upgrade reply: Error = ' error_S_OK
+        @'Completed = \[\s?' completed
+        @'\s?\]\s+?Pending = \[\s?' pending
+        @'\s?\]\s+?Skipped = \[\s?' skipped
+        @'\s?\]\s+?CurrentUpgradeDomain=' currentUpgradeDomain
+        @'[^\d]'
+    | summarize 
+        Error = max(toint(error_S_OK !contains "S_OK")),
+        currentUpgradeDomain = max(toint(currentUpgradeDomain)),
+        completed_0 = max(toint(completed contains "0")), 
+        completed_1 = max(toint(completed contains "1")), 
+        completed_2 = max(toint(completed contains "2")), 
+        completed_3 = max(toint(completed contains "3")), 
+        completed_4 = max(toint(completed contains "4")),
+        pending_0 = max(toint(pending contains "0")), 
+        pending_1 = max(toint(pending contains "1")), 
+        pending_2 = max(toint(pending contains "2")), 
+        pending_3 = max(toint(pending contains "3")), 
+        pending_4 = max(toint(pending contains "4")),
+        skipped_0 = max(toint(skipped contains "0")), 
+        skipped_1 = max(toint(skipped contains "1")), 
+        skipped_2 = max(toint(skipped contains "2")), 
+        skipped_3 = max(toint(skipped contains "3")), 
+        skipped_4 = max(toint(skipped contains "4"))
+        by bin(Timestamp,5s), id
+    | extend completedTotal = (completed_0 + completed_1 + completed_2 + completed_3 + completed_4)
+    | extend pendingTotal = (pending_0 + pending_1 + pending_2 + pending_3 + pending_4)
+    | extend skippedTotal = (skipped_0 + skipped_1 + skipped_2 + skipped_3 + skipped_4)
+    //| project-away completed_0, completed_1, completed_2, completed_3, completed_4, pending_0, pending_1, pending_2, pending_3, pending_4, skipped_0, skipped_1, skipped_2, skipped_3, skipped_4
+    | render timechart
+}
