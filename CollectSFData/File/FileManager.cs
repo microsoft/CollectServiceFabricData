@@ -359,7 +359,7 @@ namespace CollectSFData
                 new CsvExceptionRecord($"{fileObject.FileUri}", fileObject, Config.ResourceUri)
             };
 
-            DisplayMessages.Add($"{fileObject.LastModified} {fileObject.FileUri}{Config.SasEndpointInfo.SasToken}");
+            Log.Last($"{fileObject.LastModified} {fileObject.FileUri}{Config.SasEndpointInfo.SasToken}", ConsoleColor.Cyan);
             TotalFilesFormatted++;
             TotalRecords += records.Count;
             return PopulateCollection(fileObject, records);
