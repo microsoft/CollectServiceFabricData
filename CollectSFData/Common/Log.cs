@@ -91,12 +91,12 @@ namespace CollectSFData
         }
 
         public static void Info(string message,
-            ConsoleColor? foregroundColor = null,
-            ConsoleColor? backgroundColor = null,
-            object jsonSerializer = null,
-            bool minimal = false,
-            [CallerMemberName] string callerName = "",
-            bool lastMessage = false)
+                                ConsoleColor? foregroundColor = null,
+                                ConsoleColor? backgroundColor = null,
+                                object jsonSerializer = null,
+                                bool minimal = false,
+                                [CallerMemberName] string callerName = "",
+                                bool lastMessage = false)
         {
             if (jsonSerializer != null)
             {
@@ -142,12 +142,20 @@ namespace CollectSFData
             Info(message, null, null, jsonSerializer, false, callerName);
         }
 
-        public static void Last(string message, ConsoleColor? foregroundColor = null, ConsoleColor? backgroundColor = null, object jsonSerializer = null, [CallerMemberName] string callerName = "")
+        public static void Last(string message,
+                                ConsoleColor? foregroundColor = null,
+                                ConsoleColor? backgroundColor = null,
+                                object jsonSerializer = null,
+                                [CallerMemberName] string callerName = "")
         {
             Info(message, foregroundColor, backgroundColor, jsonSerializer, false, callerName, true);
         }
 
-        public static void Min(string message, ConsoleColor? foregroundColor = null, ConsoleColor? backgroundColor = null, object jsonSerializer = null, [CallerMemberName] string callerName = "")
+        public static void Min(string message,
+                                ConsoleColor? foregroundColor = null,
+                                ConsoleColor? backgroundColor = null,
+                                object jsonSerializer = null,
+                                [CallerMemberName] string callerName = "")
         {
             Info(message, foregroundColor, backgroundColor, jsonSerializer, true, callerName);
         }
