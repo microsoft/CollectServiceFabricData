@@ -144,7 +144,7 @@ namespace CollectSFData
 
         public static void Last(string message, ConsoleColor? foregroundColor = null, ConsoleColor? backgroundColor = null, object jsonSerializer = null, [CallerMemberName] string callerName = "")
         {
-            Info(message, null, null, jsonSerializer, false, callerName, true);
+            Info(message, foregroundColor, backgroundColor, jsonSerializer, false, callerName, true);
         }
 
         public static void Min(string message, ConsoleColor? foregroundColor = null, ConsoleColor? backgroundColor = null, object jsonSerializer = null, [CallerMemberName] string callerName = "")
