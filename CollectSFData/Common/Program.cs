@@ -71,17 +71,17 @@ namespace CollectSFData
                     }
                 }
 
-                Config.DisplayStatus(DisplayMessages);
+                Config.DisplayStatus();
                 Config.SaveConfigFile();
 
-                Log.Info($"{TotalFilesEnumerated} files enumerated.");
-                Log.Info($"{TotalFilesMatched} files matched.");
-                Log.Info($"{TotalFilesDownloaded} files downloaded.");
-                Log.Info($"{TotalFilesSkipped} files skipped.");
-                Log.Info($"{TotalFilesFormatted} files formatted.");
-                Log.Info($"{TotalErrors} errors.");
-                Log.Info($"{TotalRecords} records.");
-                Log.Info($"total execution time in minutes: { (DateTime.Now - StartTime).TotalMinutes.ToString("F2") }");
+                Log.Last($"{TotalFilesEnumerated} files enumerated.");
+                Log.Last($"{TotalFilesMatched} files matched.");
+                Log.Last($"{TotalFilesDownloaded} files downloaded.");
+                Log.Last($"{TotalFilesSkipped} files skipped.");
+                Log.Last($"{TotalFilesFormatted} files formatted.");
+                Log.Last($"{TotalErrors} errors.");
+                Log.Last($"{TotalRecords} records.");
+                Log.Last($"total execution time in minutes: { (DateTime.Now - StartTime).TotalMinutes.ToString("F2") }");
 
                 return 0;
             }
@@ -200,7 +200,7 @@ namespace CollectSFData
             }
             else if (Config.IsKustoConfigured())
             {
-                DisplayMessages.Add($"{DataExplorer}/clusters/{Kusto.Endpoint.ClusterName}/databases/{Kusto.Endpoint.DatabaseName}");
+                Log.Last($"{DataExplorer}/clusters/{Kusto.Endpoint.ClusterName}/databases/{Kusto.Endpoint.DatabaseName}", ConsoleColor.Cyan);
             }
         }
 

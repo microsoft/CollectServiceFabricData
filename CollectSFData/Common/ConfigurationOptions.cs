@@ -199,7 +199,7 @@ namespace CollectSFData
             return fileType;
         }
 
-        public void DisplayStatus(SynchronizedList<string> displayMessages = null)
+        public void DisplayStatus()
         {
             Log.Min($"      Gathering: {FileType.ToString()}", ConsoleColor.White);
             Log.Min($"         Source: {(SasEndpointInfo?.StorageAccountName ?? CacheLocation)}", ConsoleColor.White);
@@ -235,12 +235,6 @@ namespace CollectSFData
                     Log.Min($"AzureResourceGroup: {AzureResourceGroup}", ConsoleColor.Yellow);
                     Log.Min($"AzureResourceGroupLocation: {AzureResourceGroupLocation}", ConsoleColor.Yellow);
                 }
-            }
-
-            if (displayMessages != null)
-            {
-                displayMessages.Sort((x, y) => -y.CompareTo(x));
-                Log.Min(string.Join(Environment.NewLine, displayMessages), ConsoleColor.Cyan);
             }
         }
 
