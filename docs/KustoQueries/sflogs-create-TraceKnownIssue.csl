@@ -3,20 +3,20 @@
         let AnyContains = (tableName:string, issue:string, query:string) {
             table(tableName) 
             | extend KnownIssue = iif((* contains query), true, false) 
-            | extend Reason = iif(KnownIssue, issue, "")
+            | extend Reason = iif(KnownIssue, strcat(issue,' ::any contains: ', query), "")
         };
         // search any column using regex sensitive match
         let AnyMatches = (tableName:string, issue:string, query:string) {
             table(tableName) 
             | extend KnownIssue = iif((* matches regex query), true, false) 
-            | extend Reason = iif(KnownIssue, issue, "")
+            | extend Reason = iif(KnownIssue, strcat(issue,' ::any matches: ', query), "")
         };
         // search any column using regex insensitive match
         let AnyIMatches = (tableName:string, issue:string, query:string) {
             let iQuery = strcat('(?i:',query,')'); // re2 case insensitive
             table(tableName) 
             | extend KnownIssue = iif((* matches regex iQuery), true, false) 
-            | extend Reason = iif(KnownIssue, issue, "")
+            | extend Reason = iif(KnownIssue, strcat(issue,' ::any imatches: ', iQuery), "")
         };
         // search Type And Text column using string contains
         let TypeAndTextContains = (tableName:string, issue:string, typeQuery:string, textQuery:string) {
@@ -26,7 +26,9 @@
         };
         // search Type And Text column using regex sensitive match
         let TypeAndTextMatches = (tableName:string, issue:string, typeQuery:string, textQuery:string) {
-            table(tableName) | extend KnownIssue = iif((Type matches regex typeQuery and Text matches regex textQuery), true, false) | extend Reason = iif(KnownIssue, issue, "")
+            table(tableName) 
+            | extend KnownIssue = iif((Type matches regex typeQuery and Text matches regex textQuery), true, false) 
+            | extend Reason = iif(KnownIssue, strcat(issue,' ::type matches: ', typeQuery, ' ::text matches: ', textQuery ), "")
         };
         // search Type And Text column using regex insensitive match
         let TypeAndTextIMatches = (tableName:string, issue:string, typeQuery:string, textQuery:string) {
@@ -44,38 +46,54 @@
         };
         // search Text column using regex sensitive match
         let TextMatches = (tableName:string, issue:string, query:string) {
-            table(tableName) | extend KnownIssue = iif((Text matches regex query), true, false) | extend Reason = iif(KnownIssue, issue, "")
+            table(tableName) 
+            | extend KnownIssue = iif((Text matches regex query), true, false) 
+            | extend Reason = iif(KnownIssue, strcat(issue,' ::text matches: ', query), "")
         };
         // search Text column using regex insensitive match
         let TextIMatches = (tableName:string, issue:string, query:string) {
             let iQuery = strcat('(?i:',query,')'); // re2 case insensitive
-            table(tableName) | extend KnownIssue = iif((Text matches regex iQuery), true, false) | extend Reason = iif(KnownIssue, issue, "")
+            table(tableName) 
+            | extend KnownIssue = iif((Text matches regex iQuery), true, false) 
+            | extend Reason = iif(KnownIssue, strcat(issue,' ::text imatches: ', iQuery), "")
         };
         // search Type column using string contains
         let TypeContains = (tableName:string, issue:string, query:string) {
-            table(tableName) | extend KnownIssue = iif((Type contains query), true, false) | extend Reason = iif(KnownIssue, issue, "")
+            table(tableName) 
+            | extend KnownIssue = iif((Type contains query), true, false) 
+            | extend Reason = iif(KnownIssue, strcat(issue,' ::type contains: ', query), "")
         };
         // search Type column using regex sensitive match
         let TypeMatches = (tableName:string, issue:string, query:string) {
-            table(tableName) | extend KnownIssue = iif((Type matches regex query), true, false) | extend Reason = iif(KnownIssue, issue, "")
+            table(tableName) 
+            | extend KnownIssue = iif((Type matches regex query), true, false) 
+            | extend Reason = iif(KnownIssue, strcat(issue,' ::type matches: ', query), "")
         };
         // search Type column using regex insensitive match
         let TypeIMatches = (tableName:string, issue:string, query:string) {
             let iQuery = strcat('(?i:',query,')'); // re2 case insensitive
-            table(tableName) | extend KnownIssue = iif((Type matches regex iQuery), true, false) | extend Reason = iif(KnownIssue, issue, "")
+            table(tableName) 
+            | extend KnownIssue = iif((Type matches regex iQuery), true, false) 
+            | extend Reason = iif(KnownIssue, strcat(issue,' ::type imatches: ', iQuery), "")
         };
         // search Type or Text columns using string contains
         let TypeOrTextContains = (tableName:string, issue:string, query:string) {
-            table(tableName) | extend KnownIssue = iif((Type contains query or Text contains query), true, false) | extend Reason = iif(KnownIssue, issue, "")
+            table(tableName) 
+            | extend KnownIssue = iif((Type contains query or Text contains query), true, false) 
+            | extend Reason = iif(KnownIssue, strcat(issue,' ::type contains: ', query, ' ::or::text contains: ', query ), "")
         };
         // search Type or Text columns using regex sensitive match
         let TypeOrTextMatches = (tableName:string, issue:string, query:string) {
-            table(tableName) | extend KnownIssue = iif((Type matches regex query or Text matches regex query), true, false) | extend Reason = iif(KnownIssue, issue, "")
+            table(tableName) 
+            | extend KnownIssue = iif((Type matches regex query or Text matches regex query), true, false) 
+            | extend Reason = iif(KnownIssue, strcat(issue,' ::type matches: ', query, ' ::or::text matches: ', query ), "")
         };
         // search Type or Text columns using regex insensitive match
         let TypeOrTextIMatches = (tableName:string, issue:string, query:string) {
             let iQuery = strcat('(?i:',query,')'); // re2 case insensitive
-            table(tableName) | extend KnownIssue = iif((Type matches regex iQuery or Text matches regex iQuery), true, false) | extend Reason = iif(KnownIssue, issue, "")
+            table(tableName) 
+            | extend KnownIssue = iif((Type matches regex iQuery or Text matches regex iQuery), true, false) 
+            | extend Reason = iif(KnownIssue, strcat(issue,' ::type imatches: ', iQuery, ' ::or::text imatches: ', iQuery ), "")
         };
         union 
         // add known issue signatures here using one of the provided functions in format table, issue description, string pattern
@@ -110,5 +128,6 @@
         TypeAndTextMatches(T, "cm upgrade error", "CM.UpgradeReply","Error = [^S_OK]"),
         TextContains(T, "docker health error", "Docker HEALTHCHECK reported health_status=unhealthy"),
         TextContains(T, ".net exception", "3762504530"),
-        TypeAndTextContains(T, "docker container not responsive", "ManagedHosting.ContainerEventManager", "Failed to connect to DockerService at named pipe 'docker_engine'")
+        TypeAndTextContains(T, "docker container not responsive", "ManagedHosting.ContainerEventManager", "Failed to connect to DockerService at named pipe 'docker_engine'"),
+        TypeAndTextContains(T, "fabric client making too many connections to gateway", "EntreeServiceProxy.LifeCycle", "exceeded client connection limit:")
     }
