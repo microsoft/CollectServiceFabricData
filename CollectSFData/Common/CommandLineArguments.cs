@@ -8,6 +8,7 @@ using System;
 using System.Text;
 using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
+using System.Net.NetworkInformation;
 
 namespace CollectSFData
 {
@@ -518,21 +519,30 @@ namespace CollectSFData
 
         private string CheckReleaseVersion()
         {
-            string response = $"local running version: {Version}";
+            string response = $"\r\n\tlocal running version: {Version}";
             Http http = new Http();
             var headers = new Dictionary<string, string>();
-            headers.Add("User-Agent", $"{AppDomain.CurrentDomain.FriendlyName}_{Environment.UserName}");
-
-            if (http.SendRequest(uri: CodeLatestRelease, headers: headers))
+            headers.Add("User-Agent", $"{AppDomain.CurrentDomain.FriendlyName}");
+            try
             {
-                JToken downloadUrl = http.ResponseStreamJson.SelectToken("assets[0].browser_download_url");
-                JToken downloadVersion = http.ResponseStreamJson.SelectToken("tag_name");
-                response += $"\r\nlatest download release version: {downloadVersion.ToString()}";
-                response += $"\r\nlatest download release url: {downloadUrl.ToString()}";
-                Log.Last(response);
-            }
+                if (new Ping().Send(new Uri(CodeLatestRelease).Host).Status == IPStatus.Success && http.SendRequest(uri: CodeLatestRelease, headers: headers))
+                {
+                    JToken downloadUrl = http.ResponseStreamJson.SelectToken("assets[0].browser_download_url");
+                    JToken downloadVersion = http.ResponseStreamJson.SelectToken("tag_name");
+                    JToken body = http.ResponseStreamJson.SelectToken("body");
+                    response += $"\r\n\tlatest download release version: {downloadVersion.ToString()}";
+                    response += $"\r\n\trelease notes: \r\n\t\t{body.ToString().Replace("\r\n", "\r\n\t\t")}";
+                    response += $"\r\n\tlatest download release url: {downloadUrl.ToString()}";
+                }
 
-            return response;
+                Log.Last(response);
+                return string.Empty;
+            }
+            catch
+            {
+                Log.Last(response);
+                return string.Empty;
+            }
         }
     }
 }
