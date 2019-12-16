@@ -282,7 +282,7 @@ namespace CollectSFData
                 }
                 else if (args.Length == 0)
                 {
-                    _cmdLineArgs.CmdLineApp.ShowHelp();
+                    Log.Last(_cmdLineArgs.CmdLineApp.GetHelpText());
                     return false;
                 }
 
@@ -295,9 +295,9 @@ namespace CollectSFData
                         MergeConfigFile(ConfigurationFile);
                         Log.Info($"setting options to {DefaultOptionsFile}", ConsoleColor.Yellow);
                     }
-                    else if (args[0].StartsWith("/?"))
+                    else if (args[0].StartsWith("/?") | args[0].StartsWith("-?") | args[0].StartsWith("--?"))
                     {
-                        _cmdLineArgs.CmdLineApp.ShowHelp();
+                        Log.Last(_cmdLineArgs.CmdLineApp.GetHelpText());
                         return false;
                     }
                 }
@@ -346,7 +346,7 @@ namespace CollectSFData
             catch (Exception e)
             {
                 Log.Exception($"{e}");
-                _cmdLineArgs.CmdLineApp.ShowHelp();
+                Log.Last(_cmdLineArgs.CmdLineApp.GetHelpText());
                 return false;
             }
         }
@@ -605,7 +605,7 @@ namespace CollectSFData
             catch (Exception e)
             {
                 Log.Exception($"{e}");
-                _cmdLineArgs.CmdLineApp.ShowHelp();
+                Log.Last(_cmdLineArgs.CmdLineApp.GetHelpText());
                 return false;
             }
         }

@@ -57,7 +57,7 @@ namespace CollectSFData
                 color = ConsoleColor.Yellow;
             }
 
-            Info(message, color, null, jsonSerializer, false, callerName);
+            Info(message, color, null, jsonSerializer, callerName: callerName);
         }
 
         public static void Close()
@@ -71,23 +71,23 @@ namespace CollectSFData
         {
             if (LogDebugEnabled)
             {
-                Info("debug: " + message, ConsoleColor.Black, ConsoleColor.Gray, jsonSerializer, false, callerName);
+                Info("debug: " + message, ConsoleColor.Black, ConsoleColor.Gray, jsonSerializer, callerName: callerName);
             }
         }
 
         public static void Error(string message, object jsonSerializer = null, [CallerMemberName] string callerName = "")
         {
-            Info("error: " + message, ConsoleColor.Red, ConsoleColor.Black, jsonSerializer, false, callerName);
+            Info("error: " + message, ConsoleColor.Red, ConsoleColor.Black, jsonSerializer, callerName: callerName);
         }
 
         public static void Exception(string message, object jsonSerializer = null, [CallerMemberName] string callerName = "")
         {
-            Info("exception: " + message, ConsoleColor.Black, ConsoleColor.Yellow, jsonSerializer, false, callerName);
+            Info("exception: " + message, ConsoleColor.Black, ConsoleColor.Yellow, jsonSerializer, callerName: callerName);
         }
 
         public static void Highlight(string message, object jsonSerializer = null, [CallerMemberName] string callerName = "")
         {
-            Info(message, _highlightForeground, _highlightBackground, jsonSerializer, false, callerName);
+            Info(message, _highlightForeground, _highlightBackground, jsonSerializer, callerName: callerName);
         }
 
         public static void Info(string message,
@@ -95,8 +95,8 @@ namespace CollectSFData
                                 ConsoleColor? backgroundColor = null,
                                 object jsonSerializer = null,
                                 bool minimal = false,
-                                [CallerMemberName] string callerName = "",
-                                bool lastMessage = false)
+                                bool lastMessage = false,
+                                [CallerMemberName] string callerName = "")
         {
             if (jsonSerializer != null)
             {
@@ -139,7 +139,7 @@ namespace CollectSFData
 
         public static void Info(string message, object jsonSerializer, [CallerMemberName] string callerName = "")
         {
-            Info(message, null, null, jsonSerializer, false, callerName);
+            Info(message, null, null, jsonSerializer, callerName: callerName);
         }
 
         public static void Last(string message,
@@ -148,7 +148,7 @@ namespace CollectSFData
                                 object jsonSerializer = null,
                                 [CallerMemberName] string callerName = "")
         {
-            Info(message, foregroundColor, backgroundColor, jsonSerializer, false, callerName, true);
+            Info(message, foregroundColor, backgroundColor, jsonSerializer, false, true, callerName);
         }
 
         public static void Min(string message,
@@ -157,12 +157,12 @@ namespace CollectSFData
                                 object jsonSerializer = null,
                                 [CallerMemberName] string callerName = "")
         {
-            Info(message, foregroundColor, backgroundColor, jsonSerializer, true, callerName);
+            Info(message, foregroundColor, backgroundColor, jsonSerializer, true, callerName: callerName);
         }
 
         public static void Warning(string message, object jsonSerializer = null, [CallerMemberName] string callerName = "")
         {
-            Info("warning: " + message, ConsoleColor.Yellow, ConsoleColor.Black, jsonSerializer, false, callerName);
+            Info("warning: " + message, ConsoleColor.Yellow, ConsoleColor.Black, jsonSerializer, callerName: callerName);
         }
 
         private static bool CheckLogFile(string logFile)
