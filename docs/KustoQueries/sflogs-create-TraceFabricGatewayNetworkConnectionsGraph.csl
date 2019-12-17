@@ -1,0 +1,14 @@
+.create-or-alter function with (docstring = '[T:string] where T=table name. function sflogs trace query to graph fabric gateway network connections. default max 1000', folder = 'sflogs')
+    TraceFabricGatewayNetworkConnectionsGraph (T:string) {
+        table(T)
+        | where Type contains 'EntreeServiceProxy.LifeCycle'
+        | where Text contains 'accepted client connection: target='
+        | parse kind=regex flags=Ui Text with * 
+            @'target=' target
+            @':' port
+            @' total=' total
+            @'/' max
+        | summarize max(toint(total)) by bin(Timestamp,1m), NodeName
+        | sample 10000
+        | render timechart
+    }
