@@ -78,7 +78,7 @@ Example: configured table name 'jagilber_0000000000000001' would be prepended wi
   
 #### counter record
 
-```json
+```text
 {
 "Timestamp": 2019-10-28T11:52:32.418Z,
 "CounterName": \\307efprod000002\Service Fabric TStore\Checkpoint File Write Bytes/sec,
@@ -99,7 +99,7 @@ Example: configured table name 'jagilber_0000000000000001' would be prepended wi
 
 #### example exception record
 
-```json
+```text
 {
 "Timestamp": 2019-11-06T01:01:36Z,
 "PID": 2732,
@@ -135,7 +135,7 @@ https://dataexplorer.azure.com
 
 #### setup record
 
-```json
+```text
 {
 "Timestamp": 2019-11-06T01:06:55.85Z,
 "Level": Info,
@@ -240,7 +240,7 @@ from [azure data explorer](https://dataexplorer.azure.com) console, type the nam
 
 #### trace record:  
 
-```json
+```text
 {
 "Timestamp": 2019-10-22T14:35:27.761Z,
 "Level": Informational,
@@ -405,7 +405,7 @@ pause
     "RootActivityId": "0e7d9608-64ca-460d-ad49-b5da22cfcbd0",
     "OriginatesFromUpdatePolicy": false,
     "ShouldRetry": false,
-    "IngestionSourcePath": "https://sflogs4v5xnwkipnejy2.blob.core.windows.net/fabriclogs-b2ca4ad0-2d44-44db-99a1-e93e56d35841/_nt0_2/Fabric/bc4316ec4b0814dcc367388a46d9903e_fabric_traces_6.5.676.9590_132172633687587976_4_00637083925242089496_0000000000.dtr.zip"
+    "IngestionSourcePath": "https://xxx.blob.core.windows.net/fabriclogs-b2ca4ad0-2d44-44db-99a1-e93e56d35841/_nt0_2/Fabric/bc4316ec4b0814dcc367388a46d9903e_fabric_traces_6.5.676.9590_132172633687587976_4_00637083925242089496_0000000000.dtr.zip"
     }
 
 ```
