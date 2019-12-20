@@ -163,7 +163,7 @@ https://dataexplorer.azure.com
 
 #### table record with TableView where TaskName is 'Hosting':  
 
-```json
+```text
 {
 "Timestamp": 2019-10-28T04:00:27.0397761Z,
 "PartitionKey": Hosting.ProcessExitedOperational,
@@ -194,7 +194,7 @@ https://dataexplorer.azure.com
 
 #### table record without TableView:  
 
-```json
+```text
 {
 "Timestamp": 2019-10-27T20:17:40.2919037Z,
 "EventTimeStamp": 2019-10-28T00:16:18.658833Z,
