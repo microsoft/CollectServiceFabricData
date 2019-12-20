@@ -81,11 +81,11 @@ Example: configured table name 'jagilber_0000000000000001' would be prepended wi
 ```text
 {
 "Timestamp": 2019-10-28T11:52:32.418Z,
-"CounterName": \\307efprod000002\Service Fabric TStore\Checkpoint File Write Bytes/sec,
+"CounterName": \\nt0000002\Service Fabric TStore\Checkpoint File Write Bytes/sec,
 "CounterValue": 0,
-"NodeName": _s00307pvss0sfprod1fe_2,
+"NodeName": _nt0_2,
 "FileType": counter,
-"RelativeUri": fabriccounters-96b543e6-6444-462d-a4a6-6dd524a059b7/_s00307pvss0sfprod1fe_2/fabric_counters_637068450074374168_000377.blg.perf.csv,
+"RelativeUri": fabriccounters-96b543e6-6444-462d-a4a6-6dd524a059b7/_nt0_2/fabric_counters_637068450074374168_000377.blg.perf.csv,
 }
 ```
 
@@ -107,7 +107,7 @@ Example: configured table name 'jagilber_0000000000000001' would be prepended wi
 "Text": https://xxx.blob.core.windows.net/fabriccrashdumps-75c7a5b0-649b-4b8a-bbf5-39a28ed3ae93/_nt0_1/FabricDCA.exe.2732.dmp,
 "NodeName": _nt0_1,
 "FileType": fabriccrashdumps,
-"RelativeUri": fabriccrashdumps-75c7a5b0-649b-4b8a-bbf5-39a28ed3ae93/_be_1/FabricDCA.exe.2732.dmp,
+"RelativeUri": fabriccrashdumps-75c7a5b0-649b-4b8a-bbf5-39a28ed3ae93/_nt0_1/FabricDCA.exe.2732.dmp,
 }
 ```
 
@@ -248,9 +248,9 @@ from [azure data explorer](https://dataexplorer.azure.com) console, type the nam
 "PID": 1272,
 "Type": Lease.ApiEnd,
 "Text": 'Lease api end GET_REMOTE_LEASE_EXPIRATION_TIME',
-"NodeName": _normal_0,
+"NodeName": _nt0_0,
 "FileType": lease,
-"RelativeUri": fabriclogs-33cf5c42-a3ba-403c-9717-6aaadaa45a55/_normal_0/Lease/c3daf3c2018074d5bd8d8b8fa7cbd7bc_lease_traces_6.5.676.9590_132161469049099725_8_00637073520242075217_2147483647.dtr
+"RelativeUri": fabriclogs-33cf5c42-a3ba-403c-9717-6aaadaa45a55/_nt0_0/Lease/c3daf3c2018074d5bd8d8b8fa7cbd7bc_lease_traces_6.5.676.9590_132161469049099725_8_00637073520242075217_2147483647.dtr
 }
 
 ```
