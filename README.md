@@ -5,6 +5,10 @@
 [current download](https://github.com/microsoft/CollectServiceFabricData/releases/latest)  
 [requirements](#requirements)  
 [setup](#setup)  
+
+- [Kusto Quick Start](/docs/kustoQuickStart.md)  
+- [Log Analytics Quick Start](/docs/logAnalyticsQuickStart.md)  
+
 [configuration](#configuration)  
 [examples](#examples)  
 [reporting issues and feedback](#Reporting-Issues-and-Feedback)  
@@ -65,7 +69,7 @@ Use the below steps to setup environment for use with CollectSFData.
 
 ### CollectSFData Setup with Kusto
 
-If using Kusto, an existing online Kusto database with authentication is required.
+If using Kusto, an existing online Kusto database with authentication is required. See [/docs/kustoQuickStart.md](/docs/kustoQuickStart.md)  
 
 - Existing online Kusto database. See [Create an Azure Data Explorer cluster](https://docs.microsoft.com/en-us/azure/data-explorer/create-cluster-database-portal) if creating a new cluster.
 - Authentication to Kusto database. This can be interactive or non-interactive using an Azure application id / spn.
@@ -74,7 +78,7 @@ If using Kusto, an existing online Kusto database with authentication is require
 
 ### CollectSFData Setup with Log Analytics
 
-If using Log Analytics (OMS), an existing or new workspace is required.  
+If using Log Analytics (OMS), an existing or new workspace is required. See [/docs/logAnalyticsQuickStart.md](/docs/logAnalyticsQuickStart.md)  
 
 - Existing Log Analytics workspace  
 - Primary / Secondary shared key from workspace -> advanced settings  
