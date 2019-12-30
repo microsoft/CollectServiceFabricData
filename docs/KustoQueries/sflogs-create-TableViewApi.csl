@@ -1,6 +1,7 @@
-.create-or-alter function with (docstring = "function to create Api TableView view for sftable",folder = "sftable") TableViewApi(T:string) {
+.create-or-alter function with (docstring = "function to create Api TableView view for sftable",folder = "sftable") 
+    TableViewApi(T:string) {
         TableView(T)
-        | where TaskName == "Api"
+        | where RelativeUri endswith "Api"
         | project Timestamp, 
             serviceType, 
             EventType, 

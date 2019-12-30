@@ -1,0 +1,5 @@
+.create-or-alter function with (docstring = "function to create Client TableView view for sftable",folder = "sftable") 
+    TableViewClient(T:string) {
+        TableView(T)
+        | where RelativeUri endswith "Client"
+    }
