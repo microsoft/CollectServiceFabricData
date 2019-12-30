@@ -1,0 +1,29 @@
+.create-or-alter function with (docstring = "function to create NodesOps TableView view for sftable",folder = "sftable") 
+    TableViewNodesOps(T:string) {
+        TableView(T)
+        | where RelativeUri endswith "NodesOps"
+        | project Timestamp, 
+            EventType, 
+            EventVersion, 
+            TaskName, 
+            dca_version, 
+            category, 
+            eventInstanceId, 
+            eventName, 
+            fabricVersion, 
+            ipAddressOrFQDN, 
+            nodeCapacities, 
+            nodeId, 
+            nodeInstance, 
+            nodeName, 
+            nodeType, 
+            lastNodeDownAt,
+            faultDomain, 
+            hostname, 
+            isSeedNode, 
+            nodeVersion,
+            upgradeDomain, 
+            PartitionKey, 
+            RowKey
+        | order by Timestamp asc
+    }

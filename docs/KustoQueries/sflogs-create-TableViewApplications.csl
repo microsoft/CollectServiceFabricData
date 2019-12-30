@@ -1,7 +1,7 @@
-.create-or-alter function with (docstring = "function to create Applications TableView view for sftable",folder = "sftable") TableViewApplications(T:string) {
+.create-or-alter function with (docstring = "function to create Applications TableView view for sftable",folder = "sftable") 
+    TableViewApplications(T:string) {
         TableView(T)
-        | where TaskName == "CM"
-        | where PartitionKey startswith "fabric:"
+        | where RelativeUri endswith "Applications"
         | project Timestamp, 
             EventType, 
             targetversion, 
@@ -10,10 +10,14 @@
             currentmanifestid, 
             dca_instance, 
             dca_version, 
+            column_ifexists("ractId_actId_id", ""), 
             ractId_actId_index, 
             ractId_prId_partitionId, 
             column_ifexists("ractid_prId_replicaId", ""),
             targetmanifestid, 
+            manifestid, 
+            typename, 
+            typeversion, 
             upgradedomains, 
             Instance, 
             IsDeleted,

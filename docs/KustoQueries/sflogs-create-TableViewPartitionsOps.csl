@@ -1,0 +1,31 @@
+.create-or-alter function with (docstring = "function to create PartitionsOps TableView view for sftable",folder = "sftable") 
+    TableViewPartitionsOps(T:string) {
+        TableView(T)
+        | where RelativeUri endswith "PartitionsOps"
+        | project Timestamp, 
+            EventType, 
+            EventVersion, 
+            TaskName, 
+            dca_version, 
+            category, 
+            ccEpoch_configVersion, 
+            ccEpoch_dataLossVersion, 
+            eventInstanceId, 
+            eventName, 
+            nodeInstance_id, 
+            nodeName, 
+            partitionId, 
+            phase0DurationMs, 
+            phase1DurationMs, 
+            phase2DurationMs, 
+            phase3DurationMs, 
+            phase4DurationMs, 
+            reconfigType, 
+            result, 
+            serviceType, 
+            totalDurationMs, 
+            PartitionKey, 
+            RowKey
+        | order by Timestamp asc    
+    }
+
