@@ -1,0 +1,23 @@
+.create-or-alter function with (docstring = "function to create Applications TableView view for sftable",folder = "sftable") TableViewApplications(T:string) {
+        TableView(T)
+        | where TaskName == "CM"
+        | where PartitionKey startswith "fabric:"
+        | project Timestamp, 
+            EventType, 
+            targetversion, 
+            EventVersion, 
+            TaskName, 
+            currentmanifestid, 
+            dca_instance, 
+            dca_version, 
+            ractId_actId_index, 
+            ractId_prId_partitionId, 
+            column_ifexists("ractid_prId_replicaId", ""),
+            targetmanifestid, 
+            upgradedomains, 
+            Instance, 
+            IsDeleted,
+            PartitionKey, 
+            RowKey
+        | order by Timestamp asc
+    }
