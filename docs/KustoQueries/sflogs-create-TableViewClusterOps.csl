@@ -1,0 +1,22 @@
+.create-or-alter function with (docstring = "function to create ClusterOps TableView view for sftable",folder = "sftable") TableViewClusterOps(T:string) {
+        TableView(T)
+        | where eventName contains "Cluster"
+        | project Timestamp, 
+            EventType, 
+            EventVersion, 
+            TTL_timespan, 
+            TaskName, 
+            category, 
+            description, 
+            dca_version, 
+            eventInstanceId, 
+            eventName, 
+            healthState, 
+            property, 
+            removeWhenExpired, 
+            sequenceNumber, 
+            sourceId,
+            PartitionKey, 
+            RowKey
+        | order by Timestamp asc
+    }
