@@ -1,12 +1,21 @@
-.create-or-alter function with (docstring = "function to create ClusterOps TableView view for sftable",folder = "sftable") TableViewClusterOps(T:string) {
+.create-or-alter function with (docstring = "function to create ClusterOps TableView view for sftable",folder = "sftable") 
+    TableViewClusterOps(T:string) {
         TableView(T)
-        | where eventName contains "Cluster"
+        | where RelativeUri endswith "ClusterOps"
         | project Timestamp, 
             EventType, 
             EventVersion, 
-            TTL_timespan, 
             TaskName, 
             category, 
+            overallUpgradeElapsedTimeInMs, 
+            targetClusterVersion, 
+            upgradeDomainElapsedTimeInMs, 
+            upgradeDomains, 
+            upgradeState, 
+            currentClusterVersion, 
+            failureAction, 
+            rollingUpgradeMode, 
+            upgradeType, 
             description, 
             dca_version, 
             eventInstanceId, 

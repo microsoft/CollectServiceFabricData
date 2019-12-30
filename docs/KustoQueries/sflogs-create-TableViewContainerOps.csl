@@ -1,0 +1,18 @@
+.create-or-alter function with (docstring = "function to create ContainerOps TableView view for sftable",folder = "sftable") 
+    TableViewContainerOps(T:string) {
+        TableView(T)
+        | where RelativeUri endswith "ContainerOps"
+        | project Timestamp, 
+            EventType, 
+            EventVersion, 
+            ApplicationName, 
+            CodePackageName, 
+            IsolationMode, 
+            Name, 
+            TaskName, 
+            dca_version, 
+            ServiceName, 
+            PartitionKey, 
+            RowKey
+        | order by Timestamp asc
+    }

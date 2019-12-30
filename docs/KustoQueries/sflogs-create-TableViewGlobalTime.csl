@@ -1,0 +1,10 @@
+.create-or-alter function with (docstring = "function to create GlobalTime TableView view for sftable",folder = "sftable") 
+    TableViewGlobalTime(T:string) {
+        TableView(T)
+        | where RelativeUri endswith "GlobalTime"
+        // todo fill in fields
+        | project Timestamp, 
+            PartitionKey, 
+            RowKey
+        | order by Timestamp asc
+    }
