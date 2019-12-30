@@ -1,0 +1,24 @@
+.create-or-alter function with (docstring = "function to create ApplicationOps TableView view for sftable",folder = "sftable") TableViewApplicationsOps(T:string) {
+        TableView(T)
+        //| where TaskName in("CM","HM")
+        //| where PartitionKey startswith "CM." or PartitionKey startswith "HM."
+        | where applicationName startswith "fabric:"
+        | where eventName contains "application" or eventName contains "package"
+        | project Timestamp, 
+            EventType, 
+            category, 
+            eventName, 
+            applicationName, 
+            applicationTypeName, 
+            applicationTypeVersion, 
+            dca_version, 
+            eventInstanceId, 
+            overallUpgradeElapsedTimeInMs, 
+            currentApplicationTypeVersion, 
+            upgradeDomainElapsedTimeInMs,
+            EventVersion, 
+            TaskName, 
+            PartitionKey, 
+            RowKey
+        | order by Timestamp asc
+    }
