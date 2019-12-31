@@ -4,7 +4,7 @@
         | where RelativeUri endswith "ApplicationsOps"
         | project Timestamp,
             column_ifexists("EventType",""),
-            column_ifexists("EventVersion,  
+            column_ifexists("EventVersion",""),  
             column_ifexists("TaskName",""),
             column_ifexists("applicationName",""),
             column_ifexists("applicationTypeName",""),
