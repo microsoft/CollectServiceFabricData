@@ -1,0 +1,24 @@
+.create-or-alter function with (docstring = "function to create Api TableView view for sftable",folder = "sftable") 
+    TableViewApi(T:string) {
+        TableView(T)
+        | where RelativeUri endswith "Api"
+        | project Timestamp,
+            column_ifexists("serviceType",""),
+            column_ifexists("EventType",""),
+            column_ifexists("elapsed",""),
+            column_ifexists("error_val",""),
+            column_ifexists("message",""),
+            column_ifexists("nodeName",""),
+            column_ifexists("api_api",""),
+            column_ifexists("api_interface",""),
+            column_ifexists("api_metadata",""),
+            column_ifexists("nodeId",""),
+            column_ifexists("replicaId",""),
+            column_ifexists("PartitionKey",""),
+            column_ifexists("RowKey",""),
+            column_ifexists("EventVersion",""),
+            column_ifexists("TaskName",""),
+            column_ifexists("dca_version","")
+        | project-away Column*
+        | order by Timestamp asc
+    }

@@ -1,0 +1,32 @@
+.create-or-alter function with (docstring = "function to create ClusterOps TableView view for sftable",folder = "sftable") 
+    TableViewClusterOps(T:string) {
+        TableView(T)
+        | where RelativeUri endswith "ClusterOps"
+        | project Timestamp,
+            column_ifexists("EventType",""),
+            column_ifexists("EventVersion",""),
+            column_ifexists("TaskName",""),
+            column_ifexists("category",""),
+            column_ifexists("overallUpgradeElapsedTimeInMs",""),
+            column_ifexists("targetClusterVersion",""),
+            column_ifexists("upgradeDomainElapsedTimeInMs",""),
+            column_ifexists("upgradeDomains",""),
+            column_ifexists("upgradeState",""),
+            column_ifexists("currentClusterVersion",""),
+            column_ifexists("failureAction",""),
+            column_ifexists("rollingUpgradeMode",""),
+            column_ifexists("upgradeType",""),
+            column_ifexists("description",""),
+            column_ifexists("dca_version",""),
+            column_ifexists("eventInstanceId",""),
+            column_ifexists("eventName",""),
+            column_ifexists("healthState",""),
+            column_ifexists("property",""),
+            column_ifexists("removeWhenExpired",""),
+            column_ifexists("sequenceNumber",""),
+            column_ifexists("sourceId",""),
+            column_ifexists("PartitionKey",""),
+            column_ifexists("RowKey","")
+        | project-away Column*
+        | order by Timestamp asc
+    }

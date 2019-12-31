@@ -1,40 +1,41 @@
-.create-or-alter function with (docstring = "function to graph FM.FailoverUnitCounts at default 5 second intervals",folder = "sflogs") TraceFMFailoverUnitCountsGraph(T:string) {
-    table(T)
-    | where Type contains "FM.FailoverUnitCounts"
-    | order by Timestamp asc 
-    | project Timestamp,Text
-    | parse kind=regex Text with * 
-        @'FailoverUnits=' failoverUnits
-        @'Persisted=' persisted
-        @'Volatile=' volatile
-        @'Stateless=' stateless
-        @'QuorumLoss=' quorumLoss
-        @'InBuild=' inBuild
-        @'Unhealthy=' unhealthy
-        @'Deleting=' deleting 
-        @'Deleted=' deleted
-        @'Replicas=' replicas
-        @'InBuild=' inBuild2
-        @'Standby=' standby
-        @'Offline=' offline
-        @'Dropped=' dropped
-        @'IsContextComplete=' isContextComplete
-    | summarize 
-        avg(toint(failoverUnits)), 
-        avg(toint(persisted)), 
-        avg(toint(volatile)), 
-        avg(toint(stateless)),
-        avg(toint(quorumLoss)),
-        avg(toint(inBuild)),
-        avg(toint(unhealthy)),
-        avg(toint(deleting)),
-        avg(toint(deleted)),
-        avg(toint(replicas)),
-        avg(toint(inBuild2)),
-        avg(toint(standby)),
-        avg(toint(offline)),
-        avg(toint(dropped)),
-        avg(toint(tobool(isContextComplete)))
-        by bin(Timestamp,5s)
-    | render timechart
-}
+.create-or-alter function with (docstring = "function to graph FM.FailoverUnitCounts at default 5 second intervals",folder = "sflogs") 
+    TraceFMFailoverUnitCountsGraph(T:string) {
+        table(T)
+        | where Type contains "FM.FailoverUnitCounts"
+        | order by Timestamp asc 
+        | project Timestamp,Text
+        | parse kind=regex Text with * 
+            @'FailoverUnits=' failoverUnits
+            @'Persisted=' persisted
+            @'Volatile=' volatile
+            @'Stateless=' stateless
+            @'QuorumLoss=' quorumLoss
+            @'InBuild=' inBuild
+            @'Unhealthy=' unhealthy
+            @'Deleting=' deleting 
+            @'Deleted=' deleted
+            @'Replicas=' replicas
+            @'InBuild=' inBuild2
+            @'Standby=' standby
+            @'Offline=' offline
+            @'Dropped=' dropped
+            @'IsContextComplete=' isContextComplete
+        | summarize 
+            avg(toint(failoverUnits)), 
+            avg(toint(persisted)), 
+            avg(toint(volatile)), 
+            avg(toint(stateless)),
+            avg(toint(quorumLoss)),
+            avg(toint(inBuild)),
+            avg(toint(unhealthy)),
+            avg(toint(deleting)),
+            avg(toint(deleted)),
+            avg(toint(replicas)),
+            avg(toint(inBuild2)),
+            avg(toint(standby)),
+            avg(toint(offline)),
+            avg(toint(dropped)),
+            avg(toint(tobool(isContextComplete)))
+            by bin(Timestamp,5s)
+        | render timechart
+    }
