@@ -1,0 +1,19 @@
+.create-or-alter function with (docstring = "function to create ContainerOps TableView view for sftable",folder = "sftable") 
+    TableViewContainerOps(T:string) {
+        TableView(T)
+        | where RelativeUri endswith "ContainerOps"
+        | project Timestamp,
+            column_ifexists("EventType",""),
+            column_ifexists("EventVersion",""),
+            column_ifexists("ApplicationName",""),
+            column_ifexists("CodePackageName",""),
+            column_ifexists("IsolationMode",""),
+            column_ifexists("Name",""),
+            column_ifexists("TaskName",""),
+            column_ifexists("dca_version",""),
+            column_ifexists("ServiceName",""),
+            column_ifexists("PartitionKey",""),
+            column_ifexists("RowKey","")
+        | project-away Column*
+        | order by Timestamp asc
+    }
