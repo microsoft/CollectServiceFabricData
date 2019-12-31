@@ -1,34 +1,35 @@
-.create-or-alter function with (docstring = "function to graph FMM.NodeCounts at default 5 second intervals",folder = "sflogs") TraceFMMNodeCountsGraph(T:string) {
-    table(T)
-    | where Type contains "FMM.NodeCounts"
-    | order by Timestamp asc 
-    | project Timestamp,Text
-    | parse kind=regex Text with * 
-        @'Nodes=' nodes
-        @'Up=' up 
-        @'Down=' down 
-        @'DeactivatedNodes=' deactivated 
-        @'Pause=' pause 
-        @'Restart=' restart 
-        @'RemoveData=' removeData 
-        @'RemoveNode=' removeNode 
-        @'Unknown=' unknown
-        @'RemovedNodes=' removed 
-        @'PendingDeactivateNode=' pendingDeactivate 
-        @'PendingFabricUpgrade=' pendingUpgrade
-    | summarize 
-        avg(toint(nodes)), 
-        avg(toint(up)), 
-        avg(toint(down)), 
-        avg(toint(deactivated)),
-        avg(toint(pause)),
-        avg(toint(restart)),
-        avg(toint(removeData)),
-        avg(toint(removeNode)),
-        avg(toint(unknown)),
-        avg(toint(removed)),
-        avg(toint(pendingDeactivate)),
-        avg(toint(pendingUpgrade))
-        by bin(Timestamp,5s)
-    | render timechart
-}
+.create-or-alter function with (docstring = "function to graph FMM.NodeCounts at default 5 second intervals",folder = "sflogs") 
+    TraceFMMNodeCountsGraph(T:string) {
+        table(T)
+        | where Type contains "FMM.NodeCounts"
+        | order by Timestamp asc 
+        | project Timestamp,Text
+        | parse kind=regex Text with * 
+            @'Nodes=' nodes
+            @'Up=' up 
+            @'Down=' down 
+            @'DeactivatedNodes=' deactivated 
+            @'Pause=' pause 
+            @'Restart=' restart 
+            @'RemoveData=' removeData 
+            @'RemoveNode=' removeNode 
+            @'Unknown=' unknown
+            @'RemovedNodes=' removed 
+            @'PendingDeactivateNode=' pendingDeactivate 
+            @'PendingFabricUpgrade=' pendingUpgrade
+        | summarize 
+            avg(toint(nodes)), 
+            avg(toint(up)), 
+            avg(toint(down)), 
+            avg(toint(deactivated)),
+            avg(toint(pause)),
+            avg(toint(restart)),
+            avg(toint(removeData)),
+            avg(toint(removeNode)),
+            avg(toint(unknown)),
+            avg(toint(removed)),
+            avg(toint(pendingDeactivate)),
+            avg(toint(pendingUpgrade))
+            by bin(Timestamp,5s)
+        | render timechart
+    }
