@@ -20,5 +20,6 @@
         | extend ['Dns'] = iif(toscalar(table(T) | where Type contains "dns." | count) > 0, "true", "false")
         | extend ['CrashDumps'] = iif(toscalar(table(T) | where Type contains "FabricDCA.WindowsFabric_ServiceFabricCrashDump" | count) > 0, "true", "false")
         | extend ['Containers'] = iif(toscalar(table(T) | where Type contains "Hosting.ContainerActivatorServiceAgent" and Text contains "ActivateContainerRequest" | count) > 0, "true", "false")
+        | extend ['CRM'] = iif(toscalar(table(T) | where Type contains "CRM.ResourceGovernanceStatistics" and Text matches regex "GovernedServicePackages=[^0]" | count) > 0, "true", "false")
         | project-away d
     }

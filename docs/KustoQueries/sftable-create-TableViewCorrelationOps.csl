@@ -1,0 +1,11 @@
+.create-or-alter function with (docstring = "function to create CorrelationOps TableView view for sftable",folder = "sftable") 
+    TableViewCorrelationOps(T:string) {
+        TableView(T)
+        | where RelativeUri endswith "CorrelationOps"
+        // todo fill in fields
+        | project Timestamp,
+            column_ifexists("PartitionKey",""),
+            column_ifexists("RowKey","")
+        | project-away Column*
+        | order by Timestamp asc
+    }

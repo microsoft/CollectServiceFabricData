@@ -1,0 +1,24 @@
+.create-or-alter function with (docstring = "function to create Client TableView view for sftable",folder = "sftable") 
+    TableViewClient(T:string) {
+        TableView(T)
+        | where RelativeUri endswith "Client"
+        | project Timestamp,
+            column_ifexists("EventType",""),
+            column_ifexists("EventVersion",""),
+            column_ifexists("TaskName",""),
+            column_ifexists("dca_version",""),
+            column_ifexists("body_activityDescription",""),
+            column_ifexists("body_isForce",""),
+            column_ifexists("activityId_index",""),
+            column_ifexists("activityId_id",""),
+            column_ifexists("body_activityDescription_activityId_index",""),
+            column_ifexists("body_activityDescription_activityType",""),
+            column_ifexists("body_faultType",""),
+            column_ifexists("body_guid",""),
+            column_ifexists("body_node",""),
+            column_ifexists("body_replica",""),
+            column_ifexists("PartitionKey",""),
+            column_ifexists("RowKey","")
+        | project-away Column*
+        | order by Timestamp asc
+    }
