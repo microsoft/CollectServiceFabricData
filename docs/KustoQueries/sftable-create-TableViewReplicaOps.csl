@@ -1,0 +1,28 @@
+.create-or-alter function with (docstring = "function to create ReplicaOps TableView view for sftable",folder = "sftable") 
+    TableViewReplicaOps(T:string) {
+        TableView(T)
+        | where RelativeUri endswith "ReplicaOps"
+        | project Timestamp,
+            column_ifexists("EventType",""),
+            column_ifexists("EventVersion",""),
+            column_ifexists("TaskName",""),
+            column_ifexists("category",""),
+            column_ifexists("checkpointLsn",""),
+            column_ifexists("dca_version",""),
+            column_ifexists("elapsedMilliseconds",""),
+            column_ifexists("eventInstanceId",""),
+            column_ifexists("eventName",""),
+            column_ifexists("partitionId",""),
+            column_ifexists("recoveredCount",""),
+            column_ifexists("replicaId",""),
+            column_ifexists("stateProviderId",""),
+            column_ifexists("stateProviderName",""),
+            column_ifexists("targetReplicaId",""),
+            column_ifexists("endingLogRecordPosition",""),
+            column_ifexists("startingLogRecordPosition",""),
+            column_ifexists("PartitionKey",""),
+            column_ifexists("RowKey","")
+        | project-away Column*
+        | order by Timestamp asc    
+    }
+

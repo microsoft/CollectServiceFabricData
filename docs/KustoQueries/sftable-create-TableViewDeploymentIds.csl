@@ -3,8 +3,9 @@
         TableView(T)
         | where RelativeUri endswith "DeploymentIds"
         // todo fill in fields
-        | project Timestamp, 
-            PartitionKey, 
-            RowKey
+        | project Timestamp,
+            column_ifexists("PartitionKey",""),
+            column_ifexists("RowKey","")
+        | project-away Column*
         | order by Timestamp asc
     }

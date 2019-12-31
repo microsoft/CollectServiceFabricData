@@ -1,0 +1,21 @@
+.create-or-alter function with (docstring = "function to create Partitions TableView view for sftable",folder = "sftable") 
+    TableViewPartitions(T:string) {
+        TableView(T)
+        | where RelativeUri endswith "Partitions"
+        | project Timestamp,
+            column_ifexists("EventType",""),
+            column_ifexists("EventVersion",""),
+            column_ifexists("TaskName",""),
+            column_ifexists("dca_version",""),
+            column_ifexists("dca_instance",""),
+            column_ifexists("primary",""),
+            column_ifexists("secondaries",""),
+            column_ifexists("Instance",""),
+            column_ifexists("IsDeleted",""),
+            column_ifexists("instances",""),
+            column_ifexists("PartitionKey",""),
+            column_ifexists("RowKey","")
+        | project-away Column*
+        | order by Timestamp asc    
+    }
+

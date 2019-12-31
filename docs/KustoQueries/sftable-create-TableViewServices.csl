@@ -1,0 +1,19 @@
+.create-or-alter function with (docstring = "function to create Services TableView view for sftable",folder = "sftable") 
+    TableViewServices(T:string) {
+        TableView(T)
+        | where RelativeUri endswith "Services"
+        | project Timestamp,
+            column_ifexists("EventType",""),
+            column_ifexists("EventVersion",""),
+            column_ifexists("TaskName",""),
+            column_ifexists("dca_version",""),
+            column_ifexists("dca_instance",""),
+            column_ifexists("partitionId",""),
+            column_ifexists("Instance",""),
+            column_ifexists("IsDeleted",""),
+            column_ifexists("PartitionKey",""),
+            column_ifexists("RowKey","")
+        | project-away Column*
+        | order by Timestamp asc    
+    }
+
