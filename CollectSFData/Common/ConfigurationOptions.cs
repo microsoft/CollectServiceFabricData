@@ -779,6 +779,12 @@ namespace CollectSFData
                 LogAnalyticsName = FileType + "_" + LogAnalyticsName;
                 Log.Info($"adding prefix to logAnalyticsName: {LogAnalyticsName}");
 
+                if (IsLogAnalyticsConfigured() & Unique & string.IsNullOrEmpty(AzureSubscriptionId))
+                {
+                    Log.Error($"log analytics and 'Unique' require 'AzureSubscriptionId'. supply AzureSubscriptionId or set Unique to false.");
+                    retval = false;
+                }
+
                 if (LogAnalyticsCreate & LogAnalyticsRecreate)
                 {
                     Log.Error($"log analytics create and log analytics recreate *cannot* both be enabled. remove configuration for one");
@@ -839,6 +845,12 @@ namespace CollectSFData
             {
                 Log.Warning($"setting UseMemoryStream to true for FileType 'exception'");
                 UseMemoryStream = true;
+            }
+
+            if (FileType != FileTypesEnum.trace && KustoUseBlobAsSource)
+            {
+                Log.Warning($"setting KustoUseBlobAsSource to false for FileType: {FileType}");
+                KustoUseBlobAsSource = false;
             }
 
             return retval;
