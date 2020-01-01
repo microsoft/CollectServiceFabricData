@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Net.NetworkInformation;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -189,6 +190,8 @@ namespace CollectSFData
 
         public bool UseMemoryStream { get; set; } = true;
 
+        public bool VersionOption { get; set; }
+
         public static FileTypesEnum ConvertFileType(string fileTypeString)
         {
             if (string.IsNullOrEmpty(fileTypeString) || !Enum.TryParse(fileTypeString.ToLower(), out FileTypesEnum fileType))
@@ -197,6 +200,33 @@ namespace CollectSFData
             }
 
             return fileType;
+        }
+
+        public void CheckReleaseVersion()
+        {
+            string response = $"\r\n\tlocal running version: {Version}";
+            Http http = new Http();
+            var headers = new Dictionary<string, string>();
+            headers.Add("User-Agent", $"{AppDomain.CurrentDomain.FriendlyName}");
+
+            try
+            {
+                if (new Ping().Send(new Uri(CodeLatestRelease).Host).Status == IPStatus.Success && http.SendRequest(uri: CodeLatestRelease, headers: headers))
+                {
+                    JToken downloadUrl = http.ResponseStreamJson.SelectToken("assets[0].browser_download_url");
+                    JToken downloadVersion = http.ResponseStreamJson.SelectToken("tag_name");
+                    JToken body = http.ResponseStreamJson.SelectToken("body");
+                    response += $"\r\n\tlatest download release version: {downloadVersion.ToString()}";
+                    response += $"\r\n\trelease notes: \r\n\t\t{body.ToString().Replace("\r\n", "\r\n\t\t")}";
+                    response += $"\r\n\tlatest download release url: {downloadUrl.ToString()}";
+                }
+
+                Log.Last(response);
+            }
+            catch
+            {
+                Log.Last(response);
+            }
         }
 
         public void DisplayStatus()
@@ -334,7 +364,12 @@ namespace CollectSFData
                 EndTimeUtc = EndTimeUtc.AddHours(WarningTimeSpanMinHours);
                 Log.Highlight($"adding {WarningTimeSpanMinHours * 60} minutes to EndTimeUtc to compensate for sf file upload timer. New EndTimeUtc: ({EndTimeUtc.ToString("o")})");
 
-                if (Validate())
+                if (VersionOption)
+                {
+                    CheckReleaseVersion();
+                    return false;
+                }
+                else if (Validate())
                 {
                     Log.Info($"options:", ShallowCopy());
                     DisplayStatus();
@@ -369,6 +404,7 @@ namespace CollectSFData
             options.Remove("SasEndpointInfo");
             options.Remove("SaveConfiguration");
             options.Remove("StartTimeUtc");
+            options.Remove("VersionOption");
 
             if (IsKustoConfigured())
             {
