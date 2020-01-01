@@ -1,0 +1,7 @@
+.create-or-alter function with (docstring = "function to create TableView Task view by TaskName for sftable",folder = "sftable") 
+    TableViewTask(T:string, taskName:string=".") {
+        let iTaskName = strcat('(?i:^',taskName,'$)'); // re2 case insensitive
+        TableView(T)
+        | where TaskName matches regex iTaskName
+        | order by Timestamp asc
+    }
