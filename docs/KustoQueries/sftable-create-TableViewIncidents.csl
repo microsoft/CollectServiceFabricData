@@ -1,0 +1,22 @@
+.create-or-alter function with (docstring = "function to create incidents TableView view for sftable",folder = "sftable") 
+    TableViewincidents(T:string) {
+        TableView(T)
+        | where RelativeUri endswith "incidents"
+        | project Timestamp,
+            column_ifexists("incidentType",""),
+            column_ifexists("TaskName",""),
+            column_ifexists("EventType",""),
+            column_ifexists("localLeaseAgentAddress",""),
+            column_ifexists("EventVersion",""),
+            column_ifexists("arbitrationType",""),
+            column_ifexists("subjectLeaseInstance",""),
+            column_ifexists("localLeaseAgentInstance",""),
+            column_ifexists("dca_version",""),
+            column_ifexists("monitorLeaseInstance",""),
+            column_ifexists("remoteLeaseAgentAddress",""),
+            column_ifexists("remoteLeaseAgentInstance",""),
+            column_ifexists("PartitionKey",""),
+            column_ifexists("RowKey","")
+        | project-away Column*
+        | order by Timestamp asc
+    }

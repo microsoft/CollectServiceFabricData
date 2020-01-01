@@ -1,0 +1,30 @@
+.create-or-alter function with (docstring = "function to create NodesOps TableView view for sftable",folder = "sftable") 
+    TableViewNodesOps(T:string) {
+        TableView(T)
+        | where RelativeUri endswith "NodesOps"
+        | project Timestamp,
+            column_ifexists("EventType",""),
+            column_ifexists("EventVersion",""),
+            column_ifexists("TaskName",""),
+            column_ifexists("dca_version",""),
+            column_ifexists("category",""),
+            column_ifexists("eventInstanceId",""),
+            column_ifexists("eventName",""),
+            column_ifexists("fabricVersion",""),
+            column_ifexists("ipAddressOrFQDN",""),
+            column_ifexists("nodeCapacities",""),
+            column_ifexists("nodeId",""),
+            column_ifexists("nodeInstance",""),
+            column_ifexists("nodeName",""),
+            column_ifexists("nodeType",""),
+            column_ifexists("lastNodeDownAt",""),
+            column_ifexists("faultDomain",""),
+            column_ifexists("hostname",""),
+            column_ifexists("isSeedNode",""),
+            column_ifexists("nodeVersion",""),
+            column_ifexists("upgradeDomain",""),
+            column_ifexists("PartitionKey",""),
+            column_ifexists("RowKey","")
+        | project-away Column*
+        | order by Timestamp asc
+    }

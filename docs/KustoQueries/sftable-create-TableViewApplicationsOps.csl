@@ -1,0 +1,33 @@
+.create-or-alter function with (docstring = "function to create ApplicationsOps TableView view for sftable",folder = "sftable") 
+    TableViewApplicationsOps(T:string) {
+        TableView(T)
+        | where RelativeUri endswith "ApplicationsOps"
+        | project Timestamp,
+            column_ifexists("EventType",""),
+            column_ifexists("EventVersion",""),  
+            column_ifexists("TaskName",""),
+            column_ifexists("applicationName",""),
+            column_ifexists("applicationTypeName",""),
+            column_ifexists("applicationTypeVersion",""),
+            column_ifexists("applicationDefinitionKind",""),
+            column_ifexists("category",""),
+            column_ifexists("dca_version",""),
+            column_ifexists("eventInstanceId",""),
+            column_ifexists("eventName",""),
+            column_ifexists("CodePackageName",""),
+            column_ifexists("EntryPointType",""),
+            column_ifexists("ExeName",""),
+            column_ifexists("ExitCode",""),
+            column_ifexists("HostId",""),
+            column_ifexists("IsExclusive",""),
+            column_ifexists("ProcessId",""),
+            column_ifexists("ServiceName",""),
+            column_ifexists("ServicePackageActivationId",""),
+            column_ifexists("ServicePackageName",""),
+            column_ifexists("StartTime",""),
+            column_ifexists("UnexpectedTermination",""),
+            column_ifexists("PartitionKey",""),
+            column_ifexists("RowKey","")
+        | project-away Column*
+        | order by Timestamp asc
+    }

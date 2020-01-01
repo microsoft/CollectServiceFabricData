@@ -1,4 +1,5 @@
-.create-or-alter function with (docstring = "[T:string] where T=table name. function to search service fabric sflogs for known issues. good place to start",folder = "sflogs/_start-here") TraceKnownIssue(T:string) {
+.create-or-alter function with (docstring = "[T:string] where T=table name. function to search service fabric sflogs for known issues. good place to start",folder = "sflogs/_start-here") 
+    TraceKnownIssue(T:string) {
         // search any column using string contains
         let AnyContains = (tableName:string, issue:string, query:string) {
             table(tableName) 
@@ -80,20 +81,20 @@
         let TypeOrTextContains = (tableName:string, issue:string, query:string) {
             table(tableName) 
             | extend KnownIssue = iif((Type contains query or Text contains query), true, false) 
-            | extend Reason = iif(KnownIssue, strcat(issue,' ::type contains: ', query, ' ::or::text contains: ', query ), "")
+            | extend Reason = iif(KnownIssue, strcat(issue,' ::type or text contains: ', query ), "")
         };
         // search Type or Text columns using regex sensitive match
         let TypeOrTextMatches = (tableName:string, issue:string, query:string) {
             table(tableName) 
             | extend KnownIssue = iif((Type matches regex query or Text matches regex query), true, false) 
-            | extend Reason = iif(KnownIssue, strcat(issue,' ::type matches: ', query, ' ::or::text matches: ', query ), "")
+            | extend Reason = iif(KnownIssue, strcat(issue,' ::type or text matches: ', query ), "")
         };
         // search Type or Text columns using regex insensitive match
         let TypeOrTextIMatches = (tableName:string, issue:string, query:string) {
             let iQuery = strcat('(?i:',query,')'); // re2 case insensitive
             table(tableName) 
             | extend KnownIssue = iif((Type matches regex iQuery or Text matches regex iQuery), true, false) 
-            | extend Reason = iif(KnownIssue, strcat(issue,' ::type imatches: ', iQuery, ' ::or::text imatches: ', iQuery ), "")
+            | extend Reason = iif(KnownIssue, strcat(issue,' ::type or text imatches: ', iQuery ), "")
         };
         union 
         // add known issue signatures here using one of the provided functions in format table, issue description, string pattern
