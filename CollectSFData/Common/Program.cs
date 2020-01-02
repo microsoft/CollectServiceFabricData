@@ -83,6 +83,15 @@ namespace CollectSFData
                 Log.Last($"{TotalRecords} records.");
                 Log.Last($"total execution time in minutes: { (DateTime.Now - StartTime).TotalMinutes.ToString("F2") }");
 
+                if (TotalRecords == 0 && (!string.IsNullOrEmpty(Config.UriFilter) | !string.IsNullOrEmpty(Config.ContainerFilter) | !string.IsNullOrEmpty(Config.NodeFilter)))
+                {
+                    Log.Last("0 records found and filters are configured. verify filters and / or try time range are correct.", ConsoleColor.Yellow);
+                }
+                else if (TotalRecords == 0)
+                {
+                    Log.Last("0 records found. verify time range is correct.", ConsoleColor.Yellow);
+                }
+
                 return 0;
             }
             catch (Exception ex)

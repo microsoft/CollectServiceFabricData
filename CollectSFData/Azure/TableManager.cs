@@ -210,6 +210,10 @@ namespace CollectSFData
                     IngestCallback?.Invoke(fileObject);
                 }
             }
+            else
+            {
+                TotalFilesSkipped++;
+            }
         }
 
         private List<CsvTableRecord> FormatRecordResults(CloudTable cloudTable, TableQuerySegment<DynamicTableEntity> tableSegment)
