@@ -259,7 +259,7 @@ namespace CollectSFData
             int parentId = Thread.CurrentThread.ManagedThreadId;
             Log.Debug($"enter. current id:{parentId}. results count: {blobResultSegment.Results.Count()}");
 
-            foreach (var blob in blobResultSegment.Results)
+            foreach (IListBlobItem blob in blobResultSegment.Results)
             {
                 ICloudBlob blobRef = null;
                 Log.Debug($"parent id:{parentId} current Id:{Thread.CurrentThread.ManagedThreadId}");
