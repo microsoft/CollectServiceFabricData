@@ -235,7 +235,6 @@ namespace CollectSFData
                         }
                     }
 
-                    TotalRecords++;
                     results.Add(new CsvTableRecord()
                     {
                         Timestamp = result.Timestamp.UtcDateTime,
