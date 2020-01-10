@@ -116,5 +116,6 @@
             | invoke TypeAndTextContains("normal cert check trace", "Common.SecurityUtility", "failed to get the certificate's private key")
             | invoke TypeAndTextContains("normal cert check trace", "Common.CryptoUtility", "CryptAcquireCertificatePrivateKey failed. Error:0x80090014")
             | invoke TypeAndTextContains("normal cert check trace", "Common.CryptoUtility", "All tries to get private key filename failed")
+            | invoke TypeAndTextContains("not an error", "HttpGateway.HttpClaimsAuthHandler" , "Authorization header not found")
     }
 
