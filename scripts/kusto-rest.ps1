@@ -17,7 +17,7 @@
 .NOTES
     Author : jagilber
     File Name  : kusto-rest.ps1
-    Version    : 191205
+    Version    : 200102
     History    : 
 
 .EXAMPLE
@@ -173,53 +173,7 @@ class KustoObj {
           
     KustoObj() { }
     static KustoObj() { }
-      
-    hidden [bool] CheckAdal() {
-        [string]$packageName = "Microsoft.IdentityModel.Clients.ActiveDirectory"
-        [string]$outputDirectory = "$($env:USERPROFILE)\.nuget\packages"
-        [string]$nugetSource = "https://api.nuget.org/v3/index.json"
-        [string]$nugetDownloadUrl = "https://dist.nuget.org/win-x86-commandline/latest/nuget.exe"
-      
-        if (!$this.force -and $this.adalDll) {
-            write-warning 'adal already set. use -force to force'
-            return $true
-        }
-      
-        [io.directory]::createDirectory($outputDirectory)
-        [string]$packageDirectory = "$outputDirectory\$packageName"
-        [string]$edition = "net45"
-              
-        $this.adalDllLocation = @(get-childitem -Path $packageDirectory -Recurse | where-object FullName -match "$edition\\$packageName\.dll" | select-object FullName)[-1].FullName
-      
-        if (!$this.adalDllLocation) {
-            if ($psscriptroot -and !($env:path.contains(";$psscriptroot"))) {
-                $env:path += ";$psscriptroot" 
-            }
-          
-            if (!(test-path nuget)) {
-                (new-object net.webclient).downloadFile($nugetDownloadUrl, "$psscriptroot\nuget.exe")
-            }
-      
-            [string]$localPackages = nuget list -Source $outputDirectory
-      
-            if ($this.force -or !($localPackages -imatch $packageName)) {
-                write-host "nuget install $packageName -Source $nugetSource -outputdirectory $outputDirectory -verbosity detailed"
-                nuget install $packageName -Source $nugetSource -outputdirectory $outputDirectory -verbosity detailed
-                $this.adalDllLocation = @(get-childitem -Path $packageDirectory -Recurse | where-object FullName -match "$edition\\$packageName\.dll" | select-object FullName)[-1].FullName
-            }
-            else {
-                write-host "$packageName already installed" -ForegroundColor green
-            }
-        }
-      
-        write-host "adalDll: $($this.adalDllLocation)" -ForegroundColor Green
-        #import-module $($this.adalDll.FullName)
-        $this.adalDll = [Reflection.Assembly]::LoadFile($this.adalDllLocation) 
-        $this.adalDll
-        $this.adalDllLocation = $this.adalDll.Location
-        return $true
-    }
-      
+
     [KustoObj] CreateResultTable() {
         $this.ResultTable = [collections.arraylist]@()
         $columns = @{ }
@@ -369,6 +323,7 @@ class KustoObj {
             return $this.Pipe()
         }
       
+        $this.Query = [regex]::Replace($this.Query,"//.+\n","") 
         $this.Exec()
         return $this.Pipe()
     }
@@ -538,10 +493,7 @@ class KustoObj {
         return $this.Pipe()
     }
 
-    [bool] Logon($resourceUrl) {
-        [object]$authenticationContext = $Null
-        [string]$ADauthorityURL = "https://login.microsoftonline.com/$($this.TenantId)"
-      
+    [bool] Logon([string]$resourceUrl) {
         if (!$resourceUrl) {
             write-warning "-resourceUrl required. example: https://{{ kusto cluster }}.kusto.windows.net"
             return $false
@@ -553,50 +505,58 @@ class KustoObj {
         }
     
         if ($global:PSVersionTable.PSEdition -eq "Core") {
-            [string]$utilityFileName = $this.msalUtilityFileName
-            [string]$utility = $this.msalUtility
-            [string]$filePath = "$env:TEMP\$utilityFileName"
-            [string]$fileName = "$filePath.zip"
-            write-warning ".net core microsoft.identity requires form/webui. checking for $filePath"
-               
-            if (!(test-path $filePath)) {
-                # .net core 3.0 singleexe may clean up extracted dir
-                if (!(test-path $fileName)) {
-                    if ((read-host "is it ok to download .net core Msal utility $utility/$utilityFileName to generate token?[y|n]`r`n" `
-                                "(if not, for .net core, you will need to generate and pass token to script.)") -ilike "y") {
-                        write-warning "downloading .net core $utilityFileName from $utility to $filePath"
-                        [psobject]$apiResults = convertfrom-json (Invoke-WebRequest $utility -UseBasicParsing)
-                        [string]$downloadUrl = @($apiResults.assets.browser_download_url -imatch "/$utilityFileName-")[0]
-                        
-                        (new-object net.webclient).downloadFile($downloadUrl, $fileName)
-                        Expand-Archive $fileName $filePath
-                    }
-                    else {
-                        write-warning "returning"
-                        return $false
-                    }
-                }
-                else {
-                    Expand-Archive $fileName $filePath
-                }
-            }
-    
-            [string]$resultJsonText = (. "$filePath\$utilityFileName.exe" --resource "https://$($this.cluster).kusto.windows.net")
-            write-host "preauth: $resultJsonText" -foregroundcolor green
-            $resultJsonText = (. "$filePath\$utilityFileName.exe" --resource "https://$($this.cluster).kusto.windows.net" --scope "https://$($this.cluster).kusto.windows.net/kusto.read,https://$($this.cluster).kusto.windows.net/kusto.write")
-            $this.authenticationResult = $resultJsonText | convertfrom-json
-            $this.Token = $this.authenticationResult.AccessToken
-            write-host ($this.authenticationResult | convertto-json)
-    
-            if ($this.Token) {
-                return $true
-            }
-            return $false
+            return $this.LogonMsal($resourceUrl)
         }
-        elseif (!($this.CheckAdal())) { 
-            return $false 
+        else { 
+            return $this.LogonAdal($resourceUrl)
         }
-     
+    }
+
+    hidden [bool] LogonAdal([string]$resourceUrl) {
+        [object]$authenticationContext = $Null
+        [string]$ADauthorityURL = "https://login.microsoftonline.com/$($this.TenantId)"
+        [string]$packageName = "Microsoft.IdentityModel.Clients.ActiveDirectory"
+        [string]$outputDirectory = "$($env:USERPROFILE)\.nuget\packages"
+        [string]$nugetSource = "https://api.nuget.org/v3/index.json"
+        [string]$nugetDownloadUrl = "https://dist.nuget.org/win-x86-commandline/latest/nuget.exe"
+      
+        if (!$this.force -and $this.adalDll) {
+            write-warning 'adal already set. use -force to force'
+            return $true
+        }
+      
+        [io.directory]::createDirectory($outputDirectory)
+        [string]$packageDirectory = "$outputDirectory\$packageName"
+        [string]$edition = "net45"
+              
+        $this.adalDllLocation = @(get-childitem -Path $packageDirectory -Recurse | where-object FullName -match "$edition\\$packageName\.dll" | select-object FullName)[-1].FullName
+      
+        if (!$this.adalDllLocation) {
+            if ($psscriptroot -and !($env:path.contains(";$psscriptroot"))) {
+                $env:path += ";$psscriptroot" 
+            }
+          
+            if (!(test-path nuget)) {
+                (new-object net.webclient).downloadFile($nugetDownloadUrl, "$psscriptroot\nuget.exe")
+            }
+      
+            [string]$localPackages = nuget list -Source $outputDirectory
+      
+            if ($this.force -or !($localPackages -imatch $packageName)) {
+                write-host "nuget install $packageName -Source $nugetSource -outputdirectory $outputDirectory -verbosity detailed"
+                nuget install $packageName -Source $nugetSource -outputdirectory $outputDirectory -verbosity detailed
+                $this.adalDllLocation = @(get-childitem -Path $packageDirectory -Recurse | where-object FullName -match "$edition\\$packageName\.dll" | select-object FullName)[-1].FullName
+            }
+            else {
+                write-host "$packageName already installed" -ForegroundColor green
+            }
+        }
+      
+        write-host "adalDll: $($this.adalDllLocation)" -ForegroundColor Green
+        #import-module $($this.adalDll.FullName)
+        $this.adalDll = [Reflection.Assembly]::LoadFile($this.adalDllLocation) 
+        $this.adalDll
+        $this.adalDllLocation = $this.adalDll.Location
         $authenticationContext = New-Object Microsoft.IdentityModel.Clients.ActiveDirectory.AuthenticationContext($ADAuthorityURL)
       
         if ($this.clientid -and $this.clientSecret) {
@@ -632,6 +592,43 @@ class KustoObj {
         $this.AuthenticationResult
         write-verbose "results saved in `$this.authenticationResult and `$this.Token"
         return $true
+    }
+     
+    hidden [bool] LogonMsal([string]$resourceUrl) {
+        [string]$utilityFileName = $this.msalUtilityFileName
+        [string]$utility = $this.msalUtility
+        [string]$filePath = "$env:LOCALAPPDATA\$utilityFileName"
+        [string]$fileName = "$filePath.zip"
+        write-warning ".net core microsoft.identity requires form/webui. checking for $filePath"
+           
+        if (!(test-path $filePath)) {
+            if ((read-host "is it ok to download .net core Msal utility $utility/$utilityFileName to generate token?[y|n]`r`n" `
+                        "(if not, for .net core, you will need to generate and pass token to script.)") -ilike "y") {
+                write-warning "downloading .net core $utilityFileName from $utility to $filePath"
+                [psobject]$apiResults = convertfrom-json (Invoke-WebRequest $utility -UseBasicParsing)
+                [string]$downloadUrl = @($apiResults.assets.browser_download_url -imatch "/$utilityFileName-")[0]
+                
+                (new-object net.webclient).downloadFile($downloadUrl, $fileName)
+                Expand-Archive $fileName $filePath
+                remove-item -Path $fileName -Force
+            }
+            else {
+                write-warning "returning"
+                return $false
+            }
+        }
+
+        [string]$resultJsonText = (. "$filePath\$utilityFileName.exe" --resource $resourceUrl)
+        write-host "preauth: $resultJsonText" -foregroundcolor green
+        $resultJsonText = (. "$filePath\$utilityFileName.exe" --resource $resourceUrl --scope "$resourceUrl/kusto.read,$resourceUrl/kusto.write")
+        $this.authenticationResult = $resultJsonText | convertfrom-json
+        $this.Token = $this.authenticationResult.AccessToken
+        write-host ($this.authenticationResult | convertto-json)
+
+        if ($this.Token) {
+            return $true
+        }
+        return $false
     }
 
     [KustoObj] Pipe() {
@@ -770,7 +767,7 @@ if ($updateScript) {
 }
 
 if ($clean) {
-    $paths = @("$env:temp\$msalUtilityFileName", "$env:temp\.net\$msalUtilityFileName", "$env:temp\$msalUtilityFileName.zip", "$psscriptroot\nuget.exe")
+    $paths = @("$env:LOCALAPPDATA\$msalUtilityFileName", "$env:temp\.net\$msalUtilityFileName", "$env:LOCALAPPDATA\$msalUtilityFileName.zip", "$psscriptroot\nuget.exe")
     foreach ($path in $paths) {    
         if ((test-path $path)) {
             Write-Warning "deleting $path"
