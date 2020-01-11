@@ -152,7 +152,15 @@ namespace CollectSFData
                 }
             }
 
-            Log.Info($"cluster id:{clusterId}");
+            if (!string.IsNullOrEmpty(clusterId))
+            {
+                Log.Info($"cluster id:{clusterId}");
+            }
+            else
+            {
+                Log.Warning("unable to determine cluster id");
+            }
+
             return clusterId;
         }
 
@@ -162,14 +170,10 @@ namespace CollectSFData
             string tablePrefix = null;
             string clusterId = DetermineClusterId();
 
-            if (!Config.FileType.Equals(FileTypesEnum.any))
+            if (!string.IsNullOrEmpty(clusterId))
             {
                 containerPrefix = FileTypes.MapFileTypeUriPrefix(Config.FileType);
                 tablePrefix = containerPrefix + clusterId.Replace("-", "");
-            }
-
-            if (!string.IsNullOrEmpty(clusterId))
-            {
                 // 's-' in prefix may not always be correct
                 containerPrefix += "s-" + clusterId;
             }

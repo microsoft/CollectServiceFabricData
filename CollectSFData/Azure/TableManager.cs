@@ -247,7 +247,7 @@ namespace CollectSFData
                         PartitionKey = $"\"{result.PartitionKey}\"",
                         RowKey = $"\"{result.RowKey}\"",
                         PropertyName = $"\"{entity.Key}\"",
-                        PropertyValue = $"\"{entity.Value}\"",
+                        PropertyValue = $"\"{entity.Value.Replace("\"", "\"\"")}\"",
                         RelativeUri = cloudTable.Name,
                         ResourceUri = Config.ResourceUri
                     });
