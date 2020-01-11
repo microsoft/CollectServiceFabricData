@@ -210,6 +210,10 @@ namespace CollectSFData
                     IngestCallback?.Invoke(fileObject);
                 }
             }
+            else
+            {
+                TotalFilesSkipped++;
+            }
         }
 
         private List<CsvTableRecord> FormatRecordResults(CloudTable cloudTable, TableQuerySegment<DynamicTableEntity> tableSegment)
@@ -235,7 +239,6 @@ namespace CollectSFData
                         }
                     }
 
-                    TotalRecords++;
                     results.Add(new CsvTableRecord()
                     {
                         Timestamp = result.Timestamp.UtcDateTime,
@@ -244,7 +247,7 @@ namespace CollectSFData
                         PartitionKey = $"\"{result.PartitionKey}\"",
                         RowKey = $"\"{result.RowKey}\"",
                         PropertyName = $"\"{entity.Key}\"",
-                        PropertyValue = $"\"{entity.Value}\"",
+                        PropertyValue = $"\"{entity.Value.Replace("\"", "\"\"")}\"",
                         RelativeUri = cloudTable.Name,
                         ResourceUri = Config.ResourceUri
                     });

@@ -17,7 +17,7 @@
 ## Overview
 
 CollectSFData is a .net command-line utility to assist with the download of Azure Service Fabric diagnostic data from the configured Azure storage account.
-Optionally, CollectSFData can be configured to ingest downloaded data into a configured [Azure Data Explorer](https://docs.microsoft.com/en-us/azure/data-explorer/) (Kusto) database or Log Analytics (OMS) for analysis.
+Optionally, CollectSFData can be configured to ingest downloaded data into a configured [Azure Data Explorer](https://docs.microsoft.com/en-us/azure/data-explorer/) (Kusto) database or Log Analytics (OMS) for analysis. The diagnostic data is primarily used by Microsoft support and engineering teams for troubleshooting issues with Service Fabric itself. This low level ETL data is large and should only be collected after other troubleshooting steps have been performed.
 See [docs](/docs) and [configurationFiles](/configurationFiles) for additional information.
 
 Service Fabric diagnostic data that can be enumerated / downloaded from configured storage account:
@@ -132,7 +132,6 @@ Options:
                                         exception
                                         table
                                         setup
-                                        any
   -kz|--kustoCompressed              [bool] compress upload to kusto ingest.
   -kc|--kustoCluster                 [string] ingest url for kusto.
                                          ex: https://ingest-{clusterName}.{location}.kusto.windows.net/{databaseName}
