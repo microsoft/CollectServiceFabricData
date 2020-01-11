@@ -206,7 +206,7 @@ namespace CollectSFData
         {
             string response = $"\r\n\tlocal running version: {Version}";
             Http http = new Http();
-            var headers = new Dictionary<string, string>();
+            Dictionary<string, string> headers = new Dictionary<string, string>();
             headers.Add("User-Agent", $"{AppDomain.CurrentDomain.FriendlyName}");
 
             try

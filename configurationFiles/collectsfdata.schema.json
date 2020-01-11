@@ -143,8 +143,7 @@
         "counter",
         "setup",
         "table",
-        "exception",
-        "any"
+        "exception"
       ],
       "pattern": "^(trace|counter|setup|table|exception)$"
     },

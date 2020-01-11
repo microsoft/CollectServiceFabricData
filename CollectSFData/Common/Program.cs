@@ -83,6 +83,15 @@ namespace CollectSFData
                 Log.Last($"{TotalRecords} records.");
                 Log.Last($"total execution time in minutes: { (DateTime.Now - StartTime).TotalMinutes.ToString("F2") }");
 
+                if (TotalRecords == 0 && (!string.IsNullOrEmpty(Config.UriFilter) | !string.IsNullOrEmpty(Config.ContainerFilter) | !string.IsNullOrEmpty(Config.NodeFilter)))
+                {
+                    Log.Last("0 records found and filters are configured. verify filters and / or try time range are correct.", ConsoleColor.Yellow);
+                }
+                else if (TotalRecords == 0)
+                {
+                    Log.Last("0 records found. verify time range is correct.", ConsoleColor.Yellow);
+                }
+
                 return 0;
             }
             catch (Exception ex)
@@ -143,7 +152,15 @@ namespace CollectSFData
                 }
             }
 
-            Log.Info($"cluster id:{clusterId}");
+            if (!string.IsNullOrEmpty(clusterId))
+            {
+                Log.Info($"cluster id:{clusterId}");
+            }
+            else
+            {
+                Log.Warning("unable to determine cluster id");
+            }
+
             return clusterId;
         }
 
@@ -153,14 +170,10 @@ namespace CollectSFData
             string tablePrefix = null;
             string clusterId = DetermineClusterId();
 
-            if (!Config.FileType.Equals(FileTypesEnum.any))
+            if (!string.IsNullOrEmpty(clusterId))
             {
                 containerPrefix = FileTypes.MapFileTypeUriPrefix(Config.FileType);
                 tablePrefix = containerPrefix + clusterId.Replace("-", "");
-            }
-
-            if (!string.IsNullOrEmpty(clusterId))
-            {
                 // 's-' in prefix may not always be correct
                 containerPrefix += "s-" + clusterId;
             }
