@@ -1,0 +1,13 @@
+// view for log analytics and gathertype 'table'
+let T = 'table_%LogAnalyticsName%_CL';
+let Table = table(T);
+let DistinctEvents = Table
+| distinct Timestamp_t, PartitionKey_s, RowKey_s;
+DistinctEvents
+| join
+    Table
+on $left.Timestamp_t==$right.Timestamp_t and $left.PartitionKey_s==$right.PartitionKey_s and $left.RowKey_s==$right.RowKey_s
+| extend propertyPack = pack(PropertyName_s, PropertyValue_s)
+| summarize bag = make_bag(propertyPack) by Timestamp_t, PartitionKey_s, RowKey_s, RelativeUri_s
+| evaluate bag_unpack(bag)
+| order by Timestamp_t asc

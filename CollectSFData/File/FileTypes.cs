@@ -39,7 +39,6 @@ namespace CollectSFData
     public enum FileTypesEnum
     {
         unknown,
-        any,
         counter,
         exception,
         setup,
@@ -132,7 +131,6 @@ namespace CollectSFData
                     }
                 default:
                     {
-                        fileTypesEnum = FileTypesEnum.any;
                         Log.Warning($"unknown filetype: {fileUri}");
                         break;
                     }
@@ -148,11 +146,6 @@ namespace CollectSFData
 
             switch (fileType)
             {
-                case FileTypesEnum.any:
-                    knownPrefix = FileTypesKnownUrisPrefix.any;
-                    Log.Warning($"returning FileTypesKnownUrisPrefix.{knownPrefix}");
-                    break;
-
                 case FileTypesEnum.counter:
                     knownPrefix = FileTypesKnownUrisPrefix.fabriccounter;
                     break;
@@ -240,7 +233,6 @@ namespace CollectSFData
 
     public class FileTypesKnownUrisPrefix
     {
-        public static string any = "";
         public static string fabriccounter = "fabriccounter";
         public static string fabriccrashdump = "fabriccrashdump";
         public static string fabriclog = "fabriclog";

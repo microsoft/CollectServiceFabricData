@@ -44,7 +44,6 @@ Options:
                                         exception
                                         table
                                         setup
-                                        any
   -kz|--kustoCompressed              [bool] compress upload to kusto ingest.
   -kc|--kustoCluster                 [string] ingest url for kusto.
                                          ex: https://ingest-{clusterName}.{location}.kusto.windows.net/{databaseName}
@@ -108,8 +107,7 @@ To use a default configuration file without having to specify on the command lin
 
 - **ContainerFilter** - optional. string / regex. default null. if populated, pattern will be used to filter which containers are enumerated for blob download.
 - **DeleteCache** - bool. default false. if true, blobs downloaded from storage account into 'cacheLocation' will be deleted at end after successful formatting and ingestion.
-- **GatherType** - required. string. options: any, counter, exception, table, trace
-  - **any** - 'any' without other filters will enumerate all containers for blobs matching criteria.
+- **GatherType** - required. string. options: counter, exception, table, trace
   - **counter** - 'counter' will enumerate service fabric performance counter (.blg) blobs from 'fabriccounters*' container.
   - **exception** - 'exception' will enumerate service fabric fabric crash dumps (.dmp) blobs from 'fabriccrashdumps*' container.
   - **table** - 'table' will enumerate service fabric events from blob tables 'fabriclogs*'
@@ -145,7 +143,7 @@ To use a default configuration file without having to specify on the command lin
 {
   "ContainerFilter": "",
   "DeleteCache": true,
-  "GatherType": "[any|counter|exception|trace|table]",
+  "GatherType": "[counter|exception|trace|table]",
   "List": false,
   "LogDebug": false,
   "LogFile": null,
@@ -165,7 +163,7 @@ To use a default configuration file without having to specify on the command lin
 {
   "ContainerFilter": "",
   "DeleteCache": true,
-  "GatherType": "[any|counter|exception|trace|table]",
+  "GatherType": "[counter|exception|trace|table]",
   "List": false,
   "LogDebug": false,
   "LogFile": null,
@@ -191,7 +189,7 @@ To use a default configuration file without having to specify on the command lin
 {
   "ContainerFilter": "",
   "DeleteCache": true,
-  "GatherType": "[any|counter|exception|trace|table]",
+  "GatherType": "[counter|exception|trace|table]",
   "List": false,
   "LogDebug": false,
   "LogFile": null,

@@ -130,5 +130,6 @@
         TextContains(T, "docker health error", "Docker HEALTHCHECK reported health_status=unhealthy"),
         TextContains(T, ".net exception", "3762504530"),
         TypeAndTextContains(T, "docker container not responsive", "ManagedHosting.ContainerEventManager", "Failed to connect to DockerService at named pipe 'docker_engine'"),
-        TypeAndTextContains(T, "fabric client making too many connections to gateway", "EntreeServiceProxy.LifeCycle", "exceeded client connection limit:")
+        TypeAndTextContains(T, "fabric client making too many connections to gateway", "EntreeServiceProxy.LifeCycle", "exceeded client connection limit:"),
+        TypeContains(T, "stuck .net timers detected", "FabricDCA.DCADotNetStuckTimersDetected")
     }
