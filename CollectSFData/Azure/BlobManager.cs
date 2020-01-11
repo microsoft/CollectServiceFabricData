@@ -313,7 +313,7 @@ namespace CollectSFData
                 if (blobRef.Properties.LastModified.HasValue)
                 {
                     DateTimeOffset lastModified = blobRef.Properties.LastModified.Value;
-                    if (Config.FileType != FileTypesEnum.any && !FileTypes.MapFileTypeUri(blob.Uri.AbsolutePath).Equals(Config.FileType))
+                    if (!FileTypes.MapFileTypeUri(blob.Uri.AbsolutePath).Equals(Config.FileType))
                     {
                         Interlocked.Increment(ref TotalFilesSkipped);
                         Log.Debug($"skipping uri with incorrect file type: {FileTypes.MapFileTypeUri(blob.Uri.AbsolutePath)}");
