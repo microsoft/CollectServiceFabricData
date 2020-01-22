@@ -44,7 +44,7 @@ namespace CollectSFData
 
         public IRecord Populate(FileObject fileObject, string traceRecord, string resourceUri = null)
         {
-            Match match = Regex.Match(traceRecord, @"/(?<Type>\w+?)(\.exe)?\.(?<PID>\d+?)\.dmp");
+            Match match = Regex.Match(traceRecord, @"/(?<Type>\w+?)(\.\w+?)?\.(?<PID>\d+?)\.dmp");
 
             Timestamp = fileObject.LastModified.UtcDateTime;
             PID = Convert.ToInt32(match.Groups["PID"].Value);
