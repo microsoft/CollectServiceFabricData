@@ -282,28 +282,29 @@ namespace CollectSFData
 
                 Interlocked.Increment(ref TotalFilesEnumerated);
 
-                if (!string.IsNullOrEmpty(Config.UriFilter) && !Regex.IsMatch(blob.Uri.ToString(), Config.UriFilter, RegexOptions.IgnoreCase))
-                {
-                    Interlocked.Increment(ref TotalFilesSkipped);
-                    Log.Debug($"blob:{blob.Uri} does not match uriFilter pattern:{Config.UriFilter}, skipping...");
-                    continue;
-                }
-
                 if (Regex.IsMatch(blob.Uri.ToString(), FileFilterPattern, RegexOptions.IgnoreCase))
                 {
                     long ticks = Convert.ToInt64(Regex.Match(blob.Uri.ToString(), FileFilterPattern, RegexOptions.IgnoreCase).Groups[1].Value);
-                    SetMinMaxDate(ref segmentMinDateTicks, ref segmentMaxDateTicks, ticks);
 
                     if (ticks < Config.StartTimeUtc.Ticks | ticks > Config.EndTimeUtc.Ticks)
                     {
                         Interlocked.Increment(ref TotalFilesSkipped);
                         Log.Debug($"exclude:bloburi ticks outside of time range:{blob.Uri}");
+
+                        SetMinMaxDate(ref segmentMinDateTicks, ref segmentMaxDateTicks, ticks);
                         continue;
                     }
                 }
                 else
                 {
                     Log.Debug($"regex not matched: {blob.Uri.ToString()} pattern: {FileFilterPattern}");
+                }
+
+                if (!string.IsNullOrEmpty(Config.UriFilter) && !Regex.IsMatch(blob.Uri.ToString(), Config.UriFilter, RegexOptions.IgnoreCase))
+                {
+                    Interlocked.Increment(ref TotalFilesSkipped);
+                    Log.Debug($"blob:{blob.Uri} does not match uriFilter pattern:{Config.UriFilter}, skipping...");
+                    continue;
                 }
 
                 try
@@ -389,18 +390,18 @@ namespace CollectSFData
             {
                 if (ticks < segmentMinDateTicks)
                 {
+                    Log.Debug($"set new discovered min time range ticks: {new DateTime(ticks).ToString("o")}");
                     lock (DateTimeMinLock)
                     {
-                        Log.Debug($"set new discovered min time range ticks: {new DateTime(ticks).ToString("o")}");
                         segmentMinDateTicks = DiscoveredMinDateTicks = Math.Min(DiscoveredMinDateTicks, ticks);
                     }
                 }
 
                 if (ticks > segmentMaxDateTicks)
                 {
+                    Log.Debug($"set new discovered max time range ticks: {new DateTime(ticks).ToString("o")}");
                     lock (DateTimeMaxLock)
                     {
-                        Log.Debug($"set new discovered max time range ticks: {new DateTime(ticks).ToString("o")}");
                         segmentMaxDateTicks = DiscoveredMaxDateTicks = Math.Max(DiscoveredMaxDateTicks, ticks);
                     }
                 }
