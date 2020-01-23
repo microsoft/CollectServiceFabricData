@@ -20,7 +20,8 @@ namespace CollectSFData
         private static readonly CustomTaskManager _blobTasks = new CustomTaskManager(true);
         private CloudStorageAccount _account;
         private CloudBlobClient _blobClient;
-
+        private object DateTimeMaxLock = new object();
+        private object DateTimeMinLock = new object();
         public List<CloudBlobContainer> ContainerList { get; set; } = new List<CloudBlobContainer>();
 
         public Action<FileObject> IngestCallback { get; set; }
@@ -258,6 +259,8 @@ namespace CollectSFData
         {
             int parentId = Thread.CurrentThread.ManagedThreadId;
             Log.Debug($"enter. current id:{parentId}. results count: {blobResultSegment.Results.Count()}");
+            long segmentMinDateTicks = Interlocked.Read(ref DiscoveredMinDateTicks);
+            long segmentMaxDateTicks = Interlocked.Read(ref DiscoveredMaxDateTicks);
 
             foreach (IListBlobItem blob in blobResultSegment.Results)
             {
@@ -289,6 +292,7 @@ namespace CollectSFData
                 if (Regex.IsMatch(blob.Uri.ToString(), FileFilterPattern, RegexOptions.IgnoreCase))
                 {
                     long ticks = Convert.ToInt64(Regex.Match(blob.Uri.ToString(), FileFilterPattern, RegexOptions.IgnoreCase).Groups[1].Value);
+                    SetMinMaxDate(ref segmentMinDateTicks, ref segmentMaxDateTicks, ticks);
 
                     if (ticks < Config.StartTimeUtc.Ticks | ticks > Config.EndTimeUtc.Ticks)
                     {
@@ -296,6 +300,10 @@ namespace CollectSFData
                         Log.Debug($"exclude:bloburi ticks outside of time range:{blob.Uri}");
                         continue;
                     }
+                }
+                else
+                {
+                    Log.Debug($"regex not matched: {blob.Uri.ToString()} pattern: {FileFilterPattern}");
                 }
 
                 try
@@ -313,6 +321,8 @@ namespace CollectSFData
                 if (blobRef.Properties.LastModified.HasValue)
                 {
                     DateTimeOffset lastModified = blobRef.Properties.LastModified.Value;
+                    SetMinMaxDate(ref segmentMinDateTicks, ref segmentMaxDateTicks, lastModified.Ticks);
+
                     if (!FileTypes.MapFileTypeUri(blob.Uri.AbsolutePath).Equals(Config.FileType))
                     {
                         Interlocked.Increment(ref TotalFilesSkipped);
@@ -369,6 +379,30 @@ namespace CollectSFData
                 {
                     Log.Error("unable to read blob modified date", blobRef);
                     TotalErrors++;
+                }
+            }
+        }
+
+        private void SetMinMaxDate(ref long segmentMinDateTicks, ref long segmentMaxDateTicks, long ticks)
+        {
+            if (ticks > DateTime.MinValue.Ticks && ticks < DateTime.MaxValue.Ticks)
+            {
+                if (ticks < segmentMinDateTicks)
+                {
+                    lock (DateTimeMinLock)
+                    {
+                        Log.Debug($"set new discovered min time range ticks: {new DateTime(ticks).ToString("o")}");
+                        segmentMinDateTicks = DiscoveredMinDateTicks = Math.Min(DiscoveredMinDateTicks, ticks);
+                    }
+                }
+
+                if (ticks > segmentMaxDateTicks)
+                {
+                    lock (DateTimeMaxLock)
+                    {
+                        Log.Debug($"set new discovered max time range ticks: {new DateTime(ticks).ToString("o")}");
+                        segmentMaxDateTicks = DiscoveredMaxDateTicks = Math.Max(DiscoveredMaxDateTicks, ticks);
+                    }
                 }
             }
         }

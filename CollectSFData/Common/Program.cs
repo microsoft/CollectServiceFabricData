@@ -81,17 +81,30 @@ namespace CollectSFData
                 Log.Last($"{TotalFilesFormatted} files formatted.");
                 Log.Last($"{TotalErrors} errors.");
                 Log.Last($"{TotalRecords} records.");
-                Log.Last($"total execution time in minutes: { (DateTime.Now - StartTime).TotalMinutes.ToString("F2") }");
 
-                if (TotalRecords == 0 && (!string.IsNullOrEmpty(Config.UriFilter) | !string.IsNullOrEmpty(Config.ContainerFilter) | !string.IsNullOrEmpty(Config.NodeFilter)))
+                if (Config.FileType != FileTypesEnum.table)
+                {
+                    DateTime discoveredMinDateTime = new DateTime(DiscoveredMinDateTicks);
+                    DateTime discoveredMaxDateTime = new DateTime(DiscoveredMaxDateTicks);
+
+                    Log.Last($"discovered time range: {discoveredMinDateTime.ToString("o")} - {discoveredMaxDateTime.ToString("o")}", ConsoleColor.Green);
+
+                    if (discoveredMinDateTime.Ticks > Config.EndTimeUtc.Ticks | discoveredMaxDateTime.Ticks < Config.StartTimeUtc.Ticks)
+                    {
+                        Log.Last($"error: configured time range not within discovered time range:{Config.StartTimeUtc} - {Config.EndTimeUtc}", ConsoleColor.Red);
+                    }
+                }
+
+                if (TotalFilesMatched + TotalRecords == 0 && (!string.IsNullOrEmpty(Config.UriFilter) | !string.IsNullOrEmpty(Config.ContainerFilter) | !string.IsNullOrEmpty(Config.NodeFilter)))
                 {
                     Log.Last("0 records found and filters are configured. verify filters and / or try time range are correct.", ConsoleColor.Yellow);
                 }
-                else if (TotalRecords == 0)
+                else if (TotalFilesMatched + TotalRecords == 0)
                 {
                     Log.Last("0 records found. verify time range is correct.", ConsoleColor.Yellow);
                 }
 
+                Log.Last($"total execution time in minutes: { (DateTime.Now - StartTime).TotalMinutes.ToString("F2") }");
                 return 0;
             }
             catch (Exception ex)
