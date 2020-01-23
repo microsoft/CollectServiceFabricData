@@ -489,7 +489,8 @@ namespace CollectSFData
                     CommandOptionType.SingleValue);
 
             SaveConfiguration = CmdLineApp.Option("-save|--saveConfiguration",
-                    "[string] file name and path to save current configuration",
+                    "[string] file name and path to save current configuration" +
+                    $"{newLine} specify file name 'collectsfdata.options.json' to create default configuration file.",
                     CommandOptionType.SingleValue);
 
             StartTimeStamp = CmdLineApp.Option("-from|--start",
