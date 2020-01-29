@@ -4,19 +4,19 @@
         | where Type contains "FMM.NodeCounts"
         | order by Timestamp asc 
         | project Timestamp,Text
-        | parse kind=regex Text with * 
+        | parse kind=regex flags=U Text with * 
             @'Nodes=' nodes
-            @', Up=' up 
-            @', Down=' down 
-            @', DeactivatedNodes=' deactivated 
-            @' \(Pause=' pause 
-            @', Restart=' restart 
-            @', RemoveData=' removeData 
-            @', RemoveNode=' removeNode 
-            @'\), Unknown=' unknown
-            @', RemovedNodes=' removed 
-            @', PendingDeactivateNode=' pendingDeactivate 
-            @'PendingFabricUpgrade=' pendingUpgrade
+            @'\W+?Up=' up 
+            @'\W+?Down=' down 
+            @'\W+?DeactivatedNodes=' deactivated 
+            @'\W+?Pause=' pause 
+            @'\W+?Restart=' restart 
+            @'\W+?RemoveData=' removeData 
+            @'\W+?RemoveNode=' removeNode 
+            @'\W+?Unknown=' unknown
+            @'\W+?RemovedNodes=' removed 
+            @'\W+?PendingDeactivateNode=' pendingDeactivate 
+            @'\W+?PendingFabricUpgrade=' pendingUpgrade
         | summarize 
             avg(toint(nodes)), 
             avg(toint(up)), 
