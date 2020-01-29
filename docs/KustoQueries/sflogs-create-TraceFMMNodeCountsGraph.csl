@@ -6,16 +6,16 @@
         | project Timestamp,Text
         | parse kind=regex Text with * 
             @'Nodes=' nodes
-            @'Up=' up 
-            @'Down=' down 
-            @'DeactivatedNodes=' deactivated 
-            @'Pause=' pause 
-            @'Restart=' restart 
-            @'RemoveData=' removeData 
-            @'RemoveNode=' removeNode 
-            @'Unknown=' unknown
-            @'RemovedNodes=' removed 
-            @'PendingDeactivateNode=' pendingDeactivate 
+            @', Up=' up 
+            @', Down=' down 
+            @', DeactivatedNodes=' deactivated 
+            @' \(Pause=' pause 
+            @', Restart=' restart 
+            @', RemoveData=' removeData 
+            @', RemoveNode=' removeNode 
+            @'\), Unknown=' unknown
+            @', RemovedNodes=' removed 
+            @', PendingDeactivateNode=' pendingDeactivate 
             @'PendingFabricUpgrade=' pendingUpgrade
         | summarize 
             avg(toint(nodes)), 
