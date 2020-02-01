@@ -82,26 +82,33 @@ namespace CollectSFData
                 Log.Last($"{TotalErrors} errors.");
                 Log.Last($"{TotalRecords} records.");
 
-                if (Config.FileType != FileTypesEnum.table)
+                if (TotalFilesEnumerated > 0)
                 {
-                    DateTime discoveredMinDateTime = new DateTime(DiscoveredMinDateTicks);
-                    DateTime discoveredMaxDateTime = new DateTime(DiscoveredMaxDateTicks);
-
-                    Log.Last($"discovered time range: {discoveredMinDateTime.ToString("o")} - {discoveredMaxDateTime.ToString("o")}", ConsoleColor.Green);
-
-                    if (discoveredMinDateTime.Ticks > Config.EndTimeUtc.Ticks | discoveredMaxDateTime.Ticks < Config.StartTimeUtc.Ticks)
+                    if (Config.FileType != FileTypesEnum.table)
                     {
-                        Log.Last($"error: configured time range not within discovered time range:{Config.StartTimeUtc} - {Config.EndTimeUtc}", ConsoleColor.Red);
+                        DateTime discoveredMinDateTime = new DateTime(DiscoveredMinDateTicks);
+                        DateTime discoveredMaxDateTime = new DateTime(DiscoveredMaxDateTicks);
+
+                        Log.Last($"discovered time range: {discoveredMinDateTime.ToString("o")} - {discoveredMaxDateTime.ToString("o")}", ConsoleColor.Green);
+
+                        if (discoveredMinDateTime.Ticks > Config.EndTimeUtc.Ticks | discoveredMaxDateTime.Ticks < Config.StartTimeUtc.Ticks)
+                        {
+                            Log.Last($"error: configured time range not within discovered time range:{Config.StartTimeUtc} - {Config.EndTimeUtc}", ConsoleColor.Red);
+                        }
+                    }
+
+                    if (TotalFilesMatched + TotalRecords == 0 && (!string.IsNullOrEmpty(Config.UriFilter) | !string.IsNullOrEmpty(Config.ContainerFilter) | !string.IsNullOrEmpty(Config.NodeFilter)))
+                    {
+                        Log.Last("0 records found and filters are configured. verify filters and / or try time range are correct.", ConsoleColor.Yellow);
+                    }
+                    else if (TotalFilesMatched + TotalRecords == 0)
+                    {
+                        Log.Last("0 records found. verify time range is correct.", ConsoleColor.Yellow);
                     }
                 }
-
-                if (TotalFilesMatched + TotalRecords == 0 && (!string.IsNullOrEmpty(Config.UriFilter) | !string.IsNullOrEmpty(Config.ContainerFilter) | !string.IsNullOrEmpty(Config.NodeFilter)))
+                else
                 {
-                    Log.Last("0 records found and filters are configured. verify filters and / or try time range are correct.", ConsoleColor.Yellow);
-                }
-                else if (TotalFilesMatched + TotalRecords == 0)
-                {
-                    Log.Last("0 records found. verify time range is correct.", ConsoleColor.Yellow);
+                    Log.Last("0 files enumerated.", ConsoleColor.Red);
                 }
 
                 Log.Last($"total execution time in minutes: { (DateTime.Now - StartTime).TotalMinutes.ToString("F2") }");
