@@ -11,6 +11,8 @@ namespace CollectSFData
     public class Instance : Constants
     {
         public static ConfigurationOptions Config = new ConfigurationOptions();
+        public static long DiscoveredMaxDateTicks = DateTime.MinValue.Ticks;
+        public static long DiscoveredMinDateTicks = DateTime.MaxValue.Ticks;
         public static FileManager FileMgr = new FileManager();
         public static KustoConnection Kusto = null;
         public static LogAnalyticsConnection LogAnalytics = null;

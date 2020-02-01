@@ -101,7 +101,7 @@
         // use *Matches (regex) only when needed as it is remarkably slower
         // use Any* only when needed
         TextContains(T, "out of disk space", "does not have enough disk space to operate"),
-        TextContains(T, "disk full", "80070070"),
+        TextContains(T, "disk full", "0x80070070"),
         TextContains(T, "stuck replica", "is stuck"),
         TypeContains(T,"api slow", "api.slow"),
         TextContains(T,"slow progress", "DueToSlowProgress=True"),
