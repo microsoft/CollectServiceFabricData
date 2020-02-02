@@ -434,6 +434,14 @@ pause
     }
 ```
 
+3. Permission denied to storage account. there may be a firewall preventing access that owner of storage account may need to open.
+
+```text
+1:Execute:exception: System.AggregateException: One or more errors occurred. ---> System.AggregateException: One or more errors occurred. ---> Microsoft.WindowsAzure.Storage.StorageException: The remote server returned an error: (403) Forbidden. ---> System.Net.WebException: The remote server returned an error: (403) Forbidden.
+   at Microsoft.WindowsAzure.Storage.Shared.Protocol.HttpResponseParsers.ProcessExpectedStatusCodeNoException[T](HttpStatusCode expectedStatusCode, HttpStatusCode actualStatusCode, T retVal, StorageCommandBase`1 cmd, Exception ex) in c:\Program Files (x86)\Jenkins\workspace\release_dotnet_master\Lib\Common\Shared\Protocol\HttpResponseParsers.Common.cs:line 54
+
+```
+
 ## reference
 
 ### kusto reference
