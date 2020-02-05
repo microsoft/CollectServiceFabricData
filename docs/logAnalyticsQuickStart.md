@@ -1,6 +1,6 @@
 # Log Analytics QuickStart
 
-[log analytics example queries](../docs/logAnalyticsExampleQueries.md)  
+[log analytics example queries](../docs/LogAnalyticsQueries/logAnalyticsExampleQueries.md)  
 [log analytic queries in csl query format](../docs/LogAnalyticsQueries/logAnalyticsExampleQueries.md.csl)  
 
 ## Overview
@@ -44,7 +44,7 @@ These steps will assist with getting started using collectsfdata and azure log a
 6. open workspace 'custom logs'. in this example, the ingest or custom log 'type' name is 'trace_latest_CL' (_CL is for custom log and is automatically appended by log analytics).
 7. verify record count with output.  
 	NOTE: this may take a while to complete ingestion even after utility has completed and this does vary regardless of size of ingest
-8. use example queries to get started. [log analytics example queries](../docs/logAnalyticsExampleQueries.md) and [log analytic queries in csl query format](../docs/LogAnalyticsQueries/logAnalyticsExampleQueries.md.csl).
+8. use example queries to get started. [log analytics example queries](../docs/LogAnalyticsQueries/logAnalyticsExampleQueries.md) and [log analytic queries in csl query format](../docs/LogAnalyticsQueries/logAnalyticsExampleQueries.md.csl).
 
     ![log analytics advanced settings](media/la-query-1.png)
 ## Tips

@@ -1,0 +1,48 @@
+.create-or-alter function with (docstring = "service fabric counter log timechart for ___. ___ could be indicator of performance issues.",folder = "sfcounter") 
+    CounterChart___(T:string) {
+        table(T)
+        //| where CounterName contains "Avg. Disk Queue Length" and CounterName contains "c:"
+        //| where CounterName contains "% Idle Time" and CounterName contains "c:"
+        //| where CounterName contains "Avg. Disk Queue Length" and CounterName contains "d:"
+        //| where CounterName contains "% Idle Time" and CounterName contains "d:"
+        //| where CounterName contains "TCP" and CounterName contains "reset"
+        //| where CounterName contains "TCP" and CounterName contains "fail"
+        //| where CounterName contains "TCP" and CounterName contains "segments received"
+        //| where CounterName contains "TCP" and CounterName contains "segments retransmitted"
+        //| where CounterName contains "TCP" and CounterName contains "segments sent"
+        //| where CounterName contains "TCP" and CounterName contains "connections active"
+        //| where CounterName contains "TCP" and CounterName contains "connections passive"
+        //| where CounterName contains "Processor(_Total)"
+        //| where CounterName contains "Paging File(_Total)\\% Usage"
+        //| where CounterName contains "Available Mbytes"
+        //| where CounterName contains "Pool Paged Bytes"
+        //| where CounterName contains "Pool NonPaged Bytes"
+        //| where CounterName contains "Process(Fabric)\\% Processor Time"
+        //| where CounterName contains "Process(FabricDCA)\\% Processor Time"
+        //| where CounterName contains "Actor" and CounterName contains "# of Actor calls waiting for actor lock"
+        //| where CounterName contains "Actor" and CounterName contains "# of outstanding requests"
+        //| where CounterName contains "Actor" and CounterName contains "Average milliseconds per request"
+        //| where CounterName contains "Actor" and CounterName contains "Average milliseconds per invocation"
+        //| where CounterName contains "Actor" and CounterName contains "Average milliseconds actor lock held"
+        //| where CounterName contains "Actor" and CounterName contains "Average milliseconds per lock wait"
+        //| where CounterName contains "Actor" and CounterName contains "Average OnActivateAsync milliseconds"
+        //| where CounterName contains "Actor" and CounterName contains "Average milliseconds for response serialization"
+        //| where CounterName contains "Actor" and CounterName contains "Average milliseconds for request deserialization"
+        //| where CounterName contains "Items/Second inserted into the job queue"
+        //| where CounterName contains "Items/Second failed to be inserted into the job queue"
+        //| where CounterName contains "Avg. time in ms an item spends in the queue/Operation" 
+        //| where CounterName contains "#InBuild Replicas" 
+        //| where CounterName contains "#Replicas" 
+        //| where CounterName contains "#Service Types" 
+        //| where CounterName contains "# of Active Callback"
+        //| where CounterName contains "exceptions"
+        //| where CounterName contains "Invocations/Sec"
+        //| where CounterName contains "Items in the job queue"
+        //| where NodeName == "_nt0_0"
+        //| extend disk = extract(@"PhysicalDisk\(\d (?P<disk>.+:)\)\\Avg. Disk Queue Length", 1, CounterName)
+        //| summarize percentiles(CounterValue,5,50,95) by xtime=bin(Timestamp,1m), NodeName
+        //| where CounterValue > 75
+        //| sample 5000
+        | summarize avg(CounterValue) by xtime=bin(Timestamp,1m), NodeName
+        | render timechart;
+    }
