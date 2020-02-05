@@ -26,6 +26,7 @@ namespace CollectSFData
         private bool _logDebugEnabled;
         private string _startTime;
         private string _tempPath = Path.GetTempPath().TrimEnd(Path.DirectorySeparatorChar);
+        private int _threads;
 
         public ConfigurationOptions()
         {
@@ -37,7 +38,6 @@ namespace CollectSFData
             _startTime = defaultOffset.AddHours(DefaultStartTimeHours).ToString(DefaultDatePattern);
             EndTimeUtc = defaultOffset.UtcDateTime;
             _endTime = defaultOffset.ToString(DefaultDatePattern);
-            Threads = Environment.ProcessorCount;
         }
 
         public string AzureClientId { get; set; }
@@ -182,7 +182,11 @@ namespace CollectSFData
 
         public DateTimeOffset StartTimeUtc { get; private set; }
 
-        public int Threads { get; set; }
+        public int Threads
+        {
+            get => _threads;
+            set => _threads = value < 1 ? Environment.ProcessorCount : value;
+        }
 
         public bool Unique { get; set; } = true;
 
