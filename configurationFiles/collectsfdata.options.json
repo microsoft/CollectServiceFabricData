@@ -32,7 +32,7 @@
   "ResourceUri": null,
   "SasKey": "",
   "StartTimeStamp": null,
-  "Threads": 8,
+  "Threads": null,
   "UriFilter": null,
   "UseMemoryStream": true,
   "Unique": true
