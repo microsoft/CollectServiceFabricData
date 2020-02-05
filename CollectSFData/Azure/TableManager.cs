@@ -152,6 +152,7 @@ namespace CollectSFData
             List<CsvTableRecord> results = new List<CsvTableRecord>();
             int tableRecords = 0;
             TableQuery query = GenerateTimeQuery(maxResults);
+            TotalFilesEnumerated++;
 
             while (token != null)
             {
