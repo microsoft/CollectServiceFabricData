@@ -396,41 +396,54 @@ pause
 ```text
     5:QueueMonitor:error: Ingestion error total:(46): {
     "OperationId": "4d026446-2de4-4c29-b74e-37d021dfc33c",
+    "Database": "incidentlogs",
     "Table": "trace_jagilber_test",
     "FailedOn": "2019-11-04T00:57:13.6847693Z",
     "IngestionSourceId": "5d608b78-2235-4885-911e-b16a84388a85",
-    "Details": "Stream_WrongNumberOfFields: Stream with id 'bc4316ec4b0814dcc367388a46d9903e_fabric_traces_6.5.676.9590_132172633687587976_4_00637083925242089496_0000000000.dtr' has a malformed Csv format, failing per ValidationOptions policy with errorCode='0x80DA0008 E_WRONG_NUMBER_OF_FIELDS'\r\nAdditional information: HRESULT=0x80da0008\nRecord=8709\n(E_WRONG_NUMBER_OF_FIELDS)\nValidator=struct Kusto::Csv::CsvFormatValidatingParserTraits\nFragment=\nKusto::Csv::Parser<>.PrepareFields: CSV has an inconsistent number of fields per line:  -- Offending record: 8710 (start position in stream: 2663151), fieldsCount: 8, currentRecordFieldCount: 8, record: 2019-11-3 15:38:39.501,Informational,2720,2368,Transport.State@1e2920b0b60-Endpoint:10.0.0.6:20002,NodeName:_nt0_2,NodeInstanceId:132172634438947603,\"owner = 'FileTransfer', listenAddress = '10.0.0.6:20002', instance = 0, securitySettings = { provider=SSL protection=EncryptAndSign certType = '' store='LocalMachine/My' findValue='FindByThumbprint:fe76761442db1e245f1148be64af1e0f87effcb8' remoteCertThumbprints='fe76761442db1e245f1148be64af1e0f87effcb8' certChainFlags=40000000 isClientRoleInEffect=false claimBasedClientAuthEnabled=false }\"\r\n[end record]",
+    "Details": "Stream_WrongNumberOfFields: Stream with id 'bc4316ec4b0814dcc367388a46d9903e_fabric_traces_6.5.676.9590_132172633687587976_4_00637083925242089496_0000000000.dtr' has a malformed Csv format, failing per ValidationOptions policy with errorCode='0x80DA0008 E_WRONG_NUMBER_OF_FIELDS'\r\nAdditional information: HRESULT=0x80da0008\nRecord=8709\n(E_WRONG_NUMBER_OF_FIELDS)\nValidator=struct Kusto::Csv::CsvFormatValidatingParserTraits\nFragment=\nKusto::Csv::Parser<>.PrepareFields: CSV has an inconsistent number of fields per line:  -- Offending record: 8710 (start position in stream: 2663151), fieldsCount: 8, currentRecordFieldCount: 8, record: ...
+    [end record]",
     "ErrorCode": "Stream_WrongNumberOfFields",
     "FailureStatus": "Permanent",
     "RootActivityId": "0e7d9608-64ca-460d-ad49-b5da22cfcbd0",
     "OriginatesFromUpdatePolicy": false,
     "ShouldRetry": false,
-    "IngestionSourcePath": "https://xxx.blob.core.windows.net/fabriclogs-b2ca4ad0-2d44-44db-99a1-e93e56d35841/_nt0_2/Fabric/bc4316ec4b0814dcc367388a46d9903e_fabric_traces_6.5.676.9590_132172633687587976_4_00637083925242089496_0000000000.dtr.zip"
+
     }
 
 ```
 
+2. Sas is not time valid. this is displayed when the generated sas uri (saskey) time range is no longer valid. a new sas uri will need to be generated.
+
+```text
+    1:ValidateSasKey:error: Sas is not time valid
+    {
+        "ApiVersion": null,
+        "IsServiceSas": false,
+        "Signature": "abcEdrmT0pU2vxkgHP6sHRztbmJ%2FwfKtJsTmXdwQkEs%3D",
+        "SignedExpiry": "2019-12-16T22:12:12.6989890Z",
+        "SignedExpiryLocal": "2019-12-16T17:12:12.698989-05:00",
+        "SignedExpiryUtc": "2019-12-16T22:12:12.698989Z",
+        "SignedIp": null,
+        "SignedPermission": "rl",
+        "SignedProtocol": null,
+        "SignedResourceTypes": "sco",
+        "SignedServices": "bt",
+        "SignedStart": null,
+        "SignedStartLocal": "0001-01-01T00:00:00",
+        "SignedStartUtc": "0001-01-01T00:00:00",
+        "SignedVersion": "2015-04-05"
+    }
+```
+
+3. Permission denied to storage account. there may be a firewall preventing access that owner of storage account may need to open.
+
+```text
+1:Execute:exception: System.AggregateException: One or more errors occurred. ---> System.AggregateException: One or more errors occurred. ---> Microsoft.WindowsAzure.Storage.StorageException: The remote server returned an error: (403) Forbidden. ---> System.Net.WebException: The remote server returned an error: (403) Forbidden.
+   at Microsoft.WindowsAzure.Storage.Shared.Protocol.HttpResponseParsers.ProcessExpectedStatusCodeNoException[T](HttpStatusCode expectedStatusCode, HttpStatusCode actualStatusCode, T retVal, StorageCommandBase`1 cmd, Exception ex) in c:\Program Files (x86)\Jenkins\workspace\release_dotnet_master\Lib\Common\Shared\Protocol\HttpResponseParsers.Common.cs:line 54
+
+```
+
 ## reference
-
-### vscode extensions
-
-Useful extensions for vscode in general.
-
-* code-settings-sync - syncs vscode settings and extensions between machines using git gist.
-* azurerm-vscode-tools - azure ARM from microsoft adds functionality for ARM templates.
-* eamodio.gitlens - defacto standard for git functionality in vscode.
-* wengerk.highlight-bad-chars - highlights invisible (bad) unicode characters.
-* rsbondi.highlight-words - highlights matching text in uniquely colored frames.
-* vscode-open - context action to launch default file type association.
-* rainbow-csv - colors .csv file columns in different colors.
-
-Some useful Kusto extensions for vscode that assist with syntax and coloring.
-
-* kuskus-extensions-pack
-* kuskus-kusto-color-themes
-* kuskus-kusto-language-server
-* kuskus-kusto-syntax-highlighting
-* kusto-syntax-highlighting
 
 ### kusto reference
 
