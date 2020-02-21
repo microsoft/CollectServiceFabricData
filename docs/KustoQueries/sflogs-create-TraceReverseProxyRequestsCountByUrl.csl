@@ -1,0 +1,21 @@
+// ReverseProxy, Count by distinct URL
+
+.create-or-alter function with (docstring = '[T:string] where T=table name. function to count reverse proxy requests by url.', folder = 'sflogs')
+    TraceReverseProxyCountByUrl (T:string) {
+        let extractPattern_requestId = @'([a-z0-9]{8}\-[a-z0-9]{4}\-[a-z0-9]{4}\-[a-z0-9]{4}\-[a-z0-9]{12})';
+        let extractPattern_ServiceUrl = @'((?:https?:\/\/[^,?]*))';
+        let extractPattern_Verb = @'(verb\s=\s)([^,]*)';
+        let extractPattern_Started = @'';
+        let extractPattern_Finished = @'';
+        table(T)
+        | where Type contains "ReverseProxy"
+        | where Text !contains "status code"
+        | extend requestId = extract(extractPattern_requestId, 1, Text, typeof(string))
+        | extend serviceUrl = extract_all(extractPattern_ServiceUrl, Text)
+        | extend verb = extract(extractPattern_Verb, 2, Text, typeof(string))
+        | project Timestamp , TID , PID , Level , Type , Text , NodeName , FileType, requestId, serviceUrl, verb
+        | limit 10000
+        | order by tostring(serviceUrl)
+        | summarize count() by tostring(serviceUrl)
+        | order by count_
+    }

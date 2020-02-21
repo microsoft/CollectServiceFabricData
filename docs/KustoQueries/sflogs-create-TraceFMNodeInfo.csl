@@ -1,0 +1,23 @@
+.create-or-alter function with (docstring = "function to enumerate FM.NodeUpdate",folder = "sflogs") 
+    TraceFMNodeInfo(T:string) {
+    table(T)
+    | where Type contains "FM.NodeUpdate"
+    | project Timestamp,Text
+    | parse kind=regex Text with * 
+        @'VersionInstance:' VersionInstance
+        @'NodeUpgradeDomainId:' NodeUpgradeDomainId
+        @'NodeFaultDomainIds:' NodeFaultDomainIds
+        @'NodeProperties:' NodeProperties
+        @'NodeTypeName,' NodeTypeName
+        @'NodeCapacities:' NodeCapacities
+        @'servicefabric:/_CpuCores,' cpuCores
+        @'servicefabric:/_MemoryInMB,' MemoryInMB 
+        @'NodeName:' nodeName
+        @'NodeType:' NodeType
+        @'IpAddressOrFQDN:' IpAddressOrFQDN
+        @'ClusterConnectionPort:' ClusterConnectionPort
+        @'HttpGatewayPort:' HttpGatewayPort
+        @'Commit Duration =' commitDuration
+    | distinct nodeName, VersionInstance, NodeUpgradeDomainId, NodeFaultDomainIds, NodeProperties, NodeTypeName, NodeCapacities, cpuCores, MemoryInMB, NodeType, IpAddressOrFQDN, ClusterConnectionPort, HttpGatewayPort //, commitDuration
+    | order by nodeName asc, NodeUpgradeDomainId asc
+}
