@@ -1,0 +1,15 @@
+.create-or-alter function with (docstring = '[T:string] where T=table name [id:string] guid string request id. function to extract reverse proxy requests by Id.', folder = 'sflogs')
+    TraceReverseProxyRequestsById (T:string, id:string) {
+        let filterPattern_requestId = id;
+        let extractPattern_requestId = @'([a-z0-9]{8}\-[a-z0-9]{4}\-[a-z0-9]{4}\-[a-z0-9]{4}\-[a-z0-9]{12})';
+        let extractPattern_ServiceUrl = @'((?:https?:\/\/[^,?]*))';
+        table(T)
+        | extend requestId = extract(extractPattern_requestId, 1, Text, typeof(string))
+        | extend serviceUrl = extract_all(extractPattern_ServiceUrl, Text)
+        | where Type contains "ReverseProxy"
+        | where Text !contains "status code"
+        | where Type contains filterPattern_requestId or Text contains filterPattern_requestId
+        | project Timestamp , TID , PID , Level , Type , Text , NodeName , FileType, requestId, serviceUrl
+        | limit 10000
+        | order by Timestamp asc
+    }
