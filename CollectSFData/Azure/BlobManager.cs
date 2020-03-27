@@ -300,13 +300,6 @@ namespace CollectSFData
                     Log.Debug($"regex not matched: {blob.Uri.ToString()} pattern: {FileFilterPattern}");
                 }
 
-                if (!string.IsNullOrEmpty(Config.UriFilter) && !Regex.IsMatch(blob.Uri.ToString(), Config.UriFilter, RegexOptions.IgnoreCase))
-                {
-                    Interlocked.Increment(ref TotalFilesSkipped);
-                    Log.Debug($"blob:{blob.Uri} does not match uriFilter pattern:{Config.UriFilter}, skipping...");
-                    continue;
-                }
-
                 try
                 {
                     Log.Debug($"file Blob: {blob.Uri}");
@@ -324,7 +317,15 @@ namespace CollectSFData
                     DateTimeOffset lastModified = blobRef.Properties.LastModified.Value;
                     SetMinMaxDate(ref segmentMinDateTicks, ref segmentMaxDateTicks, lastModified.Ticks);
 
-                    if (!FileTypes.MapFileTypeUri(blob.Uri.AbsolutePath).Equals(Config.FileType))
+                    if (!string.IsNullOrEmpty(Config.UriFilter) && !Regex.IsMatch(blob.Uri.ToString(), Config.UriFilter, RegexOptions.IgnoreCase))
+                    {
+                        Interlocked.Increment(ref TotalFilesSkipped);
+                        Log.Debug($"blob:{blob.Uri} does not match uriFilter pattern:{Config.UriFilter}, skipping...");
+                        continue;
+                    }
+
+                    if (Config.FileType != FileTypesEnum.any
+                        && !FileTypes.MapFileTypeUri(blob.Uri.AbsolutePath).Equals(Config.FileType))
                     {
                         Interlocked.Increment(ref TotalFilesSkipped);
                         Log.Debug($"skipping uri with incorrect file type: {FileTypes.MapFileTypeUri(blob.Uri.AbsolutePath)}");
@@ -341,7 +342,7 @@ namespace CollectSFData
                             continue;
                         }
 
-                        if (ReturnSourceFileLink)
+                        if (ReturnSourceFileLink || blobRef.Properties.Length > MaxStreamTransmitBytes)
                         {
                             IngestCallback?.Invoke(new FileObject(blob.Uri.AbsolutePath, Config.SasEndpointInfo.BlobEndpoint)
                             {
