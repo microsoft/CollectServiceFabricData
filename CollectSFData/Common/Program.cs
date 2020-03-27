@@ -190,12 +190,17 @@ namespace CollectSFData
             string tablePrefix = null;
             string clusterId = DetermineClusterId();
 
-            if (!string.IsNullOrEmpty(clusterId))
+            if (!Config.FileType.Equals(FileTypesEnum.any) && !Config.FileType.Equals(FileTypesEnum.table))
             {
                 containerPrefix = FileTypes.MapFileTypeUriPrefix(Config.FileType);
-                tablePrefix = containerPrefix + clusterId.Replace("-", "");
-                // 's-' in prefix may not always be correct
-                containerPrefix += "s-" + clusterId;
+
+                if (!string.IsNullOrEmpty(clusterId))
+                {
+                    // 's-' in prefix may not always be correct
+                    containerPrefix += "s-" + clusterId;
+                }
+
+                tablePrefix = containerPrefix + clusterId?.Replace("-", "");
             }
 
             if (Config.FileType == FileTypesEnum.table)

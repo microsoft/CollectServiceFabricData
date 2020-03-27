@@ -132,6 +132,7 @@ Options:
                                         exception
                                         table
                                         setup
+                                        any
   -kz|--kustoCompressed              [bool] compress upload to kusto ingest.
   -kc|--kustoCluster                 [string] ingest url for kusto.
                                          ex: https://ingest-{clusterName}.{location}.kusto.windows.net/{databaseName}
