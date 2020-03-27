@@ -1,5 +1,5 @@
 // sflogs summarize 'TraceKnownIssue()' function
-.create-or-alter function with (docstring = '[T:string] where T=table name. function to search service fabric sflogs for known issues. good place to start', folder = 'sflogs/_start-here')
+.create-or-alter function with (docstring = '[T:string] where T=table name. function to search service fabric sflogs for known issues', folder = 'sflogs')
     TraceKnownIssueSummary (T:string) {
             TraceKnownIssue(T)
             | where KnownIssue == true
