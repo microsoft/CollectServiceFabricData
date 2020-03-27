@@ -1,4 +1,4 @@
-.create-or-alter function with (docstring = '[T:string] where T=table name [id:string] guid string request id. function to extract reverse proxy requests by Id.', folder = 'sflogs')
+.create-or-alter function with (docstring = '[T:string] where T=table name [id:string] guid string request id. function to extract reverse proxy requests by Id.', folder = 'sflogs/reverse-proxy')
     TraceReverseProxyRequestsById (T:string, id:string) {
         let filterPattern_requestId = id;
         let extractPattern_requestId = @'([a-z0-9]{8}\-[a-z0-9]{4}\-[a-z0-9]{4}\-[a-z0-9]{4}\-[a-z0-9]{12})';
