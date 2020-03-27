@@ -390,7 +390,8 @@ namespace CollectSFData
                     $"{newLine}trace" +
                     $"{newLine}exception" +
                     $"{newLine}table" +
-                    $"{newLine}setup",
+                    $"{newLine}setup" +
+                    $"{newLine}any",
                     CommandOptionType.SingleValue);
 
             KustoCompressed = CmdLineApp.Option("-kz|--kustoCompressed",
