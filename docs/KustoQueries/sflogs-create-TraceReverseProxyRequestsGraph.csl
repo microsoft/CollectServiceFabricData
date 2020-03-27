@@ -1,6 +1,6 @@
 // ReverseProxy, Track number of requests handled at reverse proxy
 
-.create-or-alter function with (docstring = '[T:string] where T=table name. function to graph reverse proxy requests.', folder = 'sflogs')
+.create-or-alter function with (docstring = '[T:string] where T=table name. function to graph reverse proxy requests.', folder = 'sflogs/reverse-proxy')
     TraceReverseProxyRequestsGraph (T:string) {
         table(T)
         | where Type contains "ReverseProxy.RequestReceived"

@@ -1,5 +1,5 @@
 // sflogs remove 'TraceFalsePositive()' function true results
-.create-or-alter function with (docstring = '[T:string] where T=table name. function to remove service fabric sflogs traces with misleading errors / failures. good place to start', folder = 'sflogs/_start-here')
+.create-or-alter function with (docstring = '[T:string] where T=table name. function to remove service fabric sflogs traces with misleading errors / failures', folder = 'sflogs/base')
     TraceFalsePositiveRemove (T:string) {
             TraceFalsePositive(T)
             | where FalsePositive == false

@@ -1,6 +1,6 @@
 // ReverseProxy, Count by distinct URL
 
-.create-or-alter function with (docstring = '[T:string] where T=table name. function to count reverse proxy requests by url.', folder = 'sflogs')
+.create-or-alter function with (docstring = '[T:string] where T=table name. function to count reverse proxy requests by url.', folder = 'sflogs/reverse-proxy')
     TraceReverseProxyCountByUrl (T:string) {
         let extractPattern_requestId = @'([a-z0-9]{8}\-[a-z0-9]{4}\-[a-z0-9]{4}\-[a-z0-9]{4}\-[a-z0-9]{12})';
         let extractPattern_ServiceUrl = @'((?:https?:\/\/[^,?]*))';

@@ -1,5 +1,5 @@
 // sflogs extend 'FalsePositive' false positive query of Type and/or Text or Any
-.create-or-alter function with (docstring = '[T:string] where T=table name. function to create FalsePositives column by searching service fabric sflogs for false warning / error traces. good place to start', folder = 'sflogs/_start-here')
+.create-or-alter function with (docstring = '[T:string] where T=table name. function to create FalsePositives column by searching service fabric sflogs for false warning / error traces', folder = 'sflogs/base')
     TraceFalsePositive (T:string) {
         // search Type And Text column using string contains
         let TypeAndTextContains = (tableName:(Type:string,Text:string,FalsePositive:bool,Reason:string), issue:string, typeQuery:string, textQuery:string) {
