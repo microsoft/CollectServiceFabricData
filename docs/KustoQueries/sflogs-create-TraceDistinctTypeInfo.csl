@@ -1,9 +1,0 @@
-// sflogs summarize base Type information
-
-.create-or-alter function with (docstring = '[T:string] where T=table name. function to enumerate distinct Type information.', folder = 'sflogs')
-    TraceDistinctTypeInfo (T:string) {
-    TraceTypeNameAndIdView(T) 
-    | summarize count(TypeName), arg_min(Timestamp, *), arg_max(Timestamp, *) by TypeName, Level
-    | project TypeName, Level, count_TypeName, First=Timestamp, Last=Timestamp1
-    | order by count_TypeName desc
-}

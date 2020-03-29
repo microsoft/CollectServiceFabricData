@@ -1,0 +1,8 @@
+// sflogs summarize base Type error / warning information
+
+.create-or-alter function with (docstring = '[T:string] where T=table name. function to enumerate distinct Type error / warning information.', folder = 'sflogs/errors')
+    TraceTypeErrors (T:string, typeMatch:string = '.') {
+    TraceTypeDistinct(T)
+    | where Level !contains 'info'
+    | order by Level asc, count_TypeName desc
+}
