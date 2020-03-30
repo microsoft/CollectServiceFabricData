@@ -1,0 +1,20 @@
+.create-or-alter function with (docstring = "[T:string] where T=table name. function to enumerate CM primary replicas",folder = "sflogs/cluster-manager") 
+    TraceCMReplicaPrimaries(T:string) {
+    let serviceGuid = '00000000-0000-0000-0000-000000002000'; // cluster
+    //let serviceGuid = '00000000-0000-0000-0000-000000009000'; // EventStore
+    //let serviceGuid = '00000000-0000-0000-0000-000000000001'; // fm
+    //let serviceGuid = '00000000-0000-0000-0000-000000005000'; // fault
+    //let serviceGuid = '00000000-0000-0000-0000-000000003000'; // image
+    //let serviceGuid = '00000000-0000-0000-0000-00000000100.'; // naming
+    //let serviceGuid = '.'; // upgrade
+    //let serviceGuid = '00000000-0000-0000-0000-00000000'; // system services except upgrade
+    table(T)
+        //| where Type contains 'RE.PrimaryCtor' or Type contains 'RE.PrimaryAckProcess' or Type contains 'RE.PrimaryClose'
+        //| where Type contains 'RE.PrimaryAckProcess'
+        | where Type contains 'RE.PrimaryConfiguration'
+        | where Type matches regex strcat('(?i:@',serviceGuid,')')
+        | extend instance = extract(@';(.+?):',1,Text)
+        | summarize MinTimestamp=arg_min(Timestamp,*), MaxTimestamp=arg_max(Timestamp,*) by Type,NodeName,instance
+        | project Type, MinTimestamp, MaxTimestamp, NodeName, instance
+        | order by MinTimestamp asc 
+}
