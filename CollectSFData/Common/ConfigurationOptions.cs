@@ -851,6 +851,13 @@ namespace CollectSFData
                 UseMemoryStream = true;
             }
 
+            if (FileType == FileTypesEnum.any && (UseMemoryStream | DeleteCache))
+            {
+                Log.Warning($"setting UseMemoryStream and DeleteCache to false for FileType 'any'");
+                UseMemoryStream = false;
+                DeleteCache = false;
+            }
+
             if (FileType != FileTypesEnum.trace && KustoUseBlobAsSource)
             {
                 Log.Warning($"setting KustoUseBlobAsSource to false for FileType: {FileType}");

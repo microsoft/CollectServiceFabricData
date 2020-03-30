@@ -1,0 +1,12 @@
+// ReverseProxy, Track number of requests handled at reverse proxy by url
+
+.create-or-alter function with (docstring = '[T:string] where T=table name. function to graph reverse proxy requests by url.', folder = 'sflogs/reverse-proxy')
+    TraceReverseProxyRequestsGraphByUrl (T:string) {
+        let extractPattern_ServiceUrl = @'((?:https?:\/\/[^,?]*))';
+        table(T)
+        | where Type contains "ReverseProxy.RequestReceived"
+        | extend serviceUrl = extract_all(extractPattern_ServiceUrl, Text)
+        | limit 10000
+        | summarize count() by xtime=bin(Timestamp,60s), tostring(serviceUrl)
+        | render timechart;
+    }

@@ -1,0 +1,11 @@
+// query for fabric_e_ events that are not noise and count
+.create-or-alter function with (docstring = '[T:string] where T=table name. function to enumerate FABRIC_E_*.', folder = 'sflogs/errors')
+    TraceFabric_E_ErrorsDistinct(T:string) {
+        table(T)
+        | where Text contains "FABRIC_E" or Text contains "E_ABORT"
+        | where Text !contains "FABRIC_E_CONNECTION_CLOSED_BY_REMOTE_END"
+        | extend fabric_error = extractall(@"(?P<fabric_error>FABRIC_E\w+)", dynamic(['fabric_error']), Text).tostring()
+        | summarize count(fabric_error), First = arg_min(Timestamp, *), Last = arg_max(Timestamp, *) by fabric_error
+        | order by fabric_error asc
+        | project fabric_error, Level, Count = count_fabric_error, ['First occurence'] = tostring(First), ['Last occurrence'] = iif(First == Last, "", tostring(Last))
+    }

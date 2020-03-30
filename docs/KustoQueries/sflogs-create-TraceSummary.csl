@@ -1,5 +1,5 @@
 // sflogs table meta information
-.create-or-alter function with (docstring = '[T:string] where T=table name. function to display sflog table summary information. good place to start', folder = 'sflogs/_start-here')
+.create-or-alter function with (docstring = '[T:string] where T=table name. function to display sflog table summary information', folder = 'sflogs')
     TraceSummary(T:string) {
         print d=dynamic({})
         | extend ['Ingested'] = toscalar(table(T) | top 1 by Timestamp asc | project ingestion_time())

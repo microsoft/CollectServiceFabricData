@@ -28,7 +28,7 @@ These steps will assist with getting started using collectsfdata and azure log a
 
 ```json
     {
-        "GatherType": "trace", // trace, counter, table, exception, setup
+        "GatherType": "trace", // trace, counter, table, exception, setup, any
         "NodeFilter": null, // regex or string to match blob uri for example node name
         "CacheLocation": "c:\\temp\\trace_latest", // temp storage location. 
         "SasKey": "", // customer 'sflogs' storage account sas
