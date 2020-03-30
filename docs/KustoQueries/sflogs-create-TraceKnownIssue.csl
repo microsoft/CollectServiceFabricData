@@ -1,4 +1,4 @@
-.create-or-alter function with (docstring = "[T:string] where T=table name. function to search service fabric sflogs for known issues. good place to start",folder = "sflogs/_start-here") 
+.create-or-alter function with (docstring = "[T:string] where T=table name. function to search service fabric sflogs for known issues",folder = "sflogs/base") 
     TraceKnownIssue(T:string) {
         // search any column using string contains
         let AnyContains = (tableName:string, issue:string, query:string) {
@@ -122,6 +122,9 @@
         TypeContains(T, "node open failure", "FabricNode._NodesOps_NodeOpenedFailed"),
         TextContains(T, "expired certificate. use TSG: https://github.com/Azure/Service-Fabric-Troubleshooting-Guides/blob/master/Security/How%20to%20recover%20from%20an%20Expired%20Cluster%20Certificate.md", "SFRP poll: Exception encountered: System.InvalidOperationException: Could not load primary and secondary certificate"),
         TypeContains(T, "reverse proxy errors", "ReverseProxy.SendResponseError"),
+        TypeContains(T, "reverse proxy errors", "ReverseProxy.ProcessRequestError"),
+        TypeContains(T, "reverse proxy errors", "ReverseProxy.EndProcessReverseProxyRequestFailed"),
+        TypeAndTextContains(T, "reverse proxy", "ReverseProxy.ServiceResponseReresolve", "reresolving"),
         TypeAndTextContains(T, "reverse proxy errors possible port / app issue", "ReverseProxy.SendResponseError","SendResponseChunk, error = 3489660929"),
         TypeAndTextMatches(T, "quorum loss reported", "FM.FailoverUnitCounts", "QuorumLoss=[^0]"),
         TypeAndTextMatches(T, "unhealthy nodes reported", "FM.FailoverUnitCounts", "Unhealthy=[^0]"),
@@ -134,5 +137,7 @@
         TextContains(T, ".net exception", "3762504530"),
         TypeAndTextContains(T, "docker container not responsive", "ManagedHosting.ContainerEventManager", "Failed to connect to DockerService at named pipe 'docker_engine'"),
         TypeAndTextContains(T, "fabric client making too many connections to gateway", "EntreeServiceProxy.LifeCycle", "exceeded client connection limit:"),
-        TypeContains(T, "stuck .net timers detected", "FabricDCA.DCADotNetStuckTimersDetected")
+        TypeContains(T, "stuck .net timers detected", "FabricDCA.DCADotNetStuckTimersDetected"),
+        TypeAndTextContains(T, "sf 7.0cu3 known issue. icm 176184624. fix cu4","HM.", @"There was an error during download. Failed to download 'WindowsFabricStore\ClusterManifest"),
+        TypeAndTextContains(T, "transport network connectivity issues", "Transport.Connection", "connection open timeout")
     }

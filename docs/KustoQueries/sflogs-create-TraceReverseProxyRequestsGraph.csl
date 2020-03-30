@@ -1,0 +1,10 @@
+// ReverseProxy, Track number of requests handled at reverse proxy
+
+.create-or-alter function with (docstring = '[T:string] where T=table name. function to graph reverse proxy requests.', folder = 'sflogs/reverse-proxy')
+    TraceReverseProxyRequestsGraph (T:string) {
+        table(T)
+        | where Type contains "ReverseProxy.RequestReceived"
+        | limit 10000
+        | summarize count() by xtime=bin(Timestamp,60s)
+        | render timechart;
+    }

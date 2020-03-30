@@ -1,0 +1,20 @@
+.create-or-alter function with (docstring = "function to enumerate FabricNode.State",folder = "sflogs") 
+    TraceFMNodeState(T:string) {
+    table(T)
+    | where Type contains "FabricNode.State"
+    | project Timestamp,Text
+    | parse kind=regex Text with * 
+        @':' instance
+        @'instance name:' nodeName
+        @', upgrade domain:' NodeUpgradeDomainId
+        @', fault domain:' NodeFaultDomainId
+        @', address:' Address
+        @', hostname:' HostName
+        @', isSeedNode:' IsSeedNode
+        @', state:' State
+        @', versionInstance:' VersionInstance
+        @', instanceName:' InstanceName
+        @', osVersion:' OsVersion
+    | distinct nodeName, instance, NodeUpgradeDomainId, NodeFaultDomainId, Address, HostName, IsSeedNode, State, VersionInstance, InstanceName, OsVersion
+    | order by nodeName asc, NodeUpgradeDomainId asc
+}
