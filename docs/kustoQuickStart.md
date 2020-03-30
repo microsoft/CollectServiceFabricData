@@ -14,6 +14,7 @@
 - [setup](#gathertype-setup)  
 - [table](#gathertype-table)  
 - [trace](#gathertype-trace)  
+- [any](#gathertype-any)  
 
 [Download](#download)  
 [Execute](#execute)  
@@ -58,7 +59,7 @@ Once correct storage account is identified, select 'Shared access signature' and
 
 ## CollectSFData GatherTypes  
 
-All gather types ingest into Kusto or Log Analytics as a single table per gather type. The gather type is also prepended to the table name during ingestion. This is to allow different gather types to be collected without having to change configuration for table name and for table naming constraints.  
+All gather types ingest into Kusto or Log Analytics as a single table per gather type except for gather type 'any'. Any will download files locally. The gather type is also prepended to the table name during ingestion. This is to allow different gather types to be collected without having to change configuration for table name and for table naming constraints.  
 
 Example: configured table name 'jagilber_0000000000000001' would be prepended with 'counter_' for gather type counter 'counter_jagilber_0000000000000001'. 
 
@@ -215,9 +216,11 @@ https://dataexplorer.azure.com
 
 #### best practice:  
 
+- use 'KustoUseBlobAsSource' for fastest ingest.
 - use 'KustoCompressed' to reduce network traffic
 - use 'UriFilter' and set to 'fabric_' for fabric only traces
 - use 'UriFilter' and set to 'lease_' for lease only traces
+- use 'NodeFilter' to ingest only certain nodes
 - use regex / string based 'NodeFilter' and add name of node(s) to gather from if all nodes are not needed.  
 examples:
     * NodeFilter: "\_nt_0" to collect data for only node 0
@@ -254,6 +257,19 @@ from [azure data explorer](https://dataexplorer.azure.com) console, type the nam
 }
 
 ```
+
+### GatherType any  
+
+#### data type: any blob file.  
+
+#### time range: can typically gather 6 - 24+ hours without issue.  
+
+#### best practice:  
+
+- use 'StartTimeUtc' and 'EndTimeUtc'
+- use 'UriFilter' to filter files
+- use 'NodeFilter' to ingest only certain nodes
+- use regex / string based 'NodeFilter' and add name of node(s) to gather from if all nodes are not needed.  
 
 ## download
 

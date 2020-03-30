@@ -41,6 +41,25 @@ namespace CollectSFData
             return AddConstants(mapping);
         }
 
+        public IEnumerable<KustoCsvSchema> CsvSchema(List<string> csvColumnNames)
+        {
+            List<KustoCsvSchema> mapping = new List<KustoCsvSchema>();
+            foreach (string csvColumnName in csvColumnNames)
+            {
+                mapping.Add(new KustoCsvSchema() { Name = csvColumnName, DataType = "string", Ordinal = mapping.Count });
+            }
+
+            AddCommon(mapping);
+            return mapping;
+        }
+
+        public IEnumerable<KustoCsvSchema> CsvSchema(List<KustoCsvSchema> kustoCsvSchemas = null)
+        {
+            kustoCsvSchemas = kustoCsvSchemas ?? new List<KustoCsvSchema>();
+            AddCommon(kustoCsvSchemas);
+            return kustoCsvSchemas;
+        }
+
         public IEnumerable<KustoCsvSchema> ExceptionSchema()
         {
             int count = 0;
@@ -136,7 +155,7 @@ namespace CollectSFData
             if (SetConstants)
             {
                 mapping.Add(new KustoCsvSchema() { Name = "NodeName", DataType = "string", ConstValue = _fileObject.NodeName });
-                mapping.Add(new KustoCsvSchema() { Name = "FileType", DataType = "string", ConstValue = _fileObject.FileType.ToString() });
+                mapping.Add(new KustoCsvSchema() { Name = "FileType", DataType = "string", ConstValue = _fileObject.FileDataType.ToString() });
             }
             else
             {
