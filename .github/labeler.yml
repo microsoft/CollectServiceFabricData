@@ -6,10 +6,11 @@ Executable:
   - CollectSFData.sln
 
 Kusto Query Language:
-  - docs/KustoQueries/*
+  - KustoQueries/*
+  - KustoFunctions/*
 
 Log Analytics Language:
-  - docs/LogAnalyticsQueries/*
+  - LogAnalyticsQueries/*
 
 WorkFlow:
   - .github/**

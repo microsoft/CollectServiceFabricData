@@ -2,7 +2,7 @@
 script to setup microsoft.azure.kusto.tools nuget package for kusto interactive console in code, powershell, cmd, ...
 #>
 param(
-    $scriptDir = "$PSScriptRoot\..\docs\KustoQueries",
+    $scriptDir = "$PSScriptRoot\..\KustoQueries",
     $kustoEngineUrl = "https://{{kusto cluster}}.{{ location }}.kusto.windows.net/{{ kusto database }}",
     $kustoToolsPackage = "microsoft.azure.kusto.tools",
     $kustoConnectionString = "$kustoEngineUrl;Fed=True",
