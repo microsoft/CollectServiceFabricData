@@ -1,0 +1,10 @@
+// query for sflogs Text field for exceptions
+.create-or-alter function with (docstring = '[T:string] where T=table name. function to enumerate exceptions from Text field', folder = 'sflogs/errors')
+    TraceFabricTextExceptionsDistinct(T:string) {
+        table(T)
+        | where Text contains "exception"
+        | extend text_exception = extract_all(@"(?i:(?P<text_exceptions>(\s|\S+)exception(\s|\S+)))", dynamic(['text_exceptions']), Text).tostring()
+        | summarize count(text_exception), First = arg_min(Timestamp, *), Last = arg_max(Timestamp, *) by text_exception, NodeName
+        | order by text_exception asc
+        | project text_exception, Level, Count = count_text_exception, ['First occurence'] = tostring(First), ['Last occurrence'] = iif(First == Last, "", tostring(Last)), NodeName
+    }

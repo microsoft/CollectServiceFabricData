@@ -1,9 +1,0 @@
-// sflogs summarize 'TraceKnownFalsePositive()' function
-.create-or-alter function with (docstring = '[T:string] where T=table name. function to search service fabric sflogs for false positives (noise)', folder = 'sflogs')
-    TraceFalsePositiveSummary (T:string) {
-            TraceFalsePositive(T)
-            | where FalsePositive == true
-            | summarize Count = count(), First = arg_min(Timestamp, *), Last = arg_max(Timestamp, *) by Reason
-            | order by Reason asc
-            | project FalsePositive, Reason, Count, ['First Occurrence'] = iif(Count > 0, tostring(First), ""), ['Last Occurrence'] = iif(Count > 1, tostring(Last), "")
-        }
