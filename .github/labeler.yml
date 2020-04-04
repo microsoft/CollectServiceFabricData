@@ -6,8 +6,8 @@ Executable:
   - CollectSFData.sln
 
 Kusto Query Language:
-  - KustoQueries/*
-  - KustoFunctions/*
+  - KustoQueries/**
+  - KustoFunctions/**
 
 Log Analytics Language:
   - LogAnalyticsQueries/*
