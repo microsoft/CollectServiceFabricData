@@ -127,9 +127,7 @@
         "M-d-yy H:mm:ss zzz",
         "M-d-yyyy H:mm:ss zzz",
         "yy-M-d H:mm:ss zzz",
-        "yyyy-M-d H:mm:ss zzz",
-        "d-M-yy H:mm:ss zzz",
-        "d-M-yyyy H:mm:ss zzz"
+        "yyyy-M-d H:mm:ss zzz"
       ],
       "pattern": "^([0-9]{1,4}(\\/|-)[0-9]{1,2}(\\/|-)[0-9]{1,4} [0-9]{1,2}:[0-9]{1,2}(:[0-9]{1,2}|) (-|\\+)[0-9]{1,2}:[0-9]{1,2})$"
     },
@@ -357,7 +355,10 @@
         null,
         "fabric_",
         "lease",
-        "_nt0_0"
+        "_nt0_0",
+        "_nt0_0|_nt0_1",
+        "_nt0_(0|1)",
+        "_nt0_[0-8]"
       ],
       "pattern": "^(.+)$"
     },
@@ -398,9 +399,7 @@
         "M-d-yy H:mm:ss zzz",
         "M-d-yyyy H:mm:ss zzz",
         "yy-M-d H:mm:ss zzz",
-        "yyyy-M-d H:mm:ss zzz",
-        "d-M-yy H:mm:ss zzz",
-        "d-M-yyyy H:mm:ss zzz"
+        "yyyy-M-d H:mm:ss zzz"
       ],
       "pattern": "^([0-9]{1,4}(\\/|-)[0-9]{1,2}(\\/|-)[0-9]{1,4} [0-9]{1,2}:[0-9]{1,2}(:[0-9]{1,2}|) (-|\\+)[0-9]{1,2}:[0-9]{1,2})$"
     },
