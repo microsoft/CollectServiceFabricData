@@ -1,0 +1,10 @@
+// query for sflogs Text field for error HResult / winerror error codes
+.create-or-alter function with (docstring = '[T:string] where T=table name. function to enumerate HResult / winerror error codes from Text field', folder = 'sflogs/errors')
+    TraceTextErrorCodesDistinct(T:string) {
+        table(T)
+        | extend text_error = extract_all(@"(?P<text_errors>0x8[A-Fa-f0-9]{7})(\D|\W)", dynamic(['text_errors']), Text).tostring()
+        | where isnotempty(text_error)
+        | summarize count(text_error), First = arg_min(Timestamp, *), Last = arg_max(Timestamp, *) by text_error, NodeName
+        | order by text_error asc
+        | project text_error, Level, Count = count_text_error, ['First occurence'] = tostring(First), ['Last occurrence'] = iif(First == Last, "", tostring(Last)), NodeName
+    }
