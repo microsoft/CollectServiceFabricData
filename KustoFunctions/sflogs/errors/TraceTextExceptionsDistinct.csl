@@ -1,6 +1,6 @@
 // query for sflogs Text field for exceptions
 .create-or-alter function with (docstring = '[T:string] where T=table name. function to enumerate exceptions from Text field', folder = 'sflogs/errors')
-    TraceFabricTextExceptionsDistinct(T:string) {
+    TraceTextExceptionsDistinct(T:string) {
         table(T)
         | where Text contains "exception"
         | extend text_exception = extract_all(@"(?i:(?P<text_exceptions>(\s|\S+)exception(\s|\S+)))", dynamic(['text_exceptions']), Text).tostring()
