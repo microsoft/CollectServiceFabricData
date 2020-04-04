@@ -71,7 +71,7 @@ Example: configured table name 'jagilber_0000000000000001' would be prepended wi
 
 #### start here:  
 
-- use [perfmon kusto query](https://github.com/microsoft/CollectServiceFabricData/blob/master/docs/KustoQueries/sfcounters-general.csl) from [azure data explorer](https://dataexplorer.azure.com) to graph results  
+- use [perfmon kusto query](https://github.com/microsoft/CollectServiceFabricData/blob/master/KustoQueries/sfcounters-general.csl) from [azure data explorer](https://dataexplorer.azure.com) to graph results  
     * change value in query from '['counter_serviceFabricLogs']' to '['counter_<%user%>_<%case%>']' for table name to be graphed.
 - to view results, uncomment one counter line in query and execute.
     * // | where CounterName contains "Avg. Disk Queue Length" and CounterName contains "c:"
@@ -238,7 +238,7 @@ from [azure data explorer](https://dataexplorer.azure.com) console, type the nam
 
   ![kusto-function-tree-view.png](./media/kusto-function-tree-view.png)  
 
-- use [kusto queries](https://github.com/microsoft/CollectServiceFabricData/blob/master/docs/KustoQueries/kusto-example-queries.csl) from [azure data explorer](https://dataexplorer.azure.com) to view results  
+- use [kusto queries](https://github.com/microsoft/CollectServiceFabricData/blob/master/KustoQueries/kusto-example-queries.csl) from [azure data explorer](https://dataexplorer.azure.com) to view results  
     * change value in queries from '%kusto table name%' to 'trace_<%user%>_<%case%>' for trace table name to be viewed.
 
 #### trace record:  
