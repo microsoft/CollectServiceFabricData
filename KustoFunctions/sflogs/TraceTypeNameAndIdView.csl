@@ -1,6 +1,8 @@
 .create-or-alter function with (docstring = 'function to split Type column into TypeName and TypeId', folder = 'sflogs')
-    TraceTypeNameAndIdView(T:string) {
+    TraceTypeNameAndIdView(T:string, typeMatch:string = '.') {
         table(T)
+        | where Type matches regex strcat('(?i:',typeMatch,')')
+        //| where Type contains typeMatch
         | extend TypeId = extract(".+?@(.+)", 1, Type)
         | extend TypeName = iif(Type contains "@", extract("(.+?)@", 1, Type), Type)
         | order by Timestamp asc
