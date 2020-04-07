@@ -1,8 +1,8 @@
-// sflogs summarize base Type error / warning information
-
-.create-or-alter function with (docstring = '[T:string] where T=table name. function to enumerate distinct Type error / warning information.', folder = 'sflogs/errors')
-    TraceTypeErrorsDistinct (T:string, typeMatch:string = '.') {
+.create-or-alter function with (docstring = "[T:string] where T=table name. function to enumerate distinct Type error / warning information.",folder = "sflogs/errors") 
+    TraceTypeErrorsDistinct(T:string,typeMatch:string=".") {
+    let baseUri = CreateKustoWebQueryLink('');
     TraceTypeDistinct(T)
     | where Level !contains 'info'
+    | extend link = strcat(baseUri, url_encode(strcat(T,'| where Level contains "',Level,'"')))
     | order by Level asc, count_TypeName desc
 }

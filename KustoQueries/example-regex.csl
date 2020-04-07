@@ -1,4 +1,4 @@
-| extend endpoint = extract_all(@"failed to create endpoint (?P<endpoint>.+?) on network", dynamic(['endpoint']), Text).tostring()
+| extend endpoint = tostring(extract_all(@"failed to create endpoint (?P<endpoint>.+?) on network", dynamic(['endpoint']), Text))
 | distinct endpoint
 | order by endpoint
 | limit 1000 
