@@ -1,10 +1,13 @@
-// query for sflogs Text field for exceptions
 .create-or-alter function with (docstring = '[T:string] where T=table name. function to enumerate exceptions from Text field', folder = 'sflogs/errors')
     TraceTextExceptionsDistinct(T:string) {
+        let baseUri = CreateKustoWebQueryLink('');
         table(T)
         | where Text contains "exception"
-        | extend text_exception = extract_all(@"(?i:(?P<text_exceptions>(\s|\S+)exception(\s|\S+)))", dynamic(['text_exceptions']), Text).tostring()
+        | extend text_exception = tostring(extract_all(@"(?i:(?P<text_exceptions>(\s|\S+)exception(\s|\S+)))", dynamic(['text_exceptions']), Text))
         | summarize count(text_exception), First = arg_min(Timestamp, *), Last = arg_max(Timestamp, *) by text_exception, NodeName
         | order by text_exception asc
-        | project text_exception, Level, Count = count_text_exception, ['First occurence'] = tostring(First), ['Last occurrence'] = iif(First == Last, "", tostring(Last)), NodeName
+        | extend exception_pattern = replace("'","",replace(",",@".*",trim('\"|\\[|\\]',text_exception)))
+        | extend encoded_pattern = url_encode(strcat(T,'| where Text matches regex "',exception_pattern,'"'))
+        | extend link = strcat(baseUri, encoded_pattern)
+        | project text_exception, Level, Count = count_text_exception, ['First occurence'] = tostring(First), ['Last occurrence'] = iif(First == Last, "", tostring(Last)), NodeName, link //, exception_pattern, encoded_pattern
     }

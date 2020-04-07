@@ -9,7 +9,7 @@
   "EndTimeStamp": "6/16/19 0:05:18 -04:00",
   "GatherType": "unknown",
   "KustoCluster": "",
-  "KustoCompressed": false,
+  "KustoCompressed": true,
   "KustoRecreateTable": false,
   "KustoTable": "",
   "KustoUseBlobAsSource": false,

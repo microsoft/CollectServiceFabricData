@@ -1,11 +1,14 @@
-// query for fabric_e_ events that are not noise and count
 .create-or-alter function with (docstring = '[T:string] where T=table name. function to enumerate FABRIC_E_*.', folder = 'sflogs/errors')
     TraceFabric_E_ErrorsDistinct(T:string) {
+        let baseUri = CreateKustoWebQueryLink('');
         table(T)
         | where Text contains "FABRIC_E" or Text contains "E_ABORT"
         | where Text !contains "FABRIC_E_CONNECTION_CLOSED_BY_REMOTE_END"
-        | extend fabric_error = extract_all(@"(?P<fabric_error>FABRIC_E\w+)", dynamic(['fabric_error']), Text).tostring()
+        | extend fabric_error = tostring(extract_all(@"(?P<fabric_error>FABRIC_E\w+)", dynamic(['fabric_error']), Text))
         | summarize count(fabric_error), First = arg_min(Timestamp, *), Last = arg_max(Timestamp, *) by fabric_error
         | order by fabric_error asc
-        | project fabric_error, Level, Count = count_fabric_error, ['First occurence'] = tostring(First), ['Last occurrence'] = iif(First == Last, "", tostring(Last))
+        | extend exception_pattern = replace("'","",replace(",",@".*",trim('\"|\\[|\\]',fabric_error)))
+        | extend encoded_pattern = url_encode(strcat(T,'| where Text matches regex "',exception_pattern,'"'))
+        | extend link = strcat(baseUri, encoded_pattern)
+        | project fabric_error, Level, Count = count_fabric_error, ['First occurence'] = tostring(First), ['Last occurrence'] = iif(First == Last, "", tostring(Last)), link
     }
