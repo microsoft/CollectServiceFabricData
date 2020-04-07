@@ -109,7 +109,7 @@ namespace CollectSFData
 
         public string KustoCluster { get; set; }
 
-        public bool KustoCompressed { get; set; }
+        public bool KustoCompressed { get; set; } = true;
 
         public string KustoPurge { get; set; }
 

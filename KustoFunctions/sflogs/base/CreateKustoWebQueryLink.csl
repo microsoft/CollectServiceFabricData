@@ -1,0 +1,7 @@
+.create-or-alter function with (docstring = "[T:string] where T=table name. function to generate kusto web query", folder = "sflogs/base")
+    CreateKustoWebQueryLink(query:string = ""){
+    let database = current_database();
+    let cluster = trim('\"|\\[|\\]',tostring(split(current_cluster_endpoint(),'.',0)));
+    let encodedQuery = url_encode(query);
+    toscalar(print strcat('https://dataexplorer.azure.com/clusters/',cluster,'/databases/',database,'?query=',encodedQuery))
+    }
