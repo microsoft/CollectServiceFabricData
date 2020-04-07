@@ -144,7 +144,7 @@
         "exception",
         "any"
       ],
-      "pattern": "^(trace|counter|setup|table|exception)$"
+      "pattern": "^(trace|counter|setup|table|exception|any)$"
     },
     "KustoCluster": {
       "$id": "#/properties/KustoCluster",
