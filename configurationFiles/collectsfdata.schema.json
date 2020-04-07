@@ -163,7 +163,7 @@
       "$id": "#/properties/KustoCompressed",
       "type": "boolean",
       "title": "KustoCompressed true to compress file before posting to kusto ingest to save network bandwidth",
-      "default": false,
+      "default": true,
       "examples": [
         false,
         true
