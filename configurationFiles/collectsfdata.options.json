@@ -12,7 +12,7 @@
   "EndTimeStamp": null,
   "GatherType": "unknown",
   "KustoCluster": null,
-  "KustoCompressed": false,
+  "KustoCompressed": true,
   "KustoPurge": null,
   "KustoRecreateTable": false,
   "KustoTable": null,
