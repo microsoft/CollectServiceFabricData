@@ -1,9 +1,7 @@
-// sflogs summarize base Type information
-
 .create-or-alter function with (docstring = '[T:string] [typeMatch:string] where T=table name and optional typeMatch string /regex filter. function to enumerate distinct Type information.', folder = 'sflogs')
     TraceTypeDistinct (T:string, typeMatch:string = '.') {
-    TraceTypeNameAndIdView(T) 
-    | where TypeName matches regex strcat('(?i:',typeMatch,')')
+    TraceTypeNameAndIdView(T, typeMatch) 
+    //| where TypeName matches regex strcat('(?i:',typeMatch,')')
     | summarize count(TypeName), arg_min(Timestamp, *), arg_max(Timestamp, *) by TypeName, Level
     | project TypeName, Level, count_TypeName, First=Timestamp, Last=Timestamp1
     | order by count_TypeName desc
