@@ -64,31 +64,25 @@ namespace CollectSFData
                 throw new ArgumentException(error);
             }
 
-            if (fileObject.Stream.Get().Length < 1 & fileObject.Exists)
+            if (!fileObject.FileType.Equals(FileTypesEnum.any))
             {
-                fileObject.Stream.ReadFromFile();
-            }
+                if (fileObject.Stream.Get().Length < 1 & fileObject.Exists)
+                {
+                    // for cached directory uploads
+                    fileObject.Stream.ReadFromFile();
+                }
 
-            if (fileObject.FileExtensionType.Equals(FileExtensionTypesEnum.zip))
-            {
-                fileObject.Stream.Decompress();
-                SaveToCache(fileObject);
+                if (fileObject.FileExtensionType.Equals(FileExtensionTypesEnum.zip))
+                {
+                    fileObject.Stream.Decompress();
+                    SaveToCache(fileObject);
+                }
             }
 
             switch (fileObject.FileDataType)
             {
                 case FileDataTypesEnum.unknown:
                     {
-                        if (fileObject.FileExtensionType.Equals(FileExtensionTypesEnum.csv))
-                        {
-                            return FormatCsvFile(fileObject);
-                        }
-
-                        if (fileObject.FileExtensionType.Equals(FileExtensionTypesEnum.json))
-                        {
-                            return FormatJsonFile(fileObject);
-                        }
-
                         if (fileObject.FileType.Equals(FileTypesEnum.any))
                         {
                             SaveToCache(fileObject);
@@ -280,16 +274,6 @@ namespace CollectSFData
             return PopulateCollection(fileObject, records);
         }
 
-        private FileObjectCollection FormatCsvFile(FileObject fileObject)
-        {
-            throw new NotImplementedException();
-            Log.Debug($"enter:{fileObject.FileUri}");
-            //IList<CsvRecord> records = fileObject.Stream.Read<CsvRecord>();
-            IList<CsvTableRecord> records = fileObject.Stream.Read<CsvTableRecord>();
-
-            return PopulateCollection(fileObject, records);
-        }
-
         private FileObjectCollection FormatDtrFile(FileObject fileObject)
         {
             return FormatTraceFile<DtrTraceRecord>(fileObject);
@@ -304,16 +288,6 @@ namespace CollectSFData
             };
 
             Log.Last($"{fileObject.LastModified} {fileObject.FileUri}{Config.SasEndpointInfo.SasToken}", ConsoleColor.Cyan);
-            return PopulateCollection(fileObject, records);
-        }
-
-        private FileObjectCollection FormatJsonFile(FileObject fileObject)
-        {
-            throw new NotImplementedException();
-            Log.Debug($"enter:{fileObject.FileUri}");
-            //IList<JsonRecord> records = fileObject.Stream.Read<JsonRecord>();
-            IList<CsvTableRecord> records = fileObject.Stream.Read<CsvTableRecord>();
-
             return PopulateCollection(fileObject, records);
         }
 
