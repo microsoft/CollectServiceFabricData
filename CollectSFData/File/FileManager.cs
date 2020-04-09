@@ -109,7 +109,8 @@ namespace CollectSFData
                             return FormatExceptionFile(fileObject);
                         }
 
-                        break;
+                        SaveToCache(fileObject);
+                        return new FileObjectCollection();
                     }
                 case FileDataTypesEnum.fabric:
                 case FileDataTypesEnum.lease:
