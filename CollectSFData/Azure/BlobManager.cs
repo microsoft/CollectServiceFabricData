@@ -7,6 +7,7 @@ using Microsoft.Azure.Storage;
 using Microsoft.Azure.Storage.Blob;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -255,6 +256,46 @@ namespace CollectSFData
             Log.Info($"exit {cloudBlobDirectory.Uri}");
         }
 
+        private void InvokeCallback(IListBlobItem blob, FileObject fileObject)
+        {
+            if (!fileObject.Exists)
+            {
+                BlobRequestOptions blobRequestOptions = new BlobRequestOptions()
+                {
+                    RetryPolicy = new IngestRetryPolicy(),
+                    ParallelOperationThreadCount = Config.Threads
+                };
+
+                if (fileObject.Length > MaxStreamTransmitBytes)
+                {
+                    fileObject.DownloadAction = () =>
+                    {
+                        if (!Directory.Exists(Path.GetDirectoryName(fileObject.FileUri)))
+                        {
+                            Directory.CreateDirectory(Path.GetDirectoryName(fileObject.FileUri));
+                        }
+
+                        ((CloudBlockBlob)blob).DownloadToFileAsync(fileObject.FileUri, FileMode.Create, null, blobRequestOptions, null).Wait();
+                    };
+                }
+                else
+                {
+                    fileObject.DownloadAction = () =>
+                    {
+                        ((CloudBlockBlob)blob).DownloadToStreamAsync(fileObject.Stream.Get(), null, blobRequestOptions, null).Wait();
+                    };
+                }
+
+                IngestCallback?.Invoke(fileObject);
+                Interlocked.Increment(ref TotalFilesDownloaded);
+            }
+            else
+            {
+                Log.Warning($"destination file exists. skipping download:\r\n file: {fileObject}");
+                IngestCallback?.Invoke(fileObject);
+            }
+        }
+
         private void QueueBlobSegmentDownload(BlobResultSegment blobResultSegment)
         {
             int parentId = Thread.CurrentThread.ManagedThreadId;
@@ -342,7 +383,7 @@ namespace CollectSFData
                             continue;
                         }
 
-                        if (ReturnSourceFileLink || blobRef.Properties.Length > MaxStreamTransmitBytes)
+                        if (ReturnSourceFileLink)
                         {
                             IngestCallback?.Invoke(new FileObject(blob.Uri.AbsolutePath, Config.SasEndpointInfo.BlobEndpoint)
                             {
@@ -352,29 +393,14 @@ namespace CollectSFData
                             continue;
                         }
 
-                        FileObject fileObject = new FileObject(blob.Uri.AbsolutePath, Config.CacheLocation) { LastModified = lastModified };
+                        FileObject fileObject = new FileObject(blob.Uri.AbsolutePath, Config.CacheLocation)
+                        {
+                            Length = blobRef.Properties.Length,
+                            LastModified = lastModified
+                        };
+
                         Log.Info($"queueing blob with timestamp: {lastModified}\r\n file: {blob.Uri.AbsolutePath}");
-
-                        if (!fileObject.Exists)
-                        {
-                            fileObject.DownloadAction = () =>
-                            {
-                                ((CloudBlockBlob)blob).DownloadToStreamAsync(fileObject.Stream.Get(), null,
-                                new BlobRequestOptions()
-                                {
-                                    RetryPolicy = new IngestRetryPolicy(),
-                                    ParallelOperationThreadCount = Config.Threads
-                                }, null).Wait();
-                            };
-
-                            IngestCallback?.Invoke(fileObject);
-                            Interlocked.Increment(ref TotalFilesDownloaded);
-                        }
-                        else
-                        {
-                            Log.Warning($"destination file exists. skipping download:\r\n file: {fileObject}");
-                            IngestCallback?.Invoke(fileObject);
-                        }
+                        InvokeCallback(blob, fileObject);
                     }
                 }
                 else
