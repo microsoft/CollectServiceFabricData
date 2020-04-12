@@ -128,11 +128,11 @@ To use a default configuration file without having to specify on the command lin
 
 #### collectsfdata kusto arguments
 
-- **KustoCluster** - required. uri. https://ingest-{{cluster}}[.{{location}}].kusto.windows.net/{{database}}
+- **KustoCluster** - required. uri. kusto cluster ingest url found in properties in azure portal. example: https://ingest-{{cluster}}[.{{location}}].kusto.windows.net/{{database}}
 - **KustoRecreateTable** - bool. default false. if true, will drop (recreate) table before ingesting new data regardless if table is currently populated.
 - **KustoTable** - required. string. name of kusto table to create and or use.
 - **KustoUseBlobAsSource** - **not currently used**. bool. default false. if true will ingest service diagnostic logs directly from storage account instead of downloading and formatting. to use this option, service fabric .dtr files have to be CSV compliant.
-- **KustoUseIngestMessage** - bool. default true. if true, will use kusto fail and success queue messaging for data ingestion (service bus additional overhead). if false, use kusto 'ingestion failures' table and data table 'RelativeUri' field for confirmation.
+- **KustoUseIngestMessage** - bool. default true. if true, will use kusto fail and success queue messaging for data ingestion (service bus additional overhead). if false, use kusto 'ingestion failures' table and data table 'RelativeUri' field for confirmation. better performance when set to false for larger ingests example 'KustoUseBlobAsSource'.
 
 #### collectsfdata log analytics arguments
 - **LogAnalyticsId** - required. guid. log analytics workspace id guid.
