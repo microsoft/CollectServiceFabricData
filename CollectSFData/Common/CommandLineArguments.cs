@@ -61,6 +61,8 @@ namespace CollectSFData
 
         public CommandOption KustoUseBlobAsSource { get; set; }
 
+        public CommandOption KustoUseIngestMessage { get; set; }
+
         public CommandOption List { get; set; }
 
         public CommandOption LogAnalyticsCreate { get; set; }
@@ -422,6 +424,10 @@ namespace CollectSFData
                     $"[bool] for blob -> kusto direct ingest." +
                     $"{newLine} requires .dtr (.csv) files to be csv compliant." +
                     $"{newLine} service fabric 6.5+ dtr files are compliant.",
+                    CommandOptionType.SingleValue);
+
+            KustoUseIngestMessage = CmdLineApp.Option("-kim|--kustoUseIngestMessage",
+                    $"[bool] for kusto ingestion message tracking.",
                     CommandOptionType.SingleValue);
 
             List = CmdLineApp.Option("-l|--list",

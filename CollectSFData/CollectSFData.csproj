@@ -98,6 +98,9 @@
     <Compile Include="File\FileManager.cs" />
     <Compile Include="Kusto\KustoConnection.cs" />
     <Compile Include="Common\Program.cs" />
+    <Compile Include="Kusto\KustoRestTable.cs" />
+    <Compile Include="Kusto\KustoRestTableOfContentsV1.cs" />
+    <Compile Include="Kusto\KustoRestResponseV1.cs" />
     <Compile Include="LogAnalytics\LogAnalyticsConnection.cs" />
     <Compile Include="LogAnalytics\LogAnalyticsQueryResults.cs" />
     <Compile Include="LogAnalytics\LogAnalyticsWorkspaceModel.cs" />
