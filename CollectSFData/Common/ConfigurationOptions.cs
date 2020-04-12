@@ -186,7 +186,7 @@ namespace CollectSFData
 
         public int Threads
         {
-            get => _threads;
+            get => _threads < 1 ? Environment.ProcessorCount : _threads;
             set => _threads = value < 1 ? Environment.ProcessorCount : value;
         }
 
