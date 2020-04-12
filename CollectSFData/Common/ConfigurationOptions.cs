@@ -847,12 +847,6 @@ namespace CollectSFData
                 retval = false;
             }
 
-            if (FileType == FileTypesEnum.exception && !UseMemoryStream)
-            {
-                Log.Warning($"setting UseMemoryStream to true for FileType 'exception'");
-                UseMemoryStream = true;
-            }
-
             if (FileType == FileTypesEnum.any && (UseMemoryStream | DeleteCache))
             {
                 Log.Warning($"setting UseMemoryStream and DeleteCache to false for FileType 'any'");
