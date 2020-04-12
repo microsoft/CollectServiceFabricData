@@ -26,6 +26,7 @@ namespace CollectSFData
             _httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
         }
 
+        public bool DisplayResponse { get; set; }
         public HttpContentHeaders Headers { get; set; }
 
         public HttpMethod Method { get; set; } = HttpMethod.Get;
@@ -35,7 +36,6 @@ namespace CollectSFData
         public JObject ResponseStreamJson { get; private set; }
 
         public string ResponseStreamString { get; private set; }
-
         public HttpStatusCode StatusCode { get; private set; }
 
         public bool Success { get; set; }
@@ -100,11 +100,16 @@ namespace CollectSFData
                     if (!string.IsNullOrEmpty(ResponseStreamString))
                     {
                         ResponseStreamJson = JObject.Parse(ResponseStreamString);
-                        Log.Info($"WebResponse stream: bytes: {Response.Content.Headers.ContentLength}\r\n{ResponseStreamJson}", ConsoleColor.DarkMagenta, ConsoleColor.Black);
+                        if (DisplayResponse)
+                        {
+                            Log.Info($"WebResponse stream: bytes: {Response.Content.Headers.ContentLength}\r\n{ResponseStreamJson}", ConsoleColor.DarkMagenta, ConsoleColor.Black);
+                        }
                     }
                 }
                 else
                 {
+                    ResponseStreamJson = new JObject();
+                    ResponseStreamString = string.Empty;
                     Log.Info("no responseStream");
                 }
 
