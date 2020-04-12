@@ -23,8 +23,6 @@ namespace CollectSFData
 
         public int Execute(string[] args)
         {
-            StartTime = DateTime.Now;
-
             try
             {
                 if (!Config.PopulateConfig(args))
