@@ -89,7 +89,7 @@ namespace CollectSFData
 
             if (!found)
             {
-                Log.Error($"unable to determine datatypepattern:{fileUri} using values:", _fileDataTypes);
+                Log.Warning($"unable to determine datatypepattern:{fileUri} using values:{string.Join(",", _fileDataTypes)}");
             }
 
             Log.Debug($"returning FileDataTypesEnum.{fileDataType.ToString()}");

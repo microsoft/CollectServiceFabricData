@@ -17,7 +17,7 @@ namespace CollectSFData
         public static KustoConnection Kusto = null;
         public static LogAnalyticsConnection LogAnalytics = null;
         public static ParallelOptions ParallelConfig;
-        public static DateTime StartTime;
+        public static DateTime StartTime = DateTime.Now;
         public static CustomTaskManager TaskManager = new CustomTaskManager(true);
         public static int TotalErrors = 0;
         public static int TotalFilesConverted = 0;
