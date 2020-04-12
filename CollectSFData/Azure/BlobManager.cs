@@ -289,7 +289,7 @@ namespace CollectSFData
                     if (ticks < Config.StartTimeUtc.Ticks | ticks > Config.EndTimeUtc.Ticks)
                     {
                         Interlocked.Increment(ref TotalFilesSkipped);
-                        Log.Debug($"exclude:bloburi ticks outside of time range:{blob.Uri}");
+                        Log.Debug($"exclude:bloburi ticks {new DateTime(ticks).ToString("o")} outside of time range:{blob.Uri}");
 
                         SetMinMaxDate(ref segmentMinDateTicks, ref segmentMaxDateTicks, ticks);
                         continue;
