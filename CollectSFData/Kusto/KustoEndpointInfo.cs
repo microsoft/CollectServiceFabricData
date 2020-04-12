@@ -3,11 +3,15 @@
 // Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
+using Kusto.Cloud.Platform.Data;
+using Kusto.Cloud.Platform.Json;
 using Kusto.Data;
 using Kusto.Data.Common;
 using Kusto.Data.Net.Client;
+using Kusto.Data.Results;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using Newtonsoft.Json.Linq;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -15,6 +19,12 @@ using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
+using Kusto.Cloud.Platform.Utils;
+using System.Collections;
+using Kusto.Data.Linq;
+
+//using System.Windows.Forms;
 
 namespace CollectSFData
 {
@@ -31,6 +41,9 @@ namespace CollectSFData
 
     public class KustoEndpointInfo : Instance
     {
+        private static ICslAdminProvider _kustoAdminClient;
+        private static ICslQueryProvider _kustoQueryClient;
+        private static int maxKustoClientTimeMs = 300 * 1000;
         private AzureResourceManager _arm = new AzureResourceManager();
         private Http _httpClient = Http.ClientFactory();
         private string _pattern = "https://(?<ingest>ingest-){0,1}(?<clusterName>.+?)\\.(?<location>.+?)\\.(?<domainName>.+?)(/|$)(?<databaseName>.+?){0,1}(/|$)(?<tableName>.+?){0,1}(/|$)";
@@ -55,9 +68,11 @@ namespace CollectSFData
                 string ingestPrefix = matches.Groups["ingest"].Value;
                 ClusterName = matches.Groups["clusterName"].Value;
                 string location = matches.Groups["location"].Value;
-                ManagementUrl = $"https://{ClusterName}.{location}.{domainName}";
+                HostName = $"{ClusterName}.{location}.{domainName}";
+                ManagementUrl = $"https://{HostName}";
                 ClusterIngestUrl = $"https://{ingestPrefix}{ClusterName}.{location}.{domainName}";
                 RestMgmtUri = $"{ClusterIngestUrl}/v1/rest/mgmt";
+                RestQueryUri = $"{ManagementUrl}/v1/rest/query";
             }
             else
             {
@@ -68,25 +83,27 @@ namespace CollectSFData
         }
 
         public string ClusterIngestUrl { get; set; }
-
-        public object ClusterName { get; private set; }
-
+        public string ClusterName { get; private set; }
+        public string Cursor { get; set; } = "''";
         public KustoConnectionStringBuilder DatabaseConnection { get; set; }
-
         public string DatabaseName { get; set; }
-
         public bool DeleteSourceOnSuccess { get; set; }
-
+        public KustoRestTable ExtendedPropertiesTable { get; private set; } = new KustoRestTable();
+        public List<string> ExtendedResults { get; private set; }
+        public string HostName { get; private set; }
         public string IdentityToken { get; private set; }
-
         public IngestionResourcesSnapshot IngestionResources { get; private set; }
-
+        public bool LogLargeResults { get; set; } = true;
         public string ManagementUrl { get; private set; }
-
+        public KustoRestTable PrimaryResultTable { get; private set; } = new KustoRestTable();
+        public KustoRestResponseV1 ResponseDataSet { get; private set; } = new KustoRestResponseV1();
         public string RestMgmtUri { get; private set; }
-
+        public string RestQueryUri { get; private set; }
         public string TableName { get; private set; }
+        public KustoRestTableOfContentsV1 TableOfContents { get; private set; } = new KustoRestTableOfContentsV1();
+        private Timer adminTimer { get; set; } // = new Timer(DisposeClient, kustoAdminClient, maxKustoClientTimeMs, maxKustoClientTimeMs);
         private KustoConnectionStringBuilder ManagementConnection { get; set; }
+        private Timer queryTimer { get; set; } // = new Timer(DisposeClient, kustoQueryClient, maxKustoClientTimeMs, maxKustoClientTimeMs);
 
         public void Authenticate(bool throwOnError = false, bool prompt = false)
         {
@@ -124,27 +141,221 @@ namespace CollectSFData
         public List<string> Query(string query)
         {
             Log.Info($"query:{query}", ConsoleColor.Blue);
-            List<string> list = new List<string>();
 
-            using (ICslQueryProvider kustoQueryClient = KustoClientFactory.CreateCslQueryProvider(ManagementConnection))
+            if (_kustoQueryClient == null)
             {
-                return EnumerateResults(kustoQueryClient.ExecuteQuery(query));
+                _kustoQueryClient = KustoClientFactory.CreateCslQueryProvider(ManagementConnection);
+                queryTimer = new Timer(DisposeQueryClient, null, maxKustoClientTimeMs, maxKustoClientTimeMs);
+            }
+
+            try
+            {
+                queryTimer.Change(maxKustoClientTimeMs, maxKustoClientTimeMs);
+                /*
+                if (query.Trim().StartsWith("."))
+                {
+                    return EnumerateResults(_kustoQueryClient.ExecuteQuery(DatabaseName, query, null));
+                }
+                else
+                {
+                    // unable to parse multiple tables v1 or v2 using kusto so using httpclient and rest
+                    return EnumerateResults(_kustoQueryClient.ExecuteQueryV2Async(DatabaseName, query, null).Result);
+                    //xxDataSet t = (DataSet)_kustoQueryClient.ExecuteQueryV2Async(DatabaseName, query, null).Result;
+                }
+                */
+                //test
+                string requestBody = "{ \"db\": \"" + DatabaseName + "\", \"csl\": \"" + query + "\" }";
+                string requestId = new Guid().ToString();
+
+                Dictionary<string, string> headers = new Dictionary<string, string>();
+                headers.Add("accept", "application/json");
+                headers.Add("host", HostName);
+                headers.Add("x-ms-client-request-id", requestId);
+
+                Log.Info($"query:", requestBody);
+                //_httpClient.DisplayResponse = false;
+                _httpClient.SendRequest(uri: RestQueryUri, authToken: _arm.BearerToken, jsonBody: requestBody, httpMethod: HttpMethod.Post, headers: headers);
+                JObject responseJson = _httpClient.ResponseStreamJson;
+                Log.Info($"query response:", responseJson);
+                ResponseDataSet = JsonConvert.DeserializeObject<KustoRestResponseV1>(_httpClient.ResponseStreamString);
+
+                if (!ResponseDataSet.HasData())
+                {
+                    Log.Info($"no tables:", ResponseDataSet);
+                    return new List<string>();
+                }
+
+                Log.Info($"response:", ResponseDataSet);
+                KustoRestTableOfContentsV1 toc = SetTableOfContents(ResponseDataSet);
+
+                if (toc.HasData)
+                {
+                    SetExtendedProperties();
+
+                    long index = toc.Rows.FirstOrDefault(x => x.Kind.Equals("QueryResult")).Ordinal;
+                    PrimaryResultTable = new KustoRestTable(ResponseDataSet.Tables[index]);
+                    return PrimaryResultTable.RecordsCsv();
+                }
+                else // if (responseDataSet.Tables.Length == 1)
+                {
+                    TableOfContents = new KustoRestTableOfContentsV1();
+                    Cursor = "''";
+                    ExtendedPropertiesTable = new KustoRestTable();
+                    PrimaryResultTable = new KustoRestTable(ResponseDataSet.Tables[0]);
+                    return PrimaryResultTable.RecordsCsv();
+                }
+            }
+            catch (Exception e)
+            {
+                Log.Exception($"exception executing query: {query}\r\n{e}");
+                return new List<string>();
+            }
+        }
+
+        private static void DisposeAdminClient(object state)
+        {
+            if (_kustoAdminClient != null)
+            {
+                Log.Info("Disposing kusto admin client");
+                _kustoAdminClient.Dispose();
+                _kustoAdminClient = null;
+            }
+        }
+
+        private static void DisposeQueryClient(object state)
+        {
+            if (_kustoQueryClient != null)
+            {
+                Log.Info("Disposing kusto query client");
+                _kustoQueryClient.Dispose();
+                _kustoQueryClient = null;
             }
         }
 
         private List<string> Command(string command)
         {
             Log.Info($"command:{command}", ConsoleColor.Blue);
-
-            using (ICslAdminProvider kustoAdminClient = KustoClientFactory.CreateCslAdminProvider(ManagementConnection))
+            if (_kustoAdminClient == null)
             {
-                return EnumerateResults(kustoAdminClient.ExecuteControlCommand(command));
+                _kustoAdminClient = KustoClientFactory.CreateCslAdminProvider(ManagementConnection);
+                adminTimer = new Timer(DisposeAdminClient, null, maxKustoClientTimeMs, maxKustoClientTimeMs);
+            }
+
+            adminTimer.Change(maxKustoClientTimeMs, maxKustoClientTimeMs);
+            return EnumerateResults(_kustoAdminClient.ExecuteControlCommand(command));
+        }
+
+        private List<string> EnumerateResults(ProgressiveDataSet reader)
+        {
+            List<string> csvRecords = new List<string>();
+            bool finalResults = false;
+            bool isProgressive = false;
+
+            try
+            {
+                IEnumerator<ProgressiveDataSetFrame> resultFrames = reader.GetFrames();
+
+                //while (!finalResults && resultFrames.MoveNext())
+                while (resultFrames.MoveNext())
+                {
+                    ProgressiveDataSetFrame resultFrame = resultFrames.Current;
+                    Log.Debug($"resultFrame:", resultFrame);
+
+                    switch (resultFrame.FrameType)
+                    {
+                        case FrameType.DataSetCompletion:
+                            {
+                                ProgressiveDataSetCompletionFrame result = resultFrame as ProgressiveDataSetCompletionFrame;
+                                Log.Info($"{result.GetType()}", result);
+                                break;
+                            }
+                        case FrameType.DataSetHeader:
+                            {
+                                ProgressiveDataSetHeaderFrame result = resultFrame as ProgressiveDataSetHeaderFrame;
+                                Log.Info($"{result.GetType()}", result);
+                                isProgressive = result.IsProgressive;
+                                break;
+                            }
+                        case FrameType.DataTable:
+                            {
+                                ProgressiveDataSetDataTableFrame result = resultFrame as ProgressiveDataSetDataTableFrame;
+                                Log.Info($"{result.GetType()}", result);
+
+                                if (result.TableName.Equals("@ExtendedProperties"))
+                                {
+                                    ExtendedResults = EnumerateResults(result.TableData);
+                                    if (ExtendedResults.Any(x => x.Contains("Cursor")))
+                                    {
+                                        string cursorRecord = ExtendedResults.FirstOrDefault(x => x.Contains("Cursor"));
+                                        Cursor = $"'{Regex.Match(cursorRecord, @"Cursor,(?<cursor>\d+?)(?:,|$)").Groups["cursor"].Value}'";
+                                        Log.Info($"setting db cursor to {Cursor}");
+                                    }
+                                }
+
+                                if (result.TableKind.Equals(WellKnownDataSet.PrimaryResult))
+                                {
+                                    csvRecords = EnumerateResults(result.TableData);
+                                }
+
+                                // if non progressive, this may be last frame
+                                if (!isProgressive)
+                                {
+                                    finalResults = true;
+                                }
+
+                                break;
+                            }
+                        case FrameType.TableCompletion:
+                            {
+                                ProgressiveDataSetTableCompletionFrame result = resultFrame as ProgressiveDataSetTableCompletionFrame;
+                                Log.Info($"{result.GetType()}", result);
+                                break;
+                            }
+                        case FrameType.TableFragment:
+                            {
+                                ProgressiveDataSetDataTableFragmentFrame result = resultFrame as ProgressiveDataSetDataTableFragmentFrame;
+                                Log.Error($"not implemented: {result.GetType()}", result);
+                                result.ToDataTable();
+                                break;
+                            }
+                        case FrameType.TableHeader:
+                            {
+                                ProgressiveDataSetHeaderFrame result = resultFrame as ProgressiveDataSetHeaderFrame;
+                                Log.Info($"{result.GetType()}", result);
+                                break;
+                            }
+                        case FrameType.TableProgress:
+                            {
+                                ProgressiveDataSetTableProgressFrame result = resultFrame as ProgressiveDataSetTableProgressFrame;
+                                Log.Info($"{result.GetType()}", result);
+                                break;
+                            }
+                        case FrameType.LastInvalid:
+                        default:
+                            {
+                                Log.Warning($"unknown frame type:{resultFrame.FrameType}");
+                                return csvRecords;
+                            }
+                    }
+                }
+
+                return csvRecords;
+            }
+            catch (Exception e)
+            {
+                Log.Exception($"{e}");
+                return csvRecords;
             }
         }
 
         private List<string> EnumerateResults(IDataReader reader)
         {
+            int maxRecords = 1000;
+            int index = 0;
             List<string> csvRecords = new List<string>();
+            //DataTableReader2 tReader = (reader as DataTableReader2);
+
+            //DataTable[] tables = ((DataTable[])((DataTableReader)(reader))).tables;
 
             while (reader.Read())
             {
@@ -158,7 +369,19 @@ namespace CollectSFData
                 csvRecords.Add(csvRecord.ToString().TrimEnd(','));
             }
 
-            Log.Info($"results:", ConsoleColor.DarkBlue, null, csvRecords);
+            if (csvRecords.Count < maxRecords | LogLargeResults)
+            {
+                while (index < csvRecords.Count)
+                {
+                    Log.Info($"results:", ConsoleColor.DarkBlue, null, csvRecords.GetRange(index, Math.Min(maxRecords, csvRecords.Count - index)));
+                    index = Math.Min(index += maxRecords, csvRecords.Count);
+                }
+            }
+            else
+            {
+                Log.Info($"results: {csvRecords.Count}");
+            }
+
             return csvRecords;
         }
 
@@ -209,6 +432,77 @@ namespace CollectSFData
 
             Log.Info("identityToken:", identityToken);
             return ((string)identityToken);
+        }
+
+        private void SetExtendedProperties()
+        {
+            // extended properties stored in single 'Value' column as key value pair in json string
+            // todo visualize record
+            string columnName = "Value";
+            string extendedProperty = "Cursor";
+            string tableName = "@ExtendedProperties";
+
+            if (TableOfContents.Rows.Any(x => x.Name.Equals(tableName)))
+            {
+                long index = TableOfContents.Rows.FirstOrDefault(x => x.Name.Equals(tableName)).Ordinal;
+                ExtendedPropertiesTable = new KustoRestTable(ResponseDataSet.Tables[index]);
+                Dictionary<string, object> jsonString = ExtendedPropertiesTable.Records().FirstOrDefault(record => record[columnName].ToString().Contains(extendedProperty));
+
+                if (jsonString != null)
+                {
+                    JObject jObject = (JObject)JsonConvert.DeserializeObject(jsonString[columnName].ToString());
+                    Cursor = $"'{jObject.GetValue(extendedProperty)}'";
+                }
+            }
+        }
+
+        private KustoRestTableOfContentsV1 SetTableOfContents(KustoRestResponseV1 responseDataSet)
+        {
+            KustoRestTableOfContentsV1 content = new KustoRestTableOfContentsV1();
+
+            if (responseDataSet == null || responseDataSet.Tables?.Length < 2)
+            {
+                Log.Debug($"no table of content table");
+                return content;
+            }
+
+            KustoRestResponseTableV1 tableOfContents = responseDataSet.Tables.Last();
+
+            for (int c = 0; c < tableOfContents.Columns.Length; c++)
+            {
+                content.Columns.Add(
+                    new KustoRestTableOfContentsColumnV1
+                    {
+                        _index = c,
+                        ColumnName = tableOfContents.Columns[c].ColumnName,
+                        ColumnType = tableOfContents.Columns[c].ColumnType,
+                        DataType = tableOfContents.Columns[c].DataType
+                    });
+            }
+
+            for (int r = 0; r < tableOfContents.Rows.Length; r++)
+            {
+                Hashtable record = new Hashtable();
+                KustoRestTableOfContentsRowV1 row = new KustoRestTableOfContentsRowV1();
+
+                object[] rowFields = tableOfContents.Rows[r];
+                if (rowFields.Length != tableOfContents.Columns.Length)
+                {
+                    Log.Error($"mismatch in column count and row count {rowFields.Count()} {tableOfContents.Columns.Length}");
+                    return content;
+                }
+                //typeof((tableOfContents.Columns.First(x => x.ColumnName.Equals("Id")).DataType)
+                row._index = r;
+                row.Id = rowFields[content.Columns.First(x => x.ColumnName.Equals("Id"))._index].ToString();
+                row.Kind = rowFields[content.Columns.First(x => x.ColumnName.Equals("Kind"))._index].ToString();
+                row.Name = rowFields[content.Columns.First(x => x.ColumnName.Equals("Name"))._index].ToString();
+                row.Ordinal = Convert.ToInt64(rowFields[content.Columns.First(x => x.ColumnName.Equals("Ordinal"))._index]);
+                row.PrettyName = rowFields[content.Columns.First(x => x.ColumnName.Equals("PrettyName"))._index].ToString();
+                //list.Add(row.ToString());
+                content.Rows.Add(row);
+            }
+
+            return content;
         }
     }
 }
