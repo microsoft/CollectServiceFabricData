@@ -57,6 +57,7 @@ Options:
   -kbs|--kustoUseBlobAsSource        [bool] for blob -> kusto direct ingest.
                                          requires .dtr (.csv) files to be csv compliant.
                                          service fabric 6.5+ dtr files are compliant.
+  -kim|--kustoUseIngestMessage       [bool] for kusto ingestion message tracking.
   -l|--list                          [bool] list files instead of downloading
   -lac|--logAnalyticsCreate          [bool] create new log analytics workspace.
                                          requires LogAnalyticsWorkspaceName, AzureResourceGroup,
@@ -127,10 +128,11 @@ To use a default configuration file without having to specify on the command lin
 
 #### collectsfdata kusto arguments
 
-- **KustoCluster** - required. uri.
+- **KustoCluster** - required. uri. https://ingest-{{cluster}}[.{{location}}].kusto.windows.net/{{database}}
 - **KustoRecreateTable** - bool. default false. if true, will drop (recreate) table before ingesting new data regardless if table is currently populated.
 - **KustoTable** - required. string. name of kusto table to create and or use.
 - **KustoUseBlobAsSource** - **not currently used**. bool. default false. if true will ingest service diagnostic logs directly from storage account instead of downloading and formatting. to use this option, service fabric .dtr files have to be CSV compliant.
+- **KustoUseIngestMessage** - bool. default true. if true, will use kusto fail and success queue messaging for data ingestion (service bus additional overhead). if false, use kusto 'ingestion failures' table and data table 'RelativeUri' field for confirmation.
 
 #### collectsfdata log analytics arguments
 - **LogAnalyticsId** - required. guid. log analytics workspace id guid.

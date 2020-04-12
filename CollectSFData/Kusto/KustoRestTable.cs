@@ -1,10 +1,8 @@
 ﻿using Kusto.Cloud.Platform.Utils;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Web.Configuration;
 
 namespace CollectSFData
 {
@@ -108,7 +106,7 @@ namespace CollectSFData
             }
 
             Rows.ForEach(r => results.Add(string.Join(",", (Array.ConvertAll(r, ra => ra.ToString())))));
-            Log.Info($"returning {results.Count} record csvs", ConsoleColor.Cyan);
+            Log.Info($"returning {results.Count} record csv's", ConsoleColor.Cyan);
             return results;
         }
     }
