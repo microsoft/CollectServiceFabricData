@@ -8,6 +8,10 @@ using System.Web.Configuration;
 
 namespace CollectSFData
 {
+    public class KustoRestRecord : Dictionary<string, object> { }
+
+    public class KustoRestRecords : List<KustoRestRecord> { }
+
     public class KustoRestTable : KustoRestResponseTableV1
     {
         public KustoRestTable(KustoRestResponseTableV1 table = null)
@@ -20,18 +24,18 @@ namespace CollectSFData
             }
         }
 
-        public List<Dictionary<string, object>> Records()
+        public KustoRestRecords Records()
         {
-            List<Dictionary<string, object>> records = new List<Dictionary<string, object>>();
+            KustoRestRecords records = new KustoRestRecords();
             if (Rows?.Length < 1)
             {
-                Log.Warning("no rows in table");
+                Log.Info("no rows in table", ConsoleColor.White);
                 return records;
             }
 
             for (int r = 0; r < Rows.Length; r++)
             {
-                Dictionary<string, object> record = new Dictionary<string, object>();
+                KustoRestRecord record = new KustoRestRecord();
                 object[] rowFields = Rows[r];
 
                 if (rowFields.Length != Columns.Length)
@@ -42,52 +46,54 @@ namespace CollectSFData
 
                 for (int f = 0; f < rowFields.Length; f++)
                 {
-                    KustoRestResponseColumnV1 column = Columns[f];
+                    string columnType = Columns[f].DataType.ToLower();
+                    string columnName = Columns[f].ColumnName;
 
-                    if (column.DataType.ToLower().Contains("string"))
+                    if (columnType.Contains("string"))
                     {
-                        record.Add(column.ColumnName, rowFields[f]);
+                        record.Add(columnName, rowFields[f]);
                     }
-                    else if (column.DataType.ToLower().Contains("int32"))
+                    else if (columnType.Contains("int32"))
                     {
-                        record.Add(column.ColumnName, Convert.ToInt32(rowFields[f]));
+                        record.Add(columnName, Convert.ToInt32(rowFields[f]));
                     }
-                    else if (column.DataType.ToLower().Contains("int64"))
+                    else if (columnType.Contains("int64"))
                     {
-                        record.Add(column.ColumnName, Convert.ToInt64(rowFields[f]));
+                        record.Add(columnName, Convert.ToInt64(rowFields[f]));
                     }
-                    else if (column.DataType.ToLower().Contains("date"))
+                    else if (columnType.Contains("date"))
                     {
-                        record.Add(column.ColumnName, DateTime.Parse(rowFields[f].ToString()));
+                        record.Add(columnName, DateTime.Parse(rowFields[f].ToString()));
                     }
-                    else if (column.DataType.ToLower().Contains("bool"))
+                    else if (columnType.Contains("bool"))
                     {
-                        record.Add(column.ColumnName, Convert.ToBoolean(rowFields[f]).ToStringLowercase());
+                        record.Add(columnName, Convert.ToBoolean(rowFields[f]).ToStringLowercase());
                     }
-                    else if (column.DataType.ToLower().Contains("time"))
+                    else if (columnType.Contains("time"))
                     {
-                        record.Add(column.ColumnName, new TimeSpan(DateTime.Parse(rowFields[f].ToString()).Ticks));
+                        record.Add(columnName, new TimeSpan(DateTime.Parse(rowFields[f].ToString()).Ticks));
                     }
-                    else if (column.DataType.ToLower().Contains("guid") || column.DataType.ToLower().Contains("uuid") || column.DataType.ToLower().Contains("uniqueid"))
+                    else if (columnType.Contains("guid") || columnType.Contains("uuid") || columnType.Contains("uniqueid"))
                     {
-                        record.Add(column.ColumnName, new Guid(rowFields[f].ToString()));
+                        record.Add(columnName, new Guid(rowFields[f].ToString()));
                     }
-                    else if (column.DataType.ToLower().Contains("double"))
+                    else if (columnType.Contains("double"))
                     {
-                        record.Add(column.ColumnName, Convert.ToDouble(rowFields[f]));
+                        record.Add(columnName, Convert.ToDouble(rowFields[f]));
                     }
-                    else if (column.DataType.ToLower().Contains("decimal"))
+                    else if (columnType.Contains("decimal"))
                     {
-                        //record.Add(column.ColumnName, Convert.ToDecimal(rowFields[f]));
-                        record.Add(column.ColumnName, Decimal.Parse(rowFields[f].ToString(), NumberStyles.AllowExponent | NumberStyles.AllowDecimalPoint));
+                        //record.Add(columnName, Convert.ToDecimal(rowFields[f]));
+                        record.Add(columnName, Decimal.Parse(rowFields[f].ToString(), NumberStyles.AllowExponent | NumberStyles.AllowDecimalPoint));
                     }
                     else
                     {
-                        record.Add(column.ColumnName, rowFields[f]);
+                        record.Add(columnName, rowFields[f]);
                     }
                 }
                 records.Add(record);
             }
+            Log.Info($"returning {records.Count} records", ConsoleColor.Cyan);
             return records;
         }
 
@@ -102,6 +108,7 @@ namespace CollectSFData
             }
 
             Rows.ForEach(r => results.Add(string.Join(",", (Array.ConvertAll(r, ra => ra.ToString())))));
+            Log.Info($"returning {results.Count} record csvs", ConsoleColor.Cyan);
             return results;
         }
     }

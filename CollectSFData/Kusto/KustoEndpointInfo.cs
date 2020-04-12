@@ -173,10 +173,8 @@ namespace CollectSFData
                 headers.Add("x-ms-client-request-id", requestId);
 
                 Log.Info($"query:", requestBody);
-                //_httpClient.DisplayResponse = false;
+                _httpClient.DisplayResponse = Config.LogDebug;
                 _httpClient.SendRequest(uri: RestQueryUri, authToken: _arm.BearerToken, jsonBody: requestBody, httpMethod: HttpMethod.Post, headers: headers);
-                JObject responseJson = _httpClient.ResponseStreamJson;
-                Log.Info($"query response:", responseJson);
                 ResponseDataSet = JsonConvert.DeserializeObject<KustoRestResponseV1>(_httpClient.ResponseStreamString);
 
                 if (!ResponseDataSet.HasData())
@@ -185,7 +183,6 @@ namespace CollectSFData
                     return new List<string>();
                 }
 
-                Log.Info($"response:", ResponseDataSet);
                 KustoRestTableOfContentsV1 toc = SetTableOfContents(ResponseDataSet);
 
                 if (toc.HasData)
