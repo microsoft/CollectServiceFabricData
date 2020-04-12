@@ -119,6 +119,8 @@ namespace CollectSFData
 
         public bool KustoUseBlobAsSource { get; set; }
 
+        public bool KustoUseIngestMessage { get; set; } = true; // todo: remove
+
         public bool List { get; set; }
 
         public bool LogAnalyticsCreate { get; set; }
