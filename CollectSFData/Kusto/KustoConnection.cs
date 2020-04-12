@@ -314,35 +314,31 @@ namespace CollectSFData
             }
 
             _ingestCursor = _ingestedUris.Count() < 1 ? "''" : _ingestCursor;
-            successUris.AddRange(Endpoint.Query($"['{Endpoint.TableName}'] | where cursor_after({_ingestCursor}) | distinct RelativeUri"));
+            successUris.AddRange(Endpoint.Query($"['{Endpoint.TableName}']" +
+                $"| where cursor_after({_ingestCursor})" +
+                $"| where Timestamp > todatetime('{StartTime.ToUniversalTime()}')" +
+                $"| distinct RelativeUri"));
             _ingestCursor = Endpoint.Cursor;
 
-            List<string> failedResults = Endpoint.Query($".show ingestion failures | where Table == '{Endpoint.TableName}' | where FailedOn >= todatetime('{_failureQueryTime}') | order by FailedOn asc");
-            List<Dictionary<string, object>> failedRecords = Endpoint.PrimaryResultTable.Records();
-            bool logFailures = false;
+            Endpoint.Query($".show ingestion failures" +
+                $"| where Table == '{Endpoint.TableName}'" +
+                $"| where FailedOn >= todatetime('{_failureQueryTime}')" +
+                $"| order by FailedOn asc");
 
-            foreach (string uri in failedRecords.Select(x => x["IngestionSourcePath"]))
+            KustoRestRecords failedRecords = Endpoint.PrimaryResultTable.Records();
+
+            foreach (KustoRestRecord record in failedRecords)
             {
+                string uri = record["IngestionSourcePath"].ToString();
                 Log.Debug($"checking failed ingested relativeuri: {uri}");
 
                 if (!_failIngestedUris.Contains(uri))
                 {
-                    Log.Error($"adding failedUri to _failIngestedUris[{_failIngestedUris.Count()}]: {uri}");
+                    Log.Error($"adding failedUri to _failIngestedUris[{_failIngestedUris.Count()}]: {uri}", record);
                     _failIngestedUris.Add(uri);
-                    logFailures = true;
+                    _failureCount++;
+                    _failureQueryTime = DateTime.Now.AddMinutes(-1);
                 }
-            }
-
-            if (logFailures)
-            {
-                _failureCount += failedResults.Count;
-
-                Log.Info("ingest failures:", ConsoleColor.White, ConsoleColor.Red, failedRecords);
-
-                _failureQueryTime = (DateTime)failedRecords.OrderByDescending(record => record["FailedOn"]).First()["FailedOn"];
-                Log.Info("last ingest failure:", ConsoleColor.White, ConsoleColor.Red, _failureQueryTime);
-                // not sure if needed. unknown if last failedon can be relied on for minimum query time range. add buffer.
-                _failureQueryTime = DateTime.Now.AddMinutes(-1);
             }
 
             foreach (string uri in _failIngestedUris)
