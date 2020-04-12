@@ -213,6 +213,16 @@
         true
       ]
     },
+    "KustoUseIngestMessage": {
+      "$id": "#/properties/KustoUseIngestMessage",
+      "type": "boolean",
+      "title": "KustoUseIngestMessage true to use Kusto (service bus) messaging for success and failure ingests",
+      "default": true,
+      "examples": [
+        false,
+        true
+      ]
+    },
     "List": {
       "$id": "#/properties/List",
       "type": "boolean",

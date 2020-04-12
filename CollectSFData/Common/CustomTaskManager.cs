@@ -140,14 +140,14 @@ namespace CollectSFData
                 instance.ScheduleTask(taskObject);
                 instance.QueuedTaskObjects.Remove(taskObject);
 
-                Log.Highlight($"scheduled task {instance.GetHashCode()} " +
+                Log.Info($"scheduled task {instance.GetHashCode()} " +
                     $"instance:{instance.CallerName} " +
                     $"total:{instance.AllTasks.Count()} " +
                     $"incomplete:{instance.AllTasks.Count(x => !x.IsCompleted)} " +
                     $"queued:{instance.QueuedTaskObjects.Count()} " +
                     $"GC:{GC.GetTotalMemory(false)} " +
                     $"total records:{TotalRecords} " +
-                    $"rps:{TotalRecords / (DateTime.Now - StartTime).TotalSeconds}");
+                    $"rps:{TotalRecords / (DateTime.Now - StartTime).TotalSeconds}", ConsoleColor.Magenta);
             }
 
             return instance.AllTasks.Count(x => !x.IsCompleted);
