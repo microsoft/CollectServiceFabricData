@@ -316,8 +316,9 @@ namespace CollectSFData
             _ingestCursor = _ingestedUris.Count() < 1 ? "''" : _ingestCursor;
             successUris.AddRange(Endpoint.Query($"['{Endpoint.TableName}']" +
                 $"| where cursor_after({_ingestCursor})" +
-                $"| where Timestamp > todatetime('{StartTime.ToUniversalTime()}')" +
+                $"| where ingestion_time() > todatetime('{StartTime.ToUniversalTime().ToString("o")}')" +
                 $"| distinct RelativeUri"));
+
             _ingestCursor = Endpoint.Cursor;
 
             Endpoint.Query($".show ingestion failures" +
@@ -337,7 +338,7 @@ namespace CollectSFData
                     Log.Error($"adding failedUri to _failIngestedUris[{_failIngestedUris.Count()}]: {uri}", record);
                     _failIngestedUris.Add(uri);
                     _failureCount++;
-                    _failureQueryTime = DateTime.Now.AddMinutes(-1);
+                    _failureQueryTime = DateTime.Now.ToUniversalTime().AddMinutes(-1);
                 }
             }
 
@@ -371,6 +372,8 @@ namespace CollectSFData
                     Log.Info($"removing ingested relativeuri from _messageList[{_messageList.Count()}]: {uri}", ConsoleColor.Green);
                 }
             }
+
+            Log.Info($"current count ingested: {_ingestedUris.Count()} ingesting: {_messageList.Count()} failed: {_failureCount} total: {_ingestedUris.Count() + _messageList.Count() + _failureCount}", ConsoleColor.Green);
         }
 
         private void PurgeMessages(string tableName)

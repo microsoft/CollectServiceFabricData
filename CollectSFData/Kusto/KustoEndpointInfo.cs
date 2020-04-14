@@ -252,8 +252,8 @@ namespace CollectSFData
             {
                 IEnumerator<ProgressiveDataSetFrame> resultFrames = reader.GetFrames();
 
-                //while (!finalResults && resultFrames.MoveNext())
-                while (resultFrames.MoveNext())
+                while (!finalResults && resultFrames.MoveNext())
+                //while (resultFrames.MoveNext())
                 {
                     ProgressiveDataSetFrame resultFrame = resultFrames.Current;
                     Log.Debug($"resultFrame:", resultFrame);
