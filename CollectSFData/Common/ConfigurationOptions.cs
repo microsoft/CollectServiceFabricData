@@ -288,7 +288,7 @@ namespace CollectSFData
 
         public bool IsKustoConfigured()
         {
-            return (!string.IsNullOrEmpty(KustoCluster) & !string.IsNullOrEmpty(KustoTable));
+            return (!FileType.Equals(FileTypesEnum.any) & !string.IsNullOrEmpty(KustoCluster) & !string.IsNullOrEmpty(KustoTable));
         }
 
         public bool IsKustoPurgeRequested()
