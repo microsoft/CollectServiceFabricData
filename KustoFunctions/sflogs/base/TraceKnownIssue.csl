@@ -126,7 +126,6 @@
         TypeOrTextContains(T, "exception", "exception"),
         TextContains(T, "cancellation token issue? (not confirmed)", "RunAsync is taking longer then expected time (15s) to cancel."),
         TextContains(T, "possible certificate trust issue if not self-signed cert. check CA connectivity and intermediate certs.","0x800b0109"),
-        TypeAndTextContains(T, "container activation issues", "ManagedHosting.ActivateContainerOperation", "Failed to start Container"),
         TypeContains(T, "node open failure", "FabricNode._NodesOps_NodeOpenedFailed"),
         TextContains(T, "expired certificate. use TSG: https://github.com/Azure/Service-Fabric-Troubleshooting-Guides/blob/master/Security/How%20to%20recover%20from%20an%20Expired%20Cluster%20Certificate.md", "SFRP poll: Exception encountered: System.InvalidOperationException: Could not load primary and secondary certificate"),
         TypeContains(T, "reverse proxy errors", "ReverseProxy.SendResponseError"),
@@ -141,12 +140,14 @@
         TypeAndTextMatches(T, "down nodes reported", "FM.NodeCounts", "Down=[^0]"),
         TypeAndTextMatches(T, "removed nodes reported", "FM.NodeCounts", "Removed=[^0]"),
         TypeAndTextMatches(T, "cm upgrade error", "CM.UpgradeReply","Error = [^S_OK]"),
-        TextContains(T, "docker health error", "Docker HEALTHCHECK reported health_status=unhealthy"),
         TextContains(T, ".net exception", "3762504530"),
-        TypeAndTextContains(T, "docker container not responsive", "ManagedHosting.ContainerEventManager", "Failed to connect to DockerService at named pipe 'docker_engine'"),
         TypeAndTextContains(T, "fabric client making too many connections to gateway", "EntreeServiceProxy.LifeCycle", "exceeded client connection limit:"),
         TypeContains(T, "stuck .net timers detected", "FabricDCA.DCADotNetStuckTimersDetected"),
         TypeAndTextContains(T, "sf 7.0cu3 known issue. icm 176184624. fix cu4","HM.", @"There was an error during download. Failed to download 'WindowsFabricStore\ClusterManifest"),
         TypeAndTextContains(T, "transport network connectivity issues", "Transport.Connection", "connection open timeout"),
-        TextContainsFabric_E(T, "FABRIC_E_ errors use TraceFabric_E_ErrorsDistinct('') function to view.", "FABRIC_E_")
+        TextContainsFabric_E(T, "FABRIC_E_ errors use TraceFabric_E_ErrorsDistinct('') function to view.", "FABRIC_E_"),
+        TextContains(T, "docker health error", "Docker HEALTHCHECK reported health_status=unhealthy"),
+        TypeAndTextContains(T, "docker container not responsive", "ManagedHosting.ContainerEventManager", "Failed to connect to DockerService at named pipe 'docker_engine'"),
+        TypeAndTextContains(T, "container activation issues", "ManagedHosting.ActivateContainerOperation", "Failed to start Container"),
+        TypeAndTextContains(T, "possible container hns nat issue", "FabricDeployer.FabricDeployer", "Failed to set up container network")
     }
