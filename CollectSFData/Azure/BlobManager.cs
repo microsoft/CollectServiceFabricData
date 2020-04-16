@@ -292,7 +292,7 @@ namespace CollectSFData
             else
             {
                 Log.Warning($"destination file exists. skipping download:\r\n file: {fileObject}");
-                IngestCallback?.Invoke(fileObject);
+                Interlocked.Increment(ref TotalFilesSkipped);
             }
         }
 
