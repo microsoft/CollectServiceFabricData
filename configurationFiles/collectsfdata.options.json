@@ -17,6 +17,7 @@
   "KustoRecreateTable": false,
   "KustoTable": null,
   "KustoUseBlobAsSource": false,
+  "KustoUseIngestMessage": true,
   "List": false,
   "LogAnalyticsCreate": false,
   "LogAnalyticsId": null,
