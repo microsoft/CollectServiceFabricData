@@ -119,6 +119,8 @@ namespace CollectSFData
 
         public bool KustoUseBlobAsSource { get; set; }
 
+        public bool KustoUseIngestMessage { get; set; } = true; // todo: remove
+
         public bool List { get; set; }
 
         public bool LogAnalyticsCreate { get; set; }
@@ -184,7 +186,7 @@ namespace CollectSFData
 
         public int Threads
         {
-            get => _threads;
+            get => _threads < 1 ? Environment.ProcessorCount : _threads;
             set => _threads = value < 1 ? Environment.ProcessorCount : value;
         }
 
