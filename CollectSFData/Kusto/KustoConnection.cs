@@ -24,7 +24,10 @@ namespace CollectSFData
         private readonly SynchronizedList<string> _messageList = new SynchronizedList<string>();
         private readonly TimeSpan _messageTimeToLive = new TimeSpan(0, 1, 0, 0);
         private readonly CancellationTokenSource _tokenSource = new CancellationTokenSource();
+        private SynchronizedList<string> _failIngestedUris = new SynchronizedList<string>();
         private int _failureCount;
+        private DateTime _failureQueryTime = StartTime.ToUniversalTime();
+        private string _ingestCursor = "''";
         private SynchronizedList<string> _ingestedUris = new SynchronizedList<string>();
         private IEnumerator<string> _ingestionQueueEnumerator;
         private Task _monitorTask;
@@ -37,7 +40,7 @@ namespace CollectSFData
         {
             Log.Debug("enter");
 
-            if (!CanInjest(fileObject.RelativeUri))
+            if (!CanIngest(fileObject.RelativeUri))
             {
                 Log.Warning($"file already ingested. skipping: {fileObject.RelativeUri}");
                 return;
@@ -62,8 +65,13 @@ namespace CollectSFData
                 _monitorTask.Wait();
                 _monitorTask.Dispose();
 
+                if (_failureCount > 0)
+                {
+                    TotalErrors += _failureCount;
+                    Log.Error($"Ingestion error total:({_failureCount})");
+                }
+
                 Log.Info($"return: total kusto ingests:{_totalBlobIngestQueued} success:{_failureCount == 0} ");
-                TotalErrors += _failureCount;
                 return _failureCount == 0;
             }
             catch (Exception ex)
@@ -140,7 +148,7 @@ namespace CollectSFData
                 blobUriWithSas = UploadFileToBlobContainer(fileObject, _tempContainerEnumerator.Current, fileObject.NodeName, blobName);
             }
 
-            PostMessageToQueue(_ingestionQueueEnumerator.Current, PrepareIngestionMessage(blobUriWithSas, fileObject.Length, ingestionMapping));
+            PostMessageToQueue(_ingestionQueueEnumerator.Current, PrepareIngestionMessage(blobUriWithSas, fileObject.Length, ingestionMapping), fileObject);
         }
 
         public IEnumerable<CloudQueueMessage> PopTopMessagesFromQueue(string queueUriWithSas, int count = _maxMessageCount)
@@ -157,7 +165,7 @@ namespace CollectSFData
             return messagesFromQueue;
         }
 
-        public void PostMessageToQueue(string queueUriWithSas, KustoIngestionMessage message)
+        public void PostMessageToQueue(string queueUriWithSas, KustoIngestionMessage message, FileObject fileObject)
         {
             Log.Info($"post: {queueUriWithSas}", ConsoleColor.Magenta);
             _totalBlobIngestQueued++;
@@ -171,7 +179,16 @@ namespace CollectSFData
             };
 
             queue.AddMessage(queueMessage, _messageTimeToLive, null, null, context);
-            _messageList.Add(message.Id);
+
+            if (Config.KustoUseIngestMessage)
+            {
+                _messageList.Add(message.Id);
+            }
+            else
+            {
+                _messageList.Add(fileObject.RelativeUri);
+            }
+
             Log.Info($"queue message id: {message.Id}");
         }
 
@@ -189,8 +206,8 @@ namespace CollectSFData
                 RetainBlobOnSuccess = !Config.KustoUseBlobAsSource,
                 Format = FileExtensionTypesEnum.csv.ToString(),
                 FlushImmediately = true,
-                ReportLevel = 2,
-                ReportMethod = 0,
+                ReportLevel = Config.KustoUseIngestMessage ? 2 : 1, //(int)IngestionReportLevel.FailuresAndSuccesses, // 2 FailuresAndSuccesses, 0 failures, 1 none
+                ReportMethod = Convert.ToInt32(!Config.KustoUseIngestMessage), //(int)IngestionReportMethod.Table, // 0 queue, 1 table, 2 both
                 AdditionalProperties = new KustoAdditionalProperties()
                 {
                     authorizationContext = Endpoint.IdentityToken,
@@ -276,7 +293,7 @@ namespace CollectSFData
             return $"{blockBlob.Uri.AbsoluteUri}{blobUri.Query}";
         }
 
-        private bool CanInjest(string relativeUri)
+        private bool CanIngest(string relativeUri)
         {
             if (!Config.Unique)
             {
@@ -285,6 +302,78 @@ namespace CollectSFData
 
             string cleanUri = Regex.Replace(relativeUri, $"\\.?\\d*?({ZipExtension}|{TableExtension})", "");
             return !_ingestedUris.Any(x => x.Contains(cleanUri));
+        }
+
+        private void IngestStatusQuery()
+        {
+            List<string> successUris = new List<string>();
+
+            if (!Endpoint.HasTable(Endpoint.TableName))
+            {
+                return;
+            }
+
+            _ingestCursor = _ingestedUris.Count() < 1 ? "''" : _ingestCursor;
+            successUris.AddRange(Endpoint.Query($"['{Endpoint.TableName}']" +
+                $"| where cursor_after({_ingestCursor})" +
+                $"| where ingestion_time() > todatetime('{StartTime.ToUniversalTime().ToString("o")}')" +
+                $"| distinct RelativeUri"));
+
+            _ingestCursor = Endpoint.Cursor;
+
+            Endpoint.Query($".show ingestion failures" +
+                $"| where Table == '{Endpoint.TableName}'" +
+                $"| where FailedOn >= todatetime('{_failureQueryTime}')" +
+                $"| order by FailedOn asc");
+
+            KustoRestRecords failedRecords = Endpoint.PrimaryResultTable.Records();
+
+            foreach (KustoRestRecord record in failedRecords)
+            {
+                string uri = record["IngestionSourcePath"].ToString();
+                Log.Debug($"checking failed ingested relativeuri: {uri}");
+
+                if (!_failIngestedUris.Contains(uri))
+                {
+                    Log.Error($"adding failedUri to _failIngestedUris[{_failIngestedUris.Count()}]: {uri}", record);
+                    _failIngestedUris.Add(uri);
+                    _failureCount++;
+                    _failureQueryTime = DateTime.Now.ToUniversalTime().AddMinutes(-1);
+                }
+            }
+
+            foreach (string uri in _failIngestedUris)
+            {
+                if (_messageList.Any(x => Regex.IsMatch(x, Regex.Escape(new Uri(uri).AbsolutePath.TrimStart('/')), RegexOptions.IgnoreCase)))
+                {
+                    _messageList.RemoveAll(x => Regex.IsMatch(x, Regex.Escape(new Uri(uri).AbsolutePath.TrimStart('/')), RegexOptions.IgnoreCase));
+                    Log.Error($"removing failed ingested relativeuri from _messageList[{_messageList.Count()}]: {uri}");
+                }
+            }
+
+            Log.Debug($"files ingested:{successUris.Count}");
+
+            foreach (string uri in successUris)
+            {
+                Log.Debug($"checking ingested relativeuri: {uri}");
+
+                if (!_ingestedUris.Contains(uri))
+                {
+                    Log.Info($"adding relativeuri to _ingestedUris[{_ingestedUris.Count()}]: {uri}", ConsoleColor.Green);
+                    _ingestedUris.Add(uri);
+                }
+            }
+
+            foreach (string uri in _ingestedUris)
+            {
+                if (_messageList.Any(x => Regex.IsMatch(x, Regex.Escape(uri), RegexOptions.IgnoreCase)))
+                {
+                    _messageList.RemoveAll(x => Regex.IsMatch(x, Regex.Escape(uri), RegexOptions.IgnoreCase));
+                    Log.Info($"removing ingested relativeuri from _messageList[{_messageList.Count()}]: {uri}", ConsoleColor.Green);
+                }
+            }
+
+            Log.Info($"current count ingested: {_ingestedUris.Count()} ingesting: {_messageList.Count()} failed: {_failureCount} total: {_ingestedUris.Count() + _messageList.Count() + _failureCount}", ConsoleColor.Green);
         }
 
         private void PurgeMessages(string tableName)
@@ -332,69 +421,79 @@ namespace CollectSFData
             }
         }
 
+        private void QueueMessageMonitor()
+        {
+            // read success notifications
+            while (true)
+            {
+                IEnumerable<CloudQueueMessage> successes = PopTopMessagesFromQueue(Endpoint.IngestionResources.SuccessNotificationsQueue);
+
+                foreach (CloudQueueMessage success in successes)
+                {
+                    KustoSuccessMessage message = JsonConvert.DeserializeObject<KustoSuccessMessage>(success.AsString);
+                    Log.Debug("success:", message);
+
+                    if (_messageList.Exists(x => x.Equals(message.IngestionSourceId)))
+                    {
+                        _messageList.Remove(message.IngestionSourceId);
+                        RemoveMessageFromQueue(Endpoint.IngestionResources.SuccessNotificationsQueue, success);
+                        _totalBlobIngestResults++;
+                        Log.Info($"Ingestion completed total:({_totalBlobIngestResults}/{_totalBlobIngestQueued}): {JsonConvert.DeserializeObject(success.AsString)}", ConsoleColor.Green);
+                    }
+                    else if (message.SucceededOn + _messageTimeToLive < DateTime.Now)
+                    {
+                        Log.Warning($"cleaning stale message", message);
+                        RemoveMessageFromQueue(Endpoint.IngestionResources.SuccessNotificationsQueue, success);
+                    }
+                }
+                if (successes.Count() < _maxMessageCount)
+                {
+                    break;
+                }
+            }
+
+            while (true)
+            {
+                // read failure notifications
+                IEnumerable<CloudQueueMessage> errors = PopTopMessagesFromQueue(Endpoint.IngestionResources.FailureNotificationsQueue);
+
+                foreach (CloudQueueMessage error in errors)
+                {
+                    KustoErrorMessage message = JsonConvert.DeserializeObject<KustoErrorMessage>(error.AsString);
+                    Log.Debug("error:", message);
+
+                    if (_messageList.Exists(x => x.Equals(message.IngestionSourceId)))
+                    {
+                        _messageList.Remove(message.IngestionSourceId);
+                        RemoveMessageFromQueue(Endpoint.IngestionResources.FailureNotificationsQueue, error);
+                        _totalBlobIngestResults++;
+                        _failureCount++;
+                        Log.Error($"Ingestion error total:({_failureCount}): {JsonConvert.DeserializeObject(error.AsString)}");
+                    }
+                    else if (message.FailedOn + _messageTimeToLive < DateTime.Now)
+                    {
+                        Log.Warning($"cleaning stale message", message);
+                        RemoveMessageFromQueue(Endpoint.IngestionResources.FailureNotificationsQueue, error);
+                    }
+                }
+                if (errors.Count() < _maxMessageCount)
+                {
+                    break;
+                }
+            }
+        }
+
         private void QueueMonitor()
         {
             while (!_tokenSource.IsCancellationRequested | _messageList.Any())
             {
                 Thread.Sleep(ThreadSleepMs100);
+                QueueMessageMonitor();
 
-                // read success notifications
-                while (true)
+                if (!Config.KustoUseIngestMessage)
                 {
-                    IEnumerable<CloudQueueMessage> successes = PopTopMessagesFromQueue(Endpoint.IngestionResources.SuccessNotificationsQueue);
-
-                    foreach (CloudQueueMessage success in successes)
-                    {
-                        KustoSuccessMessage message = JsonConvert.DeserializeObject<KustoSuccessMessage>(success.AsString);
-                        Log.Debug("success:", message);
-
-                        if (_messageList.Exists(x => x.Equals(message.IngestionSourceId)))
-                        {
-                            _messageList.Remove(message.IngestionSourceId);
-                            RemoveMessageFromQueue(Endpoint.IngestionResources.SuccessNotificationsQueue, success);
-                            _totalBlobIngestResults++;
-                            Log.Info($"Ingestion completed total:({_totalBlobIngestResults}/{_totalBlobIngestQueued}): {JsonConvert.DeserializeObject(success.AsString)}", ConsoleColor.Green);
-                        }
-                        else if (message.SucceededOn + _messageTimeToLive < DateTime.Now)
-                        {
-                            Log.Warning($"cleaning stale message", message);
-                            RemoveMessageFromQueue(Endpoint.IngestionResources.SuccessNotificationsQueue, success);
-                        }
-                    }
-                    if (successes.Count() < _maxMessageCount)
-                    {
-                        break;
-                    }
-                }
-
-                while (true)
-                {
-                    // read failure notifications
-                    IEnumerable<CloudQueueMessage> errors = PopTopMessagesFromQueue(Endpoint.IngestionResources.FailureNotificationsQueue);
-
-                    foreach (CloudQueueMessage error in errors)
-                    {
-                        KustoErrorMessage message = JsonConvert.DeserializeObject<KustoErrorMessage>(error.AsString);
-                        Log.Debug("error:", message);
-
-                        if (_messageList.Exists(x => x.Equals(message.IngestionSourceId)))
-                        {
-                            _messageList.Remove(message.IngestionSourceId);
-                            RemoveMessageFromQueue(Endpoint.IngestionResources.FailureNotificationsQueue, error);
-                            _totalBlobIngestResults++;
-                            _failureCount++;
-                            Log.Error($"Ingestion error total:({_failureCount}): {JsonConvert.DeserializeObject(error.AsString)}");
-                        }
-                        else if (message.FailedOn + _messageTimeToLive < DateTime.Now)
-                        {
-                            Log.Warning($"cleaning stale message", message);
-                            RemoveMessageFromQueue(Endpoint.IngestionResources.FailureNotificationsQueue, error);
-                        }
-                    }
-                    if (errors.Count() < _maxMessageCount)
-                    {
-                        break;
-                    }
+                    Thread.Sleep(ThreadSleepMs10000);
+                    IngestStatusQuery();
                 }
             }
 
