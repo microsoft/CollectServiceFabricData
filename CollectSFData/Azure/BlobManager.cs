@@ -292,7 +292,7 @@ namespace CollectSFData
             else
             {
                 Log.Warning($"destination file exists. skipping download:\r\n file: {fileObject}");
-                IngestCallback?.Invoke(fileObject);
+                Interlocked.Increment(ref TotalFilesSkipped);
             }
         }
 
@@ -330,7 +330,7 @@ namespace CollectSFData
                     if (ticks < Config.StartTimeUtc.Ticks | ticks > Config.EndTimeUtc.Ticks)
                     {
                         Interlocked.Increment(ref TotalFilesSkipped);
-                        Log.Debug($"exclude:bloburi ticks {new DateTime(ticks).ToString("o")} outside of time range:{blob.Uri}");
+                        Log.Debug($"exclude:bloburi file ticks {new DateTime(ticks).ToString("o")} outside of time range:{blob.Uri}");
 
                         SetMinMaxDate(ref segmentMinDateTicks, ref segmentMaxDateTicks, ticks);
                         continue;
@@ -401,6 +401,14 @@ namespace CollectSFData
 
                         Log.Info($"queueing blob with timestamp: {lastModified}\r\n file: {blob.Uri.AbsolutePath}");
                         InvokeCallback(blob, fileObject);
+                    }
+                    else
+                    {
+                        Interlocked.Increment(ref TotalFilesSkipped);
+                        Log.Debug($"exclude:bloburi {lastModified.ToString("o")} outside of time range:{blob.Uri}");
+
+                        SetMinMaxDate(ref segmentMinDateTicks, ref segmentMaxDateTicks, lastModified.Ticks);
+                        continue;
                     }
                 }
                 else
