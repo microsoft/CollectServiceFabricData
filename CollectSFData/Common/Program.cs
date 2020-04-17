@@ -21,6 +21,89 @@ namespace CollectSFData
             return new Program().Execute(args);
         }
 
+        public string DetermineClusterId()
+        {
+            string clusterId = string.Empty;
+
+            if (!string.IsNullOrEmpty(Config.SasEndpointInfo.AbsolutePath))
+            {
+                //fabriclogs-e2fd6f05-921f-4e81-92d5-f70a648be762
+                string pattern = ".+-([a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12})";
+
+                if (Regex.IsMatch(Config.SasEndpointInfo.AbsolutePath, pattern))
+                {
+                    clusterId = Regex.Match(Config.SasEndpointInfo.AbsolutePath, pattern).Groups[1].Value;
+                }
+            }
+
+            if (string.IsNullOrEmpty(clusterId))
+            {
+                TableManager tableMgr = new TableManager();
+
+                if (tableMgr.Connect())
+                {
+                    clusterId = tableMgr.QueryTablesForClusterId();
+                }
+            }
+
+            if (!string.IsNullOrEmpty(clusterId))
+            {
+                Log.Info($"cluster id:{clusterId}");
+            }
+            else
+            {
+                Log.Warning("unable to determine cluster id");
+            }
+
+            return clusterId;
+        }
+
+        public void DownloadAzureData()
+        {
+            string containerPrefix = null;
+            string tablePrefix = null;
+            string clusterId = DetermineClusterId();
+
+            if (!Config.FileType.Equals(FileTypesEnum.any) && !Config.FileType.Equals(FileTypesEnum.table))
+            {
+                containerPrefix = FileTypes.MapFileTypeUriPrefix(Config.FileType);
+
+                if (!string.IsNullOrEmpty(clusterId))
+                {
+                    // 's-' in prefix may not always be correct
+                    containerPrefix += "s-" + clusterId;
+                }
+
+                tablePrefix = containerPrefix + clusterId?.Replace("-", "");
+            }
+
+            if (Config.FileType == FileTypesEnum.table)
+            {
+                TableManager tableMgr = new TableManager()
+                {
+                    IngestCallback = (exportedFile) => { QueueForIngest(exportedFile); }
+                };
+
+                if (tableMgr.Connect())
+                {
+                    tableMgr.DownloadTables(tablePrefix);
+                }
+            }
+            else
+            {
+                BlobManager blobMgr = new BlobManager()
+                {
+                    IngestCallback = (sourceFileUri) => { QueueForIngest(sourceFileUri); },
+                    ReturnSourceFileLink = (Config.IsKustoConfigured() & Config.KustoUseBlobAsSource) | Config.FileType == FileTypesEnum.exception
+                };
+
+                if (blobMgr.Connect())
+                {
+                    blobMgr.DownloadContainers(containerPrefix);
+                }
+            }
+        }
+
         public int Execute(string[] args)
         {
             try
@@ -126,6 +209,40 @@ namespace CollectSFData
             }
         }
 
+        public void FinalizeKusto()
+        {
+            if (Config.IsKustoConfigured() && !Kusto.Complete())
+            {
+                Log.Warning($"there may have been errors during kusto import. {Config.CacheLocation} has *not* been deleted.");
+            }
+            else if (Config.IsKustoConfigured())
+            {
+                Log.Last($"{DataExplorer}/clusters/{Kusto.Endpoint.ClusterName}/databases/{Kusto.Endpoint.DatabaseName}", ConsoleColor.Cyan);
+            }
+        }
+
+        public bool InitializeKusto()
+        {
+            if (Config.IsKustoConfigured() | Config.IsKustoPurgeRequested())
+            {
+                Kusto = new KustoConnection();
+                return Kusto.Connect();
+            }
+
+            return true;
+        }
+
+        public bool InitializeLogAnalytics()
+        {
+            if (Config.IsLogAnalyticsConfigured() | Config.LogAnalyticsCreate | Config.IsLogAnalyticsPurgeRequested())
+            {
+                LogAnalytics = new LogAnalyticsConnection();
+                return LogAnalytics.Connect();
+            }
+
+            return true;
+        }
+
         public void QueueForIngest(FileObject fileObject)
         {
             Log.Debug("enter");
@@ -148,124 +265,7 @@ namespace CollectSFData
             }
         }
 
-        private string DetermineClusterId()
-        {
-            string clusterId = string.Empty;
-
-            if (!string.IsNullOrEmpty(Config.SasEndpointInfo.AbsolutePath))
-            {
-                //fabriclogs-e2fd6f05-921f-4e81-92d5-f70a648be762
-                string pattern = ".+-([a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12})";
-
-                if (Regex.IsMatch(Config.SasEndpointInfo.AbsolutePath, pattern))
-                {
-                    clusterId = Regex.Match(Config.SasEndpointInfo.AbsolutePath, pattern).Groups[1].Value;
-                }
-            }
-
-            if (string.IsNullOrEmpty(clusterId))
-            {
-                TableManager tableMgr = new TableManager();
-
-                if (tableMgr.Connect())
-                {
-                    clusterId = tableMgr.QueryTablesForClusterId();
-                }
-            }
-
-            if (!string.IsNullOrEmpty(clusterId))
-            {
-                Log.Info($"cluster id:{clusterId}");
-            }
-            else
-            {
-                Log.Warning("unable to determine cluster id");
-            }
-
-            return clusterId;
-        }
-
-        private void DownloadAzureData()
-        {
-            string containerPrefix = null;
-            string tablePrefix = null;
-            string clusterId = DetermineClusterId();
-
-            if (!Config.FileType.Equals(FileTypesEnum.any) && !Config.FileType.Equals(FileTypesEnum.table))
-            {
-                containerPrefix = FileTypes.MapFileTypeUriPrefix(Config.FileType);
-
-                if (!string.IsNullOrEmpty(clusterId))
-                {
-                    // 's-' in prefix may not always be correct
-                    containerPrefix += "s-" + clusterId;
-                }
-
-                tablePrefix = containerPrefix + clusterId?.Replace("-", "");
-            }
-
-            if (Config.FileType == FileTypesEnum.table)
-            {
-                TableManager tableMgr = new TableManager()
-                {
-                    IngestCallback = (exportedFile) => { QueueForIngest(exportedFile); }
-                };
-
-                if (tableMgr.Connect())
-                {
-                    tableMgr.DownloadTables(tablePrefix);
-                }
-            }
-            else
-            {
-                BlobManager blobMgr = new BlobManager()
-                {
-                    IngestCallback = (sourceFileUri) => { QueueForIngest(sourceFileUri); },
-                    ReturnSourceFileLink = (Config.IsKustoConfigured() & Config.KustoUseBlobAsSource) | Config.FileType == FileTypesEnum.exception
-                };
-
-                if (blobMgr.Connect())
-                {
-                    blobMgr.DownloadContainers(containerPrefix);
-                }
-            }
-        }
-
-        private void FinalizeKusto()
-        {
-            if (Config.IsKustoConfigured() && !Kusto.Complete())
-            {
-                Log.Warning($"there may have been errors during kusto import. {Config.CacheLocation} has *not* been deleted.");
-            }
-            else if (Config.IsKustoConfigured())
-            {
-                Log.Last($"{DataExplorer}/clusters/{Kusto.Endpoint.ClusterName}/databases/{Kusto.Endpoint.DatabaseName}", ConsoleColor.Cyan);
-            }
-        }
-
-        private bool InitializeKusto()
-        {
-            if (Config.IsKustoConfigured() | Config.IsKustoPurgeRequested())
-            {
-                Kusto = new KustoConnection();
-                return Kusto.Connect();
-            }
-
-            return true;
-        }
-
-        private bool InitializeLogAnalytics()
-        {
-            if (Config.IsLogAnalyticsConfigured() | Config.LogAnalyticsCreate | Config.IsLogAnalyticsPurgeRequested())
-            {
-                LogAnalytics = new LogAnalyticsConnection();
-                return LogAnalytics.Connect();
-            }
-
-            return true;
-        }
-
-        private void UploadCacheData()
+        public void UploadCacheData()
         {
             Log.Info("enter");
             List<string> files = new List<string>();
