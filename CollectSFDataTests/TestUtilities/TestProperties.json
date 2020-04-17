@@ -1,0 +1,18 @@
+{
+  "testAadUser": null,
+  "testAadPassword": null,
+  "testAadKeyVault": null,
+  "testAadCertificateThumbprint": null,
+  "testAadSourceVaultValue": null,
+  "certificateUrlValue": null,
+
+  //
+  "AzureClientId": null,
+  "AzureClientSecret": null,
+  "AzureResourceGroup": null,
+  "AzureResourceGroupLocation": null,
+  "AzureSubscriptionId": null,
+  "AzureTenantId": null,
+  "KustoCluster": null,
+  "SasKey": ""
+}
