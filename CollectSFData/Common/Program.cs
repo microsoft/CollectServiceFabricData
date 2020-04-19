@@ -157,6 +157,7 @@ namespace CollectSFData
 
                 Config.DisplayStatus();
                 Config.SaveConfigFile();
+                TotalErrors += Log.LogErrors;
 
                 Log.Last($"{TotalFilesEnumerated} files enumerated.");
                 Log.Last($"{TotalFilesMatched} files matched.");
@@ -196,7 +197,7 @@ namespace CollectSFData
                 }
 
                 Log.Last($"total execution time in minutes: { (DateTime.Now - StartTime).TotalMinutes.ToString("F2") }");
-                return (TotalErrors + Log.LogErrors);
+                return TotalErrors;
             }
             catch (Exception ex)
             {
