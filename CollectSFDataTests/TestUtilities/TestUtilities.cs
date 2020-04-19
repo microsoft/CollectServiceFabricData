@@ -1,20 +1,13 @@
-﻿using System.Diagnostics;
-using System.Management.Automation;
+﻿using CollectSFData;
 using CollectSFData.Tests;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Management.Automation.Runspaces;
-using System.Collections;
-using System.Collections.ObjectModel;
-using CollectSFData;
 using Newtonsoft.Json;
-using System.Text.RegularExpressions;
-using CollectSFDataTests.TestUtilities;
+using System;
+using System.Collections.ObjectModel;
+using System.Diagnostics;
+using System.IO;
+using System.Management.Automation;
+using System.Management.Automation.Runspaces;
 
 namespace CollectSFDataTests
 {
@@ -23,11 +16,11 @@ namespace CollectSFDataTests
         public int ExitCode { get; set; } = 0;
 
         public string StandardError { get; set; } = "";
+
         public string StandardOutput { get; set; } = "";
 
         public bool HasErrors()
         {
-            //return !string.IsNullOrEmpty(StandardError) | ExitCode > 0 | Regex.IsMatch(StandardOutput, "error", RegexOptions.IgnoreCase);
             return !string.IsNullOrEmpty(StandardError) | ExitCode > 0;
         }
 
@@ -40,7 +33,8 @@ namespace CollectSFDataTests
     public class TestUtilities
     {
         public static string[] TestArgs = new string[2] { "-config", TestOptionsFile };
-        public string[] TempArgs; //= new string[2] { "config", TempOptionsFile };
+
+        public string[] TempArgs;
 
         static TestUtilities()
         {
@@ -49,7 +43,6 @@ namespace CollectSFDataTests
 
             if (!Directory.Exists(TempDir))
             {
-                //Directory.Delete(TempDir, true);
                 Directory.CreateDirectory(TempDir);
             }
 
@@ -60,27 +53,35 @@ namespace CollectSFDataTests
 
             Assert.IsTrue(File.Exists(TestPropertiesFile));
 
-            Test testProperties = JsonConvert.DeserializeObject<TestProperties>(File.ReadAllText(TestPropertiesFile));
+            TestProperties = JsonConvert.DeserializeObject<TestProperties>(File.ReadAllText(TestPropertiesFile));
+            Assert.IsNotNull(TestProperties);
         }
 
         public TestUtilities()
         {
             PopulateTempOptions();
-            PopulateTestOptions();
+            //PopulateTestOptions();
         }
 
         public static StringWriter ConsoleErr { get; set; } = new StringWriter();
+
         public static StringWriter ConsoleOut { get; set; } = new StringWriter();
+
         public static string DefaultOptionsFile => $"..\\..\\..\\..\\configurationFiles\\collectsfdata.options.json";
+
         public static string TempDir => "..\\..\\Temp";
+
         public static string TestConfigurationsDir => "..\\..\\..\\TestConfigurations";
         public static string TestFilesDir => "..\\..\\..\\TestFiles";
-        public static ConfigurationOptions TestOptions { get; set; } = new ConfigurationOptions();
-        public static string TestOptionsFile => $"{TestConfigurationsDir}\\collectsfdata.options.json";
+        public static TestProperties TestProperties { get; set; }
         public static string TestPropertiesFile => $"{TempDir}\\collectSfDataTestProperties.json";
-        public static string TestPropertiesSetupScript => $".\\setup-test-env.ps1";
-        public ConfigurationOptions TempOptions { get; set; } = new ConfigurationOptions();
+        public static string TestPropertiesSetupScript => $"{TestUtilitiesDir}\\setup-test-env.ps1";
+        public static string TestUtilitiesDir => "..\\..\\..\\TestUtilities";
+        public ConfigurationOptions ConfigurationOptions { get; set; } = new ConfigurationOptions();
         public string TempOptionsFile { get; set; } = $"{TempDir}\\collectsfdatda.{DateTime.Now.ToString("yyMMddhhmmssfff")}.json";
+        private static ConfigurationOptions TestOptions { get; set; } = new ConfigurationOptions();
+
+        private static string TestOptionsFile => $"{TestConfigurationsDir}\\collectsfdata.options.json";
 
         public static bool BuildWindowsCluster()
         {
@@ -197,31 +198,47 @@ namespace CollectSFDataTests
             return output;
         }
 
-        public ProcessOutput ExecuteTest(ConfigurationOptions testOptions)
+        public ProcessOutput ExecuteTest()
         {
             Log.Info("enter");
-            PopulateTestOptions(testOptions);
 
+            SaveTempOptions();
             StartConsoleRedirection();
-            ProgramTests programTests = new ProgramTests();
-            programTests.ExecuteTest();
-            ProcessOutput output = StopConsoleRedirection();
 
+            Program program = new Program();
+            int result = program.Execute(TempArgs);
+
+            ProcessOutput output = StopConsoleRedirection();
             Assert.IsNotNull(output);
+
+            if (result != 0)
+            {
+                Log.Error($"result {result}");
+            }
+
             return output;
         }
 
-        public void PopulateTempOptions()
+        private void PopulateTempOptions()
         {
             Log.Info("enter");
-            TempOptions = new ConfigurationOptions();
+
+            ConfigurationOptions = new ConfigurationOptions();
+
             TempArgs = new string[2] { "-config", TestOptionsFile };
-            //TempOptions.PopulateConfig(new string[1] { TempOptionsFile });
-            TempOptions.PopulateConfig(TestArgs);
-            TempOptions.SaveConfiguration = TempOptionsFile;
-            TempOptions.SaveConfigFile();
+            ConfigurationOptions.PopulateConfig(TestArgs);
+            SaveTempOptions();
+
+            TempArgs = new string[2] { "-config", TempOptionsFile };
         }
 
+        private void SaveTempOptions()
+        {
+            ConfigurationOptions.SaveConfiguration = TempOptionsFile;
+            ConfigurationOptions.SaveConfigFile();
+        }
+
+        /*
         public void PopulateTestOptions(ConfigurationOptions tempOptions = null)
         {
             Log.Info("enter");
@@ -242,5 +259,6 @@ namespace CollectSFDataTests
             TestOptions.SaveConfiguration = TempOptionsFile;
             TestOptions.SaveConfigFile();
         }
+        */
     }
 }
