@@ -14,6 +14,7 @@ using System.Collections.ObjectModel;
 using CollectSFData;
 using Newtonsoft.Json;
 using System.Text.RegularExpressions;
+using CollectSFDataTests.TestUtilities;
 
 namespace CollectSFDataTests
 {
@@ -46,17 +47,24 @@ namespace CollectSFDataTests
             Assert.IsTrue(File.Exists(TestOptionsFile));
             Assert.IsTrue(Directory.Exists(TestFilesDir));
 
-            if (Directory.Exists(TempDir))
+            if (!Directory.Exists(TempDir))
             {
-                Directory.Delete(TempDir, true);
+                //Directory.Delete(TempDir, true);
+                Directory.CreateDirectory(TempDir);
             }
 
-            Directory.CreateDirectory(TempDir);
+            if (!File.Exists(TestPropertiesFile))
+            {
+                Collection<PSObject> result = ExecutePowerShellCommand(TestPropertiesSetupScript);
+            }
+
+            Assert.IsTrue(File.Exists(TestPropertiesFile));
+
+            Test testProperties = JsonConvert.DeserializeObject<TestProperties>(File.ReadAllText(TestPropertiesFile));
         }
 
         public TestUtilities()
         {
-            //   TestOptions = new ConfigurationOptions();
             PopulateTempOptions();
             PopulateTestOptions();
         }
@@ -69,7 +77,8 @@ namespace CollectSFDataTests
         public static string TestFilesDir => "..\\..\\..\\TestFiles";
         public static ConfigurationOptions TestOptions { get; set; } = new ConfigurationOptions();
         public static string TestOptionsFile => $"{TestConfigurationsDir}\\collectsfdata.options.json";
-        public static string TestPropertiesFile => $".\\testproperties.json";
+        public static string TestPropertiesFile => $"{TempDir}\\collectSfDataTestProperties.json";
+        public static string TestPropertiesSetupScript => $".\\setup-test-env.ps1";
         public ConfigurationOptions TempOptions { get; set; } = new ConfigurationOptions();
         public string TempOptionsFile { get; set; } = $"{TempDir}\\collectsfdatda.{DateTime.Now.ToString("yyMMddhhmmssfff")}.json";
 
