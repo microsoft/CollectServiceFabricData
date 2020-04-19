@@ -10,9 +10,9 @@
   "ContainerFilter": null,
   "DeleteCache": false,
   "EndTimeStamp": null,
-  "GatherType": "unknown",
+  "GatherType": null,
   "KustoCluster": null,
-  "KustoCompressed": true,
+  "KustoCompressed": false,
   "KustoPurge": null,
   "KustoRecreateTable": false,
   "KustoTable": null,
@@ -35,6 +35,6 @@
   "StartTimeStamp": null,
   "Threads": null,
   "UriFilter": null,
-  "UseMemoryStream": true,
-  "Unique": true
+  "UseMemoryStream": false,
+  "Unique": false
 }
