@@ -20,8 +20,8 @@ namespace CollectSFData
 {
     public class ConfigurationOptions : Constants
     {
-        private static readonly CommandLineArguments _cmdLineArgs = new CommandLineArguments();
         private static readonly string _workDir = "csfd";
+        private readonly CommandLineArguments _cmdLineArgs = new CommandLineArguments();
         private string _endTime;
         private bool _logDebugEnabled;
         private string _startTime;
@@ -843,7 +843,7 @@ namespace CollectSFData
 
             if (FileType == FileTypesEnum.unknown)
             {
-                Log.Warning($"invalid -type|--gatherType argument, value can be:", Enum.GetNames(typeof(FileTypesEnum)).Skip(2));
+                Log.Warning($"invalid -type|--gatherType argument, value can be:", Enum.GetNames(typeof(FileTypesEnum)).Skip(1));
                 retval = false;
             }
 
