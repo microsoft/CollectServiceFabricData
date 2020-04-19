@@ -4,9 +4,13 @@
   "testAadKeyVault": null,
   "testAadCertificateThumbprint": null,
   "testAadSourceVaultValue": null,
-  "certificateUrlValue": null,
+  "aadCertificateUrlValue": null,
 
-  //
+  // for azure cluster deployments
+  "adminUserName": null,
+  "adminPassword": null,
+
+  // existing collectsfdata variables
   "AzureClientId": null,
   "AzureClientSecret": null,
   "AzureResourceGroup": null,
@@ -14,5 +18,5 @@
   "AzureSubscriptionId": null,
   "AzureTenantId": null,
   "KustoCluster": null,
-  "SasKey": ""
+  "SasKey": null
 }

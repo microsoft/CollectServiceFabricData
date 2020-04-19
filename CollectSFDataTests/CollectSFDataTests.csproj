@@ -92,19 +92,20 @@
     <Compile Include="Common\SynchronizedListTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Tests\GatherTypeTests.cs" />
+    <Compile Include="TestUtilities\TestProperties.cs" />
     <Compile Include="TestUtilities\TestUtilities.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
-    <None Include="TestConfigurations\collectsfdata.azure.json" />
     <None Include="TestConfigurations\collectsfdata.options.json" />
+    <None Include="TestUtilities\setup-test-env.ps1" />
     <None Include="TestUtilities\sf-1nt-3n-1lb.json" />
     <None Include="TestUtilities\sf-1nt-3n-1lb.parameters.json" />
     <None Include="TestUtilities\sfl-1nt-1n-1lb.json" />
     <None Include="TestUtilities\sfl-1nt-1n-1lb.parameters.json" />
     <None Include="TestUtilities\standalone-1nt-5n-1lb.json" />
     <None Include="TestUtilities\standalone-1nt-5n-1lb.parameters.json" />
-    <None Include="TestUtilities\TestProperties.json" />
+    <None Include="TestUtilities\collectSfDataTestProperties.json" />
     <None Include="TestUtilities\azure-az-deploy-template.ps1" />
     <None Include="TestUtilities\azure-az-patch-resource.ps1" />
   </ItemGroup>

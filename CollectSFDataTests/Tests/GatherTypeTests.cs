@@ -70,7 +70,6 @@ namespace CollectSFData.Tests
         {
             TestUtilities utils = new TestUtilities();
             utils.TempOptions.GatherType = FileTypesEnum.trace.ToString();
-            //testOptions.UseMemoryStream = false;
 
             ProcessOutput results = utils.ExecuteTest(utils.TempOptions);
             Assert.IsFalse(results.HasErrors());
