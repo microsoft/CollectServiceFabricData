@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using CollectSFDataTests;
+using System.Text.RegularExpressions;
 
 namespace CollectSFData.Tests
 {
@@ -33,10 +34,14 @@ namespace CollectSFData.Tests
         [TestMethod()]
         public void ExecuteTest()
         {
-            string[] args = new string[1] { $"{TestUtilities.TestConfigurationsDir}\\collectsfdata.options.json" };
+            //string[] args = new string[1] { TestUtilities.TestConfig.SaveConfiguration };
             Program program = new Program();
-            int result = program.Execute(args);
-            Assert.AreEqual(0, result);
+
+            //TestUtilities.StartConsoleRedirection();
+            int result = program.Execute(TestUtilities.TestArgs);
+            //ProcessOutput output = TestUtilities.StopConsoleRedirection();
+
+            //Assert.IsTrue(Regex.IsMatch(output, "version", RegexOptions.IgnoreCase));
         }
 
         [TestMethod()]
