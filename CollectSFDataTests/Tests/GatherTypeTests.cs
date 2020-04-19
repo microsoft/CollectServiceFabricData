@@ -27,9 +27,9 @@ namespace CollectSFData.Tests
         public void GatherTypeAnyTests()
         {
             TestUtilities utils = new TestUtilities();
-            utils.TempOptions.GatherType = FileTypesEnum.any.ToString();
+            utils.ConfigurationOptions.GatherType = FileTypesEnum.any.ToString();
 
-            ProcessOutput results = utils.ExecuteTest(utils.TempOptions);
+            ProcessOutput results = utils.ExecuteTest();
             Assert.IsFalse(results.HasErrors());
         }
 
@@ -69,9 +69,9 @@ namespace CollectSFData.Tests
         public void GatherTypeTraceTests()
         {
             TestUtilities utils = new TestUtilities();
-            utils.TempOptions.GatherType = FileTypesEnum.trace.ToString();
+            utils.ConfigurationOptions.GatherType = FileTypesEnum.trace.ToString();
 
-            ProcessOutput results = utils.ExecuteTest(utils.TempOptions);
+            ProcessOutput results = utils.ExecuteTest();
             Assert.IsFalse(results.HasErrors());
         }
 

@@ -4,13 +4,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CollectSFDataTests.TestUtilities
+namespace CollectSFDataTests
 {
     public class TestProperties
     {
-        //
+        public string adminPassword;
+        public string adminUserName;
         public string AzureClientId;
-
         public string AzureClientSecret;
         public string AzureResourceGroup;
         public string AzureResourceGroupLocation;

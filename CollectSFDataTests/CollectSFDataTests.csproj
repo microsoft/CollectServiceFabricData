@@ -82,14 +82,6 @@
     <Otherwise />
   </Choose>
   <ItemGroup>
-    <Compile Include="Common\CommandLineArgumentsTests.cs" />
-    <Compile Include="Common\ConfigurationOptionsTests.cs" />
-    <Compile Include="Common\CustomTaskManagerTests.cs" />
-    <Compile Include="Common\CustomTaskSchedulerTests.cs" />
-    <Compile Include="Common\HttpTests.cs" />
-    <Compile Include="Common\LogTests.cs" />
-    <Compile Include="Common\ProgramTests.cs" />
-    <Compile Include="Common\SynchronizedListTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Tests\GatherTypeTests.cs" />
     <Compile Include="TestUtilities\TestProperties.cs" />
@@ -98,6 +90,10 @@
   <ItemGroup>
     <None Include="packages.config" />
     <None Include="TestConfigurations\collectsfdata.options.json" />
+    <None Include="TestUtilities\azure-az-aad-add-key-vault.ps1" />
+    <None Include="TestUtilities\azure-az-create-aad-application-spn.ps1" />
+    <None Include="TestUtilities\azure-az-rest-logon.ps1" />
+    <None Include="TestUtilities\azure-az-rest-query.ps1" />
     <None Include="TestUtilities\setup-test-env.ps1" />
     <None Include="TestUtilities\sf-1nt-3n-1lb.json" />
     <None Include="TestUtilities\sf-1nt-3n-1lb.parameters.json" />
