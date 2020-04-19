@@ -15,6 +15,7 @@ namespace CollectSFData
 {
     public static class Log
     {
+        public static int LogErrors = 0;
         private static readonly ConsoleColor _highlightBackground = Console.ForegroundColor;
         private static readonly ConsoleColor _highlightForeground = Console.BackgroundColor;
         private static readonly SynchronizedList<MessageObject> _lastMessageList = new SynchronizedList<MessageObject>();
@@ -77,12 +78,12 @@ namespace CollectSFData
 
         public static void Error(string message, object jsonSerializer = null, [CallerMemberName] string callerName = "")
         {
-            Info("error: " + message, ConsoleColor.Red, ConsoleColor.Black, jsonSerializer, callerName: callerName);
+            Info("error: " + message, ConsoleColor.Red, ConsoleColor.Black, jsonSerializer, isError: true, callerName: callerName);
         }
 
         public static void Exception(string message, object jsonSerializer = null, [CallerMemberName] string callerName = "")
         {
-            Info("exception: " + message, ConsoleColor.Black, ConsoleColor.Yellow, jsonSerializer, callerName: callerName);
+            Info("exception: " + message, ConsoleColor.Black, ConsoleColor.Yellow, jsonSerializer, isError: true, callerName: callerName);
         }
 
         public static void Highlight(string message, object jsonSerializer = null, [CallerMemberName] string callerName = "")
@@ -96,6 +97,7 @@ namespace CollectSFData
                                 object jsonSerializer = null,
                                 bool minimal = false,
                                 bool lastMessage = false,
+                                bool isError = false,
                                 [CallerMemberName] string callerName = "")
         {
             if (jsonSerializer != null)
@@ -122,7 +124,8 @@ namespace CollectSFData
                     TimeStamp = DateTime.Now.ToString("o") + "::",
                     Message = message,
                     BackgroundColor = backgroundColor,
-                    ForegroundColor = foregroundColor
+                    ForegroundColor = foregroundColor,
+                    IsError = isError
                 });
             }
             else
@@ -132,7 +135,8 @@ namespace CollectSFData
                     TimeStamp = DateTime.Now.ToString("o") + "::",
                     Message = message,
                     BackgroundColor = backgroundColor,
-                    ForegroundColor = foregroundColor
+                    ForegroundColor = foregroundColor,
+                    IsError = isError
                 });
             }
         }
@@ -148,7 +152,7 @@ namespace CollectSFData
                                 object jsonSerializer = null,
                                 [CallerMemberName] string callerName = "")
         {
-            Info(message, foregroundColor, backgroundColor, jsonSerializer, false, true, callerName);
+            Info(message, foregroundColor, backgroundColor, jsonSerializer, false, true, callerName: callerName);
         }
 
         public static void Min(string message,
@@ -265,18 +269,25 @@ namespace CollectSFData
                 Console.WriteLine(Environment.NewLine);
             }
 
-            Console.WriteLine(message.Message);
+            if (message.IsError)
+            {
+                LogErrors++;
+                Console.Error.WriteLine(message.Message);
+            }
+            else
+            {
+                Console.WriteLine(message.Message);
+            }
+
             ResetColor(message.ForegroundColor, message.BackgroundColor);
         }
 
         public class MessageObject
         {
             public ConsoleColor? BackgroundColor { get; set; }
-
             public ConsoleColor? ForegroundColor { get; set; }
-
+            public bool IsError { get; set; }
             public string Message { get; set; }
-
             public string TimeStamp { get; set; }
         }
     }

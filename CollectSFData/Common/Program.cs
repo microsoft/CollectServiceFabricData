@@ -196,7 +196,7 @@ namespace CollectSFData
                 }
 
                 Log.Last($"total execution time in minutes: { (DateTime.Now - StartTime).TotalMinutes.ToString("F2") }");
-                return 0;
+                return (TotalErrors + Log.LogErrors);
             }
             catch (Exception ex)
             {
