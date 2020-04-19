@@ -13,17 +13,6 @@ namespace CollectSFData.Tests
     public class GatherTypeTests
     {
         [TestMethod()]
-        public void GatherTypeAllTests()
-        {
-            foreach (string type in Enum.GetValues(typeof(FileTypesEnum)))
-            {
-                TestUtilities utils = new TestUtilities();
-                ProcessOutput results = utils.ExecuteCollectSfData($"-type {type}");
-                Assert.IsFalse(results.HasErrors());
-            }
-        }
-
-        [TestMethod()]
         public void GatherTypeAnyTests()
         {
             TestUtilities utils = new TestUtilities();
@@ -37,7 +26,9 @@ namespace CollectSFData.Tests
         public void GatherTypeCounterTests()
         {
             TestUtilities utils = new TestUtilities();
-            ProcessOutput results = utils.ExecuteCollectSfData("-type counter");
+            utils.ConfigurationOptions.GatherType = FileTypesEnum.counter.ToString();
+
+            ProcessOutput results = utils.ExecuteTest();
             Assert.IsFalse(results.HasErrors());
         }
 
@@ -45,7 +36,9 @@ namespace CollectSFData.Tests
         public void GatherTypeExceptionTests()
         {
             TestUtilities utils = new TestUtilities();
-            ProcessOutput results = utils.ExecuteCollectSfData("-type exception");
+            utils.ConfigurationOptions.GatherType = FileTypesEnum.exception.ToString();
+
+            ProcessOutput results = utils.ExecuteTest();
             Assert.IsFalse(results.HasErrors());
         }
 
@@ -53,7 +46,9 @@ namespace CollectSFData.Tests
         public void GatherTypeSetupTests()
         {
             TestUtilities utils = new TestUtilities();
-            ProcessOutput results = utils.ExecuteCollectSfData("-type setup");
+            utils.ConfigurationOptions.GatherType = FileTypesEnum.setup.ToString();
+
+            ProcessOutput results = utils.ExecuteTest();
             Assert.IsFalse(results.HasErrors());
         }
 
@@ -61,7 +56,9 @@ namespace CollectSFData.Tests
         public void GatherTypeTableTests()
         {
             TestUtilities utils = new TestUtilities();
-            ProcessOutput results = utils.ExecuteCollectSfData("-type table");
+            utils.ConfigurationOptions.GatherType = FileTypesEnum.table.ToString();
+
+            ProcessOutput results = utils.ExecuteTest();
             Assert.IsFalse(results.HasErrors());
         }
 
@@ -79,8 +76,14 @@ namespace CollectSFData.Tests
         public void GatherTypeUnknownTests()
         {
             TestUtilities utils = new TestUtilities();
-            ProcessOutput results = utils.ExecuteCollectSfData("-type unknown");
-            Assert.IsTrue(results.HasErrors());
+            utils.ConfigurationOptions.GatherType = FileTypesEnum.unknown.ToString();
+
+            ProcessOutput results = utils.ExecuteTest();
+
+            // all test outputs will have invalid type initially
+            Assert.IsTrue(results.StandardOutput.Contains("ValidateFileType:warning: invalid -type"));
+            // should not start execution
+            Assert.IsFalse(results.StandardOutput.Contains("total execution time in minutes"));
         }
     }
 }

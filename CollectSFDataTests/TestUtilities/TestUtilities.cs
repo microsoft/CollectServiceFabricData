@@ -63,14 +63,8 @@ namespace CollectSFDataTests
             //PopulateTestOptions();
         }
 
-        public static StringWriter ConsoleErr { get; set; } = new StringWriter();
-
-        public static StringWriter ConsoleOut { get; set; } = new StringWriter();
-
         public static string DefaultOptionsFile => $"..\\..\\..\\..\\configurationFiles\\collectsfdata.options.json";
-
         public static string TempDir => "..\\..\\Temp";
-
         public static string TestConfigurationsDir => "..\\..\\..\\TestConfigurations";
         public static string TestFilesDir => "..\\..\\..\\TestFiles";
         public static TestProperties TestProperties { get; set; }
@@ -78,7 +72,10 @@ namespace CollectSFDataTests
         public static string TestPropertiesSetupScript => $"{TestUtilitiesDir}\\setup-test-env.ps1";
         public static string TestUtilitiesDir => "..\\..\\..\\TestUtilities";
         public ConfigurationOptions ConfigurationOptions { get; set; } = new ConfigurationOptions();
-        public string TempOptionsFile { get; set; } = $"{TempDir}\\collectsfdatda.{DateTime.Now.ToString("yyMMddhhmmssfff")}.json";
+        public string TempOptionsFile { get; private set; } = $"{TempDir}\\collectsfdatda.{DateTime.Now.ToString("yyMMddhhmmssfff")}.json";
+        private static StringWriter ConsoleErr { get; set; } = new StringWriter();
+
+        private static StringWriter ConsoleOut { get; set; } = new StringWriter();
         private static ConfigurationOptions TestOptions { get; set; } = new ConfigurationOptions();
 
         private static string TestOptionsFile => $"{TestConfigurationsDir}\\collectsfdata.options.json";
@@ -203,9 +200,10 @@ namespace CollectSFDataTests
             Log.Info("enter");
 
             SaveTempOptions();
-            StartConsoleRedirection();
-
             Program program = new Program();
+            Assert.IsNotNull(program);
+
+            StartConsoleRedirection();
             int result = program.Execute(TempArgs);
 
             ProcessOutput output = StopConsoleRedirection();
@@ -237,28 +235,5 @@ namespace CollectSFDataTests
             ConfigurationOptions.SaveConfiguration = TempOptionsFile;
             ConfigurationOptions.SaveConfigFile();
         }
-
-        /*
-        public void PopulateTestOptions(ConfigurationOptions tempOptions = null)
-        {
-            Log.Info("enter");
-
-            if (tempOptions != null)
-            {
-                if (string.IsNullOrEmpty(tempOptions.SaveConfiguration))
-                {
-                    tempOptions.SaveConfiguration = TempOptionsFile;
-                }
-
-                tempOptions.SaveConfigFile();
-            }
-
-            TestArgs = new string[2] { "-config", TempOptionsFile };
-            TestOptions = new ConfigurationOptions();
-            TestOptions.PopulateConfig(TestArgs);
-            TestOptions.SaveConfiguration = TempOptionsFile;
-            TestOptions.SaveConfigFile();
-        }
-        */
     }
 }
