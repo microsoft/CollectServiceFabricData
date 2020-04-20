@@ -6,20 +6,10 @@
   "default": {},
   "additionalProperties": true,
   "required": [
-    "$schema",
-    "FileUris"
+    "FileUri"
   ],
   "properties": {
-    "$schema": {
-      "type": "string",
-      "title": "The $schema Schema",
-      "description": "An explanation about the purpose of this instance.",
-      "default": "",
-      "examples": [
-        "./FileUriTests.schema.json"
-      ]
-    },
-    "FileUris": {
+    "FileUri": {
       "type": "array",
       "title": "The Fileuris Schema",
       "description": "An explanation about the purpose of this instance.",
