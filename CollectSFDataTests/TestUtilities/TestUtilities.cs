@@ -35,6 +35,7 @@ namespace CollectSFDataTests
         public static string[] TestArgs = new string[2] { "-config", TestOptionsFile };
 
         public string[] TempArgs;
+        private static object _executing = new object();
 
         static TestUtilities()
         {
@@ -72,13 +73,15 @@ namespace CollectSFDataTests
         public static string TestPropertiesSetupScript => $"{TestUtilitiesDir}\\setup-test-env.ps1";
         public static string TestUtilitiesDir => "..\\..\\..\\TestUtilities";
         public ConfigurationOptions ConfigurationOptions { get; set; } = new ConfigurationOptions();
-        public string TempOptionsFile { get; private set; } = $"{TempDir}\\collectsfdatda.{DateTime.Now.ToString("yyMMddhhmmssfff")}.json";
-        private static StringWriter ConsoleErr { get; set; } = new StringWriter();
 
-        private static StringWriter ConsoleOut { get; set; } = new StringWriter();
-        private static ConfigurationOptions TestOptions { get; set; } = new ConfigurationOptions();
+        //public string TempOptionsFile { get; private set; } = $"{TempDir}\\collectsfdatda.{DateTime.Now.ToString("yyMMddhhmmssfff")}.json";
+        public string TempOptionsFile { get; private set; } = $"{TempDir}\\collectsfdatda.{Guid.NewGuid()}.json";
 
         private static string TestOptionsFile => $"{TestConfigurationsDir}\\collectsfdata.options.json";
+        private StringWriter ConsoleErr { get; set; } = new StringWriter();
+
+        private StringWriter ConsoleOut { get; set; } = new StringWriter();
+        //private ConfigurationOptions TestOptions { get; set; } = new ConfigurationOptions();
 
         public static bool BuildWindowsCluster()
         {
@@ -102,45 +105,6 @@ namespace CollectSFDataTests
 
             Collection<PSObject> results = pipeline.Invoke();
             return results;
-        }
-
-        public static void FlushConsoleOutput()
-        {
-            Console.Out.Flush();
-            Console.Error.Flush();
-            ConsoleOut.Flush();
-            ConsoleErr.Flush();
-        }
-
-        public static ProcessOutput GetConsoleOutput()
-        {
-            ProcessOutput output = StopConsoleRedirection();
-            Console.WriteLine(ConsoleOut.ToString());
-            Console.Error.WriteLine(ConsoleErr.ToString());
-            //Assert.IsFalse(string.IsNullOrEmpty(ConsoleErr.ToString()));
-            StartConsoleRedirection();
-            return output;
-        }
-
-        public static void StartConsoleRedirection()
-        {
-            FlushConsoleOutput();
-            Console.SetOut(ConsoleOut);
-            Console.SetError(ConsoleErr);
-        }
-
-        public static ProcessOutput StopConsoleRedirection()
-        {
-            FlushConsoleOutput();
-            ProcessOutput output = new ProcessOutput
-            {
-                StandardError = ConsoleErr.ToString(),
-                StandardOutput = ConsoleOut.ToString()
-            };
-
-            Console.SetOut(Console.Out);
-            Console.SetError(Console.Error);
-            return output;
         }
 
         public ProcessOutput ExecuteCollectSfData(string arguments = null, bool withTempConfig = true, bool wait = true)
@@ -197,23 +161,65 @@ namespace CollectSFDataTests
 
         public ProcessOutput ExecuteTest()
         {
-            Log.Info("enter");
-
-            SaveTempOptions();
-            Program program = new Program();
-            Assert.IsNotNull(program);
-
-            StartConsoleRedirection();
-            int result = program.Execute(TempArgs);
-
-            ProcessOutput output = StopConsoleRedirection();
-            Assert.IsNotNull(output);
-
-            if (result != 0)
+            lock (_executing)
             {
-                Log.Error($"result {result}");
-            }
+                Log.Info("enter");
 
+                SaveTempOptions();
+                Program program = new Program();
+                Assert.IsNotNull(program);
+
+                StartConsoleRedirection();
+                int result = program.Execute(TempArgs);
+
+                ProcessOutput output = StopConsoleRedirection();
+
+                Assert.IsNotNull(output);
+
+                if (result != 0)
+                {
+                    Log.Error($"result {result}");
+                }
+
+                return output;
+            }
+        }
+
+        public void FlushConsoleOutput()
+        {
+            Console.Out.Flush();
+            Console.Error.Flush();
+            ConsoleOut.Flush();
+            ConsoleErr.Flush();
+        }
+
+        public ProcessOutput GetConsoleOutput()
+        {
+            ProcessOutput output = StopConsoleRedirection();
+            Console.WriteLine(ConsoleOut.ToString());
+            Console.Error.WriteLine(ConsoleErr.ToString());
+            StartConsoleRedirection();
+            return output;
+        }
+
+        public void StartConsoleRedirection()
+        {
+            FlushConsoleOutput();
+            Console.SetOut(ConsoleOut);
+            Console.SetError(ConsoleErr);
+        }
+
+        public ProcessOutput StopConsoleRedirection()
+        {
+            FlushConsoleOutput();
+            ProcessOutput output = new ProcessOutput
+            {
+                StandardError = ConsoleErr.ToString(),
+                StandardOutput = ConsoleOut.ToString()
+            };
+
+            Console.SetOut(Console.Out);
+            Console.SetError(Console.Error);
             return output;
         }
 
