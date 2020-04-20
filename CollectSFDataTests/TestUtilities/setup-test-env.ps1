@@ -4,9 +4,11 @@ setup variables for running tests
 #>
 [cmdletbinding()]
 param(
+    [switch]$clean,
+    [switch]$reset,
     [string]$configurationFile = "..\..\temp\collectSfDataTestProperties.json",
-[string]$configurationFileTemplate = "$psscriptroot\collectSfDataTestProperties.json",
-[switch]$reset
+    [string]$configurationFileTemplate = "$psscriptroot\collectSfDataTestProperties.json",
+    [string]$tempDir = "..\..\temp"
 )
 
 $PSModuleAutoLoadingPreference = 2
@@ -14,6 +16,12 @@ $ErrorActionPreference = "continue"
 $error.clear()
 
 function main(){
+
+if((test-path $tempDir) -and $clean){
+    remove-item $tempDir -recurse -force
+    new-item -itemType directory -name $tempDir
+}
+
 if(!(test-path $configurationFile) -or $reset){
     if(!(test-path $configurationFileTemplate)){
         write-error "unable to find template file $configurationFileTemplate"

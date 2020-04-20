@@ -83,13 +83,17 @@
   </Choose>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Tests\FileUriTests.cs" />
     <Compile Include="Tests\GatherTypeTests.cs" />
+    <Compile Include="Tests\SasUriTests.cs" />
     <Compile Include="TestUtilities\TestProperties.cs" />
     <Compile Include="TestUtilities\TestUtilities.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
     <None Include="TestConfigurations\collectsfdata.options.json" />
+    <None Include="TestFiles\FileUriTests.schema.json" />
+    <None Include="TestFiles\FileUriTests.json" />
     <None Include="TestUtilities\azure-az-aad-add-key-vault.ps1" />
     <None Include="TestUtilities\azure-az-create-aad-application-spn.ps1" />
     <None Include="TestUtilities\azure-az-rest-logon.ps1" />
@@ -111,9 +115,7 @@
       <Name>CollectSFData</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="TestFiles\" />
-  </ItemGroup>
+  <ItemGroup />
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">
       <ItemGroup>
