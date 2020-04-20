@@ -96,6 +96,48 @@
       "FileType": "setup"
     },
     {
+      "Uri": "https://sflogsbmnjfzoagi7jc2.blob.core.windows.net/fabriccounters-c9113ef8-4fea-420e-aa37-3be4401dce67/_nt0_0/fabric_counters_636772263220294612_000001.blg",
+      "DataType": "counter",
+      "Description": "counter blg file",
+      "FileType": "counter"
+    },
+    {
+      "Uri": "/0358/Collected/fabricperf-62821bc2-e537-4084-a505-615184da27ad/ECS-S-FABN-B04/fabric_counters_636830189613638393_000017.blg",
+      "DataType": "counter",
+      "Description": "relative counter blg file",
+      "FileType": "counter"
+    },
+    {
+      "Uri": "F:\\cases\\archive\\118091819033049\\09.05.10.00-09.05.12.30\\fabriccrashdumps-6fc5a92a-0c94-4e51-8589-db9691903011\\_vm-t4axcpod01-ocp-est_0\\FabricDCA.exe.4376.dmp",
+      "DataType": "fabriccrashdumps",
+      "Description": "local exception dump",
+      "FileType": "exception"
+    },
+    {
+      "Uri": "G:\\temp\\perftest5node\\fabriccounters-85be08a2-361a-4089-8a72-1268ce0ee591\\_nt0_0\\fabric_counters_636785815845605349_000001.blg",
+      "DataType": "counter",
+      "Description": "local counter blg",
+      "FileType": "counter"
+    },
+    {
+      "Uri": "G:\\temp\\dtrtest5nodenew\\_nt0_0.Lease.181126.01-35-16_181126.03-50-49.003.csv",
+      "DataType": "lease",
+      "Description": "local lease csv",
+      "FileType": "trace"
+    },
+    {
+      "Uri": "G:\\temp\\dtrtest5nodenew\\_nt0_0.Fabric.181126.02-29-40_181126.03-50-49.004.csv",
+      "DataType": "fabric",
+      "Description": "local fabric csv",
+      "FileType": "trace"
+    },
+    {
+      "Uri": "G:\\temp\\perftest5node\\_nt0_0.counter.merge.perf.csv",
+      "DataType": "counter",
+      "Description": "",
+      "FileType": "counter"
+    },
+    {
       "Uri": "",
       "DataType": "unknown",
       "Description": "",
