@@ -33,85 +33,73 @@
       "Uri": "sf-ps1/_nt0_2/test.etl",
       "DataType": "data",
       "Description": "any etl file",
-      "FileType": "any",
-      "ExtensionType": "unknown"
+      "FileType": "any"
     },
     {
       "Uri": "c:/temp/fabriclogs-82ee81a7-9d95-4003-b81b-883fdf945eaf/_nt0_2/Fabric/bc4316ec4b0814dcc367388a46d9903e_fabric_traces_7.0.470.9590_132301541323585400_1570_00637227551217830354_0000000000.dtr",
       "DataType": "fabric",
       "Description": "local fabric dtr file /",
-      "FileType": "trace",
-      "ExtensionType": "dtr"
+      "FileType": "trace"
     },
     {
       "Uri": "c:\\temp\\fabriclogs-82ee81a7-9d95-4003-b81b-883fdf945eaf\\_nt0_2\\Fabric\\bc4316ec4b0814dcc367388a46d9903e_fabric_traces_7.0.470.9590_132301541323585400_1570_00637227551217830354_0000000000.dtr",
       "DataType": "fabric",
       "Description": "local fabric dtr file \\",
-      "FileType": "trace",
-      "ExtensionType": "dtr"
+      "FileType": "trace"
     },
     {
       "Uri": "/5e07ccefb6d346508082dd9fa9c5ed71/FEFabric/FEFabric_IN_0/Fabric/f26ff4bedf68bd8a96ec0e36e5d4b5_fabric_traces_6.2.301.9494_131850706152861697_128_00636764220556393989_0000000000.dtr.zip",
       "DataType": "fabric",
       "Description": "fabric zip file",
-      "FileType": "trace",
-      "ExtensionType": "zip"
+      "FileType": "trace"
     },
     {
       "Uri": "/fabriclogs-1b491379-c516-4310-b234-b08103421a2b/_nt0_1/Lease/d8511df4d4a1fb61dd6b829752e17ac5_lease_traces_6.3.187.9494_131853820499107012_5_00636765462764856049_0000000000.dtr.zip",
       "DataType": "lease",
       "Description": "lease zip file",
-      "FileType": "trace",
-      "ExtensionType": "zip"
+      "FileType": "trace"
     },
     {
       "Uri": "https://sflogsbmnjfzoagi7jc2.blob.core.windows.net/fabriclogs-c9113ef8-4fea-420e-aa37-3be4401dce67/_nt0_0/Fabric/f45f24746c42cc2a6dd69da9e7797e2c_fabric_traces_6.3.187.9494_131861030069574505_1_00636772262289400052_2147483647.dtr.zip",
       "DataType": "fabric",
       "Description": "fabric zip file",
-      "FileType": "trace",
-      "ExtensionType": "zip"
+      "FileType": "trace"
     },
     {
       "Uri": "/_nt0_0/Fabric/f45f24746c42cc2a6dd69da9e7797e2c_fabric_traces_6.3.187.9494_131861030069574505_1_00636772262289400052_2147483647.dtr.zip",
       "DataType": "fabric",
       "Description": "fabric zip file",
-      "FileType": "trace",
-      "ExtensionType": "zip"
+      "FileType": "trace"
     },
     {
       "Uri": "G:\\temp\\dtrtest5nodenew\\fabriclogs-9ad814a1-0c6e-41d9-8db5-a21bc64fcb2b\\_nt0_0\\Lease\\f45f24746c42cc2a6dd69da9e7797e2c_lease_traces_6.3.187.9494_131876365524017503_1_00636787597571191225_2147483647.dtr",
       "DataType": "lease",
       "Description": "local lease dtr file \\",
-      "FileType": "trace",
-      "ExtensionType": "dtr"
+      "FileType": "trace"
     },
     {
       "Uri": "G:\\temp\\dtrtest5nodenew\\fabriclogs-9ad814a1-0c6e-41d9-8db5-a21bc64fcb2b\\_nt0_0\\Fabric\\f45f24746c42cc2a6dd69da9e7797e2c_fabric_traces_6.3.187.9494_131876365523987503_1_00636787597591941239_2147483647.dtr",
       "DataType": "fabric",
       "Description": "local fabric dtr file \\",
-      "FileType": "trace",
-      "ExtensionType": "dtr"
+      "FileType": "trace"
     },
     {
       "Uri": "e:/cases/_0358_0114/0358/Collected/fabriclogs-62821bc2-e537-4084-a505-615184da27ad/ECS-I-FABN-B01/Fabric/4a7740b8c5ba0c74c9eafbdbb3bdb249_fabric_traces_6.1.467.9494_131919171510089596_26_00636830885199782893_0000000000.dtr",
       "DataType": "fabric",
       "Description": "local fabric dtr file /",
-      "FileType": "trace",
-      "ExtensionType": "dtr"
+      "FileType": "trace"
     },
     {
       "Uri": "c:/temp/001/fabriclogs-2b692f00-1604-4e00-8537-04cb88243c1e/_nt0_3/Bootstrap/a0350f0b15d5495ac172a2b2b8b0ff4f_FabricDeployer-636817856041415553.trace",
       "DataType": "bootstrap",
       "Description": "local setup trace /",
-      "FileType": "setup",
-      "ExtensionType": "trace"
+      "FileType": "setup"
     },
     {
       "Uri": "",
       "DataType": "unknown",
       "Description": "",
-      "FileType": "unknown",
-      "ExtensionType": "unknown"
+      "FileType": "unknown"
     }
   ]
 }
