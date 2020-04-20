@@ -1,6 +1,6 @@
-//{
-//  "$schema": "./FileUriTests.schema.json",
-//  "FileUris": 
+{
+  "$schema": "./FileUriTests.schema.json",
+  "FileUri": 
 [{
       "Uri": "fabriclogs-82ee81a7-9d95-4003-b81b-883fdf945eaf/_nt0_2/Fabric/bc4316ec4b0814dcc367388a46d9903e_fabric_traces_7.0.470.9590_132301541323585400_1570_00637227551217830354_0000000000.dtr.zip",
       "DataType": "fabric",
@@ -105,6 +105,13 @@
       "Description": "local setup trace /",
       "FileType": "setup",
       "ExtensionType": "trace"
+    },
+    {
+      "Uri": "",
+      "DataType": "unknown",
+      "Description": "",
+      "FileType": "unknown",
+      "ExtensionType": "unknown"
     }
   ]
-//}
+}

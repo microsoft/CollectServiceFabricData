@@ -31,7 +31,7 @@ namespace CollectSFDataTests
         public FileUriTests()
         {
             Assert.IsTrue(File.Exists(FileUriDataFile));
-            FileUris = JsonConvert.DeserializeObject<List<FileUri>>(File.ReadAllText(FileUriDataFile));
+            FileUris = JsonConvert.DeserializeObject<FileUris>(File.ReadAllText(FileUriDataFile)).FileUri.ToList();
         }
 
         [TestMethod()]
