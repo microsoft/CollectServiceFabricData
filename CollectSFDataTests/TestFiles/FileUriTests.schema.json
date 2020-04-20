@@ -18,12 +18,10 @@
         [{
             "Uri": "",
             "FileType": "",
-            "ExtensionType": "",
             "DataType": "",
             "Description": ""
           },
           {
-            "ExtensionType": "zip",
             "DataType": "fabric",
             "Description": "fabric zip file",
             "Uri": "fabriclogs-82ee81a7-9d95-4003-b81b-883fdf945eaf/_nt0_2/Fabric/bc4316ec4b0814dcc367388a46d9903e_fabric_traces_7.0.470.9590_132301541323585400_1570_00637227551217830354_0000000000.dtr.zip",
@@ -31,7 +29,6 @@
           },
           {
             "FileType": "trace",
-            "ExtensionType": "dtr",
             "DataType": "fabric",
             "Description": "fabric dtr file",
             "Uri": "fabriclogs-82ee81a7-9d95-4003-b81b-883fdf945eaf/_nt0_2/Fabric/bc4316ec4b0814dcc367388a46d9903e_fabric_traces_7.0.470.9590_132301541323585400_1570_00637227551217830354_0000000000.dtr"
@@ -47,13 +44,11 @@
         "examples": [{
             "Uri": "",
             "FileType": "",
-            "ExtensionType": "",
             "DataType": "",
             "Description": ""
           },
           {
             "FileType": "trace",
-            "ExtensionType": "zip",
             "DataType": "fabric",
             "Description": "fabric zip file",
             "Uri": "fabriclogs-82ee81a7-9d95-4003-b81b-883fdf945eaf/_nt0_2/Fabric/bc4316ec4b0814dcc367388a46d9903e_fabric_traces_7.0.470.9590_132301541323585400_1570_00637227551217830354_0000000000.dtr.zip"
@@ -61,7 +56,6 @@
           {
             "Uri": "fabriclogs-82ee81a7-9d95-4003-b81b-883fdf945eaf/_nt0_2/Fabric/bc4316ec4b0814dcc367388a46d9903e_fabric_traces_7.0.470.9590_132301541323585400_1570_00637227551217830354_0000000000.dtr",
             "FileType": "trace",
-            "ExtensionType": "dtr",
             "DataType": "fabric",
             "Description": "fabric dtr file"
           }
@@ -71,8 +65,7 @@
           "Uri",
           "DataType",
           "Description",
-          "FileType",
-          "ExtensionType"
+          "FileType"
         ],
         "properties": {
           "Uri": {
@@ -124,21 +117,6 @@
               "table"
             ],
             "pattern": "^(any|counter|exception|setup|trace|table)$"
-          },
-          "ExtensionType": {
-            "type": "string",
-            "title": "ExtensionType - FileExtensionTypesEnum.",
-            "default": null,
-            "examples": [
-              "csv",
-              "blg",
-              "dmp",
-              "dtr",
-              "json",
-              "trace",
-              "zip"
-            ],
-            "pattern": "^(csv|blg|dmp|dtr|json|trace|zip)$"
           }
         }
       }
