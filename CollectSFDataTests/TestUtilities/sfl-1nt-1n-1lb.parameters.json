@@ -1,0 +1,84 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "clusterName": {
+            "value": "sfcluster1lx1"
+        },
+        "clusterLocation": {
+            "value": "eastus"
+        },
+        "computeLocation": {
+            "value": "eastus"
+        },
+        "adminUserName": {
+            "value": "cloudadmin"
+        },
+        "adminPassword": {
+            "value": ""
+        },
+        "nicName": {
+            "value": "NIC-sfcluster1lx1"
+        },
+        "publicIPAddressName": {
+            "value": "sfcluster1lx1-PubIP"
+        },
+        "dnsName": {
+            "value": "sfcluster1lx1"
+        },
+        "virtualNetworkName": {
+            "value": "VNet-sfcluster1lx1"
+        },
+        "lbName": {
+            "value": "LB-sfcluster1lx1"
+        },
+        "lbIPName": {
+            "value": "LBIP-sfcluster1lx1"
+        },
+        "applicationDiagnosticsStorageAccountName": {
+            "value": "sfdgsfcluster1lx17878"
+        },
+        "supportLogStorageAccountName": {
+            "value": "sflogssfcluster1lx16451"
+        },
+        "sourceVaultValue": {
+            "value": ""
+        },
+        "certificateUrlValue": {
+            "value": ""
+        },
+        "certificateThumbprint": {
+            "value": ""
+        },
+        "vmImageSku": {
+            "value": "16.04-LTS"
+        },
+        "vmImageVersion": {
+            "value": "latest"
+        },
+        "vmImagePublisher": {
+            "value": "Canonical"
+        },
+        "vmImageOffer": {
+            "value": "UbuntuServer"
+        },
+        "nt0ephemeralStartPort": {
+            "value": 49152
+        },
+        "nt0ephemeralEndPort": {
+            "value": 65534
+        },
+        "nt0applicationStartPort": {
+            "value": 20000
+        },
+        "nt0applicationEndPort": {
+            "value": 30000
+        },
+        "nt0fabricTcpGatewayPort": {
+            "value": 19000
+        },
+        "nt0fabricHttpGatewayPort": {
+            "value": 19080
+        }
+    }
+}
