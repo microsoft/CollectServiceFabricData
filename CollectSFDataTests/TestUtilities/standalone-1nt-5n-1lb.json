@@ -1,0 +1,511 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "clusterName": {
+      "defaultValue": "",
+      "type": "string",
+      "metadata": {
+        "description": "public cluster name"
+      }
+    },
+    "adminUserName": {
+      "defaultValue": "cloudadmin",
+      "type": "string",
+      "metadata": {
+        "description": "Administrator Username for the local admin account"
+      }
+    },
+    "adminPassword": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Administrator password for the local admin account"
+      }
+    },
+    "certificateCommonName": {
+      "defaultValue": "",
+      "type": "string",
+      "metadata": {
+        "description": "certificate common name"
+      }
+    },
+    "certificateThumbprint": {
+      "defaultValue": "",
+      "type": "string",
+      "metadata": {
+        "description": "certificate thumbprint"
+      }
+    },
+    "certificateUrlValue": {
+      "defaultValue": "",
+      "type": "string",
+      "metadata": {
+        "description": "keyvault certificate url. example: https://sfsa.vault.azure.net/secrets/sfsa/75bcb8695bcb4ac6ba103b7bbfd05822"
+      }
+    },
+    "dnsName": {
+      "defaultValue": "",
+      "type": "string",
+      "metadata": {
+        "description": "public dnsname"
+      }
+    },
+    "fabricTcpGatewayPort": {
+      "type": "int",
+      "defaultValue": 19000
+    },
+    "fabricHttpGatewayPort": {
+      "type": "int",
+      "defaultValue": 19080
+    },
+    "operatingSystem": {
+      "type": "string",
+      "defaultValue": "Server2016",
+      "metadata": {
+        "description": "Operating System of the Server"
+      },
+      "allowedValues": [
+        "Server2012R2",
+        "Server2016",
+        "Server2019"
+      ]
+    },
+    "serviceFabricPackageUrl": {
+      "defaultValue": "https://go.microsoft.com/fwlink/?LinkId=730690",
+      "type": "string",
+      "metadata": {
+        "description": "service fabric standalone download url link"
+      }
+    },
+    "sourceVaultValue": {
+      "defaultValue": "",
+      "type": "string",
+      "metadata": {
+        "description": "certificate keyvault resource id. example: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/certssfsa/providers/Microsoft.KeyVault/vaults/sfsa"
+      }
+    },
+    "virtualMachineNamePrefix": {
+      "defaultValue": "nt",
+      "type": "string",
+      "maxLength": 15,
+      "metadata": {
+        "description": "Name of the virtual machine to be created"
+      }
+    },
+    "virtualMachineCount": {
+      "type": "int",
+      "defaultValue": 5,
+      "metadata": {
+        "description": "Number of  virtual machines to be created"
+      }
+    },
+    "virtualMachineSize": {
+      "type": "string",
+      "defaultValue": "Standard_DS3_v2",
+      "allowedValues": [
+        "Standard_DS1_v2",
+        "Standard_DS2_v2",
+        "Standard_DS3_v2",
+        "Standard_DS4_v2",
+        "Standard_DS5_v2"
+      ],
+      "metadata": {
+        "description": "Virtual Machine Size"
+      }
+    }
+  },
+  "variables": {
+    "availabilitySetName": "sfsaAvailabilitySet",
+    "dnsPrefixForPublicIP": "[resourceGroup().name]",
+    "lbApiVersion": "2015-06-15",
+    "lbIDP": "[resourceId('Microsoft.Network/loadBalancers', concat('LBP-', parameters('dnsName')))]",
+    "lbIPConfigP": "[concat(variables('lbIDP'),'/frontendIPConfigurations/LoadBalancerIPConfig')]",
+    "lbPoolIDP": "[concat(variables('lbIDP'),'/backendAddressPools/LoadBalancerBEAddressPool')]",
+    "lbProbeIDP": "[concat(variables('lbIDP'),'/probes/FabricGatewayProbe')]",
+    "lbHttpProbeIDP": "[concat(variables('lbIDP'),'/probes/FabricHttpGatewayProbe')]",
+    "lbNatPoolIDP": "[concat(variables('lbIDP'),'/inboundNatPools/LoadBalancerBEAddressNatPool')]",
+    "publicIPApiVersion": "2015-06-15",
+    "vNETName": "sfsaVnet",
+    "vNETPrefix": "10.0.0.0/16",
+    "vNETSubnet1Name": "Subnet1",
+    "vNETSubnet1Prefix": "10.0.0.0/24",
+    "diagnosticStorageAccountName": "[concat('diagst', uniqueString(resourceGroup().id))]",
+    "lbIPName": "[concat('LB-SF-SA-FE',parameters('dnsName'))]",
+    "operatingSystemValues": {
+      "Server2012R2": {
+        "PublisherValue": "MicrosoftWindowsServer",
+        "OfferValue": "WindowsServer",
+        "SkuValue": "2012-R2-Datacenter"
+      },
+      "Server2016": {
+        "PublisherValue": "MicrosoftWindowsServer",
+        "OfferValue": "WindowsServer",
+        "SkuValue": "2019-Datacenter-with-containers"
+      },
+      "Server2019": {
+        "PublisherValue": "MicrosoftWindowsServer",
+        "OfferValue": "WindowsServer",
+        "SkuValue": "2019-Datacenter-with-containers"
+      }
+    },
+    "availabilitySetPlatformFaultDomainCount": "2",
+    "availabilitySetPlatformUpdateDomainCount": "5",
+    "subnetRef": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('vNETName'),  variables('vNETSubnet1Name'))]"
+  },
+  "resources": [
+    {
+      "apiVersion": "[variables('publicIPApiVersion')]",
+      "type": "Microsoft.Network/publicIPAddresses",
+      "name": "[variables('lbIPName')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "dnsSettings": {
+          "domainNameLabel": "[parameters('dnsName')]"
+        },
+        "publicIPAllocationMethod": "Dynamic"
+      },
+      "tags": {
+        "resourceType": "Service Fabric"
+      }
+    },
+    {
+      "apiVersion": "2018-11-01",
+      "type": "Microsoft.Network/loadBalancers/inboundNatRules",
+      "name": "[concat('LBP-', parameters('dnsName'), '/', 'RDP-VM', copyIndex())]",
+      "location": "[resourceGroup().location]",
+      "copy": {
+        "name": "lbNatLoop",
+        "count": "[parameters('virtualMachineCount')]"
+      },
+      "dependsOn": [
+        "[concat('Microsoft.Network/loadBalancers/', 'LBP-', parameters('dnsName'))]"
+      ],
+      "properties": {
+        "frontendIPConfiguration": {
+          "id": "[variables('lbIPConfigP')]"
+        },
+        "protocol": "Tcp",
+        "frontendPort": "[copyIndex(3389)]",
+        "backendPort": 3389,
+        "enableFloatingIP": false
+      }
+    },
+    {
+      "apiVersion": "[variables('lbApiVersion')]",
+      "type": "Microsoft.Network/loadBalancers",
+      "name": "[concat('LBP-', parameters('dnsName'))]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[concat('Microsoft.Network/virtualNetworks/', variables('vNETName'))]"
+      ],
+      "properties": {
+        "frontendIPConfigurations": [
+          {
+            "name": "LoadBalancerIPConfig",
+            "properties": {
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses',variables('lbIPName'))]"
+              }
+            }
+          }
+        ],
+        "backendAddressPools": [
+          {
+            "name": "LoadBalancerBEAddressPool",
+            "properties": {}
+          }
+        ],
+        "loadBalancingRules": [
+          {
+            "name": "LBRule",
+            "properties": {
+              "backendAddressPool": {
+                "id": "[variables('lbPoolIDP')]"
+              },
+              "backendPort": "[parameters('fabricTcpGatewayPort')]",
+              "enableFloatingIP": false,
+              "frontendIPConfiguration": {
+                "id": "[variables('lbIPConfigP')]"
+              },
+              "frontendPort": "[parameters('fabricTcpGatewayPort')]",
+              "idleTimeoutInMinutes": 5,
+              "probe": {
+                "id": "[variables('lbProbeIDP')]"
+              },
+              "protocol": "Tcp"
+            }
+          },
+          {
+            "name": "LBHttpRule",
+            "properties": {
+              "backendAddressPool": {
+                "id": "[variables('lbPoolIDP')]"
+              },
+              "backendPort": "[parameters('fabricHttpGatewayPort')]",
+              "enableFloatingIP": false,
+              "frontendIPConfiguration": {
+                "id": "[variables('lbIPConfigP')]"
+              },
+              "frontendPort": "[parameters('fabricHttpGatewayPort')]",
+              "idleTimeoutInMinutes": 5,
+              "probe": {
+                "id": "[variables('lbHttpProbeIDP')]"
+              },
+              "protocol": "Tcp"
+            }
+          }
+        ],
+        "probes": [
+          {
+            "name": "FabricGatewayProbe",
+            "properties": {
+              "intervalInSeconds": 5,
+              "numberOfProbes": 2,
+              "port": "[parameters('fabricTcpGatewayPort')]",
+              "protocol": "Tcp"
+            }
+          },
+          {
+            "name": "FabricHttpGatewayProbe",
+            "properties": {
+              "intervalInSeconds": 5,
+              "numberOfProbes": 2,
+              "port": "[parameters('fabricHttpGatewayPort')]",
+              "protocol": "Tcp"
+            }
+          }
+        ],
+        "inboundNatPools": [
+          {
+            "name": "LoadBalancerBEAddressNatPool",
+            "properties": {
+              "backendPort": 3389,
+              "frontendIPConfiguration": {
+                "id": "[variables('lbIPConfigP')]"
+              },
+              "frontendPortRangeEnd": 4500,
+              "frontendPortRangeStart": 3389,
+              "protocol": "Tcp"
+            }
+          }
+        ]
+      },
+      "tags": {
+        "resourceType": "Service Fabric"
+      }
+    },
+    {
+      "name": "[variables('vNETName')]",
+      "type": "Microsoft.Network/virtualNetworks",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2016-03-30",
+      "dependsOn": [],
+      "tags": {
+        "displayName": "[variables('vNETName')]"
+      },
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "[variables('vNETPrefix')]"
+          ]
+        },
+        "subnets": [
+          {
+            "name": "[variables('vNETSubnet1Name')]",
+            "properties": {
+              "addressPrefix": "[variables('vNETSubnet1Prefix')]"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "[variables('diagnosticStorageAccountName')]",
+      "type": "Microsoft.Storage/storageAccounts",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2016-01-01",
+      "sku": {
+        "name": "Standard_LRS"
+      },
+      "dependsOn": [],
+      "tags": {
+        "displayName": "diagnosticStorageAccount"
+      },
+      "kind": "Storage"
+    },
+    {
+      "type": "Microsoft.Compute/availabilitySets",
+      "name": "[variables('availabilitySetName')]",
+      "apiVersion": "2017-03-30",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "platformFaultDomainCount": "[variables('availabilitySetPlatformFaultDomainCount')]",
+        "platformUpdateDomainCount": "[variables('availabilitySetPlatformUpdateDomainCount')]"
+      },
+      "sku": {
+        "name": "Aligned"
+      }
+    },
+    {
+      "type": "Microsoft.Compute/virtualMachines",
+      "name": "[concat(parameters('virtualMachineNamePrefix'), padLeft(copyIndex(), 7, '0'))]",
+      "apiVersion": "2017-03-30",
+      "location": "[resourceGroup().location]",
+      "copy": {
+        "name": "VMcopy",
+        "count": "[parameters('virtualMachineCount')]"
+      },
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "[parameters('virtualMachineSize')]"
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "[variables('operatingSystemValues')[parameters('operatingSystem')].PublisherValue]",
+            "offer": "[variables('operatingSystemValues')[parameters('operatingSystem')].OfferValue]",
+            "sku": "[variables('operatingSystemValues')[parameters('operatingSystem')].SkuValue]",
+            "version": "latest"
+          },
+          "osDisk": {
+            "name": "[concat(parameters('virtualMachineNamePrefix'), padLeft(copyIndex(), 7, '0'))]",
+            "createOption": "FromImage",
+            "managedDisk": {
+              "storageAccountType": "Premium_LRS"
+            },
+            "caching": "ReadWrite"
+          }
+        },
+        "osProfile": {
+          "computerName": "[concat(parameters('virtualMachineNamePrefix'), padLeft(copyIndex(), 7, '0'))]",
+          "adminUsername": "[parameters('adminUserName')]",
+          "windowsConfiguration": {
+            "provisionVMAgent": true
+          },
+          "secrets": [
+            {
+              "sourceVault": {
+                "id": "[parameters('sourceVaultValue')]"
+              },
+              "vaultCertificates": [
+                {
+                  "certificateUrl": "[parameters('certificateUrlValue')]",
+                  "certificateStore": "My"
+                }
+              ]
+            }
+          ],
+          "adminPassword": "[parameters('adminPassword')]"
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', concat(parameters('virtualMachineNamePrefix'), padLeft(copyIndex(), 7, '0'), '-NIC1'))]"
+            }
+          ]
+        },
+        "availabilitySet": {
+          "id": "[resourceId('Microsoft.Compute/availabilitySets', variables('availabilitySetName'))]"
+        },
+        "diagnosticsProfile": {
+          "bootDiagnostics": {
+            "enabled": true,
+            "storageUri": "[reference(resourceId('Microsoft.Storage/storageAccounts', variables('diagnosticStorageAccountName')), '2016-01-01').primaryEndpoints.blob]"
+          }
+        }
+      },
+      "resources": [
+        {
+          "type": "extensions",
+          "name": "Microsoft.Powershell.DSC",
+          "apiVersion": "2018-10-01",
+          "location": "[resourceGroup().location]",
+          "dependsOn": [
+            "[concat(parameters('virtualMachineNamePrefix'), padLeft(copyIndex(), 7, '0'))]"
+          ],
+          "properties": {
+            "publisher": "Microsoft.Powershell",
+            "type": "DSC",
+            "typeHandlerVersion": "2.77",
+            "autoUpgradeMinorVersion": true,
+            "settings": {
+              "wmfVersion": "latest",
+              "configuration": {
+                "url": "https://raw.githubusercontent.com/jagilber/armServiceFabricStandalone/master/DSC/DSC.zip",
+                "script": "configuration.ps1",
+                "function": "SFStandaloneInstall"
+              },
+              "configurationArguments": {
+                "thumbprint": "[parameters('certificateThumbprint')]",
+                "virtualMachineNamePrefix": "[parameters('virtualMachineNamePrefix')]",
+                "commonName": "[parameters('certificateCommonName')]",
+                "serviceFabricPackageUrl": "[parameters('serviceFabricPackageUrl')]",
+                "sourceVaultValue": "[parameters('sourceVaultValue')]",
+                "certificateUrlValue": "[parameters('certificateUrlValue')]",
+                "virtualMachineCount": "[parameters('virtualMachineCount')]"
+              },
+              "privacy": {
+                "dataCollection": "enable"
+              }
+            },
+            "protectedSettings": {
+              "configurationArguments": {
+                "UserAccount": {
+                  "userName": "[parameters('adminUserName')]",
+                  "password": "[parameters('adminPassword')]"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "dependsOn": [
+        "[concat('Microsoft.Compute/availabilitySets/', variables('availabilitySetName'))]",
+        "[concat('Microsoft.Storage/storageAccounts/', variables('diagnosticStorageAccountName'))]",
+        "[resourceId('Microsoft.Network/networkInterfaces', concat(parameters('virtualMachineNamePrefix'), padLeft(copyIndex(), 7, '0'), '-NIC1'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "[concat(parameters('virtualMachineNamePrefix'), padLeft(copyIndex(), 7, '0'), '-NIC1')]",
+      "apiVersion": "2016-03-30",
+      "location": "[resourceGroup().location]",
+      "copy": {
+        "name": "NICCopy",
+        "count": "[parameters('virtualMachineCount')]"
+      },
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "subnet": {
+                "id": "[variables('subnetRef')]"
+              },
+              "loadBalancerBackendAddressPools": [
+                {
+                  "id": "[variables('lbPoolIDP')]"
+                }
+              ],
+              "loadBalancerInboundNatRules": [
+                {
+                  "id": "[concat(variables('lbIDP'), '/inboundNatRules/RDP-VM', copyIndex())]"
+                }
+              ]
+            }
+          }
+        ],
+        "dnsSettings": {
+          "dnsServers": []
+        },
+        "enableIPForwarding": false
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/virtualNetworks/', variables('vNETName'))]",
+        "[resourceId('Microsoft.Network/loadBalancers', concat('LBP-', parameters('dnsName')))]",
+        "[concat('Microsoft.Network/loadBalancers/', 'LBP-', parameters('dnsName'), '/inboundNatRules/RDP-VM', copyIndex())]"
+      ]
+    }
+  ],
+  "outputs": {}
+}

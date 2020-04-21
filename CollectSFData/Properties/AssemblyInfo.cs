@@ -1,4 +1,5 @@
-﻿// ------------------------------------------------------------
+﻿using System.Runtime.CompilerServices;
+// ------------------------------------------------------------
 // Copyright (c) Microsoft Corporation.  All rights reserved.
 // Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
@@ -37,4 +38,6 @@ using System.Runtime.InteropServices;
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
 [assembly: AssemblyVersion("2.6.*")]
+[assembly: InternalsVisibleTo("CollectSFData.Tests")]
+[assembly: InternalsVisibleTo("CollectSFData.Explorables")]
 //[assembly: AssemblyFileVersion("1.0.0")]
