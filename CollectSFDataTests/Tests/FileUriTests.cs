@@ -38,7 +38,7 @@ namespace CollectSFDataTests
         {
             foreach (FileUri fileUri in FileUriList.Where(x => x.FileType == FileTypesEnum.any))
             {
-                Console.WriteLine($"checking file {fileUri.Uri}");
+                TestUtilities.WriteConsole($"checking uri result {fileUri.Uri}", fileUri);
                 Assert.AreEqual(FileTypesEnum.any, FileTypes.MapFileTypeUri(fileUri.Uri));
             }
         }
@@ -48,7 +48,7 @@ namespace CollectSFDataTests
         {
             foreach (FileUri fileUri in FileUriList.Where(x => x.FileType == FileTypesEnum.counter))
             {
-                Console.WriteLine($"checking file {fileUri.Uri}");
+                TestUtilities.WriteConsole($"checking uri result {fileUri.Uri}", fileUri);
                 Assert.AreEqual(FileTypesEnum.counter, FileTypes.MapFileTypeUri(fileUri.Uri));
             }
         }
@@ -58,7 +58,7 @@ namespace CollectSFDataTests
         {
             foreach (FileUri fileUri in FileUriList.Where(x => x.FileType == FileTypesEnum.exception))
             {
-                Console.WriteLine($"checking file {fileUri.Uri}");
+                TestUtilities.WriteConsole($"checking uri result {fileUri.Uri}", fileUri);
                 Assert.AreEqual(FileTypesEnum.exception, FileTypes.MapFileTypeUri(fileUri.Uri));
             }
         }
@@ -68,7 +68,7 @@ namespace CollectSFDataTests
         {
             foreach (FileUri fileUri in FileUriList.Where(x => x.FileType == FileTypesEnum.setup))
             {
-                Console.WriteLine($"checking file {fileUri.Uri}");
+                TestUtilities.WriteConsole($"checking uri result {fileUri.Uri}", fileUri);
                 Assert.AreEqual(FileTypesEnum.setup, FileTypes.MapFileTypeUri(fileUri.Uri));
             }
         }
@@ -78,7 +78,7 @@ namespace CollectSFDataTests
         {
             foreach (FileUri fileUri in FileUriList.Where(x => x.FileType == FileTypesEnum.table))
             {
-                Console.WriteLine($"checking file {fileUri.Uri}");
+                TestUtilities.WriteConsole($"checking uri result {fileUri.Uri}", fileUri);
                 Assert.AreEqual(FileTypesEnum.table, FileTypes.MapFileTypeUri(fileUri.Uri));
             }
         }
@@ -88,7 +88,7 @@ namespace CollectSFDataTests
         {
             foreach (FileUri fileUri in FileUriList.Where(x => x.FileType == FileTypesEnum.trace))
             {
-                Console.WriteLine($"checking file {fileUri.Uri}");
+                TestUtilities.WriteConsole($"checking uri result {fileUri.Uri}", fileUri);
                 Assert.AreEqual(FileTypesEnum.trace, FileTypes.MapFileTypeUri(fileUri.Uri));
             }
         }

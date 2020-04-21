@@ -65,23 +65,30 @@ namespace CollectSFDataTests
         }
 
         public static string DefaultOptionsFile => $"..\\..\\..\\..\\configurationFiles\\collectsfdata.options.json";
+
         public static string TempDir => "..\\..\\Temp";
+
         public static string TestConfigurationsDir => "..\\..\\..\\TestConfigurations";
+
         public static string TestFilesDir => "..\\..\\..\\TestFiles";
+
         public static TestProperties TestProperties { get; set; }
+
         public static string TestPropertiesFile => $"{TempDir}\\collectSfDataTestProperties.json";
+
         public static string TestPropertiesSetupScript => $"{TestUtilitiesDir}\\setup-test-env.ps1";
+
         public static string TestUtilitiesDir => "..\\..\\..\\TestUtilities";
+
         public ConfigurationOptions ConfigurationOptions { get; set; } = new ConfigurationOptions();
 
-        //public string TempOptionsFile { get; private set; } = $"{TempDir}\\collectsfdatda.{DateTime.Now.ToString("yyMMddhhmmssfff")}.json";
         public string TempOptionsFile { get; private set; } = $"{TempDir}\\collectsfdatda.{Guid.NewGuid()}.json";
 
         private static string TestOptionsFile => $"{TestConfigurationsDir}\\collectsfdata.options.json";
+
         private StringWriter ConsoleErr { get; set; } = new StringWriter();
 
         private StringWriter ConsoleOut { get; set; } = new StringWriter();
-        //private ConfigurationOptions TestOptions { get; set; } = new ConfigurationOptions();
 
         public static bool BuildWindowsCluster()
         {
@@ -105,6 +112,15 @@ namespace CollectSFDataTests
 
             Collection<PSObject> results = pipeline.Invoke();
             return results;
+        }
+
+        public static void WriteConsole(string data, object json = null)
+        {
+            Console.WriteLine(data);
+            if (json != null)
+            {
+                Console.WriteLine(JsonConvert.SerializeObject(json, Formatting.Indented));
+            }
         }
 
         public ProcessOutput ExecuteCollectSfData(string arguments = null, bool withTempConfig = true, bool wait = true)
