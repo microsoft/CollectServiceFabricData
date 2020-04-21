@@ -1,0 +1,35 @@
+{
+  "$schema": "./SasUriTests.schema.json",
+  "SasUri": [
+    {
+      "Uri": "https://sflogsxxxxxxxx.blob.core.windows.net/fabriclogs-f33707ca-75bd-43c7-aafb-f589f66bed6c?sv=2015-04-05&ss=bt&srt=sco&sp=rl&se=2020-04-16T00:45:16.1725245Z&sig=5YDOE%2B1VSEGc5Te%2F%2B7w%2FK%2FXgZGmTL5%2FX9LNiCFKWWGU%3D,https://sflogsxxxxxxxx.table.core.windows.net/fabriclogf33707ca75bd43c7aafbf589f66bed6cApplications?sv=2015-04-05&ss=bt&srt=sco&sp=rl&se=2020-04-16T00:45:16.1725245Z&sig=5YDOE%2B1VSEGc5Te%2F%2B7w%2FK%2FXgZGmTL5%2FX9LNiCFKWWGU%3D,https://sflogsxxxxxxxx.table.core.windows.net/fabriclogf33707ca75bd43c7aafbf589f66bed6cDeploymentIds?sv=2015-04-05&ss=bt&srt=sco&sp=rl&se=2020-04-16T00:45:16.1725245Z&sig=5YDOE%2B1VSEGc5Te%2F%2B7w%2FK%2FXgZGmTL5%2FX9LNiCFKWWGU%3D,https://sflogsxxxxxxxx.table.core.windows.net/fabriclogf33707ca75bd43c7aafbf589f66bed6cGlobalTime?sv=2015-04-05&ss=bt&srt=sco&sp=rl&se=2020-04-16T00:45:16.1725245Z&sig=5YDOE%2B1VSEGc5Te%2F%2B7w%2FK%2FXgZGmTL5%2FX9LNiCFKWWGU%3D,https://sflogsxxxxxxxx.table.core.windows.net/fabriclogf33707ca75bd43c7aafbf589f66bed6cIncidents?sv=2015-04-05&ss=bt&srt=sco&sp=rl&se=2020-04-16T00:45:16.1725245Z&sig=5YDOE%2B1VSEGc5Te%2F%2B7w%2FK%2FXgZGmTL5%2FX9LNiCFKWWGU%3D,https://sflogsxxxxxxxx.table.core.windows.net/fabriclogf33707ca75bd43c7aafbf589f66bed6cNodes?sv=2015-04-05&ss=bt&srt=sco&sp=rl&se=2020-04-16T00:45:16.1725245Z&sig=5YDOE%2B1VSEGc5Te%2F%2B7w%2FK%2FXgZGmTL5%2FX9LNiCFKWWGU%3D,https://sflogsxxxxxxxx.table.core.windows.net/fabriclogf33707ca75bd43c7aafbf589f66bed6cPartitions?sv=2015-04-05&ss=bt&srt=sco&sp=rl&se=2020-04-16T00:45:16.1725245Z&sig=5YDOE%2B1VSEGc5Te%2F%2B7w%2FK%2FXgZGmTL5%2FX9LNiCFKWWGU%3D,https://sflogsxxxxxxxx.table.core.windows.net/fabriclogf33707ca75bd43c7aafbf589f66bed6cServices?sv=2015-04-05&ss=bt&srt=sco&sp=rl&se=2020-04-16T00:45:16.1725245Z&sig=5YDOE%2B1VSEGc5Te%2F%2B7w%2FK%2FXgZGmTL5%2FX9LNiCFKWWGU%3D",
+      "Description": "ASC / currently succeeds falsely. todo: fix",
+      "ShouldSucceed": true
+    },
+    {
+      "Uri": "BlobEndpoint=https://sflogsxxxxxxxx.blob.core.windows.net/;QueueEndpoint=https://sflogsxxxxxxxx.queue.core.windows.net/;FileEndpoint=https://sflogsxxxxxxxx.file.core.windows.net/;TableEndpoint=https://sflogsxxxxxxxx.table.core.windows.net/;SharedAccessSignature=sv=2019-02-02&ss=bfqt&srt=sco&sp=rwdlacup&se=2025-04-21T10:28:09Z&st=2020-04-21T02:28:09Z&spr=https&sig=quPGr6xzAvhli6KbLn%2BMm%2Fy2x0EsFw%2FipFvBiyiSLEU%3D",
+      "Description": "portal storage account connection string full access",
+      "ShouldSucceed": true
+    },
+    {
+      "Uri": "https://sflogsxxxxxxxx.blob.core.windows.net/?sv=2019-02-02&ss=bfqt&srt=sco&sp=rwdlacup&se=2025-04-21T10:28:09Z&st=2020-04-21T02:28:09Z&spr=https&sig=quPGr6xzAvhli6KbLn%2BMm%2Fy2x0EsFw%2FipFvBiyiSLEU%3D",
+      "Description": "portal storage account blob sas uri full access",
+      "ShouldSucceed": true
+    },
+    {
+      "Uri": "https://sflogsxxxxxxxx.table.core.windows.net/?sv=2019-02-02&ss=bfqt&srt=sco&sp=rwdlacup&se=2025-04-21T10:28:09Z&st=2020-04-21T02:28:09Z&spr=https&sig=quPGr6xzAvhli6KbLn%2BMm%2Fy2x0EsFw%2FipFvBiyiSLEU%3D",
+      "Description": "portal storage account table sas uri full access",
+      "ShouldSucceed": true
+    },
+    {
+      "Uri": "sflogsxxxxxxxx.table.core.windows.net/?sv=2019-02-02&ss=bfqt&srt=sco&sp=rwdlacup&se=2020-04-21T02:40:09Z&st=2020-04-21T02:28:09Z&spr=https&sig=0W03jW29bxVoYk0T480sbd0NsfEyOAw%2B%2F6mBHGl5fVY%3D",
+      "Description": "invalid uri",
+      "ShouldSucceed": false
+    },
+    {
+      "Uri": "https://sflogsxxxxxxxx.blob.core.windows.net/?sv=2015-02-21&st=2015-07-01T08:49Z&se=2015-07-02T08:49Z&sr=c&sp=r&rscd=file;%20attachment&rsct=binary&sig=YWJjZGVmZw%3d%3d&sig=a39%2BYozJhGp6miujGymjRpN8tsrQfLo9Z3i8IRyIpnQ%3d",
+      "Description": "example service sas 'sr='",
+      "ShouldSucceed": true
+    }
+  ]
+}
