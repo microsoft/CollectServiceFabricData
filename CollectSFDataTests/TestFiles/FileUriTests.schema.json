@@ -1,0 +1,125 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "type": "object",
+  "title": "The Root Schema",
+  "description": "The root schema comprises the entire JSON document.",
+  "default": {},
+  "additionalProperties": true,
+  "required": [
+    "FileUri"
+  ],
+  "properties": {
+    "FileUri": {
+      "type": "array",
+      "title": "The Fileuris Schema",
+      "description": "An explanation about the purpose of this instance.",
+      "default": [],
+      "examples": [
+        [{
+            "Uri": "",
+            "FileType": "",
+            "DataType": "",
+            "Description": ""
+          },
+          {
+            "DataType": "fabric",
+            "Description": "fabric zip file",
+            "Uri": "fabriclogs-82ee81a7-9d95-4003-b81b-883fdf945eaf/_nt0_2/Fabric/bc4316ec4b0814dcc367388a46d9903e_fabric_traces_7.0.470.9590_132301541323585400_1570_00637227551217830354_0000000000.dtr.zip",
+            "FileType": "trace"
+          },
+          {
+            "FileType": "trace",
+            "DataType": "fabric",
+            "Description": "fabric dtr file",
+            "Uri": "fabriclogs-82ee81a7-9d95-4003-b81b-883fdf945eaf/_nt0_2/Fabric/bc4316ec4b0814dcc367388a46d9903e_fabric_traces_7.0.470.9590_132301541323585400_1570_00637227551217830354_0000000000.dtr"
+          }
+        ]
+      ],
+      "additionalItems": true,
+      "items": {
+        "type": "object",
+        "title": "The Items Schema",
+        "description": "An explanation about the purpose of this instance.",
+        "default": {},
+        "examples": [{
+            "Uri": "",
+            "FileType": "",
+            "DataType": "",
+            "Description": ""
+          },
+          {
+            "FileType": "trace",
+            "DataType": "fabric",
+            "Description": "fabric zip file",
+            "Uri": "fabriclogs-82ee81a7-9d95-4003-b81b-883fdf945eaf/_nt0_2/Fabric/bc4316ec4b0814dcc367388a46d9903e_fabric_traces_7.0.470.9590_132301541323585400_1570_00637227551217830354_0000000000.dtr.zip"
+          },
+          {
+            "Uri": "fabriclogs-82ee81a7-9d95-4003-b81b-883fdf945eaf/_nt0_2/Fabric/bc4316ec4b0814dcc367388a46d9903e_fabric_traces_7.0.470.9590_132301541323585400_1570_00637227551217830354_0000000000.dtr",
+            "FileType": "trace",
+            "DataType": "fabric",
+            "Description": "fabric dtr file"
+          }
+        ],
+        "additionalProperties": true,
+        "required": [
+          "Uri",
+          "DataType",
+          "Description",
+          "FileType"
+        ],
+        "properties": {
+          "Uri": {
+            "type": "string",
+            "title": "FileUri - test File Uri for different gather types local, remote, and relative.",
+            "default": null,
+            "examples": [
+              "fabriclogs-82ee81a7-9d95-4003-b81b-883fdf945eaf/_nt0_2/Fabric/bc4316ec4b0814dcc367388a46d9903e_fabric_traces_7.0.470.9590_132301541323585400_1570_00637227551217830354_0000000000.dtr.zip",
+              "G:\\temp\\dtrtest5nodenew\\fabriclogs-9ad814a1-0c6e-41d9-8db5-a21bc64fcb2b\\_nt0_0\\Fabric\\f45f24746c42cc2a6dd69da9e7797e2c_fabric_traces_6.3.187.9494_131876365523987503_1_00636787597591941239_2147483647.dtr"
+            ],
+            "pattern": "^.+$"
+          },
+          "DataType": {
+            "type": "string",
+            "title": "DataType - FileDataTypeEnum (GatherType).",
+            "default": null,
+            "examples": [
+              "fabric",
+              "lease",
+              "counter",
+              "table",
+              "fabricsetup",
+              "fabricdeployer",
+              "bootstrap",
+              "data",
+              "fabriccrashdumps"
+            ],
+            "pattern": "^(fabric|lease|counter|table|fabricsetup|fabricdeployer|bootstrap|data|fabriccrashdumps)$"
+          },
+          "Description": {
+            "type": "string",
+            "title": "Description - optional string description of uri.",
+            "default": null,
+            "examples": [
+              "azure storage account fabric file uri."
+            ],
+            "pattern": ".*"
+          },
+          "FileType": {
+            "type": "string",
+            "title": "FileType - FileTypesEnum.",
+            "default": null,
+            "examples": [
+              "any",
+              "counter",
+              "exception",
+              "setup",
+              "trace",
+              "table"
+            ],
+            "pattern": "^(any|counter|exception|setup|trace|table)$"
+          }
+        }
+      }
+    }
+  }
+}

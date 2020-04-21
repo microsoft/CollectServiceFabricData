@@ -74,8 +74,7 @@ namespace CollectSFData
             {
                 foreach (string dataType in _fileDataTypes)
                 {
-                    string dataTypePattern = $@"(\\|/)(?<fileType>{dataType})s?(\\|/|-|_)"; //local path fix?
-                    //string dataTypePattern = $@"/(?<fileType>{dataType})s?(/|-)";
+                    string dataTypePattern = $@"(\\|/)(?<fileType>{dataType})s?(\\|/|-|_)";
 
                     if (Regex.IsMatch(fileUri, dataTypePattern, RegexOptions.IgnoreCase))
                     {
