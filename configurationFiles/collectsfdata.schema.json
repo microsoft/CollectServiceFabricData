@@ -372,6 +372,16 @@
       ],
       "pattern": "^(.+)$"
     },
+    "NoProgressTimeoutMin": {
+      "$id": "#/properties/NoProgressTimeoutMin",
+      "type": "integer",
+      "title": "NoProgressTimeoutMin to set no progress timer in minutes. if no progress has been made during timespan, utility will exit. set to 0 to disable.",
+      "default": 10,
+      "examples": [
+        0,
+        10
+      ]
+    },
     "ResourceUri": {
       "$id": "#/properties/ResourceUri",
       "type": "string",
