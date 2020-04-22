@@ -100,12 +100,9 @@ For help with command line options, type 'collectsfdata.exe -?'.
 
 ```text
 C:\>CollectSFData.exe /?
-2.5.7197.14241
-
 Usage: CollectSFData.exe [options]
 
 Options:
-  -v|--version                       Show version information
   -?|--?                             Show help information
   -client|--azureClientId            [string] azure application id / client id for use with authentication
                                          for non interactive to kusto. default is to use integrated AAD auth token
@@ -124,7 +121,7 @@ Options:
   -cf|--containerFilter              [string] string / regex to filter container names
   -dc|--deleteCache                  [bool] delete downloaded blobs from local disk at end of execution.
   -to|--stop                         [DateTime] end time range to collect data to. default is now.
-                                         example: "09/15/2019 08:04:06 -04:00"
+                                         example: "04/21/2020 09:03:49 -04:00"
   -ex|--examples                     [bool] show example commands
   -type|--gatherType                 [string] Gather data type:
                                         counter
@@ -145,6 +142,7 @@ Options:
   -kbs|--kustoUseBlobAsSource        [bool] for blob -> kusto direct ingest.
                                          requires .dtr (.csv) files to be csv compliant.
                                          service fabric 6.5+ dtr files are compliant.
+  -kim|--kustoUseIngestMessage       [bool] for kusto ingestion message tracking.
   -l|--list                          [bool] list files instead of downloading
   -lac|--logAnalyticsCreate          [bool] create new log analytics workspace.
                                          requires LogAnalyticsWorkspaceName, AzureResourceGroup,
@@ -165,17 +163,20 @@ Options:
   -log|--logFile                     [string] file name and path to save console output
   -nf|--nodeFilter                   [string] string / regex Filter on node name or any string in blob url
                                          (case-insensitive comparison)
+  -timeout|--noProgressTimeoutMin    [int] no progress timer in minutes. set to 0 to disable timeout.
   -ruri|--resourceUri                [string] resource uri / resource id used by microsoft internal support for tracking.
   -s|--sasKey                        [string] source blob SAS key required to access service fabric sflogs
                                          blob storage.
   -save|--saveConfiguration          [string] file name and path to save current configuration
+                                         specify file name 'collectsfdata.options.json' to create default configuration file.
   -from|--start                      [DateTime] start time range to collect data from.
                                          default is -2 hours.
-                                         example: "09/15/2019 06:04:06 -04:00"
+                                         example: "04/21/2020 07:03:49 -04:00"
   -t|--threads                       [int] override default number of threads equal to processor count.
   -u|--unique                        [bool] default true to query for fileuri before ingestion to prevent duplicates
   -uf|--uriFilter                    [string] string / regex filter for storage account blob uri.
   -stream|--useMemoryStream          [bool] default true to use memory stream instead of disk during format.
+  -v|--version                       [switch] check local and online version
 
 argument names on command line *are* case sensitive.
 bool argument values on command line should either be (true|1|on) or (false|0|off|null).
