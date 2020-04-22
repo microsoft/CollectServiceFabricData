@@ -5,6 +5,7 @@
 
 using System;
 using System.Threading.Tasks;
+using System.Threading;
 
 namespace CollectSFData
 {
@@ -16,6 +17,7 @@ namespace CollectSFData
         public static FileManager FileMgr = new FileManager();
         public static KustoConnection Kusto = null;
         public static LogAnalyticsConnection LogAnalytics = null;
+        public static Timer NoProgressTimer;
         public static ParallelOptions ParallelConfig;
         public static DateTime StartTime = DateTime.Now;
         public static CustomTaskManager TaskManager = new CustomTaskManager(true);

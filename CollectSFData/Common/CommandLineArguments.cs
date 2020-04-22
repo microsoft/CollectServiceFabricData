@@ -87,6 +87,8 @@ namespace CollectSFData
 
         public CommandOption NodeFilter { get; set; }
 
+        public CommandOption NoProgressTimeoutMin { get; set; }
+
         public CommandOption ResourceUri { get; set; }
 
         public CommandOption SasKey { get; set; }
@@ -484,6 +486,10 @@ namespace CollectSFData
             NodeFilter = CmdLineApp.Option("-nf|--nodeFilter",
                     $"[string] string / regex Filter on node name or any string in blob url" +
                     $"{newLine} (case-insensitive comparison)",
+                    CommandOptionType.SingleValue);
+
+            NoProgressTimeoutMin = CmdLineApp.Option("-timeout|--noProgressTimeoutMin",
+                    $"[int] no progress timer in minutes. set to 0 to disable timeout.",
                     CommandOptionType.SingleValue);
 
             ResourceUri = CmdLineApp.Option("-ruri|--resourceUri",
