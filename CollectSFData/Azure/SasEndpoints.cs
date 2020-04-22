@@ -80,11 +80,52 @@ namespace CollectSFData
 
         public bool IsPopulated()
         {
-            return !string.IsNullOrEmpty(ConnectionString)
-                | !string.IsNullOrEmpty(StorageAccountName)
-                | !string.IsNullOrEmpty(BlobEndpoint)
-                | !string.IsNullOrEmpty(TableEndpoint)
-                | !string.IsNullOrEmpty(SasToken);
+            return !(string.IsNullOrEmpty(ConnectionString)
+                | string.IsNullOrEmpty(StorageAccountName)
+                | string.IsNullOrEmpty(BlobEndpoint)
+                | string.IsNullOrEmpty(TableEndpoint)
+                | string.IsNullOrEmpty(SasToken)
+                | string.IsNullOrEmpty(Parameters?.Signature));
+        }
+
+        public bool IsValid()
+        {
+            bool retval = true;
+
+            if (!IsPopulated() | Parameters == null)
+            {
+                Log.Warning("SasEndpoint not populated");
+                return false;
+            }
+
+            if (Parameters.SignedStartUtc > DateTime.Now.ToUniversalTime()
+                | Parameters.SignedExpiryUtc < DateTime.Now.ToUniversalTime())
+            {
+                Log.Error("Sas is not time valid", Parameters);
+                retval = false;
+            }
+            else if (Parameters.SignedExpiryUtc.AddHours(-1) < DateTime.Now.ToUniversalTime())
+            {
+                Log.Warning("Sas expiring in less than 1 hour", Parameters);
+            }
+
+            if (!Parameters.SignedPermission.Contains("r"))
+            {
+                Log.Error("Sas does not contain read permissions", Parameters);
+                retval = false;
+            }
+
+            if (!Parameters.IsServiceSas)
+            {
+                if (!Parameters.SignedServices.Contains("b")
+                    & !Parameters.SignedServices.Contains("t"))
+                {
+                    Log.Error("Sas does not contain blob or table signed services", Parameters);
+                    retval = false;
+                }
+            }
+
+            return retval;
         }
 
         private void SetConnectionString()
