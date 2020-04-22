@@ -16,6 +16,9 @@ namespace CollectSFData
 
     public class Program : Instance
     {
+        private int _noProgressCounter = 0;
+        private Tuple<int, int, int, int, int, int, int> _progressTuple = new Tuple<int, int, int, int, int, int, int>(0, 0, 0, 0, 0, 0, 0);
+
         public static int Main(string[] args)
         {
             return new Program().Execute(args);
@@ -122,6 +125,11 @@ namespace CollectSFData
 
                 ThreadPool.SetMinThreads(Config.Threads * MinThreadMultiplier, Config.Threads * MinThreadMultiplier);
                 ThreadPool.SetMaxThreads(Config.Threads * MaxThreadMultiplier, Config.Threads * MaxThreadMultiplier);
+
+                if (Config.NoProgressTimeoutMin > 0)
+                {
+                    NoProgressTimer = new Timer(NoProgressCallback, null, 0, 60 * 1000);
+                }
 
                 if (!InitializeKusto() | !InitializeLogAnalytics())
                 {
@@ -322,6 +330,37 @@ namespace CollectSFData
                 {
                     QueueForIngest(fileObject);
                 }
+            }
+        }
+
+        private void NoProgressCallback(object state)
+        {
+            Log.Highlight($"checking progress {_noProgressCounter} of {Config.NoProgressTimeoutMin}.");
+
+            Tuple<int, int, int, int, int, int, int> tuple = new Tuple<int, int, int, int, int, int, int>(
+                TotalErrors,
+                TotalFilesDownloaded,
+                TotalFilesEnumerated,
+                TotalFilesFormatted,
+                TotalFilesMatched,
+                TotalFilesSkipped,
+                TotalRecords);
+
+            if (tuple.Equals(_progressTuple))
+            {
+                if (_noProgressCounter >= Config.NoProgressTimeoutMin)
+                {
+                    string message = $"no progress timeout reached {Config.NoProgressTimeoutMin}. exiting application.";
+                    Log.Error(message);
+                    Log.Close();
+                    throw new TimeoutException(message);
+                }
+                ++_noProgressCounter;
+            }
+            else
+            {
+                _noProgressCounter = 0;
+                _progressTuple = tuple;
             }
         }
     }

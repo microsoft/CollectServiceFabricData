@@ -149,6 +149,8 @@ namespace CollectSFData
 
         public string NodeFilter { get; set; }
 
+        public int NoProgressTimeoutMin { get; set; } = 10;
+
         public string ResourceUri { get; set; }
 
         public SasEndpoints SasEndpointInfo { get; private set; } = new SasEndpoints();
@@ -865,41 +867,13 @@ namespace CollectSFData
 
         private bool ValidateSasKey()
         {
-            bool retval = true;
-
             if (!string.IsNullOrEmpty(SasKey))
             {
                 SasEndpointInfo = new SasEndpoints(SasKey);
-
-                if (SasEndpointInfo.Parameters.SignedStartUtc > DateTime.Now.ToUniversalTime()
-                    | SasEndpointInfo.Parameters.SignedExpiryUtc < DateTime.Now.ToUniversalTime())
-                {
-                    Log.Error("Sas is not time valid", SasEndpointInfo.Parameters);
-                    retval = false;
-                }
-                else if (SasEndpointInfo.Parameters.SignedExpiryUtc.AddHours(-1) < DateTime.Now.ToUniversalTime())
-                {
-                    Log.Warning("Sas expiring in less than 1 hour", SasEndpointInfo.Parameters);
-                }
-
-                if (!SasEndpointInfo.Parameters.SignedPermission.Contains("r"))
-                {
-                    Log.Error("Sas does not contain read permissions", SasEndpointInfo.Parameters);
-                    retval = false;
-                }
-
-                if (!SasEndpointInfo.Parameters.IsServiceSas)
-                {
-                    if (!SasEndpointInfo.Parameters.SignedServices.Contains("b")
-                        & !SasEndpointInfo.Parameters.SignedServices.Contains("t"))
-                    {
-                        Log.Error("Sas does not contain blob or table signed services", SasEndpointInfo.Parameters);
-                        retval = false;
-                    }
-                }
+                return SasEndpointInfo.IsValid();
             }
 
-            return retval;
+            return true;
         }
 
         private bool ValidateSource()
