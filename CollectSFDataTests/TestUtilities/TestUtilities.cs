@@ -1,5 +1,9 @@
-﻿using CollectSFData;
-using CollectSFData.Tests;
+﻿// ------------------------------------------------------------
+// Copyright (c) Microsoft Corporation.  All rights reserved.
+// Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
+// ------------------------------------------------------------
+
+using CollectSFData;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
 using System;
@@ -30,10 +34,10 @@ namespace CollectSFDataTests
         }
     }
 
+    [TestClass]
     public class TestUtilities
     {
         public static string[] TestArgs = new string[2] { "-config", TestOptionsFile };
-
         public string[] TempArgs;
         private static object _executing = new object();
 
@@ -61,29 +65,19 @@ namespace CollectSFDataTests
         public TestUtilities()
         {
             PopulateTempOptions();
-            //PopulateTestOptions();
         }
 
         public static string DefaultOptionsFile => $"..\\..\\..\\..\\configurationFiles\\collectsfdata.options.json";
-
         public static string TempDir => "..\\..\\Temp";
-
         public static string TestConfigurationsDir => "..\\..\\..\\TestConfigurations";
-
         public static string TestFilesDir => "..\\..\\..\\TestFiles";
-
         public static TestProperties TestProperties { get; set; }
-
         public static string TestPropertiesFile => $"{TempDir}\\collectSfDataTestProperties.json";
-
         public static string TestPropertiesSetupScript => $"{TestUtilitiesDir}\\setup-test-env.ps1";
-
         public static string TestUtilitiesDir => "..\\..\\..\\TestUtilities";
-
         public ConfigurationOptions ConfigurationOptions { get; set; } = new ConfigurationOptions();
-
         public string TempOptionsFile { get; private set; } = $"{TempDir}\\collectsfdatda.{Guid.NewGuid()}.json";
-
+        public TestContext TestContext { get; set; }
         private static string TestOptionsFile => $"{TestConfigurationsDir}\\collectsfdata.options.json";
 
         private StringWriter ConsoleErr { get; set; } = new StringWriter();
@@ -114,13 +108,16 @@ namespace CollectSFDataTests
             return results;
         }
 
-        public static void WriteConsole(string data, object json = null)
+        [ClassInitialize]
+        public static void SetupTests(TestContext context)
         {
-            Console.WriteLine(data);
-            if (json != null)
-            {
-                Console.WriteLine(JsonConvert.SerializeObject(json, Formatting.Indented));
-            }
+            //ClassTestContext = context;
+        }
+
+        [TestCleanup]
+        public void CleanupTest()
+        {
+            TestContext.WriteLine($"finished test: {TestContext.TestName}");
         }
 
         public ProcessOutput ExecuteCollectSfData(string arguments = null, bool withTempConfig = true, bool wait = true)
@@ -160,7 +157,7 @@ namespace CollectSFDataTests
             while (process.StandardOutput.Peek() > -1)
             {
                 string line = process.StandardOutput.ReadLine();
-                Console.WriteLine(line);
+                TestContext.WriteLine(line);
                 output.StandardOutput += line;
             }
 
@@ -212,10 +209,16 @@ namespace CollectSFDataTests
         public ProcessOutput GetConsoleOutput()
         {
             ProcessOutput output = StopConsoleRedirection();
-            Console.WriteLine(ConsoleOut.ToString());
+            WriteConsole(ConsoleOut.ToString());
             Console.Error.WriteLine(ConsoleErr.ToString());
             StartConsoleRedirection();
             return output;
+        }
+
+        [TestInitialize]
+        public void SetupTest()
+        {
+            TestContext.WriteLine($"starting test: {TestContext.TestName}");
         }
 
         public void StartConsoleRedirection()
@@ -237,6 +240,26 @@ namespace CollectSFDataTests
             Console.SetOut(Console.Out);
             Console.SetError(Console.Error);
             return output;
+        }
+
+        public void WriteConsole(string data, object json = null)
+        {
+            if (TestContext != null)
+            {
+                TestContext.WriteLine(data);
+                if (json != null)
+                {
+                    TestContext.WriteLine(JsonConvert.SerializeObject(json, Formatting.Indented));
+                }
+            }
+            else
+            {
+                Console.WriteLine(data);
+                if (json != null)
+                {
+                    Console.WriteLine(JsonConvert.SerializeObject(json, Formatting.Indented));
+                }
+            }
         }
 
         private void PopulateTempOptions()
