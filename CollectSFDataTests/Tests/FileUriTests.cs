@@ -1,7 +1,11 @@
-﻿using CollectSFData;
+﻿// ------------------------------------------------------------
+// Copyright (c) Microsoft Corporation.  All rights reserved.
+// Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
+// ------------------------------------------------------------
+
+using CollectSFData;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -22,7 +26,7 @@ namespace CollectSFDataTests
     }
 
     [TestClass()]
-    public class FileUriTests
+    public class FileUriTests : TestUtilities
     {
         private string FileUriDataFile = $"{TestUtilities.TestFilesDir}\\FileUriTests.json";
         private List<FileUri> FileUriList;
@@ -38,7 +42,7 @@ namespace CollectSFDataTests
         {
             foreach (FileUri fileUri in FileUriList.Where(x => x.FileType == FileTypesEnum.any))
             {
-                TestUtilities.WriteConsole($"checking uri result {fileUri.Uri}", fileUri);
+                WriteConsole($"checking uri result {fileUri.Uri}", fileUri);
                 Assert.AreEqual(FileTypesEnum.any, FileTypes.MapFileTypeUri(fileUri.Uri));
             }
         }
@@ -48,7 +52,7 @@ namespace CollectSFDataTests
         {
             foreach (FileUri fileUri in FileUriList.Where(x => x.FileType == FileTypesEnum.counter))
             {
-                TestUtilities.WriteConsole($"checking uri result {fileUri.Uri}", fileUri);
+                WriteConsole($"checking uri result {fileUri.Uri}", fileUri);
                 Assert.AreEqual(FileTypesEnum.counter, FileTypes.MapFileTypeUri(fileUri.Uri));
             }
         }
@@ -58,7 +62,7 @@ namespace CollectSFDataTests
         {
             foreach (FileUri fileUri in FileUriList.Where(x => x.FileType == FileTypesEnum.exception))
             {
-                TestUtilities.WriteConsole($"checking uri result {fileUri.Uri}", fileUri);
+                WriteConsole($"checking uri result {fileUri.Uri}", fileUri);
                 Assert.AreEqual(FileTypesEnum.exception, FileTypes.MapFileTypeUri(fileUri.Uri));
             }
         }
@@ -68,7 +72,7 @@ namespace CollectSFDataTests
         {
             foreach (FileUri fileUri in FileUriList.Where(x => x.FileType == FileTypesEnum.setup))
             {
-                TestUtilities.WriteConsole($"checking uri result {fileUri.Uri}", fileUri);
+                WriteConsole($"checking uri result {fileUri.Uri}", fileUri);
                 Assert.AreEqual(FileTypesEnum.setup, FileTypes.MapFileTypeUri(fileUri.Uri));
             }
         }
@@ -78,7 +82,7 @@ namespace CollectSFDataTests
         {
             foreach (FileUri fileUri in FileUriList.Where(x => x.FileType == FileTypesEnum.table))
             {
-                TestUtilities.WriteConsole($"checking uri result {fileUri.Uri}", fileUri);
+                WriteConsole($"checking uri result {fileUri.Uri}", fileUri);
                 Assert.AreEqual(FileTypesEnum.table, FileTypes.MapFileTypeUri(fileUri.Uri));
             }
         }
@@ -88,7 +92,7 @@ namespace CollectSFDataTests
         {
             foreach (FileUri fileUri in FileUriList.Where(x => x.FileType == FileTypesEnum.trace))
             {
-                TestUtilities.WriteConsole($"checking uri result {fileUri.Uri}", fileUri);
+                WriteConsole($"checking uri result {fileUri.Uri}", fileUri);
                 Assert.AreEqual(FileTypesEnum.trace, FileTypes.MapFileTypeUri(fileUri.Uri));
             }
         }
