@@ -1,11 +1,14 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿// ------------------------------------------------------------
+// Copyright (c) Microsoft Corporation.  All rights reserved.
+// Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
+// ------------------------------------------------------------
+
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
 using System.IO;
-using System;
 using CollectSFData;
-using System.Net;
 
 namespace CollectSFDataTests
 {
@@ -21,10 +24,10 @@ namespace CollectSFDataTests
         public SasUri[] SasUri;
     }
 
-    [TestClass()]
-    public class SasUriTests
+    [TestClass]
+    public class SasUriTests : TestUtilities
     {
-        private string SasUriDataFile = $"{TestUtilities.TestFilesDir}\\SasUriTests.json";
+        private string SasUriDataFile = $"{TestFilesDir}\\SasUriTests.json";
         private List<SasUri> SasUriList;
 
         public SasUriTests()
@@ -33,29 +36,30 @@ namespace CollectSFDataTests
             SasUriList = JsonConvert.DeserializeObject<SasUris>(File.ReadAllText(SasUriDataFile)).SasUri.ToList();
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void SasUriFailTest()
         {
             foreach (SasUri sasUri in SasUriList.Where(x => x.ShouldSucceed.Equals(false)))
             {
-                TestUtilities.WriteConsole($"checking uri {sasUri.Uri}", sasUri);
+                WriteConsole($"checking uri {sasUri.Uri}", sasUri);
                 SasEndpoints endpoints = new SasEndpoints(sasUri.Uri);
-                TestUtilities.WriteConsole($"checking uri result {sasUri.Uri}", endpoints);
+                WriteConsole($"checking uri result {sasUri.Uri}", endpoints);
 
-                Assert.AreEqual(sasUri.ShouldSucceed, endpoints.IsPopulated());
+                Assert.AreEqual(sasUri.ShouldSucceed, endpoints.IsValid());
             }
         }
 
-        [TestMethod()]
+        [TestMethod]
+        //[ExpectedException()]
         public void SasUriSucceedTest()
         {
             foreach (SasUri sasUri in SasUriList.Where(x => x.ShouldSucceed.Equals(true)))
             {
-                TestUtilities.WriteConsole($"checking uri {sasUri.Uri}", sasUri);
+                WriteConsole($"checking uri {sasUri.Uri}", sasUri);
                 SasEndpoints endpoints = new SasEndpoints(sasUri.Uri);
-                TestUtilities.WriteConsole($"checking uri result {sasUri.Uri}", endpoints);
+                WriteConsole($"checking uri result {sasUri.Uri}", endpoints);
 
-                Assert.AreEqual(sasUri.ShouldSucceed, endpoints.IsPopulated());
+                Assert.AreEqual(sasUri.ShouldSucceed, endpoints.IsValid());
             }
         }
     }
