@@ -3,15 +3,15 @@
 // Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
 using CollectSFDataTests;
 
 namespace CollectSFData.Tests
 {
-    [TestClass()]
+    [TestFixture]
     public class GatherTypeTests
     {
-        [TestMethod()]
+        [Test]
         public void GatherTypeAnyTest()
         {
             TestUtilities utils = new TestUtilities();
@@ -21,7 +21,7 @@ namespace CollectSFData.Tests
             Assert.IsFalse(results.HasErrors());
         }
 
-        [TestMethod()]
+        [Test]
         public void GatherTypeBadTest()
         {
             TestUtilities utils = new TestUtilities();
@@ -35,7 +35,7 @@ namespace CollectSFData.Tests
             Assert.IsFalse(results.StandardOutput.Contains("total execution time in minutes"));
         }
 
-        [TestMethod()]
+        [Test]
         public void GatherTypeCounterTest()
         {
             TestUtilities utils = new TestUtilities();
@@ -45,7 +45,7 @@ namespace CollectSFData.Tests
             Assert.IsFalse(results.HasErrors());
         }
 
-        [TestMethod()]
+        [Test]
         public void GatherTypeExceptionTest()
         {
             TestUtilities utils = new TestUtilities();
@@ -55,7 +55,7 @@ namespace CollectSFData.Tests
             Assert.IsFalse(results.HasErrors());
         }
 
-        [TestMethod()]
+        [Test]
         public void GatherTypeNullTest()
         {
             TestUtilities utils = new TestUtilities();
@@ -69,7 +69,7 @@ namespace CollectSFData.Tests
             Assert.IsFalse(results.StandardOutput.Contains("total execution time in minutes"));
         }
 
-        [TestMethod()]
+        [Test]
         public void GatherTypeSetupTest()
         {
             TestUtilities utils = new TestUtilities();
@@ -79,7 +79,7 @@ namespace CollectSFData.Tests
             Assert.IsFalse(results.HasErrors());
         }
 
-        [TestMethod()]
+        [Test]
         public void GatherTypeTableTest()
         {
             TestUtilities utils = new TestUtilities();
@@ -89,7 +89,7 @@ namespace CollectSFData.Tests
             Assert.IsFalse(results.HasErrors());
         }
 
-        [TestMethod()]
+        [Test]
         public void GatherTypeTraceTest()
         {
             TestUtilities utils = new TestUtilities();
@@ -99,7 +99,7 @@ namespace CollectSFData.Tests
             Assert.IsFalse(results.HasErrors());
         }
 
-        [TestMethod()]
+        [Test]
         public void GatherTypeUnknownTest()
         {
             TestUtilities utils = new TestUtilities();
