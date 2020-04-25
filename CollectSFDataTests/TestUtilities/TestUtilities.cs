@@ -3,9 +3,14 @@
 // Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
+//https://www.automatetheplanet.com/nunit-cheat-sheet/
+//https://github.com/nunit/docs/wiki/Tips-And-Tricks
+//https://github.com/nunit/nunit-csharp-samples
+
 using CollectSFData;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+
 using Newtonsoft.Json;
+using NUnit.Framework;
 using System;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -34,7 +39,7 @@ namespace CollectSFDataTests
         }
     }
 
-    [TestClass]
+    [TestFixture]
     public class TestUtilities
     {
         public static string[] TestArgs = new string[2] { "-config", TestOptionsFile };
@@ -43,23 +48,7 @@ namespace CollectSFDataTests
 
         static TestUtilities()
         {
-            Assert.IsTrue(File.Exists(TestOptionsFile));
-            Assert.IsTrue(Directory.Exists(TestFilesDir));
-
-            if (!Directory.Exists(TempDir))
-            {
-                Directory.CreateDirectory(TempDir);
-            }
-
-            if (!File.Exists(TestPropertiesFile))
-            {
-                Collection<PSObject> result = ExecutePowerShellCommand(TestPropertiesSetupScript);
-            }
-
-            Assert.IsTrue(File.Exists(TestPropertiesFile));
-
-            TestProperties = JsonConvert.DeserializeObject<TestProperties>(File.ReadAllText(TestPropertiesFile));
-            Assert.IsNotNull(TestProperties);
+            SetupTests();
         }
 
         public TestUtilities()
@@ -67,14 +56,16 @@ namespace CollectSFDataTests
             PopulateTempOptions();
         }
 
-        public static string DefaultOptionsFile => $"..\\..\\..\\..\\configurationFiles\\collectsfdata.options.json";
-        public static string TempDir => "..\\..\\Temp";
-        public static string TestConfigurationsDir => "..\\..\\..\\TestConfigurations";
-        public static string TestFilesDir => "..\\..\\..\\TestFiles";
+        public static TestContext ClassTestContext { get; set; }
+        public static string DefaultOptionsFile => $"{WorkingDir}\\..\\..\\..\\..\\configurationFiles\\collectsfdata.options.json";
+        public static string TempDir => $"{WorkingDir}\\..\\..\\Temp";
+        public static string TestConfigurationsDir => $"{WorkingDir}\\..\\..\\..\\TestConfigurations";
+        public static string TestFilesDir => $"{WorkingDir}\\..\\..\\..\\TestFiles";
         public static TestProperties TestProperties { get; set; }
         public static string TestPropertiesFile => $"{TempDir}\\collectSfDataTestProperties.json";
         public static string TestPropertiesSetupScript => $"{TestUtilitiesDir}\\setup-test-env.ps1";
-        public static string TestUtilitiesDir => "..\\..\\..\\TestUtilities";
+        public static string TestUtilitiesDir => $"{WorkingDir}\\..\\..\\..\\TestUtilities";
+        public static string WorkingDir { get; set; } = string.Empty;
         public ConfigurationOptions ConfigurationOptions { get; set; } = new ConfigurationOptions();
         public string TempOptionsFile { get; private set; } = $"{TempDir}\\collectsfdatda.{Guid.NewGuid()}.json";
         public TestContext TestContext { get; set; }
@@ -108,16 +99,29 @@ namespace CollectSFDataTests
             return results;
         }
 
-        [ClassInitialize]
-        public static void SetupTests(TestContext context)
+        [OneTimeSetUp]
+        public static void SetupTests()
         {
+            ClassTestContext = TestContext.CurrentContext;
+            WorkingDir = ClassTestContext.WorkDirectory;
             //ClassTestContext = context;
-        }
+            Assert.IsTrue(File.Exists(TestOptionsFile));
+            Assert.IsTrue(Directory.Exists(TestFilesDir));
 
-        [TestCleanup]
-        public void CleanupTest()
-        {
-            TestContext.WriteLine($"finished test: {TestContext.TestName}");
+            if (!Directory.Exists(TempDir))
+            {
+                Directory.CreateDirectory(TempDir);
+            }
+
+            if (!File.Exists(TestPropertiesFile))
+            {
+                Collection<PSObject> result = ExecutePowerShellCommand(TestPropertiesSetupScript);
+            }
+
+            Assert.IsTrue(File.Exists(TestPropertiesFile));
+
+            TestProperties = JsonConvert.DeserializeObject<TestProperties>(File.ReadAllText(TestPropertiesFile));
+            Assert.IsNotNull(TestProperties);
         }
 
         public ProcessOutput ExecuteCollectSfData(string arguments = null, bool withTempConfig = true, bool wait = true)
@@ -215,10 +219,11 @@ namespace CollectSFDataTests
             return output;
         }
 
-        [TestInitialize]
-        public void SetupTest()
+        [SetUp]
+        public void Setup()
         {
-            TestContext.WriteLine($"starting test: {TestContext.TestName}");
+            WriteConsole("TestContext", ClassTestContext);
+            TestContext.WriteLine($"starting test: {ClassTestContext?.Test.Name}");
         }
 
         public void StartConsoleRedirection()
@@ -240,6 +245,12 @@ namespace CollectSFDataTests
             Console.SetOut(Console.Out);
             Console.SetError(Console.Error);
             return output;
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            TestContext.WriteLine($"finished test: {ClassTestContext?.Test.Name}");
         }
 
         public void WriteConsole(string data, object json = null)
