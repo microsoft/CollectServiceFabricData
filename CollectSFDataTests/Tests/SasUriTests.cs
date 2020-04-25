@@ -3,12 +3,12 @@
 // Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
 using System.IO;
 using CollectSFData;
+using NUnit.Framework;
 
 namespace CollectSFDataTests
 {
@@ -24,7 +24,7 @@ namespace CollectSFDataTests
         public SasUri[] SasUri;
     }
 
-    [TestClass]
+    [TestFixture]
     public class SasUriTests : TestUtilities
     {
         private string SasUriDataFile = $"{TestFilesDir}\\SasUriTests.json";
@@ -36,7 +36,7 @@ namespace CollectSFDataTests
             SasUriList = JsonConvert.DeserializeObject<SasUris>(File.ReadAllText(SasUriDataFile)).SasUri.ToList();
         }
 
-        [TestMethod]
+        [Test]
         public void SasUriFailTest()
         {
             foreach (SasUri sasUri in SasUriList.Where(x => x.ShouldSucceed.Equals(false)))
@@ -49,8 +49,7 @@ namespace CollectSFDataTests
             }
         }
 
-        [TestMethod]
-        //[ExpectedException()]
+        [Test]
         public void SasUriSucceedTest()
         {
             foreach (SasUri sasUri in SasUriList.Where(x => x.ShouldSucceed.Equals(true)))
