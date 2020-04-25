@@ -4,8 +4,8 @@
 // ------------------------------------------------------------
 
 using CollectSFData;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
+using NUnit.Framework;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -25,7 +25,7 @@ namespace CollectSFDataTests
         public FileUri[] FileUri;
     }
 
-    [TestClass()]
+    [TestFixture]
     public class FileUriTests : TestUtilities
     {
         private string FileUriDataFile = $"{TestUtilities.TestFilesDir}\\FileUriTests.json";
@@ -37,7 +37,7 @@ namespace CollectSFDataTests
             FileUriList = JsonConvert.DeserializeObject<FileUris>(File.ReadAllText(FileUriDataFile)).FileUri.ToList();
         }
 
-        [TestMethod()]
+        [Test]
         public void FileTypeAnyTest()
         {
             foreach (FileUri fileUri in FileUriList.Where(x => x.FileType == FileTypesEnum.any))
@@ -47,7 +47,7 @@ namespace CollectSFDataTests
             }
         }
 
-        [TestMethod()]
+        [Test]
         public void FileTypeCounterTest()
         {
             foreach (FileUri fileUri in FileUriList.Where(x => x.FileType == FileTypesEnum.counter))
@@ -57,7 +57,7 @@ namespace CollectSFDataTests
             }
         }
 
-        [TestMethod()]
+        [Test]
         public void FileTypeExceptionTest()
         {
             foreach (FileUri fileUri in FileUriList.Where(x => x.FileType == FileTypesEnum.exception))
@@ -67,7 +67,7 @@ namespace CollectSFDataTests
             }
         }
 
-        [TestMethod()]
+        [Test]
         public void FileTypeSetupTest()
         {
             foreach (FileUri fileUri in FileUriList.Where(x => x.FileType == FileTypesEnum.setup))
@@ -77,7 +77,7 @@ namespace CollectSFDataTests
             }
         }
 
-        [TestMethod()]
+        [Test]
         public void FileTypeTableTest()
         {
             foreach (FileUri fileUri in FileUriList.Where(x => x.FileType == FileTypesEnum.table))
@@ -87,7 +87,7 @@ namespace CollectSFDataTests
             }
         }
 
-        [TestMethod()]
+        [Test]
         public void FileTypeTraceTest()
         {
             foreach (FileUri fileUri in FileUriList.Where(x => x.FileType == FileTypesEnum.trace))

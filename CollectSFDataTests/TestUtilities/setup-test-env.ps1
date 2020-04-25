@@ -6,9 +6,9 @@ setup variables for running tests
 param(
     [switch]$clean,
     [switch]$reset,
-    [string]$configurationFile = "..\..\temp\collectSfDataTestProperties.json",
+    [string]$configurationFile = "$psscriptroot\..\bin\temp\collectSfDataTestProperties.json",
     [string]$configurationFileTemplate = "$psscriptroot\collectSfDataTestProperties.json",
-    [string]$tempDir = "..\..\temp"
+    [string]$tempDir = "$psscriptroot\..\bin\temp"
 )
 
 $PSModuleAutoLoadingPreference = 2
@@ -16,7 +16,6 @@ $ErrorActionPreference = "continue"
 $error.clear()
 
 function main(){
-
 if((test-path $tempDir) -and $clean){
     remove-item $tempDir -recurse -force
     new-item -itemType directory -name $tempDir
@@ -35,9 +34,6 @@ if(!(test-path $configurationFile) -or $reset){
 
 $testProperties = get-content -raw $configurationFile
 write-host "current configuration:`r`n$($testProperties | out-string)" -foregroundcolor green
-
-
-
 }
 
 main
