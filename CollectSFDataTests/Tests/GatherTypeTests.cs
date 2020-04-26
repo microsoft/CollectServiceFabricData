@@ -4,9 +4,9 @@
 // ------------------------------------------------------------
 
 using NUnit.Framework;
-using CollectSFDataTests;
+using CollectSFData;
 
-namespace CollectSFData.Tests
+namespace CollectSFDataTests
 {
     [TestFixture]
     public class GatherTypeTests
