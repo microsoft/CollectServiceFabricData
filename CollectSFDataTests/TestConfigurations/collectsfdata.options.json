@@ -30,7 +30,7 @@
   "LogDebug": false,
   "LogFile": null,
   "NodeFilter": null,
-  "NoProgressTimeoutMin": 1,
+  "NoProgressTimeoutMin": 0,
   "ResourceUri": null,
   "SasKey": "",
   "StartTimeStamp": null,
