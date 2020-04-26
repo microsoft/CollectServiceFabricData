@@ -56,19 +56,31 @@ namespace CollectSFDataTests
             PopulateTempOptions();
         }
 
-        public static TestContext ClassTestContext { get; set; }
+        public static TestContext Context { get; set; }
+
         public static string DefaultOptionsFile => $"{WorkingDir}\\..\\..\\..\\..\\configurationFiles\\collectsfdata.options.json";
+
         public static string TempDir => $"{WorkingDir}\\..\\..\\Temp";
+
         public static string TestConfigurationsDir => $"{WorkingDir}\\..\\..\\..\\TestConfigurations";
+
         public static string TestFilesDir => $"{WorkingDir}\\..\\..\\..\\TestFiles";
+
         public static TestProperties TestProperties { get; set; }
+
         public static string TestPropertiesFile => $"{TempDir}\\collectSfDataTestProperties.json";
+
         public static string TestPropertiesSetupScript => $"{TestUtilitiesDir}\\setup-test-env.ps1";
+
         public static string TestUtilitiesDir => $"{WorkingDir}\\..\\..\\..\\TestUtilities";
+
         public static string WorkingDir { get; set; } = string.Empty;
+
         public ConfigurationOptions ConfigurationOptions { get; set; } = new ConfigurationOptions();
+
         public string TempOptionsFile { get; private set; } = $"{TempDir}\\collectsfdatda.{Guid.NewGuid()}.json";
-        public TestContext TestContext { get; set; }
+
+        //public TestContext TestContext { get; set; }
         private static string TestOptionsFile => $"{TestConfigurationsDir}\\collectsfdata.options.json";
 
         private StringWriter ConsoleErr { get; set; } = new StringWriter();
@@ -99,11 +111,17 @@ namespace CollectSFDataTests
             return results;
         }
 
+        public static void Main(string[] args)
+        {
+            TestUtilities testUtilities = new TestUtilities();
+            testUtilities.WriteConsole("", testUtilities.TempArgs);
+        }
+
         [OneTimeSetUp]
         public static void SetupTests()
         {
-            ClassTestContext = TestContext.CurrentContext;
-            WorkingDir = ClassTestContext.WorkDirectory;
+            Context = TestContext.CurrentContext;
+            WorkingDir = Context?.WorkDirectory ?? Directory.GetCurrentDirectory();
             //ClassTestContext = context;
             Assert.IsTrue(File.Exists(TestOptionsFile));
             Assert.IsTrue(Directory.Exists(TestFilesDir));
@@ -222,8 +240,8 @@ namespace CollectSFDataTests
         [SetUp]
         public void Setup()
         {
-            WriteConsole("TestContext", ClassTestContext);
-            TestContext.WriteLine($"starting test: {ClassTestContext?.Test.Name}");
+            WriteConsole("TestContext", Context);
+            TestContext.WriteLine($"starting test: {Context?.Test.Name}");
         }
 
         public void StartConsoleRedirection()
@@ -235,6 +253,7 @@ namespace CollectSFDataTests
 
         public ProcessOutput StopConsoleRedirection()
         {
+            Log.Close();
             FlushConsoleOutput();
             ProcessOutput output = new ProcessOutput
             {
@@ -250,12 +269,12 @@ namespace CollectSFDataTests
         [TearDown]
         public void TearDown()
         {
-            TestContext.WriteLine($"finished test: {ClassTestContext?.Test.Name}");
+            WriteConsole($"finished test: {Context?.Test.Name}", Context);
         }
 
         public void WriteConsole(string data, object json = null)
         {
-            if (TestContext != null)
+            if (Context != null)
             {
                 TestContext.WriteLine(data);
                 if (json != null)

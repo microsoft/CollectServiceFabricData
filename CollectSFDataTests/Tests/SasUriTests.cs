@@ -42,9 +42,11 @@ namespace CollectSFDataTests
             foreach (SasUri sasUri in SasUriList.Where(x => x.ShouldSucceed.Equals(false)))
             {
                 WriteConsole($"checking uri {sasUri.Uri}", sasUri);
+                StartConsoleRedirection();
                 SasEndpoints endpoints = new SasEndpoints(sasUri.Uri);
-                WriteConsole($"checking uri result {sasUri.Uri}", endpoints);
+                WriteConsole($"ProcessOutput", StopConsoleRedirection());
 
+                WriteConsole($"checking uri result {sasUri.Uri}", endpoints);
                 Assert.AreEqual(sasUri.ShouldSucceed, endpoints.IsValid());
             }
         }
@@ -55,9 +57,11 @@ namespace CollectSFDataTests
             foreach (SasUri sasUri in SasUriList.Where(x => x.ShouldSucceed.Equals(true)))
             {
                 WriteConsole($"checking uri {sasUri.Uri}", sasUri);
+                StartConsoleRedirection();
                 SasEndpoints endpoints = new SasEndpoints(sasUri.Uri);
-                WriteConsole($"checking uri result {sasUri.Uri}", endpoints);
+                WriteConsole($"ProcessOutput", StopConsoleRedirection());
 
+                WriteConsole($"checking uri result {sasUri.Uri}", endpoints);
                 Assert.AreEqual(sasUri.ShouldSucceed, endpoints.IsValid());
             }
         }
