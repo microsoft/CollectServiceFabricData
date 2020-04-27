@@ -163,7 +163,7 @@ namespace CollectSFData
         private void SetStorageUriInfo(string uriString)
         {
             uriString = uriString.TrimEnd('/') + "/";
-            string pattern = @"https?://(?<storageAccountName>.+?)\..+?\.(?<storageAccountSuffix>.+?)(\?|/$|/(?<absolutePath>.+?))(/|\?|$)";
+            string pattern = @"https?://(?<storageAccountName>.+?)\..+?\.(?<storageAccountSuffix>.+?)(\?|/$|/(?<absolutePath>.+?))(;|,|\?|$)";
 
             if (Regex.IsMatch(uriString, pattern, RegexOptions.IgnoreCase))
             {
@@ -199,7 +199,7 @@ namespace CollectSFData
 
         private bool SetToken(string sasString)
         {
-            string pattern = @"(SharedAccessSignature=|\?)(?<sas>.+?)(;|$|\s)";
+            string pattern = @"(SharedAccessSignature=|\?)(?<sas>.+?)(;|$|\s|,)";
 
             if (Regex.IsMatch(sasString, pattern, RegexOptions.IgnoreCase))
             {
