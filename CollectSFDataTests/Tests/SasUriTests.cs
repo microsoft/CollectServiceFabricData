@@ -9,12 +9,14 @@ using Newtonsoft.Json;
 using System.IO;
 using CollectSFData;
 using NUnit.Framework;
+using System;
 
 namespace CollectSFDataTests
 {
     public class SasUri
     {
         public string Description;
+        public string Exception;
         public bool ShouldSucceed;
         public string Uri;
     }
@@ -41,13 +43,31 @@ namespace CollectSFDataTests
         {
             foreach (SasUri sasUri in SasUriList.Where(x => x.ShouldSucceed.Equals(false)))
             {
-                WriteConsole($"checking uri {sasUri.Uri}", sasUri);
                 StartConsoleRedirection();
-                SasEndpoints endpoints = new SasEndpoints(sasUri.Uri);
-                WriteConsole($"ProcessOutput", StopConsoleRedirection());
+                SasEndpoints endpoints = null;
 
-                WriteConsole($"checking uri result {sasUri.Uri}", endpoints);
-                Assert.AreEqual(sasUri.ShouldSucceed, endpoints.IsValid());
+                if (!string.IsNullOrEmpty(sasUri.Exception))
+                {
+                    WriteConsole($"checking uri for exception {sasUri.Exception} {sasUri.Uri}", sasUri);
+                    Type exceptionType = Type.GetType(sasUri.Exception, true, true);
+
+                    Assert.Throws(exceptionType, () => endpoints = new SasEndpoints(sasUri.Uri));
+                }
+                else
+                {
+                    WriteConsole($"checking uri {sasUri.Uri}", sasUri);
+                    endpoints = new SasEndpoints(sasUri.Uri);
+                    WriteConsole($"checking uri result {sasUri.Uri}", endpoints);
+
+                    if (sasUri.ShouldSucceed != endpoints.IsValid())
+                    {
+                        WriteConsole($"test fail bug: {sasUri.Uri} {Context?.Test.Name}", Context);
+                    }
+
+                    Assert.AreEqual(sasUri.ShouldSucceed, endpoints.IsValid());
+                }
+
+                WriteConsole($"ProcessOutput", StopConsoleRedirection());
             }
         }
 
@@ -62,6 +82,12 @@ namespace CollectSFDataTests
                 WriteConsole($"ProcessOutput", StopConsoleRedirection());
 
                 WriteConsole($"checking uri result {sasUri.Uri}", endpoints);
+
+                if (sasUri.ShouldSucceed != endpoints.IsValid())
+                {
+                    WriteConsole($"test fail bug: {sasUri.Uri} {Context?.Test.Name}", Context);
+                }
+
                 Assert.AreEqual(sasUri.ShouldSucceed, endpoints.IsValid());
             }
         }
