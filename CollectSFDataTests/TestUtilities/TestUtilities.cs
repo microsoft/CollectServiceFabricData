@@ -42,7 +42,6 @@ namespace CollectSFDataTests
     [TestFixture]
     public class TestUtilities
     {
-        public static string[] TestArgs = new string[2] { "-config", TestOptionsFile };
         public string[] TempArgs;
         private static object _executing = new object();
 
@@ -57,11 +56,9 @@ namespace CollectSFDataTests
         }
 
         public static TestContext Context { get; set; }
-
         public static string DefaultOptionsFile => $"{WorkingDir}\\..\\..\\..\\..\\configurationFiles\\collectsfdata.options.json";
-
         public static string TempDir => $"{WorkingDir}\\..\\..\\Temp";
-
+        public static string[] TestArgs => new string[2] { "-config", TestOptionsFile };
         public static string TestConfigurationsDir => $"{WorkingDir}\\..\\..\\..\\TestConfigurations";
 
         public static string TestFilesDir => $"{WorkingDir}\\..\\..\\..\\TestFiles";
@@ -260,6 +257,9 @@ namespace CollectSFDataTests
                 StandardError = ConsoleErr.ToString(),
                 StandardOutput = ConsoleOut.ToString()
             };
+
+            ConsoleErr = new StringWriter();
+            ConsoleOut = new StringWriter();
 
             Console.SetOut(Console.Out);
             Console.SetError(Console.Error);
