@@ -15,7 +15,8 @@
       "description": "sasuri test data file.",
       "default": [],
       "examples": [
-        [{
+        [
+          {
             "Uri": "",
             "Description": "",
             "ShouldSucceed": true
@@ -72,6 +73,16 @@
               false
             ],
             "pattern": "true|false"
+          },
+          "Exception": {
+            "type": "string",
+            "title": "Exception set to exception type if any.",
+            "default": true,
+            "examples": [
+              "ArgumentExeption",
+              "NullReferenceExeption"
+            ],
+            "pattern": "."
           }
         }
       }
