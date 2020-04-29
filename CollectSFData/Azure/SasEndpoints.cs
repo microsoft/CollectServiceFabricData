@@ -27,15 +27,7 @@ namespace CollectSFData
                 // verify sas is valid uri if not sasconnection
                 Uri testUri = null;
                 string errMessage = $"invalid uri.scheme/saskey:{sasKey}";
-
-                try
-                {
-                    testUri = new Uri(sasKey, UriKind.Absolute);
-                }
-                catch (Exception e)
-                {
-                    throw new ArgumentException(errMessage, e);
-                }
+                testUri = new Uri(sasKey, UriKind.Absolute);
 
                 Log.Debug("sas testUri", testUri);
 
