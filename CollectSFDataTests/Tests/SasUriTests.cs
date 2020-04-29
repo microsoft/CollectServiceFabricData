@@ -12,7 +12,7 @@ namespace CollectSFDataTests
     [TestFixture]
     public class SasUriTests : TestUtilities
     {
-        [Test]
+        [Test(Description = "SAS ASC / Jarvis connection string test", TestOf = typeof(SasEndpoints))]
         public void SasAscTest()
         {
             string sasUri = "https://sflogsxxxxxxxx.blob.core.windows.net/fabriclogs-f33707ca-75bd-43c7-aafb-f589f66bed6c" +
@@ -42,7 +42,7 @@ namespace CollectSFDataTests
             Assert.AreEqual(true, endpoints.IsValid());
         }
 
-        [Test]
+        [Test(Description = "SAS expired sas fail test", TestOf = typeof(SasEndpoints))]
         public void SasExpiredFailTest()
         {
             string sasUri = "https://sflogsxxxxxxxx.blob.core.windows.net/" +
@@ -58,7 +58,7 @@ namespace CollectSFDataTests
             Assert.AreEqual(false, endpoints.IsValid());
         }
 
-        [Test]
+        [Test(Description = "SAS invalid uri fail test", TestOf = typeof(SasEndpoints))]
         public void SasInvalidUriFailTest()
         {
             string sasUri = "sflogsxxxxxxxx.table.core.windows.net/" +
@@ -73,7 +73,7 @@ namespace CollectSFDataTests
             WriteConsole($"ProcessOutput", StopConsoleRedirection());
         }
 
-        [Test]
+        [Test(Description = "SAS no access sas fail test", TestOf = typeof(SasEndpoints))]
         public void SasNoAccessFailTest()
         {
             string sasUri = "https://sflogsxxxxxxxx.file.core.windows.net/" +
@@ -89,7 +89,7 @@ namespace CollectSFDataTests
             Assert.AreEqual(false, endpoints.IsValid());
         }
 
-        [Test]
+        [Test(Description = "SAS no signature sas fail test", TestOf = typeof(SasEndpoints))]
         public void SasNoSignatureFailTest()
         {
             string sasUri = "https://sflogsxxxxxxxx.table.core.windows.net/" +
@@ -105,7 +105,7 @@ namespace CollectSFDataTests
             Assert.AreEqual(false, endpoints.IsValid());
         }
 
-        [Test]
+        [Test(Description = "SAS portal connection string test", TestOf = typeof(SasEndpoints))]
         public void SasPortalConnectionStringTest()
         {
             string sasUri = "https://sflogsxxxxxxxx.blob.core.windows.net/;" +
@@ -124,7 +124,7 @@ namespace CollectSFDataTests
             Assert.AreEqual(true, endpoints.IsValid());
         }
 
-        [Test]
+        [Test(Description = "SAS portal full access test (default)", TestOf = typeof(SasEndpoints))]
         public void SasPortalFullAccessTest()
         {
             string sasUri = "https://sflogsxxxxxxxx.blob.core.windows.net/" +
@@ -140,7 +140,7 @@ namespace CollectSFDataTests
             Assert.AreEqual(true, endpoints.IsValid());
         }
 
-        [Test]
+        [Test(Description = "SAS service sas test", TestOf = typeof(SasEndpoints))]
         public void SasServiceSasTest()
         {
             // service sas example has 'sr='
@@ -157,7 +157,7 @@ namespace CollectSFDataTests
             Assert.AreEqual(true, endpoints.IsValid());
         }
 
-        [Test]
+        [Test(Description = "SAS storage account only fail test", TestOf = typeof(SasEndpoints))]
         public void SasStorageAccountOnlyFailTest()
         {
             string sasUri = "https://sflogsxxxxxxxx.table.core.windows.net/";
@@ -173,7 +173,7 @@ namespace CollectSFDataTests
             WriteConsole($"ProcessOutput", StopConsoleRedirection());
         }
 
-        [Test]
+        [Test(Description = "SAS write only sas fail test", TestOf = typeof(SasEndpoints))]
         public void SasWriteOnlyFailTest()
         {
             string sasUri = "https://sflogsxxxxxxxx.blob.core.windows.net/" +
