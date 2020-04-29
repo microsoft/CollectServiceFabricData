@@ -35,17 +35,6 @@ namespace CollectSFDataTests
             Assert.AreEqual(FileExtensionTypesEnum.unknown, FileTypes.MapKnownFileExtension(fileUri));
         }
 
-        [Test(Description = "counter blg file full uri", TestOf = typeof(FileTypes))]
-        public void FileCounterBlgFullUriTest()
-        {
-            string fileUri = "https://sflogsbmnjfzoagi7jc2.blob.core.windows.net/fabriclogs-c9113ef8-4fea-420e-aa37-3be4401dce67/_nt0_0/Fabric/f45f24746c42cc2a6dd69da9e7797e2c_fabric_traces_6.3.187.9494_131861030069574505_1_00636772262289400052_2147483647.dtr.zip";
-            WriteConsole($"checking uri result {fileUri}");
-
-            Assert.AreEqual(FileTypesEnum.counter, FileTypes.MapFileTypeUri(fileUri));
-            Assert.AreEqual(FileDataTypesEnum.counter, FileTypes.MapFileDataTypeUri(fileUri));
-            Assert.AreEqual(FileExtensionTypesEnum.blg, FileTypes.MapKnownFileExtension(fileUri));
-        }
-
         [Test(Description = "counter .blg file partial uri", TestOf = typeof(FileTypes))]
         public void FileCounterLocalTest()
         {
@@ -218,6 +207,7 @@ namespace CollectSFDataTests
             Assert.AreEqual(FileExtensionTypesEnum.trace, FileTypes.MapKnownFileExtension(fileUri));
         }
 
+        /*
         [Test(Description = "", TestOf = typeof(FileTypes))]
         public void FileTableTest()
         {
@@ -227,15 +217,6 @@ namespace CollectSFDataTests
             Assert.AreEqual(FileDataTypesEnum.table, FileTypes.MapFileDataTypeUri(fileUri));
             Assert.AreEqual(FileExtensionTypesEnum.csv, FileTypes.MapKnownFileExtension(fileUri));
         }
-
-        [Test(Description = "", TestOf = typeof(FileTypes))]
-        public void FileTraceTest()
-        {
-            string fileUri = "";
-            WriteConsole($"checking uri result {fileUri}");
-            Assert.AreEqual(FileTypesEnum.trace, FileTypes.MapFileTypeUri(fileUri));
-            Assert.AreEqual(FileDataTypesEnum.fabric, FileTypes.MapFileDataTypeUri(fileUri));
-            Assert.AreEqual(FileExtensionTypesEnum.zip, FileTypes.MapKnownFileExtension(fileUri));
-        }
+        */
     }
 }
