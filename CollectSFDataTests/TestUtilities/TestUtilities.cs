@@ -61,8 +61,6 @@ namespace CollectSFDataTests
         public static string[] TestArgs => new string[2] { "-config", TestOptionsFile };
         public static string TestConfigurationsDir => $"{WorkingDir}\\..\\..\\..\\TestConfigurations";
 
-        public static string TestFilesDir => $"{WorkingDir}\\..\\..\\..\\TestFiles";
-
         public static TestProperties TestProperties { get; set; }
 
         public static string TestPropertiesFile => $"{TempDir}\\collectSfDataTestProperties.json";
@@ -77,23 +75,11 @@ namespace CollectSFDataTests
 
         public string TempOptionsFile { get; private set; } = $"{TempDir}\\collectsfdatda.{Guid.NewGuid()}.json";
 
-        //public TestContext TestContext { get; set; }
         private static string TestOptionsFile => $"{TestConfigurationsDir}\\collectsfdata.options.json";
 
         private StringWriter ConsoleErr { get; set; } = new StringWriter();
 
         private StringWriter ConsoleOut { get; set; } = new StringWriter();
-
-        public static bool BuildWindowsCluster()
-        {
-            string templateFile = $".\\sf-1nt-3n-1lb.json";
-            string templateParameterFile = $".\\sf-1nt-3n-1lb.parameters.json";
-
-            var results = ExecutePowerShellCommand($".\\azure-az-deploy-template.ps1 -force" +
-                $" -templatefile '{templateFile}'" +
-                $" -templateParameterFile '{templateParameterFile}'");
-            return true;
-        }
 
         public static Collection<PSObject> ExecutePowerShellCommand(string command)
         {
@@ -119,9 +105,7 @@ namespace CollectSFDataTests
         {
             Context = TestContext.CurrentContext;
             WorkingDir = Context?.WorkDirectory ?? Directory.GetCurrentDirectory();
-            //ClassTestContext = context;
             Assert.IsTrue(File.Exists(TestOptionsFile));
-            Assert.IsTrue(Directory.Exists(TestFilesDir));
 
             if (!Directory.Exists(TempDir))
             {
