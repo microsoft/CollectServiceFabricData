@@ -99,7 +99,6 @@
   <ItemGroup>
     <None Include="packages.config" />
     <None Include="TestConfigurations\collectsfdata.options.json" />
-    <None Include="TestFiles\FileUriTests.schema.json" />
     <None Include="TestFiles\FileUriTests.json" />
     <None Include="TestUtilities\azure-az-aad-add-key-vault.ps1" />
     <None Include="TestUtilities\azure-az-create-aad-application-spn.ps1" />
