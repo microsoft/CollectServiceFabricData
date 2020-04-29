@@ -99,8 +99,6 @@
   <ItemGroup>
     <None Include="packages.config" />
     <None Include="TestConfigurations\collectsfdata.options.json" />
-    <None Include="TestFiles\SasUriTests.json" />
-    <None Include="TestFiles\SasUriTests.schema.json" />
     <None Include="TestFiles\FileUriTests.schema.json" />
     <None Include="TestFiles\FileUriTests.json" />
     <None Include="TestUtilities\azure-az-aad-add-key-vault.ps1" />
