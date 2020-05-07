@@ -3,12 +3,8 @@
 // Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
-using CollectSFData;
-using Newtonsoft.Json;
+using CollectSFData.DataFile;
 using NUnit.Framework;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 
 namespace CollectSFDataTests
 {
