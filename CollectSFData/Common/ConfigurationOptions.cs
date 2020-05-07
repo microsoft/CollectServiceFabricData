@@ -3,6 +3,8 @@
 // Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
+using CollectSFData.Azure;
+using CollectSFData.DataFile;
 using Microsoft.Extensions.CommandLineUtils;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -16,7 +18,7 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading;
 
-namespace CollectSFData
+namespace CollectSFData.Common
 {
     public class ConfigurationOptions : Constants
     {

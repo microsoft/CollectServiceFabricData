@@ -3,7 +3,7 @@
 // Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
-using CollectSFData;
+using CollectSFData.Azure;
 using NUnit.Framework;
 using System;
 

@@ -12,7 +12,7 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Threading;
 
-namespace CollectSFData
+namespace CollectSFData.Common
 {
     public class Http : Constants
     {
