@@ -3,6 +3,8 @@
 // Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
+using CollectSFData.Common;
+using CollectSFData.DataFile;
 using Microsoft.Azure.Storage;
 using Microsoft.Azure.Storage.Blob;
 using Microsoft.Azure.Storage.Queue;
@@ -15,7 +17,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace CollectSFData
+namespace CollectSFData.Kusto
 {
     public class KustoConnection : Instance
     {

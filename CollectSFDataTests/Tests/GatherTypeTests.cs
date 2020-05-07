@@ -4,7 +4,7 @@
 // ------------------------------------------------------------
 
 using NUnit.Framework;
-using CollectSFData;
+using CollectSFData.DataFile;
 
 namespace CollectSFDataTests
 {

@@ -6,8 +6,11 @@
 using System;
 using System.Threading.Tasks;
 using System.Threading;
+using CollectSFData.DataFile;
+using CollectSFData.Kusto;
+using CollectSFData.LogAnalytics;
 
-namespace CollectSFData
+namespace CollectSFData.Common
 {
     public class Instance : Constants
     {

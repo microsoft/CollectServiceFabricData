@@ -5,37 +5,33 @@
 
 using System;
 
-namespace CollectSFData
+namespace CollectSFData.DataFile
 {
     [Serializable]
-    public class CsvTableRecord : IRecord
+    public class CsvCounterRecord : IRecord
     {
-        public string ETag { get; set; }
+        public string CounterName { get; set; }
 
-        public string EventTimeStamp { get; set; }
+        public Decimal CounterValue { get; set; }
 
-        public string PartitionKey { get; set; }
+        public string FileType { get; set; }
 
-        public string PropertyName { get; set; }
-
-        public string PropertyValue { get; set; }
+        public string NodeName { get; set; }
 
         public string RelativeUri { get; set; }
 
         public string ResourceUri { get; set; }
 
-        public string RowKey { get; set; }
-
         public DateTime Timestamp { get; set; }
 
         public IRecord Populate(FileObject fileObject, string dtrRecord, string resourceUri = null)
         {
-            return this;
+            return this as ITraceRecord;
         }
 
         public override string ToString()
         {
-            return $"{Timestamp:o},{EventTimeStamp},{ETag},{PartitionKey},{RowKey},{PropertyName},{PropertyValue},{RelativeUri},{ResourceUri}{Environment.NewLine}";
+            return $"{Timestamp:o},{CounterName},{CounterValue},{NodeName},{FileType},{RelativeUri},{ResourceUri}{Environment.NewLine}";
         }
     }
 }
