@@ -7,7 +7,7 @@ using Microsoft.Azure.Storage;
 using Microsoft.Azure.Storage.RetryPolicies;
 using System;
 
-namespace CollectSFData
+namespace CollectSFData.Common
 {
     public class IngestRetryPolicy : Constants, IRetryPolicy
     {

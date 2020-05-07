@@ -5,7 +5,7 @@
 
 using System;
 
-namespace CollectSFData
+namespace CollectSFData.Kusto
 {
     public class KustoAdditionalProperties
     {

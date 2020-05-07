@@ -7,7 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 
-namespace CollectSFData
+namespace CollectSFData.Common
 {
     public class SynchronizedList<T> : List<T>, IEnumerable<T>
     {
