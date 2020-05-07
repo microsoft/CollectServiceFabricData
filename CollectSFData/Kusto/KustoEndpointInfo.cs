@@ -3,8 +3,6 @@
 // Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
-using Kusto.Cloud.Platform.Data;
-using Kusto.Cloud.Platform.Json;
 using Kusto.Data;
 using Kusto.Data.Common;
 using Kusto.Data.Net.Client;
@@ -22,11 +20,12 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using Kusto.Cloud.Platform.Utils;
 using System.Collections;
-using Kusto.Data.Linq;
+using CollectSFData.Common;
+using CollectSFData.Azure;
 
 //using System.Windows.Forms;
 
-namespace CollectSFData
+namespace CollectSFData.Kusto
 {
     public class IngestionResourcesSnapshot
     {

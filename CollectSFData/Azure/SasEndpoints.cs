@@ -3,11 +3,12 @@
 // Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
+using CollectSFData.Common;
 using System;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace CollectSFData
+namespace CollectSFData.Azure
 {
     public class SasEndpoints
     {

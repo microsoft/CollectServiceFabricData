@@ -3,8 +3,12 @@
 // Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
-namespace CollectSFData
+namespace CollectSFData.Common
 {
+    using CollectSFData.Azure;
+    using CollectSFData.DataFile;
+    using CollectSFData.Kusto;
+    using CollectSFData.LogAnalytics;
     using System;
     using System.Collections.Generic;
     using System.IO;

@@ -5,7 +5,7 @@
 
 using System.Diagnostics;
 
-namespace CollectSFData
+namespace CollectSFData.Common
 {
     public class Constants
     {

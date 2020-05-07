@@ -7,8 +7,7 @@
 //https://github.com/nunit/docs/wiki/Tips-And-Tricks
 //https://github.com/nunit/nunit-csharp-samples
 
-using CollectSFData;
-
+using CollectSFData.Common;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using System;
