@@ -29,10 +29,10 @@ namespace CollectSFDataTests
 
             ProcessOutput results = utils.ExecuteTest();
 
-            // all test outputs will have invalid type initially
+
             Assert.IsTrue(results.StandardOutput.Contains("ValidateFileType:warning: invalid -type"));
             // should not start execution
-            Assert.IsFalse(results.StandardOutput.Contains("total execution time in minutes"));
+            Assert.NotZero(results.ExitCode);
         }
 
         [Test]
@@ -43,6 +43,7 @@ namespace CollectSFDataTests
 
             ProcessOutput results = utils.ExecuteTest();
             Assert.IsFalse(results.HasErrors());
+            Assert.IsTrue(results.StandardOutput.Contains("total execution time in minutes"));
         }
 
         [Test]
@@ -63,10 +64,10 @@ namespace CollectSFDataTests
 
             ProcessOutput results = utils.ExecuteTest();
 
-            // all test outputs will have invalid type initially
+
             Assert.IsTrue(results.StandardOutput.Contains("ValidateFileType:warning: invalid -type"));
             // should not start execution
-            Assert.IsFalse(results.StandardOutput.Contains("total execution time in minutes"));
+            Assert.NotZero(results.ExitCode);
         }
 
         [Test]
@@ -107,10 +108,9 @@ namespace CollectSFDataTests
 
             ProcessOutput results = utils.ExecuteTest();
 
-            // all test outputs will have invalid type initially
             Assert.IsTrue(results.StandardOutput.Contains("ValidateFileType:warning: invalid -type"));
             // should not start execution
-            Assert.IsFalse(results.StandardOutput.Contains("total execution time in minutes"));
+            Assert.NotZero(results.ExitCode);
         }
     }
 }

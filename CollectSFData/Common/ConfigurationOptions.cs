@@ -27,7 +27,7 @@ namespace CollectSFData.Common
         private string _endTime;
         private bool _logDebugEnabled;
         private string _startTime;
-        private string _tempPath = Path.GetTempPath().TrimEnd(Path.DirectorySeparatorChar);
+        private string _tempPath = FileManager.NormalizePath(Path.GetTempPath().TrimEnd(Path.DirectorySeparatorChar));
         private int _threads;
 
         public ConfigurationOptions()
@@ -282,7 +282,7 @@ namespace CollectSFData.Common
         {
             // saving config file with no options will set cache location to %temp% by default
             // collectsfdata.exe -save file.json
-            return !string.IsNullOrEmpty(CacheLocation) | (CacheLocation == _tempPath);
+            return !(string.IsNullOrEmpty(CacheLocation) | (CacheLocation == _tempPath));
         }
 
         public bool IsClientIdConfigured()

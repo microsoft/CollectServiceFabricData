@@ -16,6 +16,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Management.Automation;
 using System.Management.Automation.Runspaces;
+using System.Text;
 
 namespace CollectSFDataTests
 {
@@ -54,6 +55,9 @@ namespace CollectSFDataTests
             PopulateTempOptions();
         }
 
+        public StringBuilder consoleOutBuilder = new StringBuilder();
+        public StringBuilder consoleErrBuilder = new StringBuilder();
+
         public static TestContext Context { get; set; }
         public static string DefaultOptionsFile => $"{WorkingDir}\\..\\..\\..\\..\\configurationFiles\\collectsfdata.options.json";
         public static string TempDir => $"{WorkingDir}\\..\\..\\Temp";
@@ -70,7 +74,7 @@ namespace CollectSFDataTests
 
         public static string WorkingDir { get; set; } = string.Empty;
 
-        public ConfigurationOptions ConfigurationOptions { get; set; } = new ConfigurationOptions();
+        public ConfigurationOptions ConfigurationOptions { get; set; } //= new ConfigurationOptions();
 
         public string TempOptionsFile { get; private set; } = $"{TempDir}\\collectsfdatda.{Guid.NewGuid()}.json";
 
@@ -174,19 +178,22 @@ namespace CollectSFDataTests
             return output;
         }
 
-        public ProcessOutput ExecuteTest()
+        public ProcessOutput ExecuteTest(ConfigurationOptions options = null)
         {
             lock (_executing)
             {
                 Log.Info("enter");
 
                 SaveTempOptions();
+                //Program.Config = new ConfigurationOptions();
                 Program program = new Program();
+                
                 Assert.IsNotNull(program);
 
                 StartConsoleRedirection();
+                Log.Info(">>>>Starting test<<<<\r\n", ConfigurationOptions);
                 int result = program.Execute(TempArgs);
-
+                Log.Info(">>>>test result<<<<", result);
                 ProcessOutput output = StopConsoleRedirection();
 
                 Assert.IsNotNull(output);
@@ -194,8 +201,10 @@ namespace CollectSFDataTests
                 if (result != 0)
                 {
                     Log.Error($"result {result}");
+                    output.ExitCode = result;
                 }
 
+                //Log.Info(">>>>test result<<<<", output);
                 return output;
             }
         }
@@ -222,10 +231,14 @@ namespace CollectSFDataTests
         {
             WriteConsole("TestContext", Context);
             TestContext.WriteLine($"starting test: {Context?.Test.Name}");
+            consoleOutBuilder = new StringBuilder();
+            consoleErrBuilder = new StringBuilder();
         }
 
         public void StartConsoleRedirection()
         {
+            Log.Start();
+            Log.Info("starting redirection");
             FlushConsoleOutput();
             Console.SetOut(ConsoleOut);
             Console.SetError(ConsoleErr);
@@ -233,6 +246,7 @@ namespace CollectSFDataTests
 
         public ProcessOutput StopConsoleRedirection()
         {
+            Log.Info("stopping redirection");
             Log.Close();
             FlushConsoleOutput();
             ProcessOutput output = new ProcessOutput
@@ -246,12 +260,18 @@ namespace CollectSFDataTests
 
             Console.SetOut(Console.Out);
             Console.SetError(Console.Error);
+
+            consoleOutBuilder.Append(output.StandardOutput);
+            consoleErrBuilder.Append(output.StandardError);
+
             return output;
         }
 
         [TearDown]
         public void TearDown()
         {
+            WriteConsole($"standard out:\r\n{consoleOutBuilder}");
+            WriteConsole($"standard err:\r\n{consoleErrBuilder}");
             WriteConsole($"finished test: {Context?.Test.Name}", Context);
         }
 
@@ -281,8 +301,9 @@ namespace CollectSFDataTests
 
             ConfigurationOptions = new ConfigurationOptions();
 
-            TempArgs = new string[2] { "-config", TestOptionsFile };
+            //TempArgs = new string[2] { "-config", TestOptionsFile };
             ConfigurationOptions.PopulateConfig(TestArgs);
+            //ConfigurationOptions.CacheLocation = "";// null;
             SaveTempOptions();
 
             TempArgs = new string[2] { "-config", TempOptionsFile };
