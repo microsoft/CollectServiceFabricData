@@ -3,6 +3,7 @@
 // Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
+using Moq;
 using NUnit.Framework;
 using CollectSFData.DataFile;
 
@@ -16,6 +17,11 @@ namespace CollectSFDataTests
         {
             TestUtilities utils = new TestUtilities();
             utils.ConfigurationOptions.GatherType = FileTypesEnum.any.ToString();
+
+            //test
+            //ProcessOutput result = utils.ExecuteMoqTest();
+            //end test
+
 
             ProcessOutput results = utils.ExecuteTest();
             Assert.IsFalse(results.HasErrors());
