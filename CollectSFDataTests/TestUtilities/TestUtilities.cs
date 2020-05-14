@@ -8,6 +8,7 @@
 //https://github.com/nunit/nunit-csharp-samples
 
 using CollectSFData.Common;
+using Moq;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using System;
@@ -176,6 +177,40 @@ namespace CollectSFDataTests
 
             output.ExitCode = process.ExitCode;
             return output;
+        }
+
+        public ProcessOutput ExecuteMoqTest(ConfigurationOptions options = null)
+        {
+            lock (_executing)
+            {
+                Log.Info("enter");
+
+                SaveTempOptions();
+                //Program.Config = new ConfigurationOptions();
+                //Program program = new Program();
+                var program = new Mock<Program>();
+                //Moq.Language.Flow.ISetup<Program, int> result = program.Setup(p => p.Execute(TempArgs));
+                program.Setup(p => p.Execute(TempArgs));
+
+                Assert.IsNotNull(program);
+
+                StartConsoleRedirection();
+                Log.Info(">>>>Starting test<<<<\r\n", ConfigurationOptions);
+                //int result = program.Execute(TempArgs);
+                //Log.Info(">>>>test result<<<<", result);
+                ProcessOutput output = StopConsoleRedirection();
+
+                Assert.IsNotNull(output);
+                /*
+                if (result. != 0)
+                {
+                    Log.Error($"result {result}");
+                    output.ExitCode = result;
+                }
+                */
+                //Log.Info(">>>>test result<<<<", output);
+                return output;
+            }
         }
 
         public ProcessOutput ExecuteTest(ConfigurationOptions options = null)
