@@ -67,7 +67,7 @@ namespace CollectSFDataTests
 
         public static TestProperties TestProperties { get; set; }
 
-        public static string TestPropertiesFile => $"{TempDir}\\collectSfDataTestProperties.json";
+        public static string TestPropertiesFile => $"{Environment.GetEnvironmentVariable("LOCALAPPDATA")}\\collectsfdata\\collectSfDataTestProperties.json";
 
         public static string TestPropertiesSetupScript => $"{TestUtilitiesDir}\\setup-test-env.ps1";
 
@@ -188,7 +188,7 @@ namespace CollectSFDataTests
                 SaveTempOptions();
                 //Program.Config = new ConfigurationOptions();
                 //Program program = new Program();
-                var program = new Mock<Program>();
+                var program = new Mock<ProgramInstance>();
                 //Moq.Language.Flow.ISetup<Program, int> result = program.Setup(p => p.Execute(TempArgs));
                 program.Setup(p => p.Execute(TempArgs));
 
@@ -221,7 +221,7 @@ namespace CollectSFDataTests
 
                 SaveTempOptions();
                 //Program.Config = new ConfigurationOptions();
-                Program program = new Program();
+                ProgramInstance program = new ProgramInstance();
                 
                 Assert.IsNotNull(program);
 

@@ -14,9 +14,11 @@ param(
     $directoryDepth = 3,
     $numberOfContainers = 6,
     $numberOfDirectories = 3,
-    $numberOfBlobs = 100,
+    $numberOfBlobs = 10,
+    $testClusterGuid = "4a17f977-93a7-4f4b-b924-4daa96fe13c5", #[guid]::newguid().tostring(),
     [switch]$recreateBaseContainer
 )
+
 $PSModuleAutoLoadingPreference = 2
 $ErrorActionPreference = "continue"
 Clear-Host
@@ -90,11 +92,33 @@ function main() {
                 $totalBlobs++
                 write-host "creating blob $($totalBlobs): $($blobName)"
                 $blobRef = $baseContainer.GetBlockBlobReference($blobName)
-                $result = $blobRef.UploadTextAsync("testtest", $null, $null, $null, $null).Result;
+                $result = $blobRef.UploadTextAsync((generate-testData), $null, $null, $null, $null).Result;
                 write-host "upload file result: $($result | convertto-json -depth 5)"
             }
         }
     }
+}
+
+function generate-testData(){
+    $testData = [collections.arraylist]::new()
+
+    for($i = 0; $i -lt 1000; $i++){
+        $timestamp = (get-date).ToString('o')
+        $level = get-random @('Informational','Warning','Error')
+        $TID = get-random -Minimum 0 -Maximum 10000
+        $PID1 = get-random -Minimum 0 -Maximum 10000
+        $type = get-random @('Transport.Message','LeaseAgent.Heartbeat','Transport.SendBuf')
+        $text = "test messsage"
+        $nodeName = get-random @('_nt0_0','_nt0_1','_nt0_2')
+        $fileType = get-random @('fabric','lease')
+        $relativeUri = "fabriclogs-$testClusterGuid/$($data.NodeName)/$($data.FileType)/eeb6ae3dc3ff88122d45c1b426b30a9a_fabric_traces_7.0.470.9590_132314840561756254_1444_$((get-date).ticks)_0000000000.dtr"
+        $dataString = "$timestamp,$level,$tid,$pid1,$type,$text,$nodeName,$fileType,$relativeUri"
+        [void]$testData.Add(
+            $dataString
+        )
+    }
+
+    return ($testData | out-string)
 }
 
 main
