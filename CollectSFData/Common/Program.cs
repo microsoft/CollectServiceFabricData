@@ -22,6 +22,11 @@ namespace CollectSFData.Common
     {
         private int _noProgressCounter = 0;
         private Tuple<int, int, int, int, int, int, int> _progressTuple = new Tuple<int, int, int, int, int, int, int>(0, 0, 0, 0, 0, 0, 0);
+        private CustomTaskManager TaskManager = new CustomTaskManager(true);
+        private KustoConnection Kusto = null;
+        private LogAnalyticsConnection LogAnalytics = null;
+        private Timer NoProgressTimer;
+        private ParallelOptions ParallelConfig;
 
         public static int Main(string[] args)
         {
