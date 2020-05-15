@@ -37,29 +37,30 @@ namespace CollectSFData.Common
 
         public bool AddUnique(T item, bool failIfExists = false)
         {
-            _rwl.EnterWriteLock();
-
-            try
+            if (!Exists(x => x.Equals(item)))
             {
-                if (!Exists(x => x.Equals(item)))
+                _rwl.EnterWriteLock();
+
+                try
                 {
+
                     base.Add(item);
                 }
-                else
+                finally
                 {
-                    if (failIfExists)
-                    {
-                        Log.Warning("item exists", item);
-                        return false;
-                    }
+                    _rwl.ExitWriteLock();
                 }
-
-                return true;
             }
-            finally
+            else
             {
-                _rwl.ExitWriteLock();
+                if (failIfExists)
+                {
+                    Log.Warning("item exists", item);
+                    return false;
+                }
             }
+
+            return true;
         }
 
         public bool Any()
