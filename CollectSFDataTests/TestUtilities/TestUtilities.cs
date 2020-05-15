@@ -188,7 +188,7 @@ namespace CollectSFDataTests
                 SaveTempOptions();
                 //Program.Config = new ConfigurationOptions();
                 //Program program = new Program();
-                var program = new Mock<ProgramInstance>();
+                var program = new Mock<Program>();
                 //Moq.Language.Flow.ISetup<Program, int> result = program.Setup(p => p.Execute(TempArgs));
                 program.Setup(p => p.Execute(TempArgs));
 
@@ -221,7 +221,7 @@ namespace CollectSFDataTests
 
                 SaveTempOptions();
                 //Program.Config = new ConfigurationOptions();
-                ProgramInstance program = new ProgramInstance();
+                Program program = new Program();
                 
                 Assert.IsNotNull(program);
 
