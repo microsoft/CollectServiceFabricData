@@ -44,7 +44,7 @@ namespace CollectSFDataTests
         [Test(Description = "counter .blg file uri", TestOf = typeof(FileTypes))]
         public void FileCounterUriTest()
         {
-            string fileUri = "https://sflogsbmnjfzoagi7jc2.blob.core.windows.net/fabriccounters-c9113ef8-4fea-420e-aa37-3be4401dce67/_nt0_0/fabric_counters_636772263220294612_000001.blg";
+            string fileUri = "https://sflogsxxxxxxxx.blob.core.windows.net/fabriccounters-c9113ef8-4fea-420e-aa37-3be4401dce67/_nt0_0/fabric_counters_636772263220294612_000001.blg";
             WriteConsole($"checking uri result {fileUri}");
             Assert.AreEqual(FileTypesEnum.counter, FileTypes.MapFileTypeUri(fileUri));
             Assert.AreEqual(FileDataTypesEnum.counter, FileTypes.MapFileDataTypeUri(fileUri));
@@ -151,7 +151,7 @@ namespace CollectSFDataTests
         [Test(Description = "fabric zip file full uri", TestOf = typeof(FileTypes))]
         public void FileFabricZipTraceFullUriTest()
         {
-            string fileUri = "https://sflogsbmnjfzoagi7jc2.blob.core.windows.net/fabriclogs-c9113ef8-4fea-420e-aa37-3be4401dce67/_nt0_0/Fabric/f45f24746c42cc2a6dd69da9e7797e2c_fabric_traces_6.3.187.9494_131861030069574505_1_00636772262289400052_2147483647.dtr.zip";
+            string fileUri = "https://sflogsxxxxxxxx.blob.core.windows.net/fabriclogs-c9113ef8-4fea-420e-aa37-3be4401dce67/_nt0_0/Fabric/f45f24746c42cc2a6dd69da9e7797e2c_fabric_traces_6.3.187.9494_131861030069574505_1_00636772262289400052_2147483647.dtr.zip";
             WriteConsole($"checking uri result {fileUri}");
 
             Assert.AreEqual(FileTypesEnum.trace, FileTypes.MapFileTypeUri(fileUri));

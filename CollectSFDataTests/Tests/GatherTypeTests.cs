@@ -17,7 +17,8 @@ namespace CollectSFDataTests
         {
             TestUtilities utils = new TestUtilities();
             utils.ConfigurationOptions.GatherType = FileTypesEnum.any.ToString();
-
+            utils.ConfigurationOptions.SasKey = TestUtilities.TestProperties.SasKey;
+            utils.ConfigurationOptions.CacheLocation = TestUtilities.TempDir;
             //test
             //ProcessOutput result = utils.ExecuteMoqTest();
             //end test
