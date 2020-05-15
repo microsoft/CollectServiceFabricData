@@ -112,8 +112,11 @@
   <ItemGroup>
     <None Include="packages.config" />
     <None Include="TestConfigurations\collectsfdata.options.json" />
+    <None Include="TestUtilities\azure-az-create-aad-application-spn.ps1" />
+    <None Include="TestUtilities\azure-az-rest-logon.ps1" />
+    <None Include="TestUtilities\kusto-blob-test-generator.ps1" />
+    <None Include="TestUtilities\kuto-dtr-blob-test.ps1" />
     <None Include="TestUtilities\setup-test-env.ps1" />
-    <None Include="TestUtilities\collectSfDataTestProperties.json" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CollectSFData\CollectSFData.csproj">
