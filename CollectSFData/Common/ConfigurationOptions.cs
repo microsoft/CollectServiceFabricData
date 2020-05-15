@@ -27,7 +27,7 @@ namespace CollectSFData.Common
         private string _endTime;
         private bool _logDebugEnabled;
         private string _startTime;
-        private string _tempPath;
+        private string _tempPath = FileManager.NormalizePath(Path.GetTempPath().TrimEnd(Path.DirectorySeparatorChar));
         private int _threads;
 
         public ConfigurationOptions()
@@ -316,7 +316,7 @@ namespace CollectSFData.Common
         {
             try
             {
-                _tempPath = FileManager.NormalizePath(Path.GetTempPath().TrimEnd(Path.DirectorySeparatorChar));
+                //_tempPath = FileManager.NormalizePath(Path.GetTempPath().TrimEnd(Path.DirectorySeparatorChar));
 
                 if (File.Exists(DefaultOptionsFile))
                 {
