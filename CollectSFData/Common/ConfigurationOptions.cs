@@ -27,8 +27,7 @@ namespace CollectSFData.Common
         private string _endTime;
         private bool _logDebugEnabled;
         private string _startTime;
-        //private string _tempPath = FileManager.NormalizePath(Path.GetTempPath().TrimEnd(Path.DirectorySeparatorChar)); // todo:fix startup hang
-        private string _tempPath = Path.GetTempPath().TrimEnd(Path.DirectorySeparatorChar).Replace("/","\\");
+        private string _tempPath;
         private int _threads;
 
         public ConfigurationOptions()
@@ -158,7 +157,7 @@ namespace CollectSFData.Common
 
         public SasEndpoints SasEndpointInfo { get; private set; } = new SasEndpoints();
 
-        public string SasKey { get; private set; } = string.Empty;
+        public string SasKey { get; set; } = string.Empty;
 
         public string SaveConfiguration { get; set; }
 
@@ -317,6 +316,8 @@ namespace CollectSFData.Common
         {
             try
             {
+                _tempPath = FileManager.NormalizePath(Path.GetTempPath().TrimEnd(Path.DirectorySeparatorChar));
+
                 if (File.Exists(DefaultOptionsFile))
                 {
                     MergeConfigFile(DefaultOptionsFile);
