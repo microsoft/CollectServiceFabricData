@@ -27,7 +27,8 @@ namespace CollectSFData.Common
         private string _endTime;
         private bool _logDebugEnabled;
         private string _startTime;
-        private string _tempPath = FileManager.NormalizePath(Path.GetTempPath().TrimEnd(Path.DirectorySeparatorChar));
+        //private string _tempPath = FileManager.NormalizePath(Path.GetTempPath().TrimEnd(Path.DirectorySeparatorChar)); // todo:fix startup timing issue
+        private string _tempPath = Path.GetTempPath().TrimEnd(Path.DirectorySeparatorChar).Replace("/","\\");
         private int _threads;
 
         public ConfigurationOptions()
