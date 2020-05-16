@@ -15,7 +15,8 @@ param(
     $numberOfDirectories = 3,
     $numberOfBlobs = 10,
     $nodeNames = @('_nt0_0', '_nt0_1', '_nt0_2'),
-    $testClusterGuid = "4a17f977-93a7-4f4b-b924-4daa96fe13c5", #[guid]::newguid().tostring(),
+    $testClusterGuid = "00000000-0000-0000-0000-000000000000", #[guid]::newguid().tostring(),
+    $testFileTime = (get-date).ToFileTime(),
     [switch]$recreateBaseContainer
 )
 
@@ -26,7 +27,7 @@ $error.Clear()
 $totalBlobs = 0
 $startTime = get-date
 import-module azure.storage
-$ErrorActionPreference = "stop"
+#$ErrorActionPreference = "stop"
 
 function main() {
     $baseContainerName = $baseContainerName + $testClusterGuid
@@ -79,7 +80,7 @@ function main() {
             $count++
             #$testFileName = "f45f24746c42cc2a6dd69da9e7797e2c_fabric_traces_7.0.470.9590_132335945633288356_106_00637251513810151760_0000000000.dtr"
             $typeTrace = $(get-random @('Fabric', 'Lease'))
-            $blobName = "$nodeName/$typeTrace/f45f24746c42cc2a6dd69da9e7797e2c_$($typeTrace.ToLower())_traces_7.0.470.9590_$((get-date).ticks)_106_00637251513810151760_000000000$i.dtr"
+            $blobName = "$nodeName/$typeTrace/00000000aaaabbbbccccdddddddddddd_$($typeTrace.ToLower())_traces_7.0.470.9590_$($testFileTime)_106_00$((get-date).ticks)_000000000$i.dtr"
         
             write-host "creating blob $($totalBlobs): $($blobName)"
             $blobRef = $baseContainer.GetBlockBlobReference($blobName)
@@ -95,12 +96,12 @@ function generate-testData() {
     $testData = [collections.arraylist]::new()
 
     for ($i = 0; $i -lt 100; $i++) {
-        $timestamp = (get-date).ToString('o')
+        $timestamp = (get-date).ToUniversalTime().ToString('yyyy-M-d HH:mm:ss:fff')  # 2020-5-15 13:36:01.861 #(get-date).ToString('o')
         $level = get-random @('Informational', 'Warning', 'Error')
         $TID = get-random -Minimum 0 -Maximum 10000
         $PID1 = get-random -Minimum 0 -Maximum 10000
         $type = get-random @('Transport.Message', 'LeaseAgent.Heartbeat', 'Transport.SendBuf')
-        $text = "test messsage"
+        $text = "`"test messsage $i`""
         #$nodeName = get-random @('_nt0_0','_nt0_1','_nt0_2')
         #$fileType = get-random @('fabric','lease')
         #$relativeUri = "$baseContaineraName$testClusterGuid/$($data.NodeName)/$($data.FileType)/eeb6ae3dc3ff88122d45c1b426b30a9a_fabric_traces_7.0.470.9590_132314840561756254_1444_$((get-date).ticks)_0000000000.dtr"
