@@ -3,9 +3,8 @@
 // Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
-using Moq;
-using NUnit.Framework;
 using CollectSFData.DataFile;
+using NUnit.Framework;
 
 namespace CollectSFDataTests
 {
@@ -23,7 +22,6 @@ namespace CollectSFDataTests
             //ProcessOutput result = utils.ExecuteMoqTest();
             //end test
 
-
             ProcessOutput results = utils.ExecuteTest();
             Assert.IsFalse(results.HasErrors());
         }
@@ -35,7 +33,6 @@ namespace CollectSFDataTests
             utils.ConfigurationOptions.GatherType = "wtw";
 
             ProcessOutput results = utils.ExecuteTest();
-
 
             Assert.IsTrue(results.StandardOutput.Contains("ValidateFileType:warning: invalid -type"));
             // should not start execution
@@ -70,7 +67,6 @@ namespace CollectSFDataTests
             utils.ConfigurationOptions.GatherType = null;
 
             ProcessOutput results = utils.ExecuteTest();
-
 
             Assert.IsTrue(results.StandardOutput.Contains("ValidateFileType:warning: invalid -type"));
             // should not start execution
