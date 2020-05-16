@@ -41,20 +41,20 @@ namespace CollectSFDataTests
             Assert.AreEqual(FileExtensionTypesEnum.blg, FileTypes.MapKnownFileExtension(fileUri));
         }
 
-        [Test(Description = "counter .blg file uri", TestOf = typeof(FileTypes))]
-        public void FileCounterUriTest()
+        [Test(Description = "counter .blg file partial uri", TestOf = typeof(FileTypes))]
+        public void FileCounterPartialUriTest()
         {
-            string fileUri = "https://sflogsxxxxxxxx.blob.core.windows.net/fabriccounters-c9113ef8-4fea-420e-aa37-3be4401dce67/_nt0_0/fabric_counters_636772263220294612_000001.blg";
+            string fileUri = "/0358/Collected/fabricperf-62821bc2-e537-4084-a505-615184da27ad/ECS-S-FABN-B04/fabric_counters_636830189613638393_000017.blg";
             WriteConsole($"checking uri result {fileUri}");
             Assert.AreEqual(FileTypesEnum.counter, FileTypes.MapFileTypeUri(fileUri));
             Assert.AreEqual(FileDataTypesEnum.counter, FileTypes.MapFileDataTypeUri(fileUri));
             Assert.AreEqual(FileExtensionTypesEnum.blg, FileTypes.MapKnownFileExtension(fileUri));
         }
 
-        [Test(Description = "counter .blg file partial uri", TestOf = typeof(FileTypes))]
-        public void FileCounterPartialUriTest()
+        [Test(Description = "counter .blg file uri", TestOf = typeof(FileTypes))]
+        public void FileCounterUriTest()
         {
-            string fileUri = "/0358/Collected/fabricperf-62821bc2-e537-4084-a505-615184da27ad/ECS-S-FABN-B04/fabric_counters_636830189613638393_000017.blg";
+            string fileUri = "https://sflogsxxxxxxxx.blob.core.windows.net/fabriccounters-c9113ef8-4fea-420e-aa37-3be4401dce67/_nt0_0/fabric_counters_636772263220294612_000001.blg";
             WriteConsole($"checking uri result {fileUri}");
             Assert.AreEqual(FileTypesEnum.counter, FileTypes.MapFileTypeUri(fileUri));
             Assert.AreEqual(FileDataTypesEnum.counter, FileTypes.MapFileDataTypeUri(fileUri));
@@ -214,10 +214,10 @@ namespace CollectSFDataTests
             Assert.AreEqual(FileExtensionTypesEnum.dtr, FileTypes.MapKnownFileExtension(fileUri));
         }
 
-        [Test(Description = "lease zip file", TestOf = typeof(FileTypes))]
-        public void FileLeaseZipTraceTest()
+        [Test(Description = "lease zip alternate file", TestOf = typeof(FileTypes))]
+        public void FileLeaseZipTraceAlternateTest()
         {
-            string fileUri = "fabriclogs-82ee81a7-9d95-4003-b81b-883fdf945eaf/_nt0_2/Fabric/bc4316ec4b0814dcc367388a46d9903e_lease_traces_7.0.470.9590_132301541323585400_1570_00637227551217830354_0000000000.dtr.zip";
+            string fileUri = "/fabriclogs-1b491379-c516-4310-b234-b08103421a2b/_nt0_1/Lease/d8511df4d4a1fb61dd6b829752e17ac5_lease_traces_6.3.187.9494_131853820499107012_5_00636765462764856049_0000000000.dtr.zip";
             WriteConsole($"checking uri result {fileUri}");
 
             Assert.AreEqual(FileTypesEnum.trace, FileTypes.MapFileTypeUri(fileUri));
@@ -225,10 +225,10 @@ namespace CollectSFDataTests
             Assert.AreEqual(FileExtensionTypesEnum.zip, FileTypes.MapKnownFileExtension(fileUri));
         }
 
-        [Test(Description = "lease zip alternate file", TestOf = typeof(FileTypes))]
-        public void FileLeaseZipTraceAlternateTest()
+        [Test(Description = "lease zip file", TestOf = typeof(FileTypes))]
+        public void FileLeaseZipTraceTest()
         {
-            string fileUri = "/fabriclogs-1b491379-c516-4310-b234-b08103421a2b/_nt0_1/Lease/d8511df4d4a1fb61dd6b829752e17ac5_lease_traces_6.3.187.9494_131853820499107012_5_00636765462764856049_0000000000.dtr.zip";
+            string fileUri = "fabriclogs-82ee81a7-9d95-4003-b81b-883fdf945eaf/_nt0_2/Fabric/bc4316ec4b0814dcc367388a46d9903e_lease_traces_7.0.470.9590_132301541323585400_1570_00637227551217830354_0000000000.dtr.zip";
             WriteConsole($"checking uri result {fileUri}");
 
             Assert.AreEqual(FileTypesEnum.trace, FileTypes.MapFileTypeUri(fileUri));

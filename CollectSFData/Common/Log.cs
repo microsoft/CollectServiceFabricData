@@ -17,27 +17,20 @@ namespace CollectSFData.Common
     public static class Log
     {
         public static int LogErrors = 0;
+        private static bool _displayingProgress;
         private static ConsoleColor _highlightBackground = Console.ForegroundColor;
         private static ConsoleColor _highlightForeground = Console.BackgroundColor;
         private static SynchronizedList<MessageObject> _lastMessageList = new SynchronizedList<MessageObject>();
+        private static string _logFile;
         private static SynchronizedList<MessageObject> _messageList = new SynchronizedList<MessageObject>();
+        private static StreamWriter _streamWriter;
         private static Task _taskWriter;
         private static CancellationTokenSource _taskWriterCancellationToken;
-        private static bool _displayingProgress;
-        private static string _logFile;
-        private static StreamWriter _streamWriter;
         private static int _threadSleepMs = Constants.ThreadSleepMs100;
 
         static Log()
         {
             Start();
-        }
-
-        public static void Start()
-        {
-            _taskWriterCancellationToken = new CancellationTokenSource();
-            _taskWriter = new Task(TaskWriter, _taskWriterCancellationToken.Token);
-            _taskWriter.Start();
         }
 
         public static bool LogDebugEnabled { get; set; }
@@ -75,7 +68,6 @@ namespace CollectSFData.Common
                 _messageList.AddRange(_lastMessageList);
                 _taskWriterCancellationToken.Cancel();
                 _taskWriter.Wait();
-
             }
             catch (TaskCanceledException) { }
             catch (AggregateException e)
@@ -181,6 +173,13 @@ namespace CollectSFData.Common
                                 [CallerMemberName] string callerName = "")
         {
             Info(message, foregroundColor, backgroundColor, jsonSerializer, true, callerName: callerName);
+        }
+
+        public static void Start()
+        {
+            _taskWriterCancellationToken = new CancellationTokenSource();
+            _taskWriter = new Task(TaskWriter, _taskWriterCancellationToken.Token);
+            _taskWriter.Start();
         }
 
         public static void Warning(string message, object jsonSerializer = null, [CallerMemberName] string callerName = "")
