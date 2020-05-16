@@ -43,7 +43,6 @@ namespace CollectSFData.Common
 
                 try
                 {
-
                     base.Add(item);
                 }
                 finally
