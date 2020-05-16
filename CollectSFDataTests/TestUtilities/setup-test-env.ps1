@@ -90,18 +90,20 @@ class TestEnv {
             if(!(new-azstorageaccount $settings.testAzStorageAccount -skuname 'Standard_LRS' -resourcegroupname $settings.AzureResourceGroup -Location $settings.AzureResourceGroupLocation)){
                 throw new-object System.UnauthorizedAccessException($error | out-string)
             }
+            $sa = get-azstorageaccount $settings.testAzStorageAccount -resourcegroupname $settings.AzureResourceGroup
         }
 
         write-host "getting key $($settings.testAzStorageAccount)"
         $sk = Get-AzStorageAccountKey -ResourceGroupName $settings.AzureResourceGroup -Name $settings.testAzStorageAccount
-        $sc = new-azstoragecontext -storageaccountname $settings.testAzStorageAccount -storageaccountkey ([convert]::Tobase64String([text.encoding]::Unicode.GetBytes($sk.Value)))
+        #$sc = new-azstoragecontext -storageaccountname $settings.testAzStorageAccount -storageaccountkey ([convert]::Tobase64String([text.encoding]::Unicode.GetBytes($sk.Value)))
+        $sc = new-azstoragecontext -storageaccountname $settings.testAzStorageAccount -storageaccountkey ($sk[0].Value)
         $st = New-AzStorageAccountSASToken -ResourceType Container,Service,Object `
             -Permission 'racwdlup' `
             -Protocol HttpsOnly `
-            -StartTime (get-date).AddMinutes(-5) `
+            -StartTime (get-date) `
             -ExpiryTime (get-date).AddHours(8) `
             -Context $sc `
-            -Service Blob,Table,File
+            -Service Blob,Table,File,Queue
 
         $global:sasuri = "$($sa.Context.BlobEndPoint)$($st)"
         $global:storageAccount = $sa
