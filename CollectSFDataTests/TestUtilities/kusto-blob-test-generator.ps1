@@ -102,9 +102,6 @@ function generate-testData() {
         $PID1 = get-random -Minimum 0 -Maximum 10000
         $type = get-random @('Transport.Message', 'LeaseAgent.Heartbeat', 'Transport.SendBuf')
         $text = "`"test messsage $i`""
-        #$nodeName = get-random @('_nt0_0','_nt0_1','_nt0_2')
-        #$fileType = get-random @('fabric','lease')
-        #$relativeUri = "$baseContaineraName$testClusterGuid/$($data.NodeName)/$($data.FileType)/eeb6ae3dc3ff88122d45c1b426b30a9a_fabric_traces_7.0.470.9590_132314840561756254_1444_$((get-date).ticks)_0000000000.dtr"
         $dataString = "$timestamp,$level,$tid,$pid1,$type,$text"#,$nodeName,$fileType,$relativeUri"
         [void]$testData.Add(
             $dataString
