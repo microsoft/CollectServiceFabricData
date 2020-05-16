@@ -83,8 +83,6 @@ function main() {
         
             write-host "creating blob $($totalBlobs): $($blobName)"
             $blobRef = $baseContainer.GetBlockBlobReference($blobName)
-            write-host "creating blob $($totalBlobs): $($blobName)"
-            $blobRef = $baseContainer.GetBlockBlobReference($blobName)
             $result = $blobRef.UploadTextAsync((generate-testData), $null, $null, $null, $null).Result;
             write-host "upload file result: $($result | convertto-json -depth 5)"
         }
