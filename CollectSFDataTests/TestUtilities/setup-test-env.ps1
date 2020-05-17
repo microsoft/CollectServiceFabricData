@@ -114,9 +114,13 @@ class TestEnv {
     }
 
     [void] CheckTempDir(){
+        write-host "checking temp dir $($this.tempDir)"
         if ((test-path $this.tempDir) -and $this.clean) {
             remove-item $this.tempDir -recurse -force
-            new-item -itemType directory -name $this.tempDir
+            new-item -itemType directory -path $this.tempDir
+        }
+        elseif (!(test-path $this.tempDir)) {
+            new-item -itemType directory -path $this.tempDir
         }
     }
 
