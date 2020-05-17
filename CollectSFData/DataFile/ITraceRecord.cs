@@ -14,11 +14,11 @@ namespace CollectSFData.DataFile
         string NodeName { get; set; }
 
         int PID { get; set; }
-        
+
         string Text { get; set; }
 
         int TID { get; set; }
-        
+
         string Type { get; set; }
     }
 }
