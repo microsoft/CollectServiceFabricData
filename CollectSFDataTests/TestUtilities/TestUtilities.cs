@@ -8,6 +8,7 @@
 //https://github.com/nunit/nunit-csharp-samples
 
 using CollectSFData.Common;
+using Moq;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using System;
@@ -42,6 +43,8 @@ namespace CollectSFDataTests
     [TestFixture]
     public class TestUtilities
     {
+        public StringBuilder consoleErrBuilder = new StringBuilder();
+        public StringBuilder consoleOutBuilder = new StringBuilder();
         public string[] TempArgs;
         private static object _executing = new object();
 
@@ -55,9 +58,6 @@ namespace CollectSFDataTests
             PopulateTempOptions();
         }
 
-        public StringBuilder consoleOutBuilder = new StringBuilder();
-        public StringBuilder consoleErrBuilder = new StringBuilder();
-
         public static TestContext Context { get; set; }
         public static string DefaultOptionsFile => $"{WorkingDir}\\..\\..\\..\\..\\configurationFiles\\collectsfdata.options.json";
         public static string TempDir => $"{WorkingDir}\\..\\..\\Temp";
@@ -66,7 +66,7 @@ namespace CollectSFDataTests
 
         public static TestProperties TestProperties { get; set; }
 
-        public static string TestPropertiesFile => $"{TempDir}\\collectSfDataTestProperties.json";
+        public static string TestPropertiesFile => $"{Environment.GetEnvironmentVariable("LOCALAPPDATA")}\\collectsfdata\\collectSfDataTestProperties.json";
 
         public static string TestPropertiesSetupScript => $"{TestUtilitiesDir}\\setup-test-env.ps1";
 
@@ -137,6 +137,40 @@ namespace CollectSFDataTests
             return ExecuteProcess("collectsfdata.exe", arguments, wait);
         }
 
+        public ProcessOutput ExecuteMoqTest(ConfigurationOptions options = null)
+        {
+            lock (_executing)
+            {
+                Log.Info("enter");
+
+                SaveTempOptions();
+                //Program.Config = new ConfigurationOptions();
+                //Program program = new Program();
+                var program = new Mock<Program>();
+                //Moq.Language.Flow.ISetup<Program, int> result = program.Setup(p => p.Execute(TempArgs));
+                program.Setup(p => p.Execute(TempArgs));
+
+                Assert.IsNotNull(program);
+
+                StartConsoleRedirection();
+                Log.Info(">>>>Starting test<<<<\r\n", ConfigurationOptions);
+                //int result = program.Execute(TempArgs);
+                //Log.Info(">>>>test result<<<<", result);
+                ProcessOutput output = StopConsoleRedirection();
+
+                Assert.IsNotNull(output);
+                /*
+                if (result. != 0)
+                {
+                    Log.Error($"result {result}");
+                    output.ExitCode = result;
+                }
+                */
+                //Log.Info(">>>>test result<<<<", output);
+                return output;
+            }
+        }
+
         public ProcessOutput ExecuteProcess(string imageFile, string arguments = null, bool wait = true)
         {
             Log.Info($"ExecuteProcess: current dir: {Directory.GetCurrentDirectory()} image: {imageFile} args: {arguments}");
@@ -187,7 +221,7 @@ namespace CollectSFDataTests
                 SaveTempOptions();
                 //Program.Config = new ConfigurationOptions();
                 Program program = new Program();
-                
+
                 Assert.IsNotNull(program);
 
                 StartConsoleRedirection();
