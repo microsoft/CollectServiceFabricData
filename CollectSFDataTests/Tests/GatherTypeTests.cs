@@ -5,6 +5,7 @@
 
 using CollectSFData.DataFile;
 using NUnit.Framework;
+using System;
 
 namespace CollectSFDataTests
 {
@@ -18,12 +19,14 @@ namespace CollectSFDataTests
             utils.ConfigurationOptions.GatherType = FileTypesEnum.any.ToString();
             utils.ConfigurationOptions.SasKey = TestUtilities.TestProperties.SasKey;
             utils.ConfigurationOptions.CacheLocation = TestUtilities.TempDir;
+            utils.ConfigurationOptions.StartTimeStamp = DateTime.MinValue.ToString("o");
+            utils.ConfigurationOptions.EndTimeStamp = DateTime.Now.ToString("o");
             //test
             //ProcessOutput result = utils.ExecuteMoqTest();
             //end test
 
             ProcessOutput results = utils.ExecuteTest();
-            Assert.IsFalse(results.HasErrors());
+            Assert.IsFalse(results.HasErrors(), results.ToString());
         }
 
         [Test]
@@ -34,7 +37,7 @@ namespace CollectSFDataTests
 
             ProcessOutput results = utils.ExecuteTest();
 
-            Assert.IsTrue(results.StandardOutput.Contains("ValidateFileType:warning: invalid -type"));
+            Assert.IsTrue(results.StandardOutput.Contains("ValidateFileType:warning: invalid -type"), results.ToString());
             // should not start execution
             Assert.NotZero(results.ExitCode);
         }
@@ -46,7 +49,7 @@ namespace CollectSFDataTests
             utils.ConfigurationOptions.GatherType = FileTypesEnum.counter.ToString();
 
             ProcessOutput results = utils.ExecuteTest();
-            Assert.IsFalse(results.HasErrors());
+            Assert.IsFalse(results.HasErrors(), results.ToString());
             Assert.IsTrue(results.StandardOutput.Contains("total execution time in minutes"));
         }
 
@@ -57,7 +60,7 @@ namespace CollectSFDataTests
             utils.ConfigurationOptions.GatherType = FileTypesEnum.exception.ToString();
 
             ProcessOutput results = utils.ExecuteTest();
-            Assert.IsFalse(results.HasErrors());
+            Assert.IsFalse(results.HasErrors(), results.ToString());
         }
 
         [Test]
@@ -68,7 +71,7 @@ namespace CollectSFDataTests
 
             ProcessOutput results = utils.ExecuteTest();
 
-            Assert.IsTrue(results.StandardOutput.Contains("ValidateFileType:warning: invalid -type"));
+            Assert.IsTrue(results.StandardOutput.Contains("ValidateFileType:warning: invalid -type"), results.ToString());
             // should not start execution
             Assert.NotZero(results.ExitCode);
         }
@@ -80,7 +83,7 @@ namespace CollectSFDataTests
             utils.ConfigurationOptions.GatherType = FileTypesEnum.setup.ToString();
 
             ProcessOutput results = utils.ExecuteTest();
-            Assert.IsFalse(results.HasErrors());
+            Assert.IsFalse(results.HasErrors(), results.ToString());
         }
 
         [Test]
@@ -90,7 +93,7 @@ namespace CollectSFDataTests
             utils.ConfigurationOptions.GatherType = FileTypesEnum.table.ToString();
 
             ProcessOutput results = utils.ExecuteTest();
-            Assert.IsFalse(results.HasErrors());
+            Assert.IsFalse(results.HasErrors(), results.ToString());
         }
 
         [Test]
@@ -100,7 +103,7 @@ namespace CollectSFDataTests
             utils.ConfigurationOptions.GatherType = FileTypesEnum.trace.ToString();
 
             ProcessOutput results = utils.ExecuteTest();
-            Assert.IsFalse(results.HasErrors());
+            Assert.IsFalse(results.HasErrors(), results.ToString());
         }
 
         [Test]
@@ -111,7 +114,7 @@ namespace CollectSFDataTests
 
             ProcessOutput results = utils.ExecuteTest();
 
-            Assert.IsTrue(results.StandardOutput.Contains("ValidateFileType:warning: invalid -type"));
+            Assert.IsTrue(results.StandardOutput.Contains("ValidateFileType:warning: invalid -type"), results.ToString());
             // should not start execution
             Assert.NotZero(results.ExitCode);
         }
