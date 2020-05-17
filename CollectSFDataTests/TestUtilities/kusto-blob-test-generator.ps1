@@ -2,22 +2,18 @@
     script to create specified number of test sf 6.x sflog .dtr files in specified number of directories in specified depth
     useful for testing enumeration and continuation token
     storage format is storage account -> root container ($root) -> container(n) -> directory(n)+ -> blob(n)+
-    max return from cloudblob is 5000. any count over that will return continuationtoken when enumerating
-    total blob count == ($numberOfBlobs * $numberOfDirectories * ($directoryDepth + 1))
-    181220
 #>
 
 param(
     [Parameter(Mandatory = $true)]
-    $BlobSasUri = "",
-    $baseContainerName = "fabriclogs-", #"sflogsblobtest",
-    $numberOfContainers = 6,
-    $numberOfDirectories = 3,
+    $blobSasUri = "",
+    [switch]$recreateBaseContainer,
     $numberOfBlobs = 10,
     $nodeNames = @('_nt0_0', '_nt0_1', '_nt0_2'),
+    $baseContainerName = "fabriclogs-", #"sflogsblobtest",
     $testClusterGuid = "00000000-0000-0000-0000-000000000000", #[guid]::newguid().tostring(),
     $testFileTime = (get-date).ToFileTime(),
-    [switch]$recreateBaseContainer
+    $numberOfContainers = 6
 )
 
 $PSModuleAutoLoadingPreference = 2
@@ -32,14 +28,14 @@ import-module azure.storage
 function main() {
     $baseContainerName = $baseContainerName + $testClusterGuid
     
-    write-host "creating $($numberOfBlobs * $numberOfDirectories) blobs"
+    write-host "creating $numberOfBlobs blobs"
     $storageCredentials = new-object microsoft.windowsazure.storage.auth.storageCredentials($BlobSasUri)
     #[microsoft.windowsazure.storage.blob.cloudBlobContainer]
     $rootContainer = new-object microsoft.windowsazure.storage.blob.CloudBlobContainer(new-object Uri($BlobSasUri), $storageCredentials);
     # Get the ServiceClient from the RootContainer ref
     $baseContainer = $rootContainer.ServiceClient.GetContainerReference($baseContainerName)
 
-    if ($recreateBaseContainer -and $baseContainer.DeleteIfExists()) {
+    if ($recreateBaseContainer -and $baseContainer.DeleteIfExistsAsync().Wait()) {
         write-host "deleting existing container $($baseContainerName)"
     }
     
@@ -96,7 +92,8 @@ function generate-testData() {
     $testData = [collections.arraylist]::new()
 
     for ($i = 0; $i -lt 100; $i++) {
-        $timestamp = (get-date).ToUniversalTime().ToString('yyyy-M-d HH:mm:ss:fff')  # 2020-5-15 13:36:01.861 #(get-date).ToString('o')
+        #2020-5-15 13:36:02.073,Informational,12488,5076,PLBM.PLBPrepareEnd,"PLB Prepare end. Total ms: 0"
+        $timestamp = (get-date).ToUniversalTime().ToString('yyyy-M-d HH:mm:ss.fff')  # 2020-5-15 13:36:01.861 #(get-date).ToString('o')
         $level = get-random @('Informational', 'Warning', 'Error')
         $TID = get-random -Minimum 0 -Maximum 10000
         $PID1 = get-random -Minimum 0 -Maximum 10000
