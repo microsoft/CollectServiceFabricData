@@ -3,6 +3,7 @@
 // Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
+using Kusto.Cloud.Platform.Utils;
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -28,6 +29,20 @@ namespace CollectSFData.Common
             try
             {
                 base.Add(item);
+            }
+            finally
+            {
+                _rwl.ExitWriteLock();
+            }
+        }
+
+        public new void AddRange(IEnumerable<T> items)
+        {
+            _rwl.EnterWriteLock();
+
+            try
+            {
+                items.ForEach(x => base.Add(x));
             }
             finally
             {
