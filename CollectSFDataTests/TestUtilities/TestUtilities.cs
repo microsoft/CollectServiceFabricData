@@ -7,7 +7,9 @@
 //https://github.com/nunit/docs/wiki/Tips-And-Tricks
 //https://github.com/nunit/nunit-csharp-samples
 
+using CollectSFData.Azure;
 using CollectSFData.Common;
+using CollectSFData.DataFile;
 using Moq;
 using Newtonsoft.Json;
 using NUnit.Framework;
@@ -50,17 +52,31 @@ namespace CollectSFDataTests
 
         static TestUtilities()
         {
-            SetupTests();
+            OneTimeSetup();
         }
 
         public TestUtilities()
         {
-            PopulateTempOptions();
+            Log.Info("enter");
+            Directory.SetCurrentDirectory(TempDir);
+
+            File.Copy(TestOptionsFile, TempOptionsFile, true);
+
+            ConfigurationOptions = new ConfigurationOptions();
+
+            //TempArgs = new string[2] { "-config", TestOptionsFile };
+            ConfigurationOptions.PopulateConfig(TestArgs);
+            //ConfigurationOptions.CacheLocation = "";// null;
+            SaveTempOptions();
+
+            TempArgs = new string[2] { "-config", TempOptionsFile };
         }
 
         public static TestContext Context { get; set; }
-        public static string DefaultOptionsFile => $"{WorkingDir}\\..\\..\\..\\..\\configurationFiles\\collectsfdata.options.json";
+
+        //public static string DefaultOptionsFile => $"{WorkingDir}\\..\\..\\..\\..\\configurationFiles\\collectsfdata.options.json";
         public static string TempDir => $"{WorkingDir}\\..\\..\\Temp";
+
         public static string[] TestArgs => new string[2] { "-config", TestOptionsFile };
         public static string TestConfigurationsDir => $"{WorkingDir}\\..\\..\\..\\TestConfigurations";
 
@@ -76,7 +92,7 @@ namespace CollectSFDataTests
 
         public ConfigurationOptions ConfigurationOptions { get; set; } //= new ConfigurationOptions();
 
-        public string TempOptionsFile { get; private set; } = $"{TempDir}\\collectsfdatda.{Guid.NewGuid()}.json";
+        public string TempOptionsFile { get; private set; } = $"{TempDir}\\collectsfdata.options.json";
 
         private static string TestOptionsFile => $"{TestConfigurationsDir}\\collectsfdata.options.json";
 
@@ -104,7 +120,7 @@ namespace CollectSFDataTests
         }
 
         [OneTimeSetUp]
-        public static void SetupTests()
+        public static void OneTimeSetup()
         {
             Context = TestContext.CurrentContext;
             WorkingDir = Context?.WorkDirectory ?? Directory.GetCurrentDirectory();
@@ -115,15 +131,7 @@ namespace CollectSFDataTests
                 Directory.CreateDirectory(TempDir);
             }
 
-            if (!File.Exists(TestPropertiesFile))
-            {
-                Collection<PSObject> result = ExecutePowerShellCommand(TestPropertiesSetupScript);
-            }
-
-            Assert.IsTrue(File.Exists(TestPropertiesFile));
-
-            TestProperties = JsonConvert.DeserializeObject<TestProperties>(File.ReadAllText(TestPropertiesFile));
-            Assert.IsNotNull(TestProperties);
+            ReadTestSettings();
         }
 
         public ProcessOutput ExecuteCollectSfData(string arguments = null, bool withTempConfig = true, bool wait = true)
@@ -216,17 +224,22 @@ namespace CollectSFDataTests
         {
             lock (_executing)
             {
+                Log.Close();
+                Log.Start();
                 Log.Info("enter");
 
                 SaveTempOptions();
-                //Program.Config = new ConfigurationOptions();
+                //Instance.Config = new ConfigurationOptions();
                 Program program = new Program();
-
                 Assert.IsNotNull(program);
 
                 StartConsoleRedirection();
                 Log.Info(">>>>Starting test<<<<\r\n", ConfigurationOptions);
-                int result = program.Execute(TempArgs);
+                // cant call with args
+                //
+                // populate default collectsfdata.options.json
+                //int result = program.Execute(TempArgs);
+                int result = program.Execute(new string[] { });
                 Log.Info(">>>>test result<<<<", result);
                 ProcessOutput output = StopConsoleRedirection();
 
@@ -238,7 +251,7 @@ namespace CollectSFDataTests
                     output.ExitCode = result;
                 }
 
-                //Log.Info(">>>>test result<<<<", output);
+                WriteConsole($">>>>test result<<<<", output);
                 return output;
             }
         }
@@ -263,6 +276,8 @@ namespace CollectSFDataTests
         [SetUp]
         public void Setup()
         {
+            Instance.Config = new ConfigurationOptions();
+            Instance.FileMgr = new FileManager();
             WriteConsole("TestContext", Context);
             TestContext.WriteLine($"starting test: {Context?.Test.Name}");
             consoleOutBuilder = new StringBuilder();
@@ -272,6 +287,7 @@ namespace CollectSFDataTests
         public void StartConsoleRedirection()
         {
             Log.Start();
+            Log.LogErrors = 0;
             Log.Info("starting redirection");
             FlushConsoleOutput();
             Console.SetOut(ConsoleOut);
@@ -329,18 +345,30 @@ namespace CollectSFDataTests
             }
         }
 
-        private void PopulateTempOptions()
+        private static void ReadTestSettings(bool force = false)
         {
-            Log.Info("enter");
+            if (!File.Exists(TestPropertiesFile) | force)
+            {
+                Collection<PSObject> result = ExecutePowerShellCommand(TestPropertiesSetupScript);
+            }
 
-            ConfigurationOptions = new ConfigurationOptions();
+            Assert.IsTrue(File.Exists(TestPropertiesFile));
 
-            //TempArgs = new string[2] { "-config", TestOptionsFile };
-            ConfigurationOptions.PopulateConfig(TestArgs);
-            //ConfigurationOptions.CacheLocation = "";// null;
-            SaveTempOptions();
+            TestProperties = JsonConvert.DeserializeObject<TestProperties>(File.ReadAllText(TestPropertiesFile));
+            Assert.IsNotNull(TestProperties);
+            string sasUri = TestProperties.SasKey;
 
-            TempArgs = new string[2] { "-config", TempOptionsFile };
+            Console.WriteLine($"checking test sasuri {sasUri}");
+            SasEndpoints endpoints = new SasEndpoints(sasUri);
+            Console.WriteLine($"checking sasuri result {endpoints.IsValid()}");
+
+            if (!endpoints.IsValid() & !force)
+            {
+                ReadTestSettings(true);
+                endpoints = new SasEndpoints(TestProperties.SasKey);
+                Console.WriteLine($"checking new sasuri result {endpoints.IsValid()}");
+                Assert.AreEqual(true, endpoints.IsValid());
+            }
         }
 
         private void SaveTempOptions()
