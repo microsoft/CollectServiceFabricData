@@ -68,6 +68,7 @@ namespace CollectSFData.Common
                 _messageList.AddRange(_lastMessageList);
                 _taskWriterCancellationToken.Cancel();
                 _taskWriter.Wait();
+                _taskWriter.Dispose();
             }
             catch (TaskCanceledException) { }
             catch (AggregateException e)
