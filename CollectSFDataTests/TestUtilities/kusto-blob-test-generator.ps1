@@ -93,7 +93,7 @@ function generate-testData() {
 
     for ($i = 0; $i -lt 100; $i++) {
         #2020-5-15 13:36:02.073,Informational,12488,5076,PLBM.PLBPrepareEnd,"PLB Prepare end. Total ms: 0"
-        $timestamp = (get-date).ToUniversalTime().ToString('yyyy-M-d HH:mm:ss.fff')  # 2020-5-15 13:36:01.861 #(get-date).ToString('o')
+        $timestamp = (get-date).ToUniversalTime().ToString('yyyy-M-d HH:mm:ss.fff')
         $level = get-random @('Informational', 'Warning', 'Error')
         $TID = get-random -Minimum 0 -Maximum 10000
         $PID1 = get-random -Minimum 0 -Maximum 10000
