@@ -18,7 +18,7 @@ namespace CollectSFData.DataFile
 {
     public class FileManager : Instance
     {
-        private static readonly CustomTaskManager _fileTasks = new CustomTaskManager(true);
+        private readonly CustomTaskManager _fileTasks = new CustomTaskManager(true);
 
         public static string NormalizePath(string path, string directorySeparator = "/")
         {

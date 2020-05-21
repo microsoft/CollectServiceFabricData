@@ -16,11 +16,11 @@ namespace CollectSFData.Common
 {
     public class Http : Constants
     {
-        private static readonly HttpClient _httpClient;
+        private readonly HttpClient _httpClient;
 
-        private static readonly CustomTaskManager _httpTasks = new CustomTaskManager(true);
+        private readonly CustomTaskManager _httpTasks = new CustomTaskManager(true);
 
-        static Http()
+        public Http()
         {
             _httpClient = new HttpClient { Timeout = Timeout.InfiniteTimeSpan };
             _httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
