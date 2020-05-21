@@ -17,7 +17,7 @@ namespace CollectSFData.Azure
 {
     public class TableManager : Instance
     {
-        private static readonly CustomTaskManager _tableTasks = new CustomTaskManager(true);
+        private readonly CustomTaskManager _tableTasks = new CustomTaskManager(true);
         private CloudTableClient _tableClient;
 
         public Action<FileObject> IngestCallback { get; set; }
