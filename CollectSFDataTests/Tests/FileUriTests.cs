@@ -236,6 +236,16 @@ namespace CollectSFDataTests
             Assert.AreEqual(FileExtensionTypesEnum.zip, FileTypes.MapKnownFileExtension(fileUri));
         }
 
+        [Test(Description = "linux setup .trace file test", TestOf = typeof(FileTypes))]
+        public void FileLinuxSetupTraceTest()
+        {
+            string fileUri = "/fabriclogs-1a111d9e-9f4f-421f-9235-3cc963e85517/_sfvmcore_0/System/extension/loguploader.20200516.9.trace";
+            WriteConsole($"checking uri result {fileUri}");
+            Assert.AreEqual(FileTypesEnum.setup, FileTypes.MapFileTypeUri(fileUri));
+            Assert.AreEqual(FileDataTypesEnum.fabricsetup, FileTypes.MapFileDataTypeUri(fileUri));
+            Assert.AreEqual(FileExtensionTypesEnum.trace, FileTypes.MapKnownFileExtension(fileUri));
+        }
+
         [Test(Description = "setup fabric deployer trace local file", TestOf = typeof(FileTypes))]
         public void FileSetupLocalTest()
         {
