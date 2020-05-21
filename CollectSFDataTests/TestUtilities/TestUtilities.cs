@@ -20,6 +20,7 @@ using System.IO;
 using System.Management.Automation;
 using System.Management.Automation.Runspaces;
 using System.Text;
+using System.Threading;
 
 namespace CollectSFDataTests
 {
@@ -297,6 +298,8 @@ namespace CollectSFDataTests
         public ProcessOutput StopConsoleRedirection()
         {
             Log.Info("stopping redirection");
+            // give time for logging to finish
+            Thread.Sleep(1000);
             Log.Close();
             FlushConsoleOutput();
             ProcessOutput output = new ProcessOutput
