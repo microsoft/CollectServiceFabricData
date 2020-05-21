@@ -22,7 +22,7 @@ namespace CollectSFData.Kusto
     public class KustoConnection : Instance
     {
         private const int _maxMessageCount = 32;
-        private static readonly CustomTaskManager _kustoTasks = new CustomTaskManager(true);
+        private readonly CustomTaskManager _kustoTasks = new CustomTaskManager(true);
         private readonly SynchronizedList<string> _messageList = new SynchronizedList<string>();
         private readonly TimeSpan _messageTimeToLive = new TimeSpan(0, 1, 0, 0);
         private readonly CancellationTokenSource _tokenSource = new CancellationTokenSource();
