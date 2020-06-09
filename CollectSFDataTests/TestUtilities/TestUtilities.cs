@@ -135,15 +135,11 @@ namespace CollectSFDataTests
             ReadTestSettings();
         }
 
-        public ProcessOutput ExecuteCollectSfData(string arguments = null, bool withTempConfig = true, bool wait = true)
+        public ProcessOutput ExecuteCollectSfData(string arguments = null, bool wait = true)
         {
             Log.Info("enter");
-            if (withTempConfig)
-            {
-                arguments += $" -config {TempOptionsFile}";
-            }
 
-            return ExecuteProcess("collectsfdata.exe", arguments, wait);
+            return ExecuteProcess($"{Context.WorkDirectory}\\collectsfdata.exe", arguments, wait);
         }
 
         public ProcessOutput ExecuteMoqTest(ConfigurationOptions options = null)
