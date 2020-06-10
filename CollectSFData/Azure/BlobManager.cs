@@ -19,8 +19,9 @@ namespace CollectSFData.Azure
 {
     public class BlobManager : Instance
     {
-        private readonly CustomTaskManager _blobChildTasks = new CustomTaskManager(true) { CreationOptions = TaskCreationOptions.AttachedToParent };
+        //private readonly CustomTaskManager _blobChildTasks = new CustomTaskManager(true) { CreationOptions = TaskCreationOptions.AttachedToParent };
         private readonly CustomTaskManager _blobTasks = new CustomTaskManager(true);
+
         private CloudStorageAccount _account;
         private CloudBlobClient _blobClient;
         private object DateTimeMaxLock = new object();
@@ -68,7 +69,7 @@ namespace CollectSFData.Azure
 
             Log.Info("waiting for download tasks");
             _blobTasks.Wait();
-            _blobChildTasks.Wait();
+            //_blobChildTasks.Wait();
         }
 
         private void AddContainerToList(CloudBlobContainer container)
@@ -96,7 +97,8 @@ namespace CollectSFData.Azure
 
             foreach (BlobResultSegment segment in EnumerateDirectoryBlobs(directory))
             {
-                _blobChildTasks.TaskAction(() => QueueBlobSegmentDownload(segment));
+                //_blobChildTasks.TaskAction(() => QueueBlobSegmentDownload(segment));
+                QueueBlobSegmentDownload(segment);
             }
         }
 
@@ -237,14 +239,14 @@ namespace CollectSFData.Azure
 
             while (true)
             {
-                resultSegment = _blobChildTasks.TaskFunction((blobresultsegment) =>
-                cloudBlobDirectory.ListBlobsSegmentedAsync(
+                //resultSegment = _blobChildTasks.TaskFunction((blobresultsegment) =>
+                resultSegment = cloudBlobDirectory.ListBlobsSegmentedAsync(
                     false,
                     BlobListingDetails.None,
                     MaxResults,
                     blobToken,
                     null,
-                    null).Result as BlobResultSegment).Result as BlobResultSegment;
+                    null).Result as BlobResultSegment;//).Result as BlobResultSegment;
 
                 blobToken = resultSegment.ContinuationToken;
                 yield return resultSegment;
