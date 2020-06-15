@@ -8,6 +8,7 @@ using NUnit.Framework;
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Text.RegularExpressions;
 
 namespace CollectSFDataTests
 {
@@ -18,7 +19,20 @@ namespace CollectSFDataTests
         public void DefaultConfigurationTest()
         {
             TestUtilities utils = DefaultUtilities();
-            utils.ConfigurationOptions.GatherType = FileTypesEnum.any.ToString();
+            string defaultOptionsFile = $"{TestUtilities.WorkingDir}\\collectsfdata.options.json";
+            Assert.IsTrue(File.Exists(defaultOptionsFile));
+
+            ProcessOutput results = utils.ExecuteCollectSfData(defaultOptionsFile);
+
+            Assert.IsTrue(results.HasErrors(), results.ToString());
+            // should not start execution
+            Assert.NotZero(results.ExitCode);
+        }
+
+        [Test]
+        public void DefaultSaveConfigurationTest()
+        {
+            TestUtilities utils = DefaultUtilities();
             //ProcessOutput results = utils.ExecuteTest();
             File.Delete(utils.TempOptionsFile);
             ProcessOutput results = utils.ExecuteCollectSfData($"-save collectsfdata.options.json");
@@ -37,7 +51,6 @@ namespace CollectSFDataTests
         public void NoConfigurationTest()
         {
             TestUtilities utils = DefaultUtilities();
-            utils.ConfigurationOptions.GatherType = FileTypesEnum.any.ToString();
             //ProcessOutput results = utils.ExecuteTest();
             File.Delete(utils.TempOptionsFile);
             ProcessOutput results = utils.ExecuteCollectSfData($"");
@@ -48,9 +61,59 @@ namespace CollectSFDataTests
             Assert.NotZero(results.ExitCode);
         }
 
+        [Test]
+        public void ThreadsNullConfigurationTest()
+        {
+            TestUtilities utils = DefaultUtilities();
+            utils.SaveTempOptions();
+
+            string config = File.ReadAllText(utils.TempOptionsFile);
+            config = Regex.Replace(config, "\"Threads\".+", "\"Threads\": null,", RegexOptions.IgnoreCase);
+            File.WriteAllText(utils.TempOptionsFile, config);
+
+            //ProcessOutput results = utils.ExecuteCollectSfData(utils.TempOptionsFile);
+            ProcessOutput results = utils.ExecuteCollectSfData($"");
+            //ProcessOutput results = utils.ExecuteTest(); // cant use when saving type to null
+
+            Assert.IsTrue(results.HasErrors(), results.ToString());
+            Assert.IsTrue(File.Exists(utils.TempOptionsFile));
+            // should start execution
+            Assert.Zero(results.ExitCode);
+        }
+
+        [Test]
+        public void ThreadsOneConfigurationTest()
+        {
+            TestUtilities utils = DefaultUtilities();
+            utils.ConfigurationOptions.Threads = 1;
+
+            ProcessOutput results = utils.ExecuteTest();
+            //ProcessOutput results = utils.ExecuteCollectSfData($"");
+
+            Assert.IsTrue(results.HasErrors(), results.ToString());
+            Assert.IsTrue(File.Exists(utils.TempOptionsFile));
+            // should start execution
+            Assert.Zero(results.ExitCode);
+        }
+
+        [Test]
+        public void ThreadsZeroConfigurationTest()
+        {
+            TestUtilities utils = DefaultUtilities();
+            utils.ConfigurationOptions.Threads = 0;
+            ProcessOutput results = utils.ExecuteTest();
+            //ProcessOutput results = utils.ExecuteCollectSfData($"");
+
+            Assert.IsTrue(results.HasErrors(), results.ToString());
+            Assert.IsTrue(File.Exists(utils.TempOptionsFile));
+            // should start execution
+            Assert.Zero(results.ExitCode);
+        }
+
         private TestUtilities DefaultUtilities()
         {
             TestUtilities utils = new TestUtilities();
+            utils.ConfigurationOptions.GatherType = FileTypesEnum.any.ToString();
             utils.ConfigurationOptions.SasKey = TestUtilities.TestProperties.SasKey;
             utils.ConfigurationOptions.CacheLocation = TestUtilities.TempDir;
             utils.ConfigurationOptions.StartTimeStamp = DateTime.MinValue.ToString("o");
