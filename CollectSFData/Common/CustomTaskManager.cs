@@ -188,12 +188,20 @@ namespace CollectSFData.Common
             int completionPortThreads = 0;
             int count = 0;
 
-            do
+            while (taskWait & workerThreads < 1)
             {
-                Log.Debug($"waiting for available worker thread {count++}");
+                if (count % 100 == 0)
+                {
+                    Log.Info($"waiting for available worker thread {count++}");
+                }
+                else
+                {
+                    Log.Debug($"waiting for available worker thread {count++}");
+                }
+
                 ThreadPool.GetAvailableThreads(out workerThreads, out completionPortThreads);
                 Thread.Sleep(ThreadSleepMs10);
-            } while (workerThreads < 1);
+            }
 
             QueuedTaskObjects.Add(taskObject);
             Log.Debug($"adding new taskobject to queue: {CallerName}");
