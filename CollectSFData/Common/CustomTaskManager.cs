@@ -192,7 +192,7 @@ namespace CollectSFData.Common
             {
                 if (count % 100 == 0)
                 {
-                    Log.Info($"waiting for available worker thread {count++}");
+                    Log.Info($"waiting for available worker thread {count++}", ConsoleColor.Yellow);
                 }
                 else
                 {
