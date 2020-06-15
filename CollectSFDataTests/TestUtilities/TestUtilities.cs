@@ -135,6 +135,13 @@ namespace CollectSFDataTests
             ReadTestSettings();
         }
 
+        [OneTimeTearDown]
+        public static void OneTimeTearDown()
+        {
+            CustomTaskManager.Close();
+            Log.Close();
+        }
+
         public ProcessOutput ExecuteCollectSfData(string arguments = null, bool wait = true)
         {
             Log.Info("enter");
@@ -217,7 +224,7 @@ namespace CollectSFDataTests
             return output;
         }
 
-        public ProcessOutput ExecuteTest(ConfigurationOptions options = null)
+        public ProcessOutput ExecuteTest()
         {
             lock (_executing)
             {
@@ -268,6 +275,12 @@ namespace CollectSFDataTests
             Console.Error.WriteLine(ConsoleErr.ToString());
             StartConsoleRedirection();
             return output;
+        }
+
+        public void SaveTempOptions()
+        {
+            ConfigurationOptions.SaveConfiguration = TempOptionsFile;
+            ConfigurationOptions.SaveConfigFile();
         }
 
         [SetUp]
@@ -368,12 +381,6 @@ namespace CollectSFDataTests
                 Console.WriteLine($"checking new sasuri result {endpoints.IsValid()}");
                 Assert.AreEqual(true, endpoints.IsValid());
             }
-        }
-
-        private void SaveTempOptions()
-        {
-            ConfigurationOptions.SaveConfiguration = TempOptionsFile;
-            ConfigurationOptions.SaveConfigFile();
         }
     }
 }
