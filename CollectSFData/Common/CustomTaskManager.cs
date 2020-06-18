@@ -188,15 +188,15 @@ namespace CollectSFData.Common
             int completionPortThreads = 0;
             int count = 0;
 
-            while (taskWait & workerThreads < 1)
+            while (taskWait && workerThreads < 1)
             {
-                if (count % 100 == 0)
+                if (++count % 100 == 0)
                 {
-                    Log.Info($"waiting for available worker thread {count++}", ConsoleColor.Yellow);
+                    Log.Info($"waiting for available worker thread {count}", ConsoleColor.Yellow);
                 }
                 else
                 {
-                    Log.Debug($"waiting for available worker thread {count++}");
+                    Log.Debug($"waiting for available worker thread {count}");
                 }
 
                 ThreadPool.GetAvailableThreads(out workerThreads, out completionPortThreads);
