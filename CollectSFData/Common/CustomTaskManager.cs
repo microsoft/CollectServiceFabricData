@@ -188,7 +188,7 @@ namespace CollectSFData.Common
             int completionPortThreads = 0;
             int count = 0;
 
-            while (taskWait && workerThreads < 1)
+            while (taskWait && workerThreads < (Config.Threads * MinThreadMultiplier))
             {
                 if (++count % 100 == 0)
                 {
