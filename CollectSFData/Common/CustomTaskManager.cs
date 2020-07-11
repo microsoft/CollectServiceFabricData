@@ -190,21 +190,13 @@ namespace CollectSFData.Common
 
             while (taskWait && workerThreads < (Config.Threads * MinThreadMultiplier))
             {
-                if (++count % 100 == 0)
-                {
-                    Log.Info($"waiting for available worker thread {count}", ConsoleColor.Yellow);
-                }
-                else
-                {
-                    Log.Debug($"waiting for available worker thread {count}");
-                }
-
                 ThreadPool.GetAvailableThreads(out workerThreads, out completionPortThreads);
                 Thread.Sleep(ThreadSleepMs10);
+                count++;
             }
 
             QueuedTaskObjects.Add(taskObject);
-            Log.Debug($"adding new taskobject to queue: {CallerName}");
+            Log.Info($"added new taskobject to queue: {CallerName} throttle ms: {count * 10}");
             TimeSpan delay = new TimeSpan();
 
             if (taskWait)
