@@ -1,5 +1,5 @@
 .create-or-alter function with (docstring = "function to enumerate FMM.NodeUpdate",folder = "sflogs") 
-    TraceFMNodeInfo(T:string) {
+    TraceFMMNodeInfo(T:string) {
     table(T)
     | where Type contains "FMM.NodeUpdate"
     | project Timestamp,Text
