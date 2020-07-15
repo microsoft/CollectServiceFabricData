@@ -1,0 +1,10 @@
+.create-or-alter function with (docstring = "[T:string] where T=table name. function to enumerate Type 'POA-' patch orchestration windows update results'",folder = "sflogs/patch-orchestration") 
+    TracePOAWUResults(T:string) {
+        table(T)
+        | where Type contains 'POA-CoordinatorService.VerboseMessage'
+            and Text !startswith '0 '
+            and Text endswith 'results were found in WindowsUpdateResults'
+        | parse kind=regex Text with resultsCount:long " results were found in WindowsUpdateResults"
+        | summarize min(Timestamp), max(Timestamp) by resultsCount, NodeName
+        | project resultsCount, min_Timestamp, max_Timestamp, POSPrimary=NodeName
+}
