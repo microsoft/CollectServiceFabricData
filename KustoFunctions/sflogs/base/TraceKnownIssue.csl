@@ -150,5 +150,6 @@
         TextContains(T, "docker health error", "Docker HEALTHCHECK reported health_status=unhealthy"),
         TypeAndTextContains(T, "docker container not responsive", "ManagedHosting.ContainerEventManager", "Failed to connect to DockerService at named pipe 'docker_engine'"),
         TypeAndTextContains(T, "container activation issues", "ManagedHosting.ActivateContainerOperation", "Failed to start Container"),
-        TypeAndTextContains(T, "possible container hns nat issue", "FabricDeployer.FabricDeployer", "Failed to set up container network")
+        TypeAndTextContains(T, "possible container hns nat issue", "FabricDeployer.FabricDeployer", "Failed to set up container network"),
+        TypeAndTextMatches(T, "patch orchestration has active repair tasks", "POA-CoordinatorService.VerboseMessage", "Total [1-9][0-9]* repair tasks were found for POS")
     }
