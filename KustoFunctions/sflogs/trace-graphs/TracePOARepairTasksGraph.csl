@@ -1,0 +1,10 @@
+.create-or-alter function with (docstring = "[T:string] where T=table name. function to enumerate Type 'POA-' patch orchestration repair tasks in timechart'",folder = "sflogs/trace-graphs") 
+    TracePOARepairTasksGraph(T:string) {
+        table(T)
+        | where Type contains 'POA-CoordinatorService.VerboseMessage'
+            and Text !startswith 'Total 0 '
+            and Text endswith 'repair tasks were found for POS'
+        | parse kind=regex Text with "Total " repairTaskCount:long " repair tasks were found for POS"
+        | summarize max(repairTaskCount) by bin(Timestamp,1m), repairTaskCount
+        | render timechart 
+}
