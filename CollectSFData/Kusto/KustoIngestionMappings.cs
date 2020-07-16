@@ -3,9 +3,10 @@
 // Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
+using CollectSFData.DataFile;
 using System.Collections.Generic;
 
-namespace CollectSFData
+namespace CollectSFData.Kusto
 {
     public class KustoCsvSchema
     {

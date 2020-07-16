@@ -23,5 +23,6 @@ namespace CollectSFDataTests
         public string testAadPassword;
         public string testAadSourceVaultValue;
         public string testAadUser;
+        public string testAzStorageAccount;
     }
 }
