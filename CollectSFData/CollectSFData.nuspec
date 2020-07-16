@@ -2,9 +2,9 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
     <metadata>
     <id>Microsoft.ServiceFabric.Support.CollectSFData</id>
-    <version>0.0.1-prerelease</version>
+    <version>1.0.0</version>
     <title>CollectSFData</title>
-    <authors>Microsoft, servicefabric</authors>
+    <authors>Microsoft servicefabric</authors>
     <owners>Microsoft servicefabric</owners>
     <license type="expression">MIT</license>
     <projectUrl>https://github.com/microsoft/CollectServiceFabricData</projectUrl>
