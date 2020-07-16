@@ -390,7 +390,7 @@ namespace CollectSFData.Kusto
 
                 if (results.Any())
                 {
-                    Regex pattern = new Regex(@"''resourceId'': ''(/[A-Za-z0-9./-]+)''");
+                    Regex pattern = new Regex(@"resourceId\W+?(/[A-Za-z0-9./-]+)");
                     Match match = pattern.Match(results.FirstOrDefault());
                     Config.ResourceUri = match.Groups[1].Value;
                     Log.Info($"ResourceID: {Config.ResourceUri}");
