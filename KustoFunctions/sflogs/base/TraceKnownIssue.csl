@@ -117,6 +117,7 @@
         TextContains(T,"slow progress", "DueToSlowProgress=True"),
         TypeContains(T, "node performance issues lease slow send", "Lease.SlowSendCompletion"),
         TypeContains(T, "node performance issues lease send queue full", "Lease.SendQueueFull"),
+        TypeAndTextContains(T, "lease node heartbeat disabled", "LeaseAgent.Heartbeat", "is disabled"),
         TextContains(T, "replica performance 0x80071cf7", "0x80071cf7"),
         TextContains(T, "communication errors", "failed with status -107374"),
         TextContains(T, "port exhaustion", "failed to bind to local port for connecting: 0x80072747"),
@@ -125,11 +126,11 @@
         TypeContains(T, "crash dumps in storage account", "crashdumpfound"),
         TypeOrTextContains(T, "exception", "exception"),
         TextContains(T, "cancellation token issue? (not confirmed)", "RunAsync is taking longer then expected time (15s) to cancel."),
-        TextContains(T, "possible certificate trust issue if not self-signed cert. check CA connectivity and intermediate certs.","0x800b0109"),
+        //TextContains(T, "possible certificate trust issue if not self-signed cert. check CA connectivity and intermediate certs.","0x800b0109"),
         TypeContains(T, "node open failure", "FabricNode._NodesOps_NodeOpenedFailed"),
         TextContains(T, "expired certificate. use TSG: https://github.com/Azure/Service-Fabric-Troubleshooting-Guides/blob/master/Security/How%20to%20recover%20from%20an%20Expired%20Cluster%20Certificate.md", "SFRP poll: Exception encountered: System.InvalidOperationException: Could not load primary and secondary certificate"),
         TypeContains(T, "reverse proxy errors", "ReverseProxy.SendResponseError"),
-        TypeContains(T, "reverse proxy errors", "ReverseProxy.ProcessRequestError"),
+        //TypeContains(T, "reverse proxy errors", "ReverseProxy.ProcessRequestError"),
         TypeContains(T, "reverse proxy errors", "ReverseProxy.EndProcessReverseProxyRequestFailed"),
         TypeAndTextContains(T, "reverse proxy", "ReverseProxy.ServiceResponseReresolve", "reresolving"),
         TypeAndTextContains(T, "reverse proxy errors possible port / app issue", "ReverseProxy.SendResponseError","SendResponseChunk, error = 3489660929"),
@@ -149,5 +150,6 @@
         TextContains(T, "docker health error", "Docker HEALTHCHECK reported health_status=unhealthy"),
         TypeAndTextContains(T, "docker container not responsive", "ManagedHosting.ContainerEventManager", "Failed to connect to DockerService at named pipe 'docker_engine'"),
         TypeAndTextContains(T, "container activation issues", "ManagedHosting.ActivateContainerOperation", "Failed to start Container"),
-        TypeAndTextContains(T, "possible container hns nat issue", "FabricDeployer.FabricDeployer", "Failed to set up container network")
+        TypeAndTextContains(T, "possible container hns nat issue", "FabricDeployer.FabricDeployer", "Failed to set up container network"),
+        TypeAndTextMatches(T, "patch orchestration has active repair tasks", "POA-CoordinatorService.VerboseMessage", "Total [1-9][0-9]* repair tasks were found for POS")
     }
