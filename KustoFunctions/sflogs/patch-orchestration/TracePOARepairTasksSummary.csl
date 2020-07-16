@@ -1,0 +1,6 @@
+.create-or-alter function with (docstring = "[T:string] where T=table name. function to enumerate Type \'POA-\' patch orchestration repair tasks summary\'",folder = "sflogs/patch-orchestration") 
+    TracePOARepairTasksSummary(T:string,taskName:string=".") {
+        TracePOARepairTasks(T)
+        | summarize min(Timestamp) by taskId, taskState, taskAction, taskDescription, executor, target, subState, toint(json.ExecutorTimeoutInMinutes), todatetime(json.RestartRequestedTime)
+        | order by min_Timestamp asc, taskId, taskState
+}
