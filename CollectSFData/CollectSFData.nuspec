@@ -2,21 +2,23 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
     <metadata>
     <id>Microsoft.ServiceFabric.Support.CollectSFData</id>
-    <version>0.0.1-prerelease</version>
+    <version>1.0.0</version>
     <title>CollectSFData</title>
-    <authors>Microsoft, sedwards, jagilber</authors>
+    <authors>Microsoft servicefabric</authors>
     <owners>Microsoft servicefabric</owners>
     <license type="expression">MIT</license>
     <projectUrl>https://github.com/microsoft/CollectServiceFabricData</projectUrl>
-    <iconUrl>http://raw.githubusercontent.com/microsoft/CollectServiceFabricData/master/FabricSupport.ico</iconUrl>
+    <iconUrl>http://raw.githubusercontent.com/microsoft/CollectServiceFabricData/master/CollectSFData/FabricSupport.ico</iconUrl>
+    <icon>FabricSupport.png</icon>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>standalone .net framework exe utility to manage service fabric support logs.</description>
     <releaseNotes>initial release.</releaseNotes>
-    <copyright>Copyright 2019</copyright>
+    <copyright>Copyright 2020</copyright>
     <tags>service fabric</tags>
   </metadata>
   <files>
       <file src="**\Release\*.dll" target="lib\net462" />
       <file src="**\Release\*.exe" target="lib\net462" />
+      <file src="FabricSupport.png" target="" />
   </files>
 </package>
