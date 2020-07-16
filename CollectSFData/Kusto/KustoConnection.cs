@@ -66,7 +66,7 @@ namespace CollectSFData.Kusto
                 _tokenSource.Cancel();
                 _monitorTask.Wait();
                 _monitorTask.Dispose();
-                InjestResourceIdKustoTableMapping();
+                IngestResourceIdKustoTableMapping();
 
                 if (_failureCount > 0)
                 {
@@ -379,11 +379,11 @@ namespace CollectSFData.Kusto
             Log.Info($"current count ingested: {_ingestedUris.Count()} ingesting: {_messageList.Count()} failed: {_failureCount} total: {_ingestedUris.Count() + _messageList.Count() + _failureCount}", ConsoleColor.Green);
         }
 
-        private void InjestResourceIdKustoTableMapping()
+        private void IngestResourceIdKustoTableMapping()
         {
-            if (Config.FileType == FileTypesEnum.trace)
+            if (_ingestedUris.Any() && Config.FileType == FileTypesEnum.trace)
             {
-                // Fetch resource ID from injested traces
+                // Fetch resource ID from ingested traces
                 var results = Endpoint.Query($"['{Endpoint.TableName}']" +
                     $" | where Type == 'InfrastructureService.RestClientHelper'" +
                     $" | take 1");
