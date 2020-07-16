@@ -6,7 +6,7 @@
 using System;
 using System.Text.RegularExpressions;
 
-namespace CollectSFData
+namespace CollectSFData.DataFile
 {
     [Serializable]
     public class CsvExceptionRecord : ITraceRecord

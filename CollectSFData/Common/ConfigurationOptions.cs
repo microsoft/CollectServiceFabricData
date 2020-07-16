@@ -3,6 +3,8 @@
 // Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
+using CollectSFData.Azure;
+using CollectSFData.DataFile;
 using Microsoft.Extensions.CommandLineUtils;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -16,7 +18,7 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading;
 
-namespace CollectSFData
+namespace CollectSFData.Common
 {
     public class ConfigurationOptions : Constants
     {
@@ -25,7 +27,7 @@ namespace CollectSFData
         private string _endTime;
         private bool _logDebugEnabled;
         private string _startTime;
-        private string _tempPath = Path.GetTempPath().TrimEnd(Path.DirectorySeparatorChar);
+        private string _tempPath;
         private int _threads;
 
         public ConfigurationOptions()
@@ -155,7 +157,7 @@ namespace CollectSFData
 
         public SasEndpoints SasEndpointInfo { get; private set; } = new SasEndpoints();
 
-        public string SasKey { get; private set; } = string.Empty;
+        public string SasKey { get; set; } = string.Empty;
 
         public string SaveConfiguration { get; set; }
 
@@ -280,7 +282,7 @@ namespace CollectSFData
         {
             // saving config file with no options will set cache location to %temp% by default
             // collectsfdata.exe -save file.json
-            return !string.IsNullOrEmpty(CacheLocation) | (CacheLocation == _tempPath);
+            return !(string.IsNullOrEmpty(CacheLocation) | (CacheLocation == _tempPath));
         }
 
         public bool IsClientIdConfigured()
@@ -314,6 +316,8 @@ namespace CollectSFData
         {
             try
             {
+                _tempPath = FileManager.NormalizePath(Path.GetTempPath().TrimEnd(Path.DirectorySeparatorChar));
+
                 if (File.Exists(DefaultOptionsFile))
                 {
                     MergeConfigFile(DefaultOptionsFile);

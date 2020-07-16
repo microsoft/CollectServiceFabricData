@@ -3,6 +3,8 @@
 // Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
+using CollectSFData.Common;
+using CollectSFData.DataFile;
 using Microsoft.Azure.Storage;
 using Microsoft.Azure.Storage.Blob;
 using Microsoft.Azure.Storage.Queue;
@@ -15,12 +17,12 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace CollectSFData
+namespace CollectSFData.Kusto
 {
     public class KustoConnection : Instance
     {
         private const int _maxMessageCount = 32;
-        private static readonly CustomTaskManager _kustoTasks = new CustomTaskManager(true);
+        private readonly CustomTaskManager _kustoTasks = new CustomTaskManager(true);
         private readonly SynchronizedList<string> _messageList = new SynchronizedList<string>();
         private readonly TimeSpan _messageTimeToLive = new TimeSpan(0, 1, 0, 0);
         private readonly CancellationTokenSource _tokenSource = new CancellationTokenSource();
