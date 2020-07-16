@@ -5,7 +5,7 @@
 
 using System.Diagnostics;
 
-namespace CollectSFData
+namespace CollectSFData.Common
 {
     public class Constants
     {
@@ -25,9 +25,9 @@ namespace CollectSFData
         public const string ManagementAzureCom = "https://management.azure.com";
         public const int MaxCsvTransmitBytes = 1024 * 1024 * 100;
         public const int MaxJsonTransmitBytes = 1024 * 1024 * 25;
-        public const int MaxStreamTransmitBytes = 1024 * 1024 * 1024;
         public const int MaxResults = 5000;
-        public const int MaxThreadMultiplier = 100;
+        public const int MaxStreamTransmitBytes = 1024 * 1024 * 1024;
+        public const int MaxThreadMultiplier = 20;
         public const int MinThreadMultiplier = 10;
         public const string PerfCsvExtension = ".perf.csv";
         public const string PerfCtrExtension = ".blg";
