@@ -5,7 +5,7 @@
 
 using System.Collections.Generic;
 
-namespace CollectSFData
+namespace CollectSFData.LogAnalytics
 {
     public class LogAnalyticsWorkspaceModel
     {

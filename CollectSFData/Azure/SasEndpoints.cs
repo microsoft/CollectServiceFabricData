@@ -3,11 +3,12 @@
 // Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
+using CollectSFData.Common;
 using System;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace CollectSFData
+namespace CollectSFData.Azure
 {
     public class SasEndpoints
     {
@@ -16,21 +17,23 @@ namespace CollectSFData
             if (sasKey.ToLower().Contains("endpoint="))
             {
                 IsConnectionString = true;
-                Log.Info("sas connection string:");
+                Log.Info($"sas connection string:{sasKey}");
                 SetEndpoints(sasKey);
                 SetToken(sasKey);
                 ConnectionString = sasKey;
             }
             else if (!string.IsNullOrEmpty(sasKey))
             {
-                Log.Info("sas key:");
+                Log.Info($"sas key:{sasKey}");
                 // verify sas is valid uri if not sasconnection
-                Uri testUri = new Uri(sasKey, UriKind.Absolute);
+                Uri testUri = null;
+                string errMessage = $"invalid uri.scheme/saskey:{sasKey}";
+                testUri = new Uri(sasKey, UriKind.Absolute);
+
                 Log.Debug("sas testUri", testUri);
 
                 if (testUri.Scheme != Uri.UriSchemeHttp && testUri.Scheme != Uri.UriSchemeHttps)
                 {
-                    string errMessage = $"invalid uri.scheme/saskey:{sasKey}";
                     Log.Exception(errMessage);
                     throw new ArgumentException(errMessage);
                 }
@@ -125,6 +128,7 @@ namespace CollectSFData
                 }
             }
 
+            Log.Info($"exit: {retval}");
             return retval;
         }
 
@@ -152,7 +156,7 @@ namespace CollectSFData
         private void SetStorageUriInfo(string uriString)
         {
             uriString = uriString.TrimEnd('/') + "/";
-            string pattern = @"https?://(?<storageAccountName>.+?)\..+?\.(?<storageAccountSuffix>.+?)(\?|/$|/(?<absolutePath>.+?))(/|\?|$)";
+            string pattern = @"https?://(?<storageAccountName>.+?)\..+?\.(?<storageAccountSuffix>.+?)(\?|/$|/(?<absolutePath>.+?))(;|,|\?|$)";
 
             if (Regex.IsMatch(uriString, pattern, RegexOptions.IgnoreCase))
             {
@@ -188,7 +192,7 @@ namespace CollectSFData
 
         private bool SetToken(string sasString)
         {
-            string pattern = @"(SharedAccessSignature=|\?)(?<sas>.+?)(;|$|\s)";
+            string pattern = @"(SharedAccessSignature=|\?)(?<sas>.+?)(;|$|\s|,)";
 
             if (Regex.IsMatch(sasString, pattern, RegexOptions.IgnoreCase))
             {
