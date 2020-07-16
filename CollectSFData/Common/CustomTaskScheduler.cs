@@ -8,7 +8,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace CollectSFData
+namespace CollectSFData.Common
 {
     public class CustomTaskScheduler : TaskScheduler
     {
