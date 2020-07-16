@@ -1,0 +1,15 @@
+.create-or-alter function with (docstring = "[T:string] where T=table name. function to enumerate Type 'POA-' patch orchestration repair tasks'",folder = "sflogs/patch-orchestration") 
+    TracePOAPrintRepairTasks(T:string, taskName:string=".") {
+        table(T)
+        | where Type contains 'POA-CoordinatorService.PrintRepairTasks'
+        | parse kind=regex Text with * 
+            @'TasksID = ' taskId
+            @', State = ' taskState
+            @', Action = ' taskAction
+            @', Executor = ' executor
+            @', Description = ' taskDescription
+            @', ExecutorData = ' executorData
+            @', Target = ' target
+        | where taskId matches regex strcat('(?i:',taskName,')')
+        | project taskId, taskState, taskAction, taskDescription, executor, executorData, target
+}
