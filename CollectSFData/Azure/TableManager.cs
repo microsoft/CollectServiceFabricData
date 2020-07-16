@@ -3,6 +3,8 @@
 // Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
+using CollectSFData.Common;
+using CollectSFData.DataFile;
 using Microsoft.WindowsAzure.Storage.Table;
 using System;
 using System.Collections.Generic;
@@ -11,11 +13,11 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace CollectSFData
+namespace CollectSFData.Azure
 {
     public class TableManager : Instance
     {
-        private static readonly CustomTaskManager _tableTasks = new CustomTaskManager(true);
+        private readonly CustomTaskManager _tableTasks = new CustomTaskManager(true);
         private CloudTableClient _tableClient;
 
         public Action<FileObject> IngestCallback { get; set; }

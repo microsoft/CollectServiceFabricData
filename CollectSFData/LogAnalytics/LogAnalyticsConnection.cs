@@ -3,6 +3,9 @@
 // Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
+using CollectSFData.Azure;
+using CollectSFData.Common;
+using CollectSFData.DataFile;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -15,7 +18,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 
-namespace CollectSFData
+namespace CollectSFData.LogAnalytics
 {
     public class LogAnalyticsConnection : Instance
     {
