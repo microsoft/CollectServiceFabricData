@@ -3,11 +3,10 @@
 // Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
+using CollectSFData.DataFile;
 using System;
-using System.Threading.Tasks;
-using System.Threading;
 
-namespace CollectSFData
+namespace CollectSFData.Common
 {
     public class Instance : Constants
     {
@@ -15,12 +14,7 @@ namespace CollectSFData
         public static long DiscoveredMaxDateTicks = DateTime.MinValue.Ticks;
         public static long DiscoveredMinDateTicks = DateTime.MaxValue.Ticks;
         public static FileManager FileMgr = new FileManager();
-        public static KustoConnection Kusto = null;
-        public static LogAnalyticsConnection LogAnalytics = null;
-        public static Timer NoProgressTimer;
-        public static ParallelOptions ParallelConfig;
         public static DateTime StartTime = DateTime.Now;
-        public static CustomTaskManager TaskManager = new CustomTaskManager(true);
         public static int TotalErrors = 0;
         public static int TotalFilesConverted = 0;
         public static int TotalFilesDownloaded = 0;
