@@ -117,6 +117,7 @@
         TextContains(T,"slow progress", "DueToSlowProgress=True"),
         TypeContains(T, "node performance issues lease slow send", "Lease.SlowSendCompletion"),
         TypeContains(T, "node performance issues lease send queue full", "Lease.SendQueueFull"),
+        TypeAndTextContains(T, "lease node heartbeat disabled", "LeaseAgent.Heartbeat", "is disabled"),
         TextContains(T, "replica performance 0x80071cf7", "0x80071cf7"),
         TextContains(T, "communication errors", "failed with status -107374"),
         TextContains(T, "port exhaustion", "failed to bind to local port for connecting: 0x80072747"),
@@ -149,5 +150,6 @@
         TextContains(T, "docker health error", "Docker HEALTHCHECK reported health_status=unhealthy"),
         TypeAndTextContains(T, "docker container not responsive", "ManagedHosting.ContainerEventManager", "Failed to connect to DockerService at named pipe 'docker_engine'"),
         TypeAndTextContains(T, "container activation issues", "ManagedHosting.ActivateContainerOperation", "Failed to start Container"),
-        TypeAndTextContains(T, "possible container hns nat issue", "FabricDeployer.FabricDeployer", "Failed to set up container network")
+        TypeAndTextContains(T, "possible container hns nat issue", "FabricDeployer.FabricDeployer", "Failed to set up container network"),
+        TypeAndTextMatches(T, "patch orchestration has active repair tasks", "POA-CoordinatorService.VerboseMessage", "Total [1-9][0-9]* repair tasks were found for POS")
     }
