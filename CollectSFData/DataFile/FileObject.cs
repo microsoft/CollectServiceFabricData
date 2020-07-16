@@ -3,11 +3,12 @@
 // Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
+using CollectSFData.Common;
 using System;
 using System.IO;
 using System.Text.RegularExpressions;
 
-namespace CollectSFData
+namespace CollectSFData.DataFile
 {
     public class FileObject
     {
