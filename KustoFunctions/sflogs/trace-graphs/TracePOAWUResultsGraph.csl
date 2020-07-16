@@ -1,0 +1,10 @@
+.create-or-alter function with (docstring = "[T:string] where T=table name. function to enumerate Type 'POA-' patch orchestration windows update results in timechart'",folder = "sflogs/trace-graphs") 
+    TracePOAWUResultsGraph(T:string) {
+        table(T)
+        | where Type contains 'POA-CoordinatorService.VerboseMessage'
+            and Text !startswith '0 '
+            and Text endswith 'results were found in WindowsUpdateResults'
+        | parse kind=regex Text with resultsCount:long " results were found in WindowsUpdateResults"
+        | summarize max(resultsCount) by bin(Timestamp,1m), resultsCount
+        | render timechart 
+}
