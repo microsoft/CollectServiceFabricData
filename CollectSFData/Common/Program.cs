@@ -3,8 +3,12 @@
 // Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
-namespace CollectSFData
+namespace CollectSFData.Common
 {
+    using CollectSFData.Azure;
+    using CollectSFData.DataFile;
+    using CollectSFData.Kusto;
+    using CollectSFData.LogAnalytics;
     using System;
     using System.Collections.Generic;
     using System.IO;
@@ -16,8 +20,13 @@ namespace CollectSFData
 
     public class Program : Instance
     {
+        private KustoConnection _kusto = null;
+        private LogAnalyticsConnection _logAnalytics = null;
         private int _noProgressCounter = 0;
+        private Timer _noProgressTimer;
+        private ParallelOptions _parallelConfig;
         private Tuple<int, int, int, int, int, int, int> _progressTuple = new Tuple<int, int, int, int, int, int, int>(0, 0, 0, 0, 0, 0, 0);
+        private CustomTaskManager _taskManager = new CustomTaskManager(true);
 
         public static int Main(string[] args)
         {
@@ -118,7 +127,7 @@ namespace CollectSFData
                 }
 
                 Log.Info($"version: {Version}");
-                ParallelConfig = new ParallelOptions { MaxDegreeOfParallelism = Config.Threads };
+                _parallelConfig = new ParallelOptions { MaxDegreeOfParallelism = Config.Threads };
                 ServicePointManager.DefaultConnectionLimit = Config.Threads * MaxThreadMultiplier;
                 ServicePointManager.Expect100Continue = true;
                 ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
@@ -128,7 +137,7 @@ namespace CollectSFData
 
                 if (Config.NoProgressTimeoutMin > 0)
                 {
-                    NoProgressTimer = new Timer(NoProgressCallback, null, 0, 60 * 1000);
+                    _noProgressTimer = new Timer(NoProgressCallback, null, 0, 60 * 1000);
                 }
 
                 if (!InitializeKusto() | !InitializeLogAnalytics())
@@ -220,13 +229,13 @@ namespace CollectSFData
 
         public void FinalizeKusto()
         {
-            if (Config.IsKustoConfigured() && !Kusto.Complete())
+            if (Config.IsKustoConfigured() && !_kusto.Complete())
             {
                 Log.Warning($"there may have been errors during kusto import. {Config.CacheLocation} has *not* been deleted.");
             }
             else if (Config.IsKustoConfigured())
             {
-                Log.Last($"{DataExplorer}/clusters/{Kusto.Endpoint.ClusterName}/databases/{Kusto.Endpoint.DatabaseName}", ConsoleColor.Cyan);
+                Log.Last($"{DataExplorer}/clusters/{_kusto.Endpoint.ClusterName}/databases/{_kusto.Endpoint.DatabaseName}", ConsoleColor.Cyan);
             }
         }
 
@@ -234,8 +243,8 @@ namespace CollectSFData
         {
             if (Config.IsKustoConfigured() | Config.IsKustoPurgeRequested())
             {
-                Kusto = new KustoConnection();
-                return Kusto.Connect();
+                _kusto = new KustoConnection();
+                return _kusto.Connect();
             }
 
             return true;
@@ -245,8 +254,8 @@ namespace CollectSFData
         {
             if (Config.IsLogAnalyticsConfigured() | Config.LogAnalyticsCreate | Config.IsLogAnalyticsPurgeRequested())
             {
-                LogAnalytics = new LogAnalyticsConnection();
-                return LogAnalytics.Connect();
+                _logAnalytics = new LogAnalyticsConnection();
+                return _logAnalytics.Connect();
             }
 
             return true;
@@ -260,17 +269,17 @@ namespace CollectSFData
             {
                 if (Config.IsKustoConfigured())
                 {
-                    TaskManager.QueueTaskAction(() => Kusto.AddFile(fileObject));
+                    _taskManager.QueueTaskAction(() => _kusto.AddFile(fileObject));
                 }
 
                 if (Config.IsLogAnalyticsConfigured())
                 {
-                    TaskManager.QueueTaskAction(() => LogAnalytics.AddFile(fileObject));
+                    _taskManager.QueueTaskAction(() => _logAnalytics.AddFile(fileObject));
                 }
             }
             else
             {
-                TaskManager.QueueTaskAction(() => FileMgr.ProcessFile(fileObject));
+                _taskManager.QueueTaskAction(() => FileMgr.ProcessFile(fileObject));
             }
         }
 

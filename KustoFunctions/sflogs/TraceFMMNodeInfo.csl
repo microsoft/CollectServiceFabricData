@@ -1,7 +1,7 @@
-.create-or-alter function with (docstring = "function to enumerate FM.NodeUpdate",folder = "sflogs") 
-    TraceFMNodeInfo(T:string) {
+.create-or-alter function with (docstring = "function to enumerate FMM.NodeUpdate",folder = "sflogs") 
+    TraceFMMNodeInfo(T:string) {
     table(T)
-    | where Type contains "FM.NodeUpdate"
+    | where Type contains "FMM.NodeUpdate"
     | project Timestamp,Text
     | parse kind=regex Text with * 
         @'VersionInstance:' VersionInstance

@@ -49,7 +49,7 @@
     <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup>
-    <StartupObject>CollectSFData.Program</StartupObject>
+    <StartupObject>CollectSFData.Common.Program</StartupObject>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>FabricSupport.ico</ApplicationIcon>
@@ -70,11 +70,11 @@
     <Compile Include="Azure\GenericResourceResult.cs" />
     <Compile Include="Azure\SubscriptionRecordResult.cs" />
     <Compile Include="Common\Http.cs" />
-    <Compile Include="File\CsvExceptionRecord.cs" />
-    <Compile Include="File\CsvSetupRecord.cs" />
-    <Compile Include="File\StreamManager.cs" />
-    <Compile Include="File\IRecord.cs" />
-    <Compile Include="File\ITraceRecord.cs" />
+    <Compile Include="DataFile\CsvExceptionRecord.cs" />
+    <Compile Include="DataFile\CsvSetupRecord.cs" />
+    <Compile Include="DataFile\StreamManager.cs" />
+    <Compile Include="DataFile\IRecord.cs" />
+    <Compile Include="DataFile\ITraceRecord.cs" />
     <Compile Include="Common\IngestRetryPolicy.cs" />
     <Compile Include="Kusto\KustoEndpointInfo.cs" />
     <Compile Include="Kusto\KustoIngestionMappings.cs" />
@@ -88,14 +88,14 @@
     <Compile Include="Azure\SasEndpoints.cs" />
     <Compile Include="Common\SynchronizedList.cs" />
     <Compile Include="Common\CustomTaskManager.cs" />
-    <Compile Include="File\CsvCounterRecord.cs" />
-    <Compile Include="File\CsvTableRecord.cs" />
-    <Compile Include="File\DtrTraceRecord.cs" />
-    <Compile Include="File\FileObject.cs" />
-    <Compile Include="File\FileObjectCollection.cs" />
+    <Compile Include="DataFile\CsvCounterRecord.cs" />
+    <Compile Include="DataFile\CsvTableRecord.cs" />
+    <Compile Include="DataFile\DtrTraceRecord.cs" />
+    <Compile Include="DataFile\FileObject.cs" />
+    <Compile Include="DataFile\FileObjectCollection.cs" />
     <Compile Include="Common\Log.cs" />
-    <Compile Include="File\FileTypes.cs" />
-    <Compile Include="File\FileManager.cs" />
+    <Compile Include="DataFile\FileTypes.cs" />
+    <Compile Include="DataFile\FileManager.cs" />
     <Compile Include="Kusto\KustoConnection.cs" />
     <Compile Include="Common\Program.cs" />
     <Compile Include="Kusto\KustoRestTable.cs" />

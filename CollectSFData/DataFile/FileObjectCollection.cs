@@ -3,9 +3,10 @@
 // Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
+using CollectSFData.Common;
 using System.Collections.Generic;
 
-namespace CollectSFData
+namespace CollectSFData.DataFile
 {
     public class FileObjectCollection : SynchronizedList<FileObject>
     {

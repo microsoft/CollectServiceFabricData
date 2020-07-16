@@ -3,6 +3,7 @@
 // Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
+using CollectSFData.Common;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -11,7 +12,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading;
 
-namespace CollectSFData
+namespace CollectSFData.Azure
 {
     public class AzureResourceManager : Instance
     {
