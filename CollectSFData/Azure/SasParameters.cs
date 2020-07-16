@@ -6,7 +6,7 @@
 using System;
 using System.Web;
 
-namespace CollectSFData
+namespace CollectSFData.Azure
 {
     public class SasParameters
     {

@@ -5,7 +5,7 @@
 
 using System.Collections.Generic;
 
-namespace CollectSFData
+namespace CollectSFData.Kusto
 {
     public class KustoRestTableOfContentsColumnV1 : KustoRestResponseColumnV1
     {

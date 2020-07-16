@@ -5,7 +5,7 @@
 
 using System;
 
-namespace CollectSFData
+namespace CollectSFData.DataFile
 {
     public interface IRecord
     {
