@@ -137,6 +137,23 @@ namespace CollectSFData.Kusto
             return Query($".show tables | project TableName | where TableName == '{tableName}'").Count > 0;
         }
 
+        public bool CreateTable(string tableName, string tableSchema)
+        {
+            if (!HasTable(tableName))
+            {
+                Log.Info($"creating table: {tableName}");
+                return Command($".create table ['{tableName}'] ( {tableSchema} )").Count > 0;
+            }
+
+            return true;
+        }
+
+        public bool IngestInline(string tableName, string csv)
+        {
+            Log.Info($"inline ingesting data: {csv} into table: {tableName}");
+            return Command($".ingest inline into table ['{tableName}'] <| {csv}").Count > 0;
+        }
+
         public List<string> Query(string query)
         {
             Log.Info($"query:{query}", ConsoleColor.Blue);
