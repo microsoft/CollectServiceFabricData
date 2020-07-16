@@ -3,11 +3,12 @@
 // Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
+using Kusto.Cloud.Platform.Utils;
 using System;
 using System.Collections.Generic;
 using System.Threading;
 
-namespace CollectSFData
+namespace CollectSFData.Common
 {
     public class SynchronizedList<T> : List<T>, IEnumerable<T>
     {
@@ -35,31 +36,45 @@ namespace CollectSFData
             }
         }
 
-        public bool AddUnique(T item, bool failIfExists = false)
+        public new void AddRange(IEnumerable<T> items)
         {
             _rwl.EnterWriteLock();
 
             try
             {
-                if (!Exists(x => x.Equals(item)))
-                {
-                    base.Add(item);
-                }
-                else
-                {
-                    if (failIfExists)
-                    {
-                        Log.Warning("item exists", item);
-                        return false;
-                    }
-                }
-
-                return true;
+                items.ForEach(x => base.Add(x));
             }
             finally
             {
                 _rwl.ExitWriteLock();
             }
+        }
+
+        public bool AddUnique(T item, bool failIfExists = false)
+        {
+            if (!Exists(x => x.Equals(item)))
+            {
+                _rwl.EnterWriteLock();
+
+                try
+                {
+                    base.Add(item);
+                }
+                finally
+                {
+                    _rwl.ExitWriteLock();
+                }
+            }
+            else
+            {
+                if (failIfExists)
+                {
+                    Log.Warning("item exists", item);
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         public bool Any()

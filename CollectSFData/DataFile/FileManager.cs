@@ -3,6 +3,7 @@
 // Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
+using CollectSFData.Common;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -13,11 +14,11 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace CollectSFData
+namespace CollectSFData.DataFile
 {
     public class FileManager : Instance
     {
-        private static readonly CustomTaskManager _fileTasks = new CustomTaskManager(true);
+        private readonly CustomTaskManager _fileTasks = new CustomTaskManager(true);
 
         public static string NormalizePath(string path, string directorySeparator = "/")
         {

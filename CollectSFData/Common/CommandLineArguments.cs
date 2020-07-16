@@ -7,7 +7,7 @@ using Microsoft.Extensions.CommandLineUtils;
 using System;
 using System.Text;
 
-namespace CollectSFData
+namespace CollectSFData.Common
 {
     public class CommandLineArguments : Constants
     {
