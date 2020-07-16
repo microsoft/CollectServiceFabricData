@@ -5,18 +5,18 @@
 
 using System;
 
-namespace CollectSFData
+namespace CollectSFData.DataFile
 {
     [Serializable]
-    public class DtrTraceRecord : ITraceRecord
+    public class CsvSetupRecord : ITraceRecord
     {
-        private const int _fieldCount = 6;
+        private const int _fieldCount = 5;
 
-        public DtrTraceRecord()
+        public CsvSetupRecord()
         {
         }
 
-        public DtrTraceRecord(string traceRecord, FileObject fileObject, string resourceUri = null)
+        public CsvSetupRecord(string traceRecord, FileObject fileObject, string resourceUri = null)
         {
             Populate(fileObject, traceRecord, resourceUri);
         }
@@ -41,16 +41,15 @@ namespace CollectSFData
 
         public string Type { get; set; }
 
-        public IRecord Populate(FileObject fileObject, string dtrRecord, string resourceUri = null)
+        public IRecord Populate(FileObject fileObject, string traceRecord, string resourceUri = null)
         {
-            string[] fields = ParseRecord(dtrRecord);
+            string[] fields = ParseRecord(traceRecord);
 
-            Timestamp = Convert.ToDateTime(fields[0]);
+            Timestamp = Convert.ToDateTime(fields[0].Replace("-", " "));
             Level = fields[1];
-            TID = Convert.ToInt32(fields[2]);
-            PID = Convert.ToInt32(fields[3]);
-            Type = fields[4];
-            Text = fields[5];
+            PID = Convert.ToInt32(fields[2]);
+            Type = fields[3];
+            Text = fields[4];
             NodeName = fileObject.NodeName;
             FileType = fileObject.FileDataType.ToString();
             RelativeUri = fileObject.RelativeUri;
@@ -61,26 +60,24 @@ namespace CollectSFData
 
         public override string ToString()
         {
-            return $"{Timestamp:o},{Level},{TID},{PID},{Type},{Text},{NodeName},{FileType},{RelativeUri},{ResourceUri}{Environment.NewLine}";
+            return $"{Timestamp:o},{Level},{PID},{Type},{Text},{NodeName},{FileType},{RelativeUri},{ResourceUri}{Environment.NewLine}";
         }
 
         private string[] ParseRecord(string record)
         {
             // format for csv compliance
-            // by default the Text field is not quoted, contains commas, contains quotes
-            // kusto conforms to csv standards. service fabric dtr.zip (csv file) does not
+            // kusto conforms to csv standards. service fabric trace (csv file) does not
 
             string[] newLine = record.Split(new string[] { "," }, _fieldCount, StringSplitOptions.None);
             string additionalCommas = string.Empty;
-            string newText = newLine[newLine.Length - 1];
 
             if (newLine.Length < _fieldCount)
             {
                 additionalCommas = new string(',', _fieldCount - newLine.Length);
             }
 
-            newText = newText.TrimStart('\"').TrimEnd('\"', '\r', '\n').Replace("\"", "'");
-            newLine[newLine.Length - 1] = $"{additionalCommas}\"{newText}\"";
+            newLine[newLine.Length - 1] = newLine[newLine.Length - 1].Replace("\"", "'").TrimEnd('\r', '\n');
+            newLine[newLine.Length - 1] = $"{additionalCommas}\"{newLine[newLine.Length - 1]}\"";
             return newLine;
         }
     }

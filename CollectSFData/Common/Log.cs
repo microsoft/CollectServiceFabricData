@@ -6,31 +6,31 @@
 using Newtonsoft.Json;
 using System;
 using System.IO;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace CollectSFData
+namespace CollectSFData.Common
 {
     public static class Log
     {
         public static int LogErrors = 0;
-        private static readonly ConsoleColor _highlightBackground = Console.ForegroundColor;
-        private static readonly ConsoleColor _highlightForeground = Console.BackgroundColor;
-        private static readonly SynchronizedList<MessageObject> _lastMessageList = new SynchronizedList<MessageObject>();
-        private static readonly SynchronizedList<MessageObject> _messageList = new SynchronizedList<MessageObject>();
-        private static readonly Task _taskWriter;
-        private static readonly CancellationTokenSource _taskWriterCancellationToken = new CancellationTokenSource();
         private static bool _displayingProgress;
+        private static ConsoleColor _highlightBackground = Console.ForegroundColor;
+        private static ConsoleColor _highlightForeground = Console.BackgroundColor;
+        private static SynchronizedList<MessageObject> _lastMessageList = new SynchronizedList<MessageObject>();
         private static string _logFile;
+        private static SynchronizedList<MessageObject> _messageList = new SynchronizedList<MessageObject>();
         private static StreamWriter _streamWriter;
+        private static Task _taskWriter;
+        private static CancellationTokenSource _taskWriterCancellationToken;
         private static int _threadSleepMs = Constants.ThreadSleepMs100;
 
         static Log()
         {
-            _taskWriter = new Task(TaskWriter, _taskWriterCancellationToken.Token);
-            _taskWriter.Start();
+            Start();
         }
 
         public static bool LogDebugEnabled { get; set; }
@@ -63,9 +63,21 @@ namespace CollectSFData
 
         public static void Close()
         {
-            _messageList.AddRange(_lastMessageList);
-            _taskWriterCancellationToken.Cancel();
-            _taskWriter.Wait();
+            try
+            {
+                _messageList.AddRange(_lastMessageList);
+                _taskWriterCancellationToken.Cancel();
+                _taskWriter.Wait();
+                _taskWriter.Dispose();
+            }
+            catch (TaskCanceledException) { }
+            catch (AggregateException e)
+            {
+                if (!e.InnerExceptions.Any(x => x.GetType() == typeof(TaskCanceledException)))
+                {
+                    throw new AggregateException(e);
+                }
+            }
         }
 
         public static void Debug(string message, object jsonSerializer = null, [CallerMemberName] string callerName = "")
@@ -162,6 +174,13 @@ namespace CollectSFData
                                 [CallerMemberName] string callerName = "")
         {
             Info(message, foregroundColor, backgroundColor, jsonSerializer, true, callerName: callerName);
+        }
+
+        public static void Start()
+        {
+            _taskWriterCancellationToken = new CancellationTokenSource();
+            _taskWriter = new Task(TaskWriter, _taskWriterCancellationToken.Token);
+            _taskWriter.Start();
         }
 
         public static void Warning(string message, object jsonSerializer = null, [CallerMemberName] string callerName = "")

@@ -3,13 +3,14 @@
 // Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
+using CollectSFData.Common;
 using Kusto.Cloud.Platform.Utils;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 
-namespace CollectSFData
+namespace CollectSFData.Kusto
 {
     public class KustoRestRecord : Dictionary<string, object> { }
 
