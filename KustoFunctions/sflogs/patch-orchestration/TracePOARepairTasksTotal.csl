@@ -1,0 +1,10 @@
+.create-or-alter function with (docstring = "[T:string] where T=table name. function to count 'POA-' patch orchestration repair tasks'",folder = "sflogs/patch-orchestration") 
+    TracePOARepairTasksTotal(T:string) {
+        table(T)
+        | where Type contains 'POA-CoordinatorService.VerboseMessage'
+            and Text !startswith 'Total 0 '
+            and Text endswith 'repair tasks were found for POS'
+        | parse kind=regex Text with "Total " repairTaskCount:long " repair tasks were found for POS"
+        | summarize min(Timestamp), max(Timestamp) by repairTaskCount, NodeName
+        | project repairTaskCount, min_Timestamp, max_Timestamp, POSPrimary=NodeName
+}
