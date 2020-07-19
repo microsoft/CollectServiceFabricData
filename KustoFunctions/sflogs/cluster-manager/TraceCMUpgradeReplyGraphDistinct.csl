@@ -1,5 +1,5 @@
-.create-or-alter function with (docstring = "function to graph CM.UpgradeReply at default 5 second intervals",folder = "sflogs/trace-graphs") 
-    TraceCMUpgradeReplyGraph(T:string) {
+.create-or-alter function with (docstring = "function to graph Distinct UD CM.UpgradeReply at default 5 second intervals",folder = "sflogs/cluster-manager") 
+TraceCMUpgradeReplyGraphDistinct(T:string) {
     table(T)
     | where Type contains "CM.UpgradeReply"
     | order by Timestamp asc 
@@ -34,6 +34,6 @@
     | extend completedTotal = (completed_0 + completed_1 + completed_2 + completed_3 + completed_4)
     | extend pendingTotal = (pending_0 + pending_1 + pending_2 + pending_3 + pending_4)
     | extend skippedTotal = (skipped_0 + skipped_1 + skipped_2 + skipped_3 + skipped_4)
-    | project-away completed_0, completed_1, completed_2, completed_3, completed_4, pending_0, pending_1, pending_2, pending_3, pending_4, skipped_0, skipped_1, skipped_2, skipped_3, skipped_4
+    //| project-away completed_0, completed_1, completed_2, completed_3, completed_4, pending_0, pending_1, pending_2, pending_3, pending_4, skipped_0, skipped_1, skipped_2, skipped_3, skipped_4
     | render timechart
 }
