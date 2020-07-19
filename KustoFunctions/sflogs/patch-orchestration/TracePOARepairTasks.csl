@@ -1,10 +1,38 @@
-.create-or-alter function with (docstring = "[T:string] where T=table name. function to enumerate Type 'POA-' patch orchestration repair tasks'",folder = "sflogs/patch-orchestration") 
-    TracePOARepairTasks(T:string) {
+.create-or-alter function with (docstring = "[T:string] where T=table name. function to enumerate Type \'POA-\' patch orchestration repair tasks\'",folder = "sflogs/patch-orchestration") 
+    TracePOARepairTasks(T:string,taskName:string=".") {
         table(T)
-        | where Type contains 'POA-CoordinatorService.VerboseMessage'
-            and Text !startswith 'Total 0 '
-            and Text endswith 'repair tasks were found for POS'
-        | parse kind=regex Text with "Total " repairTaskCount:long " repair tasks were found for POS"
-        | summarize min(Timestamp), max(Timestamp) by repairTaskCount, NodeName
-        | project repairTaskCount, min_Timestamp, max_Timestamp, POSPrimary=NodeName
+        | where Type contains 'POA-CoordinatorService.PrintRepairTasks'
+        | parse kind=regex Text with * 
+            @'TasksID = ' taskId
+            @', State = ' taskState
+            @', Action = ' taskAction
+            @', Executor = ' executor
+            @', Description = ' taskDescription
+            @', ExecutorData = ' executorData
+            @', Target = ' target
+        | where taskId matches regex strcat('(?i:',taskName,')')
+        | extend json = parse_json(replace("''",'"',executorData))
+        | extend executorSubState = toint(json.ExecutorSubState)
+        | extend subState = case(executorSubState == -12, "DllNotFoundException",
+                       executorSubState == -11, "ApplicationNotFound",
+                       executorSubState == -10, "TimeoutException",
+                       executorSubState == -9, "RetryableException",
+                       executorSubState == -8, "ProcessTerminated",
+                       executorSubState == -7, "ServiceNotFound",
+                       executorSubState == -6, "InvalidArgument",
+                       executorSubState == -5, "RepairTaskInvalidState",
+                       executorSubState == -1, "Failure",
+                       executorSubState == 0, "Success",
+                       executorSubState == 1, "None",
+                       executorSubState == 2, "DownloadCompleted",
+                       executorSubState == 3, "InstallationApproved",
+                       executorSubState == 4, "InstallationInProgress",
+                       executorSubState == 5, "InstallationCompleted",
+                       executorSubState == 6, "RestartRequested",
+                       executorSubState == 7, "RestartNotNeeded",
+                       executorSubState == 8, "RestartCompleted",
+                       executorSubState == 9, "OperationCompleted",
+                       executorSubState == 10, "OperationAborted",
+                       "Unknown"
+                       )
 }
