@@ -11,7 +11,7 @@
             @', ExecutorData = ' executorData
             @', Target = ' target
         | where taskId matches regex strcat('(?i:',taskName,')')
-        | extend json = parse_json(executorData)
+        | extend json = parse_json(replace("''",'"',executorData))
         | extend executorSubState = toint(json.ExecutorSubState)
         | extend subState = case(executorSubState == -12, "DllNotFoundException",
                        executorSubState == -11, "ApplicationNotFound",
