@@ -1,0 +1,9 @@
+.create-or-alter function with (docstring = "[T:string] where T=table name. function to enumerate Type error / warning information graph.",folder = "sflogs/errors") 
+    TraceTypeErrorsGraph(T:string) {
+    TraceTypeErrors(T)
+    | extend level = iff((Type contains 'exception' or Text contains 'exception'), 'exception', Level)
+    | extend node = strcat(NodeName, " level: ", level)
+    | summarize count() by bin(Timestamp, 1m), node
+    | order by node asc
+    | render timechart 
+}
