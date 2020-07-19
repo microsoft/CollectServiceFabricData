@@ -1,0 +1,7 @@
+.create-or-alter function with (docstring = "[T:string] where T=table name. function to enumerate Type error / warning information.",folder = "sflogs/errors") 
+    TraceTypeErrors(T:string) {
+    table(T)
+    | where (Level !contains 'info' and Level !contains 'verbose' and Level !contains 'unknown')
+        or (Type contains 'exception' or Text contains 'exception')
+    | project-away RelativeUri
+}
