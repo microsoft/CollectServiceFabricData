@@ -1,4 +1,4 @@
-.create-or-alter function with (docstring = "function to graph FMM.NodeCounts at default 5 second intervals",folder = "sflogs/trace-graphs") 
+.create-or-alter function with (docstring = "function to graph FMM.NodeCounts at default 5 second intervals",folder = "sflogs/failover-manager") 
     TraceFMMNodeCountsGraph(T:string) {
         table(T)
         | where Type contains "FMM.NodeCounts"
