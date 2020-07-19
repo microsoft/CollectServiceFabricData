@@ -16,5 +16,5 @@
         | extend instance = extract(@';(.+?):',1,Text)
         | summarize MinTimestamp=arg_min(Timestamp,*), MaxTimestamp=arg_max(Timestamp,*) by Type,NodeName,instance
         | project Type, MinTimestamp, MaxTimestamp, NodeName, instance
-        | order by Type asc 
+        | order by Type asc, MinTimestamp asc 
 }

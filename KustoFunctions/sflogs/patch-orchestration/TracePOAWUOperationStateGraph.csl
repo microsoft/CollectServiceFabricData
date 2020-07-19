@@ -1,0 +1,9 @@
+.create-or-alter function with (docstring = "[T:string] where T=table name. function to enumerate Type 'POA-' patch orchestration windows update operational state graph'",folder = "sflogs/patch-orchestration") 
+    TracePOAWUOperationStateGraph(T:string) {
+        TracePOAWUOperationState(T)
+        | extend nodeStatus = strcat(NodeName,":",status)
+        | summarize count=count() by bin(Timestamp, 1m), nodeStatus
+        //| summarize count() by bin(Timestamp, 1m), status
+        //| where nodeStatus contains 'installation'
+        | render timechart 
+}

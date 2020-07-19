@@ -1,4 +1,4 @@
-.create-or-alter function with (docstring = "function to enumerate FMM.NodeUpdate",folder = "sflogs") 
+.create-or-alter function with (docstring = "function to enumerate FMM.NodeUpdate",folder = "sflogs/failover-manager") 
     TraceFMMNodeInfo(T:string) {
     table(T)
     | where Type contains ".NodeState@" or Type contains ".NodeUpdate@"

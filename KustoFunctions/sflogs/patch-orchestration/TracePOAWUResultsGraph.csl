@@ -1,4 +1,4 @@
-.create-or-alter function with (docstring = "[T:string] where T=table name. function to enumerate Type 'POA-' patch orchestration windows update results in timechart'",folder = "sflogs/trace-graphs") 
+.create-or-alter function with (docstring = "[T:string] where T=table name. function to enumerate Type 'POA-' patch orchestration windows update results in timechart'",folder = "sflogs/patch-orchestration") 
     TracePOAWUResultsGraph(T:string) {
         table(T)
         | where Type contains 'POA-CoordinatorService.VerboseMessage'

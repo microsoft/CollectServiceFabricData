@@ -1,4 +1,4 @@
-.create-or-alter function with (docstring = '[T:string] where T=table name. function to enumerate hosting activate/terminate from Type field into graph', folder = 'sflogs/trace-graphs')
+.create-or-alter function with (docstring = '[T:string] where T=table name. function to enumerate hosting activate/terminate from Type field into graph', folder = 'sflogs/hosting')
     TraceHostingActivateTerminateGraph(T:string) {
         TraceHostingActivateTerminate(T)
         | summarize count=count() by bin(Timestamp, 1m), event
