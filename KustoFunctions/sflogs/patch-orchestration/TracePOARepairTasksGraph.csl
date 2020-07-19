@@ -1,4 +1,4 @@
-.create-or-alter function with (docstring = "[T:string] where T=table name. function to count 'POA-' patch orchestration repair tasks in timechart'",folder = "sflogs/trace-graphs") 
+.create-or-alter function with (docstring = "[T:string] where T=table name. function to count 'POA-' patch orchestration repair tasks in timechart'",folder = "sflogs/patch-orchestration") 
     TracePOARepairTasksGraph(T:string) {
         table(T)
         | where Type contains 'POA-CoordinatorService.VerboseMessage'
