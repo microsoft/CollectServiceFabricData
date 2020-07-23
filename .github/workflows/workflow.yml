@@ -86,7 +86,7 @@ jobs:
       - name: set nuget package
         shell: powershell
         run: |
-          $nugetPackage = (get-item *.nupkg).FullName 
+          $nugetPackage = (get-item "$($env:release_path)*.nupkg").FullName 
           echo "::set-env name=nuget_package::$nugetPackage"
 
       - name: nuget push
