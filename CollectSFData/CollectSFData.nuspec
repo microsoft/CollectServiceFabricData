@@ -19,6 +19,7 @@
   <files>
       <file src="**\Release\*.dll" target="lib\net462" />
       <file src="**\Release\*.exe" target="lib\net462" />
+      <file src="**\Release\*.json" target="lib\net462" />
       <file src="FabricSupport.png" target="" />
   </files>
 </package>
