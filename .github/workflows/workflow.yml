@@ -13,6 +13,9 @@ on:
     paths-ignore:
       - "docs/**"
       - "configurationFiles/**"
+      - "KustoFunctions/**"
+      - "KustoQueries/**"
+      - "LogAnalyticsQueries/**"
     branches:
       - master
 jobs:
@@ -86,8 +89,10 @@ jobs:
       - name: set nuget package
         shell: powershell
         run: |
-          $nugetPackage = (get-item "$($env:release_path)\*.nupkg").FullName 
+          $nugetPackage = (get-item "$($env:release_path)\*.nupkg").FullName
+          $nugetPackageName = (get-item "$($env:release_path)\*.nupkg").Name
           echo "::set-env name=nuget_package::$nugetPackage"
+          echo "::set-env name=nuget_package_name::$nugetPackageName"
 
       - name: nuget push
         shell: cmd
@@ -150,6 +155,6 @@ jobs:
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: ${{ env.nuget_package }}
-          asset_name: ${{ env.nuget_package }}
+          asset_name: ${{ env.nuget_package_name }}
           asset_content_type: application/zip
 
