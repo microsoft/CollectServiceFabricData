@@ -13,7 +13,7 @@
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>.net framework console utility to manage service fabric support logs.</description>
     <releaseNotes>initial release.</releaseNotes>
-    <copyright>Copyright 2020</copyright>
+    <copyright>© Microsoft Corporation. All rights reserved.</copyright>
     <tags>servicefabric</tags>
   </metadata>
   <files>
