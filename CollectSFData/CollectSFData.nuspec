@@ -9,7 +9,7 @@
     <license type="expression">MIT</license>
     <projectUrl>https://github.com/microsoft/CollectServiceFabricData</projectUrl>
     <iconUrl>http://raw.githubusercontent.com/microsoft/CollectServiceFabricData/master/CollectSFData/FabricSupport.ico</iconUrl>
-    <icon>FabricSupport.png</icon>
+    <icon>images\FabricSupport.png</icon>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>.net framework console utility to manage service fabric support logs.</description>
     <releaseNotes>initial release.</releaseNotes>
@@ -17,10 +17,9 @@
     <tags>servicefabric</tags>
   </metadata>
   <files>
-      <file src="**\Release\*.dll" target="lib\net462" />
-      <file src="**\Release\*.exe" target="lib\net462" />
-      <file src="..\configurationFiles\collectsfdata.options.json" target="lib\net462\bin\x64\Release" />
-      <file src="**\Release\*.config" target="lib\net462" />
-      <file src="FabricSupport.png" target="" />
+      <file src="bin\x64\$configuration$\*.dll" target="lib\net462" />
+      <file src="..\configurationFiles\collectsfdata.options.json" target="lib\net462" />
+      <file src="bin\x64\$configuration$\*.config" target="lib\net462" />
+      <file src="FabricSupport.png" target="images\" />
   </files>
 </package>
