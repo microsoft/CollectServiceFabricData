@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
     <metadata>
     <id>Microsoft.ServiceFabric.CollectSFData</id>
-    <version>1.0.0</version>
+    <version>$version$</version>
     <title>CollectSFData</title>
     <authors>Microsoft</authors>
     <owners></owners>
@@ -19,7 +19,8 @@
   <files>
       <file src="**\Release\*.dll" target="lib\net462" />
       <file src="**\Release\*.exe" target="lib\net462" />
-      <file src="**\Release\*.json" target="lib\net462" />
+      <file src="..\configurationFiles\collectsfdata.options.json" target="lib\net462\bin\x64\Release" />
+      <file src="**\Release\*.config" target="lib\net462" />
       <file src="FabricSupport.png" target="" />
   </files>
 </package>
