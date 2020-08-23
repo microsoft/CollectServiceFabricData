@@ -2,17 +2,16 @@
 
 # CollectSFData
 
-[current download](https://github.com/microsoft/CollectServiceFabricData/releases/latest)  
-[requirements](#requirements)  
-[setup](#setup)  
-
-- [Kusto Quick Start](/docs/kustoQuickStart.md)  
-- [Log Analytics Quick Start](/docs/logAnalyticsQuickStart.md)  
-
-[configuration](#configuration)  
-[examples](#examples)  
-[reporting issues and feedback](#Reporting-Issues-and-Feedback)  
-[contributing](#contributing)  
+>[Current download](https://github.com/microsoft/CollectServiceFabricData/releases/latest)  
+>[Requirements](#requirements)  
+>[Setup](#setup)  
+>>[Kusto Quick Start](/docs/kustoQuickStart.md)  
+>>[Log Analytics Quick Start](/docs/logAnalyticsQuickStart.md)  
+>
+>[Configuration](#configuration)  
+>[Examples](#examples)  
+>[Reporting issues and feedback](#Reporting-Issues-and-Feedback)  
+>[Contributing](#contributing)  
 
 ## Overview
 
@@ -57,15 +56,21 @@ Configuration for date ingestion into Log Analytics as a custom log has these re
 
 ## Setup
 
-CollectSFData is a console only utility that has no install.
+CollectSFData is a console only utility packaged in both a nuget package and github release zip.
 Use the below steps to setup environment for use with CollectSFData.
 
-1. ensure machine executing utility has comparable [requirements](#requirements)
-2. download latest build [collectsfdata.zip](https://github.com/microsoft/CollectServiceFabricData/releases/latest)  
-3. extract zip to working directory
-4. from extracted directory, use command prompt / powershell to execute utility
-5. [configuration](#configuration) can be passed as command line arguments or in json files.
-6. for help, type 'collectsfdata.exe /?'
+1. Ensure machine executing utility has comparable [requirements](#requirements)
+1. Download latest release from nuget or github release:  
+    a. nuget  
+      1. nuget install Microsoft.ServiceFabric.CollectSFData  
+      1. cd .\Microsoft.ServiceFabric.CollectSFData.{{ version }}\lib\net462
+
+    b. github  
+      1. [collectsfdata.zip](https://github.com/microsoft/CollectServiceFabricData/releases/latest)  
+      1. extract zip to working directory
+1. From working directory, use command prompt / powershell to execute utility
+1. [Configuration](#configuration) can be passed as command line arguments or in json files.  a default configuration file collectsfdata.options.json is included in the working directory.
+1. For help, type 'collectsfdata.exe /?'
 
 ### CollectSFData Setup with Kusto
 
