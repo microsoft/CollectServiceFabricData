@@ -367,11 +367,15 @@ namespace CollectSFData.DataFile
                     collection.ForEach(x => x.Stream.Compress());
                 }
             }
-
-            if (Config.IsLogAnalyticsConfigured())
+            else if (Config.IsLogAnalyticsConfigured())
             {
                 // la is kusto based but only accepts non compressed json format ingest
                 collection = SerializeJson(fileObject, records);
+            }
+            else
+            {
+                // serialize as csv for cache
+                collection = SerializeCsv(fileObject, records);
             }
 
             collection.ForEach(x => SaveToCache(x));
