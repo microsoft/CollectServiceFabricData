@@ -8,14 +8,14 @@ this script will setup Microsoft.IdentityModel.Clients Msal for use with powersh
 KustoObj will be created as $global:kusto to hold properties and run methods from
 
 use the following to save and pass arguments:
-(new-object net.webclient).downloadFile("https://raw.githubusercontent.com/jagilber/powershellScripts/master/kusto-rest.ps1","$pwd/kusto-rest.ps1");
+invoke-webRequest "https://raw.githubusercontent.com/microsoft/CollectServiceFabricData/master/scripts/kusto-rest.ps1" -outFile "$pwd/kusto-rest.ps1";
 .\kusto-rest.ps1 -cluster %kusto cluster% -database %kusto database%
 
 .NOTES
-Author : jagilber
+Author : servicefabric
 File Name  : kusto-rest.ps1
-Version    : 200128
-History    : add msal without .netcore helper exe
+Version    : 200330
+History    : add createresults
 
 .EXAMPLE
 .\kusto-rest.ps1 -cluster kustocluster -database kustodatabase
@@ -30,7 +30,7 @@ $kusto.SetTable($table)
 $kusto.SetDatabase($database)
 $kusto.SetCluster($cluster)
 $kusto.parameters = @{'T'= $table}
-$kusto.ExecScript("..\kustoqueries\sflogs-table-info.csl", $kusto.parameters)
+$kusto.ExecScript("..\KustoFunctions\sflogs\TraceKnownIssueSummary.csl", $kusto.parameters)
 
 .EXAMPLE 
 $kusto.SetTable("test_$env:USERNAME").Import()
@@ -100,7 +100,7 @@ requires clientSecret
 KustoObj
 
 .LINK
-https://raw.githubusercontent.com/jagilber/powershellScripts/master/kusto-rest.ps1
+https://raw.githubusercontent.com/microsoft/CollectServiceFabricData/master/scripts/kusto-rest.ps1
 #>
 
 [cmdletbinding()]
@@ -109,10 +109,11 @@ param(
     [string]$database,
     [string]$query = '.show tables',
     [bool]$fixDuplicateColumns,
-    [bool]$removeEmptyColumns,
+    [bool]$removeEmptyColumns = $true,
     [string]$table,
     [string]$identityPackageLocation,
     [string]$resultFile, # = ".\result.json",
+    [bool]$createResults = $true,
     [bool]$viewResults = $true,
     [string]$token,
     [int]$limit,
@@ -127,14 +128,15 @@ param(
     [switch]$updateScript,
     [hashtable]$parameters = @{ } #@{'clusterName' = $resourceGroup; 'dnsName' = $resourceGroup;}
 )
-    
+
+$PSModuleAutoLoadingPreference = 2
 $ErrorActionPreference = "continue"
 $global:kusto = $null
 $global:identityPackageLocation  
 $global:nuget = "nuget.exe"
 
 if ($updateScript) {
-    (new-object net.webclient).downloadFile("https://raw.githubusercontent.com/jagilber/powershellScripts/master/kusto-rest.ps1", "$psscriptroot/kusto-rest.ps1");
+    invoke-webRequest "https://raw.githubusercontent.com/jagilber/powershellScripts/master/kusto-rest.ps1" -outFile  "$psscriptroot/kusto-rest.ps1";
     write-warning "script updated. restart script"
     return
 }
@@ -151,7 +153,7 @@ function AddIdentityPackageType([string]$packageName, [string] $edition) {
         if (!(test-path $nuget)) {
             $nuget = "$env:temp\nuget.exe"
             if (!(test-path $nuget)) {
-                (new-object net.webclient).downloadFile($nugetDownloadUrl, $nuget)
+                invoke-webRequest $nugetDownloadUrl -outFile  $nuget
             }
         }
         [string]$localPackages = . $nuget list -Source $nugetPackageDirectory
@@ -213,12 +215,19 @@ class KustoObj {
     [string]$tenantId = $tenantId
     [timespan]$ServerTimeout = $serverTimeout
     hidden [string]$token = $token
+    [bool]$CreateResults = $createResults
     [bool]$ViewResults = $viewResults
     [hashtable]$Tables = @{}
     [hashtable]$Functions = @{}
+    hidden [hashtable]$FunctionObjs = @{}
         
     KustoObj() { }
     static KustoObj() { }
+
+    [void] ClearResults() {
+        $this.ResultObject = $null
+        $this.ResultTable = $null
+    }
 
     [KustoObj] CreateResultTable() {
         $this.ResultTable = [collections.arraylist]@()
@@ -303,9 +312,11 @@ class KustoObj {
             $this.ResultObject.Exceptions = $null
         }
     
-        if ($this.ViewResults) {
+        if ($this.ViewResults -or $this.CreateResults) {
             $this.CreateResultTable()
-            write-host ($this.ResultTable | out-string)
+            if($this.ViewResults) {
+                write-host ($this.ResultTable | out-string)
+            }
         }
     
         if ($this.ResultFile) {
@@ -331,8 +342,32 @@ class KustoObj {
         return $this.Pipe()
     }
 
+    [KustoObj] ExecFunctionWithTableName([string]$function) {
+        $functionObj = ($this.FunctionObjs.getEnumerator() | where-object Name -imatch $function).Value
+
+        if(!$function -or !$functionObj -or $functionObj.parameters.length -lt 1) {
+            write-warning "verify function '$function' and number of parameters '$($functionObj.parameters)'"
+        }
+        else {
+            write-host "function:$function$($functionObj.parameters)" -foregroundcolor cyan
+        }
+
+        if($this.Table) {
+            $this.Exec([string]::Format("{0}('{1}')",$function, $this.Table))
+        }
+        else {
+            write-warning "table not set"
+        }
+        return $this.Pipe()
+    }
+
     [KustoObj] ExecFunction([string]$function, [array]$parameters) {
-        $this.Exec([string]::Format("{0}('{1}')",$function,$parameters -join "','"))
+        if($parameters) {
+            $this.Exec([string]::Format("{0}('{1}')",$function,$parameters -join "','"))
+        }
+        else {
+            $this.Exec([string]::Format("{0}()",$function))
+        }
         return $this.Pipe()
     }
 
@@ -357,7 +392,7 @@ class KustoObj {
             
             if (!(test-path $destFile)) {
                 Write-host "downloading $($this.Script)" -foregroundcolor green
-                (new-object net.webclient).DownloadFile($this.Script, $destFile)
+                invoke-webRequest $this.Script -outFile  $destFile
             }
             else {
                 Write-host "using cached script $($this.Script)"
@@ -790,11 +825,13 @@ class KustoObj {
 
     [KustoObj] SetFunctions() {
         $this.Functions.Clear()
-        $this.exec('.show functions | project Name')
+        $this.FunctionObjs.Clear()
+        $this.exec('.show functions')
         $this.CreateResultTable()
 
         foreach($function in $this.ResultTable) {
             $this.Functions.Add($function.Name,$function.Name)
+            $this.FunctionObjs.Add($function.Name,$function)
         }
         return $this.Pipe()
     }
@@ -819,6 +856,7 @@ $global:kusto = [KustoObj]::new()
 $kusto.SetTables()
 $kusto.SetFunctions()
 $kusto.Exec()
+$kusto.ClearResults()
 
 write-host ($PSBoundParameters | out-string)
 
@@ -830,4 +868,3 @@ else {
     write-host "use `$kusto object to set properties and run queries. example: `$kusto.Exec('.show operations')" -ForegroundColor Green
     write-host "set `$kusto.viewresults=`$true to see results." -ForegroundColor Green
 }
-
