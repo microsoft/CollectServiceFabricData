@@ -1,0 +1,21 @@
+.create-or-alter function with (docstring = '[T:string] where T=table name. function to enumerate SF DNS resursive response information.', folder = 'sflogs')
+    TraceDNSRecursiveResponse (T:string) {
+        table(T)
+        | where Type contains "DNS"
+        | where Text contains "recursive"
+        | where Text contains 'processed'
+        | parse kind=regex Text with
+            @'DnsExchangeOp activityId ' activityId
+            @', processed query recursive, answer count ' answerCount
+            @', message \(not showing answers\) ID\(' queryId
+            @' \) RC\( ' returnCode
+            @' \) Flags \( ' iflags
+            @' \) Duration \( ' durationMs
+            @' ms \) ' queryString
+            @' Type \( ' apiType
+            @' \) A\(.*?' aRange
+            @'.*?\) SRV\(.*?' srvRange
+            @'.*?\) TXT\(.*?' txtRange
+            @'.*?\)'
+        | project Timestamp, NodeName,activityId,answerCount,queryId,returnCode,iflags,durationMs,queryString,apiType,aRange,srvRange,txtRange, Level, Text
+}

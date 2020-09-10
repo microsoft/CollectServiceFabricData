@@ -1,0 +1,7 @@
+.create-or-alter function with (docstring = '[T:string] where T=table name. function sflogs trace query to graph Actor Reminder Registrations. default max 1000', folder = 'sflogs')
+    TraceActorReminderRegistrationGraph (T:string) {
+        table(T)
+        | where Type contains 'ActorFramework.TelemetryEvents.ActorReminderRegisterationEvent'
+        | summarize count() by bin(Timestamp, 1m), NodeName
+        | render timechart
+    }
