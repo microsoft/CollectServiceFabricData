@@ -317,7 +317,7 @@ namespace CollectSFData.DataFile
 
             try
             {
-                foreach (string tempLine in fileObject.Stream.Read())
+                foreach (string tempLine in fileObject.Stream.ReadLine())
                 {
                     if (regex.IsMatch(tempLine))
                     {
