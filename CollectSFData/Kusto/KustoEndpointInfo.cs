@@ -23,8 +23,6 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 
-//using System.Windows.Forms;
-
 namespace CollectSFData.Kusto
 {
     public class IngestionResourcesSnapshot
@@ -121,6 +119,17 @@ namespace CollectSFData.Kusto
             IngestionResources = RetrieveIngestionResources();
         }
 
+        public bool CreateTable(string tableName, string tableSchema)
+        {
+            if (!HasTable(tableName))
+            {
+                Log.Info($"creating table: {tableName}");
+                return Command($".create table ['{tableName}'] ( {tableSchema} )").Count > 0;
+            }
+
+            return true;
+        }
+
         public bool DropTable(string tableName)
         {
             if (HasTable(tableName))
@@ -135,17 +144,6 @@ namespace CollectSFData.Kusto
         public bool HasTable(string tableName)
         {
             return Query($".show tables | project TableName | where TableName == '{tableName}'").Count > 0;
-        }
-
-        public bool CreateTable(string tableName, string tableSchema)
-        {
-            if (!HasTable(tableName))
-            {
-                Log.Info($"creating table: {tableName}");
-                return Command($".create table ['{tableName}'] ( {tableSchema} )").Count > 0;
-            }
-
-            return true;
         }
 
         public bool IngestInline(string tableName, string csv)
@@ -167,19 +165,7 @@ namespace CollectSFData.Kusto
             try
             {
                 queryTimer.Change(maxKustoClientTimeMs, maxKustoClientTimeMs);
-                /*
-                if (query.Trim().StartsWith("."))
-                {
-                    return EnumerateResults(_kustoQueryClient.ExecuteQuery(DatabaseName, query, null));
-                }
-                else
-                {
-                    // unable to parse multiple tables v1 or v2 using kusto so using httpclient and rest
-                    return EnumerateResults(_kustoQueryClient.ExecuteQueryV2Async(DatabaseName, query, null).Result);
-                    //xxDataSet t = (DataSet)_kustoQueryClient.ExecuteQueryV2Async(DatabaseName, query, null).Result;
-                }
-                */
-                //test
+                // unable to parse multiple tables v1 or v2 using kusto so using httpclient and rest
                 string requestBody = "{ \"db\": \"" + DatabaseName + "\", \"csl\": \"" + query + "\" }";
                 string requestId = new Guid().ToString();
 
@@ -209,7 +195,7 @@ namespace CollectSFData.Kusto
                     PrimaryResultTable = new KustoRestTable(ResponseDataSet.Tables[index]);
                     return PrimaryResultTable.RecordsCsv();
                 }
-                else // if (responseDataSet.Tables.Length == 1)
+                else
                 {
                     TableOfContents = new KustoRestTableOfContentsV1();
                     Cursor = "''";
@@ -269,7 +255,6 @@ namespace CollectSFData.Kusto
                 IEnumerator<ProgressiveDataSetFrame> resultFrames = reader.GetFrames();
 
                 while (!finalResults && resultFrames.MoveNext())
-                //while (resultFrames.MoveNext())
                 {
                     ProgressiveDataSetFrame resultFrame = resultFrames.Current;
                     Log.Debug($"resultFrame:", resultFrame);
@@ -366,9 +351,6 @@ namespace CollectSFData.Kusto
             int maxRecords = 1000;
             int index = 0;
             List<string> csvRecords = new List<string>();
-            //DataTableReader2 tReader = (reader as DataTableReader2);
-
-            //DataTable[] tables = ((DataTable[])((DataTableReader)(reader))).tables;
 
             while (reader.Read())
             {
@@ -450,7 +432,6 @@ namespace CollectSFData.Kusto
         private void SetExtendedProperties()
         {
             // extended properties stored in single 'Value' column as key value pair in json string
-            // todo visualize record
             string columnName = "Value";
             string extendedProperty = "Cursor";
             string tableName = "@ExtendedProperties";
@@ -504,14 +485,13 @@ namespace CollectSFData.Kusto
                     Log.Error($"mismatch in column count and row count {rowFields.Count()} {tableOfContents.Columns.Length}");
                     return content;
                 }
-                //typeof((tableOfContents.Columns.First(x => x.ColumnName.Equals("Id")).DataType)
+
                 row._index = r;
                 row.Id = rowFields[content.Columns.First(x => x.ColumnName.Equals("Id"))._index].ToString();
                 row.Kind = rowFields[content.Columns.First(x => x.ColumnName.Equals("Kind"))._index].ToString();
                 row.Name = rowFields[content.Columns.First(x => x.ColumnName.Equals("Name"))._index].ToString();
                 row.Ordinal = Convert.ToInt64(rowFields[content.Columns.First(x => x.ColumnName.Equals("Ordinal"))._index]);
                 row.PrettyName = rowFields[content.Columns.First(x => x.ColumnName.Equals("PrettyName"))._index].ToString();
-                //list.Add(row.ToString());
                 content.Rows.Add(row);
             }
 
