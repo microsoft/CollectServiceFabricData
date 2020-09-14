@@ -122,7 +122,7 @@ namespace CollectSFData.DataFile
 
         public IList<string> Read()
         {
-            return Read<string>();
+            return ReadLine().ToList();
         }
 
         public MemoryStream ReadFromFile(string fileUri = null)
