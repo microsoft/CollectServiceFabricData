@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -121,22 +122,7 @@ namespace CollectSFData.DataFile
 
         public IList<string> Read()
         {
-            Open();
-            Log.Debug($"enter: memoryStream length: {_memoryStream.Length}");
-            IList<string> sourceLines = new List<string>();
-            _memoryStream.Position = 0;
-
-            using (StreamReader reader = new StreamReader(_memoryStream, Encoding.UTF8))
-            {
-                string line;
-
-                while ((line = reader.ReadLine()) != null)
-                {
-                    sourceLines.Add(line);
-                }
-            }
-
-            return sourceLines;
+            return ReadLine().ToList();
         }
 
         public MemoryStream ReadFromFile(string fileUri = null)
@@ -152,6 +138,23 @@ namespace CollectSFData.DataFile
             }
 
             return _memoryStream;
+        }
+
+        public IEnumerable<string> ReadLine()
+        {
+            Open();
+            Log.Debug($"enter: memoryStream length: {_memoryStream.Length}");
+            _memoryStream.Position = 0;
+
+            using (StreamReader reader = new StreamReader(_memoryStream, Encoding.UTF8))
+            {
+                string line;
+
+                while ((line = reader.ReadLine()) != null)
+                {
+                    yield return line;
+                }
+            }
         }
 
         public void SaveToFile(string fileUri = null)
