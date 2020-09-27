@@ -103,8 +103,8 @@ namespace CollectSFDataTests
 
         public static Collection<PSObject> ExecutePowerShellCommand(string command)
         {
-            RunspaceConfiguration runspaceConfiguration = RunspaceConfiguration.Create();
-            Runspace runspace = RunspaceFactory.CreateRunspace(runspaceConfiguration);
+            //RunspaceConfiguration runspaceConfiguration = RunspaceConfiguration.Create();
+            Runspace runspace = RunspaceFactory.CreateRunspace(); // (runspaceConfiguration);
             runspace.Open();
 
             Pipeline pipeline = runspace.CreatePipeline();
