@@ -7,6 +7,7 @@
 //https://github.com/nunit/docs/wiki/Tips-And-Tricks
 //https://github.com/nunit/nunit-csharp-samples
 
+using CollectSFData;
 using CollectSFData.Azure;
 using CollectSFData.Common;
 using CollectSFData.DataFile;
@@ -138,7 +139,7 @@ namespace CollectSFDataTests
         [OneTimeTearDown]
         public static void OneTimeTearDown()
         {
-            CustomTaskManager.Close();
+            //CustomTaskManager.Close();
             Log.Close();
         }
 
