@@ -15,8 +15,8 @@ namespace CollectSFData.Common
     {
         private static SynchronizedList<CustomTaskManager> _allInstances = new SynchronizedList<CustomTaskManager>();
         private static CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
-        private static Task _taskMonitor = new Task(TaskMonitor);
-        private readonly CustomTaskScheduler _customScheduler = new CustomTaskScheduler(Config);
+        private static readonly Task _taskMonitor = new Task(TaskMonitor);
+        private static CustomTaskScheduler _customScheduler;// init in constructor to avoid exception
         private string CallerName;
 
         static CustomTaskManager()
@@ -27,19 +27,15 @@ namespace CollectSFData.Common
         {
             RemoveWhenComplete = removeWhenComplete;
             CallerName = callerName;
-            Log.Info($"adding task instance for:{CallerName} taskmonitor status: {_taskMonitor.Status}", ConsoleColor.White);
 
-            if (_taskMonitor.Status != TaskStatus.Running)
+            if (_taskMonitor.Status == TaskStatus.Created)
             {
-                _allInstances = new SynchronizedList<CustomTaskManager>();
-                _taskMonitor = new Task(TaskMonitor);
-                _cancellationTokenSource = new CancellationTokenSource();
                 _customScheduler = new CustomTaskScheduler(Config);
-
                 _taskMonitor.Start();
+                Log.Info($"starting taskmonitor. status: {_taskMonitor.Status}", ConsoleColor.White);
             }
 
-            Log.Info($"taskmonitor status: {_taskMonitor.Status}", ConsoleColor.White);
+            Log.Info($"adding task instance for:{CallerName} taskmonitor status: {_taskMonitor.Status}", ConsoleColor.White);
             _allInstances.Add(this);
         }
 
