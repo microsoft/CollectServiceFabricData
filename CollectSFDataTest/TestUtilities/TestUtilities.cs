@@ -115,7 +115,7 @@ namespace CollectSFDataTests
             return results;
         }
 
-        public static void Main(string[] args)
+        public static void Main()
         {
             TestUtilities testUtilities = new TestUtilities();
             testUtilities.WriteConsole("", testUtilities.TempArgs);
