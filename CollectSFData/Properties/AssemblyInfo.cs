@@ -15,7 +15,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Microsoft")]
 [assembly: AssemblyProduct("CollectSFData")]
-[assembly: AssemblyCopyright("Copyright Microsoft © 2019")]
+[assembly: AssemblyCopyright("Copyright Microsoft © 2020")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -38,6 +38,6 @@ using System.Runtime.InteropServices;
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
 [assembly: AssemblyVersion("2.6.*")]
-[assembly: InternalsVisibleTo("CollectSFData.Tests")]
+[assembly: InternalsVisibleTo("CollectSFData.Test")]
 [assembly: InternalsVisibleTo("CollectSFData.Explorables")]
 //[assembly: AssemblyFileVersion("1.0.0")]
