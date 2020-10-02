@@ -16,30 +16,30 @@ $error.clear()
 
 class TestSettings {
     TestSettings() {}
-        # needed ? not currently used
-        $testAadUser = $null
-        $testAadPassword = $null
-        $testAadKeyVault = $null
-        $testAadCertificateThumbprint = $null
-        $testAadSourceVaultValue = $null
-        $aadCertificateUrlValue = $null
+    # needed ? not currently used
+    $testAadUser = $null
+    $testAadPassword = $null
+    $testAadKeyVault = $null
+    $testAadCertificateThumbprint = $null
+    $testAadSourceVaultValue = $null
+    $aadCertificateUrlValue = $null
       
-        # for file download and gather tests
-        $testAzStorageAccount = "collectsfdatatests"
+    # for file download and gather tests
+    $testAzStorageAccount = "collectsfdatatests"
 
-        # for azure cluster deployments
-        $adminUserName = $null
-        $adminPassword = $null
+    # for azure cluster deployments
+    $adminUserName = $null
+    $adminPassword = $null
       
-        # existing collectsfdata variables
-        $AzureClientId = $null
-        $AzureClientSecret = $null
-        $AzureResourceGroup = $null
-        $AzureResourceGroupLocation = $null
-        $AzureSubscriptionId = $null
-        $AzureTenantId = $null
-        $KustoCluster = $null
-        $SasKey = $null
+    # existing collectsfdata variables
+    $AzureClientId = $null
+    $AzureClientSecret = $null
+    $AzureResourceGroup = $null
+    $AzureResourceGroupLocation = $null
+    $AzureSubscriptionId = $null
+    $AzureTenantId = $null
+    $KustoCluster = $null
+    $SasKey = $null
 }
 
 class TestEnv {
@@ -58,7 +58,7 @@ class TestEnv {
 
     [void] CheckAzureConfig() {
         $settings = $this.testSettings
-        if(!$settings.AzureClientId -or !$settings.AzureClientSecret -or !$settings.AzureResourceGroup -or !$settings.AzureResourceGroupLocation){
+        if (!$settings.AzureClientId -or !$settings.AzureClientSecret -or !$settings.AzureResourceGroup -or !$settings.AzureResourceGroupLocation) {
             Write-Warning "azure settings not configured. storage tests may fail"
             return
         }
@@ -66,16 +66,35 @@ class TestEnv {
         write-host "checking azure config" -ForegroundColor Cyan
         $credential = new-object -typename System.Management.Automation.PSCredential `
             -argumentlist @(
-                $settings.AzureClientId, 
-                ($settings.AzureClientSecret | convertto-securestring -Force -AsPlainText)
-            )
+            $settings.AzureClientId, 
+            ($settings.AzureClientSecret | convertto-securestring -Force -AsPlainText)
+        )
 
-        Login-AzAccount -TenantId $settings.AzureTenantId -Credential $credential -ServicePrincipal
+        if (!(get-module -ListAvailable -Name az.accounts)) {
+            install-module Az.Accounts -UseWindowsPowerShell
+            import-module Az.Accounts -UseWindowsPowerShell
+        }
+
+        if (!(get-module -ListAvailable -Name az.storage)) {
+            install-module Az.Storage -UseWindowsPowerShell
+            import-module Az.Storage -UseWindowsPowerShell
+        }
+
+        if (!(get-module -ListAvailable -Name Az.Resources)) {
+            install-module Az.Resources -UseWindowsPowerShell
+            import-module Az.Resources -UseWindowsPowerShell
+        }
+
+        # bug Could not load type 'System.Security.Cryptography.SHA256Cng' from assembly 'System.Core, Version=4.0.0.0,
+        # Cng is not in .net core but the az modules havent been updated
+        # possible cause is credential
+        #connect-AzAccount -TenantId $settings.AzureTenantId -Credential $credential -ServicePrincipal
+        connect-AzAccount -TenantId $settings.AzureTenantId -applications -ApplicationId $settings.AzureClientId -ServicePrincipal
         get-azcontext | fl *
 
         write-host "checking resource group $($settings.AzureResourceGroup)"
-        if(!(get-azresourcegroup $settings.AzureResourceGroup -Location $settings.AzureResourceGroupLocation)){
-            if(!(new-azresourcegroup $settings.AzureResourceGroup -Location $settings.AzureResourceGroupLocation)){
+        if (!(get-azresourcegroup $settings.AzureResourceGroup -Location $settings.AzureResourceGroupLocation)) {
+            if (!(new-azresourcegroup $settings.AzureResourceGroup -Location $settings.AzureResourceGroupLocation)) {
                 throw new-object System.UnauthorizedAccessException($error | out-string)
             }
         }
@@ -86,8 +105,8 @@ class TestEnv {
 
         write-host "checking storage account $($settings.testAzStorageAccount)"
         $sa = get-azstorageaccount $settings.testAzStorageAccount -resourcegroupname $settings.AzureResourceGroup
-        if(!($sa)){
-            if(!(new-azstorageaccount $settings.testAzStorageAccount -skuname 'Standard_LRS' -resourcegroupname $settings.AzureResourceGroup -Location $settings.AzureResourceGroupLocation)){
+        if (!($sa)) {
+            if (!(new-azstorageaccount $settings.testAzStorageAccount -skuname 'Standard_LRS' -resourcegroupname $settings.AzureResourceGroup -Location $settings.AzureResourceGroupLocation)) {
                 throw new-object System.UnauthorizedAccessException($error | out-string)
             }
             $sa = get-azstorageaccount $settings.testAzStorageAccount -resourcegroupname $settings.AzureResourceGroup
@@ -97,13 +116,13 @@ class TestEnv {
         $sk = Get-AzStorageAccountKey -ResourceGroupName $settings.AzureResourceGroup -Name $settings.testAzStorageAccount
         #$sc = new-azstoragecontext -storageaccountname $settings.testAzStorageAccount -storageaccountkey ([convert]::Tobase64String([text.encoding]::Unicode.GetBytes($sk.Value)))
         $sc = new-azstoragecontext -storageaccountname $settings.testAzStorageAccount -storageaccountkey ($sk[0].Value)
-        $st = New-AzStorageAccountSASToken -ResourceType Container,Service,Object `
+        $st = New-AzStorageAccountSASToken -ResourceType Container, Service, Object `
             -Permission 'racwdlup' `
             -Protocol HttpsOnly `
             -StartTime (get-date) `
             -ExpiryTime (get-date).AddHours(8) `
             -Context $sc `
-            -Service Blob,Table,File,Queue
+            -Service Blob, Table, File, Queue
 
         $global:sasuri = "$($sa.Context.BlobEndPoint)$($st)"
         $global:storageAccount = $sa
@@ -113,7 +132,7 @@ class TestEnv {
 
     }
 
-    [void] CheckTempDir(){
+    [void] CheckTempDir() {
         write-host "checking temp dir $($this.tempDir)"
         if ((test-path $this.tempDir) -and $this.clean) {
             remove-item $this.tempDir -recurse -force
@@ -124,7 +143,7 @@ class TestEnv {
         }
     }
 
-    [void] CheckTemplate(){
+    [void] CheckTemplate() {
         if (!(test-path $this.configurationFile) -or $this.reset) {
             $this.SaveConfig()
             write-host "edit file directly and save: $this.configurationFile" -foregroundcolor green
@@ -134,11 +153,11 @@ class TestEnv {
         }
     }
 
-    [TestSettings] ReadConfig(){
+    [TestSettings] ReadConfig() {
         return $this.ReadConfig($this.configurationFile)
     }
 
-    [TestSettings] ReadConfig([string]$configurationFile){
+    [TestSettings] ReadConfig([string]$configurationFile) {
         $this.testSettings = get-content -raw $configurationFile | convertfrom-json
         write-host "current configuration:`r`n$($global:testProperties | out-string)" -foregroundcolor green
         write-host "current configuration saved in `$global:testProperties" -foregroundcolor green
@@ -153,7 +172,7 @@ class TestEnv {
     [bool] SaveConfig([TestSettings] $settings = $this.testSettings) {
        
         $configDir = [io.path]::GetDirectoryName($this.configurationFile)
-        if(!(test-path $configDir)){
+        if (!(test-path $configDir)) {
             New-Item -ItemType Directory -Path $configDir
         }
         

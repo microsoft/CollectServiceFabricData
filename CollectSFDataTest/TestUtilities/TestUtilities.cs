@@ -80,7 +80,7 @@ namespace CollectSFDataTests
         public static string TempDir => $"{WorkingDir}\\..\\..\\Temp";
 
         public static string[] TestArgs => new string[2] { "-config", TestOptionsFile };
-        public static string TestConfigurationsDir => $"{WorkingDir}\\..\\..\\..\\TestConfigurations";
+        public static string TestConfigurationsDir => $"{WorkingDir}\\..\\..\\..\\..\\TestConfigurations";
 
         public static TestProperties TestProperties { get; set; }
 
@@ -88,7 +88,7 @@ namespace CollectSFDataTests
 
         public static string TestPropertiesSetupScript => $"{TestUtilitiesDir}\\setup-test-env.ps1";
 
-        public static string TestUtilitiesDir => $"{WorkingDir}\\..\\..\\..\\TestUtilities";
+        public static string TestUtilitiesDir => $"{WorkingDir}\\..\\..\\..\\..\\TestUtilities";
 
         public static string WorkingDir { get; set; } = string.Empty;
 
@@ -104,15 +104,30 @@ namespace CollectSFDataTests
 
         public static Collection<PSObject> ExecutePowerShellCommand(string command)
         {
-            //RunspaceConfiguration runspaceConfiguration = RunspaceConfiguration.Create();
-            Runspace runspace = RunspaceFactory.CreateRunspace(); // (runspaceConfiguration);
-            runspace.Open();
+            Collection<PSObject> results = new Collection<PSObject>();
 
-            Pipeline pipeline = runspace.CreatePipeline();
-            pipeline.Commands.Add(new Command(command));
+            try
+            {
+                //RunspaceConfiguration runspaceConfiguration = RunspaceConfiguration.Create();
 
-            Collection<PSObject> results = pipeline.Invoke();
-            return results;
+                InitialSessionState initialSessionState = InitialSessionState.CreateDefault();
+                initialSessionState.AuthorizationManager = new AuthorizationManager("csfdtest");
+                Runspace runspace = RunspaceFactory.CreateRunspace(initialSessionState); // (runspaceConfiguration);
+                //runspace.ConnectionInfo.Credential = new PSCredential(new PSObject())
+                //runspace.ConnectionInfo.SetSessionOptions(new System.Management.Automation.Remoting.PSSessionOption() { })
+                runspace.Open();
+
+                Pipeline pipeline = runspace.CreatePipeline();
+                pipeline.Commands.Add(new Command(command));
+
+                results = pipeline.Invoke();
+                return results;
+            }
+            catch(Exception e)
+            {
+                Log.Exception($"{e}", e);
+                return results;
+            }
         }
 
         public static void Main()
@@ -371,16 +386,23 @@ namespace CollectSFDataTests
             Assert.IsNotNull(TestProperties);
             string sasUri = TestProperties.SasKey;
 
-            Console.WriteLine($"checking test sasuri {sasUri}");
-            SasEndpoints endpoints = new SasEndpoints(sasUri);
-            Console.WriteLine($"checking sasuri result {endpoints.IsValid()}");
-
-            if (!endpoints.IsValid() & !force)
+            if (sasUri == null & !force)
             {
                 ReadTestSettings(true);
-                endpoints = new SasEndpoints(TestProperties.SasKey);
-                Console.WriteLine($"checking new sasuri result {endpoints.IsValid()}");
-                Assert.AreEqual(true, endpoints.IsValid());
+            }
+            else if (sasUri != null)
+            {
+                Console.WriteLine($"checking test sasuri {sasUri}");
+                SasEndpoints endpoints = new SasEndpoints(sasUri);
+                Console.WriteLine($"checking sasuri result {endpoints.IsValid()}");
+
+                if (!endpoints.IsValid() & !force)
+                {
+                    ReadTestSettings(true);
+                    endpoints = new SasEndpoints(TestProperties.SasKey);
+                    Console.WriteLine($"checking new sasuri result {endpoints.IsValid()}");
+                    Assert.AreEqual(true, endpoints.IsValid());
+                }
             }
         }
     }
