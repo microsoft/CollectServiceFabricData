@@ -51,6 +51,7 @@ namespace CollectSFDataTests
         public StringBuilder consoleOutBuilder = new StringBuilder();
         public string[] TempArgs;
         private static object _executing = new object();
+        private bool hasExited = false;
 
         static TestUtilities()
         {
@@ -76,7 +77,8 @@ namespace CollectSFDataTests
 
         public static TestContext Context { get; set; }
 
-        //public static string DefaultOptionsFile => $"{WorkingDir}\\..\\..\\..\\..\\configurationFiles\\collectsfdata.options.json";
+        public static string DefaultOptionsFile => $"{WorkingDir}\\..\\..\\..\\..\\..\\configurationFiles\\collectsfdata.options.json";
+
         public static string TempDir => $"{WorkingDir}\\..\\..\\Temp";
 
         public static string[] TestArgs => new string[2] { "-config", TestOptionsFile };
@@ -123,7 +125,7 @@ namespace CollectSFDataTests
                 results = pipeline.Invoke();
                 return results;
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 Log.Exception($"{e}", e);
                 return results;
@@ -201,10 +203,15 @@ namespace CollectSFDataTests
 
         public ProcessOutput ExecuteProcess(string imageFile, string arguments = null, bool wait = true)
         {
+            hasExited = false;
             Log.Info($"ExecuteProcess: current dir: {Directory.GetCurrentDirectory()} image: {imageFile} args: {arguments}");
             Assert.IsTrue(File.Exists(imageFile));
 
             Process process = new Process();
+            process.Exited += new EventHandler(ProcessExited);
+            process.EnableRaisingEvents = true;
+
+            //ProcessStartInfo startInfo = new ProcessStartInfo($"cmd.exe", $" /c {imageFile} {arguments}");
             ProcessStartInfo startInfo = new ProcessStartInfo(imageFile, arguments);
             startInfo.CreateNoWindow = true;
             startInfo.UseShellExecute = !wait;
@@ -217,27 +224,37 @@ namespace CollectSFDataTests
             bool reference = process.Start();
             ProcessOutput output = new ProcessOutput();
 
-            if (wait && reference && !process.HasExited)
+            while (!hasExited && wait && reference) // && !process.HasExited)
             {
-                process.WaitForExit();
-            }
+                Thread.Sleep(100);
+                //while (wait && reference && !process.HasExited)
+                //process.WaitForExit();
+                while (process.StandardOutput.Peek() > -1)
+                {
+                    string line = process.StandardOutput.ReadToEnd();//.ReadLine();
+                    TestContext.WriteLine(line);
+                    output.StandardOutput += line;
+                }
 
-            while (process.StandardOutput.Peek() > -1)
-            {
-                string line = process.StandardOutput.ReadLine();
-                TestContext.WriteLine(line);
-                output.StandardOutput += line;
-            }
+                while (process.StandardError.Peek() > -1)
+                {
+                    string errorLine = $"error:{process.StandardError.ReadToEnd()}";//.ReadLine()}";
+                    Console.Error.WriteLine(errorLine);
+                    output.StandardError += errorLine;
+                }
 
-            while (process.StandardError.Peek() > -1)
-            {
-                string errorLine = $"error:{process.StandardError.ReadLine()}";
-                Console.Error.WriteLine(errorLine);
-                output.StandardError += errorLine;
             }
 
             output.ExitCode = process.ExitCode;
             return output;
+        }
+
+        private void ProcessExited(object sender, EventArgs e)
+        {
+            //Log.Info($"sender", sender);
+            //Log.Info($"args", e);
+            hasExited = true;
+
         }
 
         public ProcessOutput ExecuteTest()
