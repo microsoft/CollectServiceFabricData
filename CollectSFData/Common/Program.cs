@@ -195,7 +195,7 @@ namespace CollectSFData.Common
 
                         if (discoveredMinDateTime.Ticks > Config.EndTimeUtc.Ticks | discoveredMaxDateTime.Ticks < Config.StartTimeUtc.Ticks)
                         {
-                            Log.Last($"error: configured time range not within discovered time range:{Config.StartTimeUtc} - {Config.EndTimeUtc}", ConsoleColor.Red);
+                            Log.Last($"error: configured time range not within discovered time range. configured time range: {Config.StartTimeUtc} - {Config.EndTimeUtc}", ConsoleColor.Red);
                         }
                     }
 
@@ -359,6 +359,7 @@ namespace CollectSFData.Common
             {
                 if (_noProgressCounter >= Config.NoProgressTimeoutMin)
                 {
+                    Log.Info("progress tuple:", tuple);
                     string message = $"no progress timeout reached {Config.NoProgressTimeoutMin}. exiting application.";
                     Log.Error(message);
                     Log.Close();
