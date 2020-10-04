@@ -27,10 +27,25 @@ namespace CollectSFData.Common
         private static Task _taskWriter;
         private static CancellationTokenSource _taskWriterCancellationToken;
         private static int _threadSleepMs = Constants.ThreadSleepMs100;
+        private static event EventHandler<Newtonsoft.Json.Serialization.ErrorEventArgs> JsonErrorHandler;
+        private static JsonSerializerSettings _jsonSerializerSettings;
 
         static Log()
         {
+            JsonErrorHandler += Log_JsonErrorHandler;
+
+            _jsonSerializerSettings = new JsonSerializerSettings()
+            {
+                Error = JsonErrorHandler
+            };
+
             Start();
+        }
+        
+        private static void Log_JsonErrorHandler(object sender, Newtonsoft.Json.Serialization.ErrorEventArgs e)
+        {
+            e.ErrorContext.Handled = true;
+            Info($"json serialization error: {e.ErrorContext.OriginalObject} {e.ErrorContext.Path}");
         }
 
         public static bool LogDebugEnabled { get; set; }
@@ -116,11 +131,11 @@ namespace CollectSFData.Common
             {
                 try
                 {
-                    jsonSerializer = Environment.NewLine + JsonConvert.SerializeObject(jsonSerializer, Formatting.Indented);
+                    jsonSerializer = Environment.NewLine + JsonConvert.SerializeObject(jsonSerializer, Formatting.Indented, _jsonSerializerSettings);
                 }
                 catch (Exception e)
                 {
-                    message += Environment.NewLine + $"LOG:jsondeserialize error{e.Message}";
+                    message += Environment.NewLine + $"LOG:jsondeserialize error: {e.Message}";
                 }
             }
 
