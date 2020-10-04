@@ -63,7 +63,7 @@ Use the below steps to setup environment for use with CollectSFData.
 1. Download latest release from nuget or github release:  
     a. nuget  
       1. nuget install Microsoft.ServiceFabric.CollectSFData  
-      1. cd .\Microsoft.ServiceFabric.CollectSFData.{{ version }}\lib\net462
+      1. cd .\Microsoft.ServiceFabric.CollectSFData.{{ version }}\lib\net472
 
     b. github  
       1. [collectsfdata.zip](https://github.com/microsoft/CollectServiceFabricData/releases/latest)  
