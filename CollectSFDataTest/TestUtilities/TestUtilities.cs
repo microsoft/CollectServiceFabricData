@@ -51,6 +51,7 @@ namespace CollectSFDataTests
         public StringBuilder consoleOutBuilder = new StringBuilder();
         public string[] TempArgs;
         private static object _executing = new object();
+        private bool hasExited = false;
 
         static TestUtilities()
         {
@@ -76,11 +77,12 @@ namespace CollectSFDataTests
 
         public static TestContext Context { get; set; }
 
-        //public static string DefaultOptionsFile => $"{WorkingDir}\\..\\..\\..\\..\\configurationFiles\\collectsfdata.options.json";
+        public static string DefaultOptionsFile => $"{WorkingDir}\\..\\..\\..\\..\\..\\configurationFiles\\collectsfdata.options.json";
+
         public static string TempDir => $"{WorkingDir}\\..\\..\\Temp";
 
         public static string[] TestArgs => new string[2] { "-config", TestOptionsFile };
-        public static string TestConfigurationsDir => $"{WorkingDir}\\..\\..\\..\\TestConfigurations";
+        public static string TestConfigurationsDir => $"{WorkingDir}\\..\\..\\..\\..\\TestConfigurations";
 
         public static TestProperties TestProperties { get; set; }
 
@@ -88,7 +90,7 @@ namespace CollectSFDataTests
 
         public static string TestPropertiesSetupScript => $"{TestUtilitiesDir}\\setup-test-env.ps1";
 
-        public static string TestUtilitiesDir => $"{WorkingDir}\\..\\..\\..\\TestUtilities";
+        public static string TestUtilitiesDir => $"{WorkingDir}\\..\\..\\..\\..\\TestUtilities";
 
         public static string WorkingDir { get; set; } = string.Empty;
 
@@ -104,18 +106,33 @@ namespace CollectSFDataTests
 
         public static Collection<PSObject> ExecutePowerShellCommand(string command)
         {
-            //RunspaceConfiguration runspaceConfiguration = RunspaceConfiguration.Create();
-            Runspace runspace = RunspaceFactory.CreateRunspace(); // (runspaceConfiguration);
-            runspace.Open();
+            Collection<PSObject> results = new Collection<PSObject>();
 
-            Pipeline pipeline = runspace.CreatePipeline();
-            pipeline.Commands.Add(new Command(command));
+            try
+            {
+                //RunspaceConfiguration runspaceConfiguration = RunspaceConfiguration.Create();
 
-            Collection<PSObject> results = pipeline.Invoke();
-            return results;
+                InitialSessionState initialSessionState = InitialSessionState.CreateDefault();
+                initialSessionState.AuthorizationManager = new AuthorizationManager("csfdtest");
+                Runspace runspace = RunspaceFactory.CreateRunspace(initialSessionState); // (runspaceConfiguration);
+                //runspace.ConnectionInfo.Credential = new PSCredential(new PSObject())
+                //runspace.ConnectionInfo.SetSessionOptions(new System.Management.Automation.Remoting.PSSessionOption() { })
+                runspace.Open();
+
+                Pipeline pipeline = runspace.CreatePipeline();
+                pipeline.Commands.Add(new Command(command));
+
+                results = pipeline.Invoke();
+                return results;
+            }
+            catch (Exception e)
+            {
+                Log.Exception($"{e}", e);
+                return results;
+            }
         }
 
-        public static void Main(string[] args)
+        public static void Main()
         {
             TestUtilities testUtilities = new TestUtilities();
             testUtilities.WriteConsole("", testUtilities.TempArgs);
@@ -186,10 +203,15 @@ namespace CollectSFDataTests
 
         public ProcessOutput ExecuteProcess(string imageFile, string arguments = null, bool wait = true)
         {
+            hasExited = false;
             Log.Info($"ExecuteProcess: current dir: {Directory.GetCurrentDirectory()} image: {imageFile} args: {arguments}");
             Assert.IsTrue(File.Exists(imageFile));
 
             Process process = new Process();
+            process.Exited += new EventHandler(ProcessExited);
+            process.EnableRaisingEvents = true;
+
+            //ProcessStartInfo startInfo = new ProcessStartInfo($"cmd.exe", $" /c {imageFile} {arguments}");
             ProcessStartInfo startInfo = new ProcessStartInfo(imageFile, arguments);
             startInfo.CreateNoWindow = true;
             startInfo.UseShellExecute = !wait;
@@ -202,27 +224,37 @@ namespace CollectSFDataTests
             bool reference = process.Start();
             ProcessOutput output = new ProcessOutput();
 
-            if (wait && reference && !process.HasExited)
+            while (!hasExited && wait && reference) // && !process.HasExited)
             {
-                process.WaitForExit();
-            }
+                Thread.Sleep(100);
+                //while (wait && reference && !process.HasExited)
+                //process.WaitForExit();
+                while (process.StandardOutput.Peek() > -1)
+                {
+                    string line = process.StandardOutput.ReadToEnd();//.ReadLine();
+                    TestContext.WriteLine(line);
+                    output.StandardOutput += line;
+                }
 
-            while (process.StandardOutput.Peek() > -1)
-            {
-                string line = process.StandardOutput.ReadLine();
-                TestContext.WriteLine(line);
-                output.StandardOutput += line;
-            }
+                while (process.StandardError.Peek() > -1)
+                {
+                    string errorLine = $"error:{process.StandardError.ReadToEnd()}";//.ReadLine()}";
+                    Console.Error.WriteLine(errorLine);
+                    output.StandardError += errorLine;
+                }
 
-            while (process.StandardError.Peek() > -1)
-            {
-                string errorLine = $"error:{process.StandardError.ReadLine()}";
-                Console.Error.WriteLine(errorLine);
-                output.StandardError += errorLine;
             }
 
             output.ExitCode = process.ExitCode;
             return output;
+        }
+
+        private void ProcessExited(object sender, EventArgs e)
+        {
+            //Log.Info($"sender", sender);
+            //Log.Info($"args", e);
+            hasExited = true;
+
         }
 
         public ProcessOutput ExecuteTest()
@@ -371,16 +403,23 @@ namespace CollectSFDataTests
             Assert.IsNotNull(TestProperties);
             string sasUri = TestProperties.SasKey;
 
-            Console.WriteLine($"checking test sasuri {sasUri}");
-            SasEndpoints endpoints = new SasEndpoints(sasUri);
-            Console.WriteLine($"checking sasuri result {endpoints.IsValid()}");
-
-            if (!endpoints.IsValid() & !force)
+            if (sasUri == null & !force)
             {
                 ReadTestSettings(true);
-                endpoints = new SasEndpoints(TestProperties.SasKey);
-                Console.WriteLine($"checking new sasuri result {endpoints.IsValid()}");
-                Assert.AreEqual(true, endpoints.IsValid());
+            }
+            else if (sasUri != null)
+            {
+                Console.WriteLine($"checking test sasuri {sasUri}");
+                SasEndpoints endpoints = new SasEndpoints(sasUri);
+                Console.WriteLine($"checking sasuri result {endpoints.IsValid()}");
+
+                if (!endpoints.IsValid() & !force)
+                {
+                    ReadTestSettings(true);
+                    endpoints = new SasEndpoints(TestProperties.SasKey);
+                    Console.WriteLine($"checking new sasuri result {endpoints.IsValid()}");
+                    Assert.AreEqual(true, endpoints.IsValid());
+                }
             }
         }
     }
