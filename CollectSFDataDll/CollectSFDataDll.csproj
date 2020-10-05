@@ -8,7 +8,7 @@
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>CollectSFData</RootNamespace>
-    <AssemblyName>CollectSFData</AssemblyName>
+    <AssemblyName>CollectSFDataDll</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
@@ -31,7 +31,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
     <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\x64\Debug\</OutputPath>
+    <OutputPath>..\bin\x64\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <DebugType>full</DebugType>
     <PlatformTarget>x64</PlatformTarget>
@@ -40,7 +40,7 @@
     <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
-    <OutputPath>bin\x64\Release\</OutputPath>
+    <OutputPath>..\bin\x64\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <Optimize>true</Optimize>
     <DebugType>pdbonly</DebugType>
@@ -54,7 +54,7 @@
     </StartupObject>
   </PropertyGroup>
   <PropertyGroup>
-    <ApplicationIcon>FabricSupport.ico</ApplicationIcon>
+    <ApplicationIcon>..\fabricsupport.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Azure\AzureResourceManager.cs" />
@@ -90,7 +90,7 @@
     <Compile Include="DataFile\FileTypes.cs" />
     <Compile Include="DataFile\FileManager.cs" />
     <Compile Include="Kusto\KustoConnection.cs" />
-    <Compile Include="Common\Program.cs" />
+    <Compile Include="Collector.cs" />
     <Compile Include="Kusto\KustoRestTable.cs" />
     <Compile Include="Kusto\KustoRestTableOfContentsV1.cs" />
     <Compile Include="Kusto\KustoRestResponseV1.cs" />
