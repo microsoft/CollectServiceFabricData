@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.28917.182
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CollectSFData", "CollectSFData\CollectSFData.csproj", "{E9639942-3161-4093-AA72-C462C8048E68}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CollectSFDataDll", "CollectSFDataDll\CollectSFDataDll.csproj", "{E9639942-3161-4093-AA72-C462C8048E68}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{BCD16966-3460-41C8-9082-C39C39079FF0}"
 EndProject
