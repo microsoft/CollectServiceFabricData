@@ -659,7 +659,7 @@ namespace CollectSFData.Common
                         break;
 
                     default:
-                        Log.Warning($"jtoken type unknown:", token);
+                        Log.Debug($"jtoken type unknown:", token);
                         continue;
                 }
 
