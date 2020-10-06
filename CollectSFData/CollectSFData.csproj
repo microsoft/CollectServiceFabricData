@@ -61,8 +61,5 @@
       <Name>CollectSFDataDll</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <Content Include="fabricsupport.ico" />
-  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
