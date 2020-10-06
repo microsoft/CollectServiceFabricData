@@ -3,10 +3,9 @@
 // Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
-namespace CollectSFData
+namespace CollectSFData.Common
 {
     using CollectSFData.Azure;
-    using CollectSFData.Common;
     using CollectSFData.DataFile;
     using CollectSFData.Kusto;
     using CollectSFData.LogAnalytics;
@@ -19,7 +18,7 @@ namespace CollectSFData
     using System.Threading;
     using System.Threading.Tasks;
 
-    public class Collector : Instance
+    public class Program : Instance
     {
         private KustoConnection _kusto = null;
         private LogAnalyticsConnection _logAnalytics = null;
@@ -31,7 +30,7 @@ namespace CollectSFData
 
         public static int Main(string[] args)
         {
-            return new Collector().Collect(args);
+            return new Program().Execute(args);
         }
 
         public string DetermineClusterId()
@@ -117,16 +116,11 @@ namespace CollectSFData
             }
         }
 
-        public int Collect(string[] args)
-        {
-            return Collect(args, null);
-        }
-
-        public int Collect(string[] args, ConfigurationOptions configuration = null)
+        public int Execute(string[] args)
         {
             try
             {
-                if (!Config.PopulateConfig(args, configuration))
+                if (!Config.PopulateConfig(args))
                 {
                     Config.SaveConfigFile();
                     return 1;
