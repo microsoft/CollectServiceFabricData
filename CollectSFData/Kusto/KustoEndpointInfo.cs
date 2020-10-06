@@ -104,7 +104,9 @@ namespace CollectSFData.Kusto
 
         public void Authenticate(bool throwOnError = false, bool prompt = false)
         {
-            if (Config.IsKustoConfigured() && _arm.Authenticate(throwOnError, ClusterIngestUrl, prompt ? PromptBehavior.Auto : PromptBehavior.Never))
+            _arm.Scopes = new List<string>() { $"{ClusterIngestUrl}/kusto.read", $"{ClusterIngestUrl}/kusto.write" };
+
+            if (Config.IsKustoConfigured() && _arm.Authenticate(throwOnError, ClusterIngestUrl, prompt))
             {
                 DatabaseConnection = new KustoConnectionStringBuilder(ClusterIngestUrl) { FederatedSecurity = true, InitialCatalog = DatabaseName, UserToken = _arm.BearerToken };
                 ManagementConnection = new KustoConnectionStringBuilder(ManagementUrl) { FederatedSecurity = true, InitialCatalog = DatabaseName, UserToken = _arm.BearerToken };
