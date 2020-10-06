@@ -134,7 +134,7 @@ jobs:
           tag_name: ${{ env.file_version }}
           release_name: ${{ env.project_name }}
           draft: false
-          prerelease: ${{ contains(github.event.pull_request.labels.*.name, 'Pre-release') }}
+          prerelease: contains(github.event.pull_request.labels.*.name, 'Pre-release')
 
       - name: upload release asset
         id: upload-release-asset
