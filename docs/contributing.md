@@ -9,11 +9,19 @@ Visual Studio 2019 with .netcoreapp3.1 and powershell 7.0 for CollectSFDataTest
 
 ## Testing
 
-To setup environment run .\setup-test-env.ps1
+To setup environment run:
+- .\azure-az-create-aad-application-spn.ps1 -aadDisplayName collectsfdatatest -uri http://collectsfdatatest -logontype cert
+- .\setup-test-env.ps1
+
 there is currently a bug with powershell core and azure authentication cmdlets using Cng cryptography.
 .\setup-test-env.ps1 will not authenticate to azure properly using spn creds until the connect-azaccount module is updated. until then, running of script outside of visual studio to set configuration settings in test configuration file may be required.
 
 .\setup-test-env.ps1 creates the following configuration file: $env:LocalAppData\collectsfdata\collectSfDataTestProperties.json
+
+using output from .\azure-az-create-aad-application-spn.ps1, enter:
+- AzureClientId
+- AzureClientSecret
+- AzureTenantId
 
 ```json
 {
@@ -39,6 +47,11 @@ there is currently a bug with powershell core and azure authentication cmdlets u
 
 ## Creating pull requests
 
+Fork repo and create pull request as normal across forks.
+Labeling will be applied by git actions.
+If executable changes, git actions will build.
+
 ## Creating Releases
 
-To create a release, merge into master from same repo (microsoft/CollectServiceFabricData) and add 'Release' label before merge.
+To create a release, merge into master, and add 'Pre-release' or 'Release' label before merge.
+Release will build signed exe and nuget package, and publish release to repo.
