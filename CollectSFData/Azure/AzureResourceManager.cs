@@ -8,28 +8,26 @@ using Microsoft.Identity.Client;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Threading;
-using System.Collections.Generic;
 
 namespace CollectSFData.Azure
 {
     public class AzureResourceManager : Instance
     {
-        private static TokenCache _tokenCache = new TokenCache();
-
         private string _commonTenantId = "common";
+        private IConfidentialClientApplication _confidentialClientApp;
         private List<string> _defaultScope = new List<string>() { ".default" };
         private string _getSubscriptionRestUri = "https://management.azure.com/subscriptions/{subscriptionId}?api-version=2016-06-01";
         private Http _httpClient = Http.ClientFactory();
         private string _listSubscriptionsRestUri = "https://management.azure.com/subscriptions?api-version=2016-06-01";
+        private IPublicClientApplication _publicClientApp;
         private string _resource;
         private Timer _timer;
         private DateTimeOffset _tokenExpirationHalfLife;
         private string _wellKnownClientId = "1950a258-227b-4e31-a9cf-717495945fc2";
-        private IConfidentialClientApplication _confidentialClientApp;
-        private IPublicClientApplication _publicClientApp;
         public AuthenticationResult AuthenticationResult { get; private set; }
         public string BearerToken { get; private set; }
         public bool IsAuthenticated { get; private set; }
