@@ -16,16 +16,11 @@ $error.clear()
 
 class TestSettings {
     TestSettings() {}
-    # needed ? not currently used
-    $testAadUser = $null
-    $testAadPassword = $null
-    $testAadKeyVault = $null
-    $testAadCertificateThumbprint = $null
-    $testAadSourceVaultValue = $null
-    $aadCertificateUrlValue = $null
       
     # for file download and gather tests
     $testAzStorageAccount = "collectsfdatatests"
+    $testAzClientId = ""
+    $testAzClientSecret = ""
 
     # for azure cluster deployments
     $adminUserName = $null
@@ -87,19 +82,22 @@ class TestEnv {
         }
 
         # bug Could not load type 'System.Security.Cryptography.SHA256Cng' from assembly 'System.Core, Version=4.0.0.0,
+        # https://github.com/PowerShell/PowerShell/issues/10473
         # Cng is not in .net core but the az modules havent been updated
         # possible cause is credential
         # need cert to use appid
         #connect-AzAccount -TenantId $settings.AzureTenantId -Credential $credential -ServicePrincipal
+        # https://docs.microsoft.com/en-us/powershell/module/az.accounts/connect-azaccount?view=azps-4.7.0#example-7--connect-using-certificates
+        # .\azure-az-create-aad-application-spn.ps1 -aadDisplayName collectsfdatatestcert -logonType cert
         write-host "connect-AzAccount -TenantId $($settings.AzureTenantId) `
-            -ApplicationId $($settings.AzureClientId) `
+            -ApplicationId $($settings.testAzClientId) `
             -ServicePrincipal `
-            -CertificateThumbprint $($settings.AzureClientSecret)
+            -CertificateThumbprint $($settings.testAzClientSecret)
         "
         connect-AzAccount -TenantId $settings.AzureTenantId `
-            -ApplicationId $settings.AzureClientId `
+            -ApplicationId $settings.testAzClientId `
             -ServicePrincipal `
-            -CertificateThumbprint $settings.AzureClientSecret
+            -CertificateThumbprint $settings.testAzClientSecret
         
         get-azcontext | fl *
 
@@ -159,7 +157,8 @@ class TestEnv {
             $this.SaveConfig()
             write-host "edit file directly and save: $this.configurationFile" -foregroundcolor green
             write-host "create azure app id / spn for azure storage / gather tests. .\azure-az-create-aad-application-spn.ps1 can be used to create one progammatically."
-            write-host ".\azure-az-create-aad-application-spn.ps1 -aadDisplayName collectsfdatatest -uri http://collectsfdatatest -logontype cert"
+            write-host ".\azure-az-create-aad-application-spn.ps1 -aadDisplayName collectsfdatatestcert -logonType cert"
+            write-host ".\azure-az-create-aad-application-spn.ps1 -aadDisplayName collectsfdatatest -uri http://collectsfdatatest -logontype certthumb"
             . $this.configurationFile
         }
     }

@@ -10,7 +10,7 @@ Visual Studio 2019 with .netcoreapp3.1 and powershell 7.0 for CollectSFDataTest
 ## Testing
 
 To setup environment run:
-- .\azure-az-create-aad-application-spn.ps1 -aadDisplayName collectsfdatatest -uri http://collectsfdatatest -logontype cert
+- .\azure-az-create-aad-application-spn.ps1 -aadDisplayName collectsfdatatest -uri http://collectsfdatatest -logontype certthumb
 - .\setup-test-env.ps1
 
 there is currently a bug with powershell core and azure authentication cmdlets using Cng cryptography.
@@ -25,12 +25,8 @@ using output from .\azure-az-create-aad-application-spn.ps1, enter:
 
 ```json
 {
-  //"testAadUser": null,
-  //"testAadPassword": null,
-  //"testAadKeyVault": null,
-  //"testAadCertificateThumbprint": null,
-  //"testAadSourceVaultValue": null,
-  //"aadCertificateUrlValue": null,
+  "testAzClientId": "",
+  "testAzClientSecret":"", // thumbprint for .net core test project
   "testAzStorageAccount": "collectsfdatatests",
   "adminUserName": null,
   "adminPassword": null,
