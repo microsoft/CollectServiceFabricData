@@ -307,6 +307,36 @@ namespace CollectSFData.Kusto
             return !_ingestedUris.Any(x => x.Contains(cleanUri));
         }
 
+        private void IngestResourceIdKustoTableMapping()
+        {
+            if (_ingestedUris.Any() && Config.FileType == FileTypesEnum.trace)
+            {
+                // Fetch resource ID from ingested traces
+                var results = Endpoint.Query($"['{Endpoint.TableName}']" +
+                    $" | where Type == 'InfrastructureService.RestClientHelper'" +
+                    $" | take 1");
+
+                if (results.Any())
+                {
+                    Regex pattern = new Regex(@"resourceId\W+?(/[A-Za-z0-9./-]+)");
+                    Match match = pattern.Match(results.FirstOrDefault());
+                    Config.ResourceUri = match.Groups[1].Value;
+                    Log.Info($"ResourceID: {Config.ResourceUri}");
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(Config.ResourceUri))
+            {
+                var metaDatatableName = "TableMetaData";
+                var metaDatetableSchema = "TimeStamp:datetime, startTime:datetime, endTime:datetime, resourceId:string, tableName:string, logType:string";
+
+                if (Endpoint.CreateTable(metaDatatableName, metaDatetableSchema))
+                {
+                    Endpoint.IngestInline(metaDatatableName, string.Format("{0},{1},{2},{3},{4},{5}", DateTime.UtcNow, Config.StartTimeUtc.UtcDateTime, Config.EndTimeUtc.UtcDateTime, Config.ResourceUri, Config.KustoTable, Config.FileType));
+                }
+            }
+        }
+
         private void IngestStatusQuery()
         {
             List<string> successUris = new List<string>();
@@ -377,36 +407,6 @@ namespace CollectSFData.Kusto
             }
 
             Log.Info($"current count ingested: {_ingestedUris.Count()} ingesting: {_messageList.Count()} failed: {_failureCount} total: {_ingestedUris.Count() + _messageList.Count() + _failureCount}", ConsoleColor.Green);
-        }
-
-        private void IngestResourceIdKustoTableMapping()
-        {
-            if (_ingestedUris.Any() && Config.FileType == FileTypesEnum.trace)
-            {
-                // Fetch resource ID from ingested traces
-                var results = Endpoint.Query($"['{Endpoint.TableName}']" +
-                    $" | where Type == 'InfrastructureService.RestClientHelper'" +
-                    $" | take 1");
-
-                if (results.Any())
-                {
-                    Regex pattern = new Regex(@"resourceId\W+?(/[A-Za-z0-9./-]+)");
-                    Match match = pattern.Match(results.FirstOrDefault());
-                    Config.ResourceUri = match.Groups[1].Value;
-                    Log.Info($"ResourceID: {Config.ResourceUri}");
-                }
-            }
-
-            if (!string.IsNullOrWhiteSpace(Config.ResourceUri))
-            {
-                var metaDatatableName = "TableMetaData";
-                var metaDatetableSchema = "TimeStamp:datetime, startTime:datetime, endTime:datetime, resourceId:string, tableName:string, logType:string";
-
-                if (Endpoint.CreateTable(metaDatatableName, metaDatetableSchema))
-                {
-                    Endpoint.IngestInline(metaDatatableName, string.Format("{0},{1},{2},{3},{4},{5}", DateTime.UtcNow, Config.StartTimeUtc.UtcDateTime, Config.EndTimeUtc.UtcDateTime, Config.ResourceUri, Config.KustoTable, Config.FileType));
-                }
-            }
         }
 
         private void PurgeMessages(string tableName)
