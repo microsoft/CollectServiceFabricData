@@ -76,7 +76,7 @@ namespace CollectSFData.Azure
                        .WithLogging(MsalLoggerCallback, LogLevel.Verbose, true, true)
                        .Build();
 
-                    TokenCacheHelper.EnableSerialization(_confidentialClientApp.UserTokenCache);
+                    TokenCacheHelper.EnableSerialization(_confidentialClientApp.AppTokenCache);//.UserTokenCache);
                     AuthenticationResult = _confidentialClientApp
                         .AcquireTokenForClient(_defaultScope)
                         .ExecuteAsync().Result;
