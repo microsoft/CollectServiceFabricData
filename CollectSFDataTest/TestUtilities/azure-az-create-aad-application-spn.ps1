@@ -124,7 +124,8 @@ function main() {
                 $cert = New-SelfSignedCertificate -CertStoreLocation $certStore `
                     -Subject "CN=$($aadDisplayName)" `
                     -KeyExportPolicy Exportable `
-                    -Provider "Microsoft Enhanced RSA and AES Cryptographic Provider"
+                    -Provider "Microsoft Enhanced RSA and AES Cryptographic Provider" `
+                    -KeySpec KeyExchange
             }
             
             if (!$credentials) {
@@ -138,32 +139,33 @@ function main() {
             }
 
             Export-PfxCertificate -cert "cert:\currentuser\my\$($cert.thumbprint)" -FilePath $pfxPath -Password $securePassword
-            $cert509 = New-Object System.Security.Cryptography.X509Certificates.X509Certificate($pfxPath, $securePassword)
-            $thumbprint = $cert509.thumbprint
-            $keyValue = [convert]::ToBase64String($cert509.GetCertHash())
+            #$cert509 = New-Object System.Security.Cryptography.X509Certificates.X509Certificate($pfxPath, $securePassword)
+            #$thumbprint = $cert509.thumbprint
+            #$keyValue = [convert]::ToBase64String($cert509.GetCertHash())
             $certValue = [convert]::ToBase64String($cert.GetRawCertData())
 
-            if ($oldAdApp = Get-azADApplication -DisplayNameStartWith $aadDisplayName) {
+            if ($oldAdApp = Get-azADApplication -DisplayName $aadDisplayName) {
                 write-host "remove-azADApplication -ObjectId $($oldAdApp.objectId)"
                 remove-azADApplication -ObjectId $oldAdApp.objectId
             }
             
-            if (!$app) {
-                write-host "New-azADApplication -DisplayName $aadDisplayName -HomePage $uri -IdentifierUris $uri -CertValue $certValue -EndDate $($cert.NotAfter) -StartDate $($cert.NotBefore) -verbose"
-                $app = New-azADApplication -DisplayName $aadDisplayName -HomePage $uri -IdentifierUris $uri -CertValue $certValue -EndDate ($cert.NotAfter) -StartDate ($cert.NotBefore) -verbose #-Debug 
-            }
+            write-host "New-azADApplication -DisplayName $aadDisplayName -HomePage $uri -IdentifierUris $uri -CertValue $certValue -EndDate $($cert.NotAfter) -StartDate $($cert.NotBefore) -verbose"
+            $app = New-azADApplication -DisplayName $aadDisplayName -HomePage $uri -IdentifierUris $uri -CertValue $certValue -EndDate ($cert.NotAfter) -StartDate ($cert.NotBefore) -verbose #-Debug 
+            $appCredential = New-AzADAppCredential -ObjectId $app.ObjectId -CertValue $certValue -EndDate ($cert.NotAfter) -StartDate ($cert.NotBefore) -verbose #-Debug 
+            $appCredential | convertto-json
 
-            $clientSecret = $cert.Thumbprint
+            $thumbprint = $cert.thumbprint
+            $clientSecret = [convert]::ToBase64String($cert.GetCertHash())
+            $keyvalue = $clientSecret
             $app | convertto-json
-            #$app = New-azADAppCredential -applicationId ($app.ApplicationId) -DisplayName $aadDisplayName -HomePage $uri -IdentifierUris $uri -KeyCredentials $KeyCredential -Verbose
-
         }
         elseif ($logontype -ieq 'certthumb') {
             if (!$cert) {
                 $cert = New-SelfSignedCertificate -CertStoreLocation $certStore `
                     -Subject "$($aadDisplayName)" `
                     -KeyExportPolicy Exportable `
-                    -Provider "Microsoft Enhanced RSA and AES Cryptographic Provider"
+                    -Provider "Microsoft Enhanced RSA and AES Cryptographic Provider" `
+                    -KeySpec KeyExchange
             }
 
             $keyValue = [System.Convert]::ToBase64String($cert.GetCertHash())
