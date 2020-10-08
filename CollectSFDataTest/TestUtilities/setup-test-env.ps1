@@ -71,25 +71,36 @@ class TestEnv {
         )
 
         if (!(get-module -ListAvailable -Name az.accounts)) {
-            install-module Az.Accounts -UseWindowsPowerShell
-            import-module Az.Accounts -UseWindowsPowerShell
+            install-module Az.Accounts #-UseWindowsPowerShell
+            import-module Az.Accounts #-UseWindowsPowerShell
         }
 
+
         if (!(get-module -ListAvailable -Name az.storage)) {
-            install-module Az.Storage -UseWindowsPowerShell
-            import-module Az.Storage -UseWindowsPowerShell
+            install-module Az.Storage #-UseWindowsPowerShell
+            import-module Az.Storage #-UseWindowsPowerShell
         }
 
         if (!(get-module -ListAvailable -Name Az.Resources)) {
-            install-module Az.Resources -UseWindowsPowerShell
-            import-module Az.Resources -UseWindowsPowerShell
+            install-module Az.Resources #-UseWindowsPowerShell
+            import-module Az.Resources #-UseWindowsPowerShell
         }
 
         # bug Could not load type 'System.Security.Cryptography.SHA256Cng' from assembly 'System.Core, Version=4.0.0.0,
         # Cng is not in .net core but the az modules havent been updated
         # possible cause is credential
+        # need cert to use appid
         #connect-AzAccount -TenantId $settings.AzureTenantId -Credential $credential -ServicePrincipal
-        connect-AzAccount -TenantId $settings.AzureTenantId -applications -ApplicationId $settings.AzureClientId -ServicePrincipal
+        write-host "connect-AzAccount -TenantId $($settings.AzureTenantId) `
+            -ApplicationId $($settings.AzureClientId) `
+            -ServicePrincipal `
+            -CertificateThumbprint $($settings.AzureClientSecret)
+        "
+        connect-AzAccount -TenantId $settings.AzureTenantId `
+            -ApplicationId $settings.AzureClientId `
+            -ServicePrincipal `
+            -CertificateThumbprint $settings.AzureClientSecret
+        
         get-azcontext | fl *
 
         write-host "checking resource group $($settings.AzureResourceGroup)"
@@ -148,7 +159,7 @@ class TestEnv {
             $this.SaveConfig()
             write-host "edit file directly and save: $this.configurationFile" -foregroundcolor green
             write-host "create azure app id / spn for azure storage / gather tests. .\azure-az-create-aad-application-spn.ps1 can be used to create one progammatically."
-            write-host ".\azure-az-create-aad-application-spn.ps1 -aadDisplayName collectsfdata -uri http://collectsfdata"
+            write-host ".\azure-az-create-aad-application-spn.ps1 -aadDisplayName collectsfdatatest -uri http://collectsfdatatest -logontype cert"
             . $this.configurationFile
         }
     }
@@ -188,6 +199,7 @@ class TestEnv {
 $error.Clear()
 $global:testEnv = [TestEnv]::new()
 write-host ($PSBoundParameters | out-string)
+
 
 if ($error) {
     write-warning ($error | out-string)
