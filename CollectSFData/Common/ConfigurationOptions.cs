@@ -733,7 +733,7 @@ namespace CollectSFData.Common
             bool needsAad = IsKustoConfigured() | IsKustoPurgeRequested() | IsLogAnalyticsConfigured();
             needsAad |= LogAnalyticsCreate | LogAnalyticsRecreate | IsLogAnalyticsPurgeRequested();
 
-            if (needsAad)
+            if (needsAad | IsClientIdConfigured())
             {
                 AzureResourceManager arm = new AzureResourceManager();
                 retval = arm.Authenticate();
