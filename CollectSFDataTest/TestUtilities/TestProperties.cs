@@ -17,12 +17,8 @@ namespace CollectSFDataTests
         public string AzureTenantId;
         public string KustoCluster;
         public string SasKey;
-        public string testAadCertificateThumbprint;
-        public string testAadCertificateUrlValue;
-        public string testAadKeyVault;
-        public string testAadPassword;
-        public string testAadSourceVaultValue;
-        public string testAadUser;
         public string testAzStorageAccount;
+        public string testAzClientId;
+        public string testAzClientSecret; // thumbprint for .net core test project
     }
 }
