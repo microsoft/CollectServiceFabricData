@@ -95,7 +95,7 @@ function main() {
                 Remove-azADServicePrincipal -ObjectId $id.Id
             }
         }
-        else{
+        else {
             return
         }
     }
@@ -111,7 +111,7 @@ function main() {
         }
 
         if (($result = read-host "enter line number of existing cert to use or 0 to create new. normally an existing cert from list should be used.") -gt 0) {
-            $cert = $certs[$result -1]
+            $cert = $certs[$result - 1]
         }
 
     }
