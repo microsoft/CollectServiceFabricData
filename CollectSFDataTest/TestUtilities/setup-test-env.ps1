@@ -181,16 +181,16 @@ class TestEnv {
             $pingResults = Test-NetConnection -ComputerName $hostName -port 443 -ErrorAction SilentlyContinue
             $pingResults | convertto-json
 
-            if(!$pingResults.TcpTestSucceeded){
+            if (!$pingResults.TcpTestSucceeded) {
                 write-warning "unable to ping kusto ingest url"
             }
-            else{
+            else {
                 $error.Clear()
                 write-host "able to ping kusto ingest url"
                 return $true
             }
 
-            if($location -ieq 'kusto') {
+            if ($location -ieq 'kusto') {
                 write-host "not a user kusto cluster"
                 return $true
             }
@@ -203,9 +203,16 @@ class TestEnv {
             $subClusters = Get-AzKustoCluster -ResourceGroupName $settings.AzureResourceGroup
             $subClusters
 
-            if(!$rgClusters -and !$subClusters){
+            if (!$rgClusters -and !$subClusters) {
                 write-warning 'no kusto clusters found. create new kusto cluster with new-azkustocluster command 
                     or provide valid kusto ingest url to test kusto functions'
+                write-host "example command: New-AzKustoCluster -Name collectsfdatatest `
+                    -ResourceGroupName $($settings.resourceGroupName) `
+                    -location $($settings.resourceGroupLocation) `
+                    -SkuName DevNoSLAStandardE2aV4 `
+                    -SkuTier basic `
+                    -EnablePurge
+                "
             }
 
             return $false
