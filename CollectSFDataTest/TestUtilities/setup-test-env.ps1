@@ -207,9 +207,9 @@ class TestEnv {
                 write-warning 'no kusto clusters found. create new kusto cluster with new-azkustocluster command 
                     or provide valid kusto ingest url to test kusto functions'
                 write-host "example command: New-AzKustoCluster -Name collectsfdatatest `
-                    -ResourceGroupName $($settings.resourceGroupName) `
-                    -location $($settings.resourceGroupLocation) `
-                    -SkuName DevNoSLAStandardE2aV4 `
+                    -ResourceGroupName $($settings.AzureResourceGroup) `
+                    -location $($settings.AzureResourceGroupLocation) `
+                    -SkuName 'Dev(No SLA)_Standard_D11_v2' `
                     -SkuTier basic `
                     -EnablePurge
                 "

@@ -103,7 +103,17 @@ namespace CollectSFData.Kusto
 
         public void Authenticate(bool throwOnError = false, bool prompt = false)
         {
+            // With client credentials flows the scopes is ALWAYS of the shape "resource/.default",
+            // as the application permissions need to be set statically(in the portal or by PowerShell), and then granted by a tenant administrator
+
             _arm.Scopes = new List<string>() { $"{ClusterIngestUrl}/kusto.read", $"{ClusterIngestUrl}/kusto.write" };
+
+            if (Config.IsClientIdConfigured())
+            {
+                _arm.Scopes = new List<string>() { $"{ClusterIngestUrl}/.default" };
+                //_arm.Scopes = new List<string>() { $"{ClusterIngestUrl}/.default", $"{ManagementUrl}/.default" };
+                //_arm.Scopes = new List<string>() { $"{ManagementUrl}/.default" };
+            }
 
             if (Config.IsKustoConfigured() && _arm.Authenticate(throwOnError, ClusterIngestUrl, prompt))
             {
