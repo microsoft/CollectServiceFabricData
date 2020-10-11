@@ -9,7 +9,6 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
-using System.IdentityModel;
 using System.Linq;
 using System.Net.Http;
 using System.Threading;
@@ -88,7 +87,7 @@ namespace CollectSFData.Azure
                         AuthenticationResult = _confidentialClientApp
                             .AcquireTokenForClient(new List<string>() { scope })
                             .ExecuteAsync().Result;
-                        Log.Info($"scope authentication result:", ConsoleColor.Green, null, AuthenticationResult);
+                        Log.Debug($"scope authentication result:", AuthenticationResult);
                     }
                 }
                 else
