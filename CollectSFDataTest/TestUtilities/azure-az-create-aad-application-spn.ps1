@@ -22,7 +22,7 @@ param(
     [string]$aadDisplayName = "azure-az-rest-logon--$($env:Computername)",
     [string]$certStore = "cert:\CurrentUser\My",
     [string]$uri,
-    [string[]]$replyUrls = @('https://localhost'), # core uses localhost 'https://login.microsoftonline.com/common/oauth2/nativeclient', 
+    [string[]]$replyUrls = @(), #@('https://localhost'), # core uses localhost 'https://login.microsoftonline.com/common/oauth2/nativeclient', 
     [switch]$list,
     [string]$pfxPath,
     [ValidateSet('credentials', 'key', 'cert', 'certthumb')]
@@ -129,17 +129,21 @@ function main() {
                     -KeySpec KeyExchange
             }
             
-            #if (!$credentials) {
-            #    $credentials = (get-credential)
-            #}
+            if (!$credentials) {
+                $password = ''
+            }
+            else{
+                $credentials = (get-credential)
+                $password = $credentials.Password
+            }
 
-            #$securePassword = ConvertTo-SecureString -String $credentials.Password -Force -AsPlainText
+            $securePassword = ConvertTo-SecureString -String $password -Force -AsPlainText
 
-            #if ([io.file]::Exists($pfxPath)) {
-            #    [io.file]::Delete($pfxPath)
-            #}
+            if ((test-path $pfxPath)) {
+                [io.file]::Delete($pfxPath)
+            }
 
-            #Export-PfxCertificate -cert "cert:\currentuser\my\$($cert.thumbprint)" -FilePath $pfxPath -Password $securePassword
+            Export-PfxCertificate -cert "cert:\currentuser\my\$($cert.thumbprint)" -FilePath $pfxPath -Password $securePassword
             #$cert509 = New-Object System.Security.Cryptography.X509Certificates.X509Certificate($pfxPath, $securePassword)
             #$thumbprint = $cert509.thumbprint
             #$keyValue = [convert]::ToBase64String($cert509.GetCertHash())
@@ -159,15 +163,26 @@ function main() {
                 -replyUrls $replyUrls `
                 -verbose"
 
-            $app = New-azADApplication -DisplayName $aadDisplayName `
-                -HomePage $uri `
-                -IdentifierUris $uri `
-                -CertValue $certValue `
-                -EndDate ($cert.NotAfter) `
-                -StartDate ($cert.NotBefore) `
-                -replyUrls $replyUrls `
-                -verbose #-Debug 
-
+            if ($replyUrls) {
+                $app = New-azADApplication -DisplayName $aadDisplayName `
+                    -HomePage $uri `
+                    -IdentifierUris $uri `
+                    -CertValue $certValue `
+                    -EndDate ($cert.NotAfter) `
+                    -StartDate ($cert.NotBefore) `
+                    -replyUrls $replyUrls `
+                    -verbose #-Debug 
+            }
+            else {
+                $app = New-azADApplication -DisplayName $aadDisplayName `
+                    -HomePage $uri `
+                    -IdentifierUris $uri `
+                    -CertValue $certValue `
+                    -EndDate ($cert.NotAfter) `
+                    -StartDate ($cert.NotBefore) `
+                    -verbose #-Debug 
+            }
+            
             $appCredential = New-AzADAppCredential -ObjectId $app.ObjectId `
                 -CertValue $certValue `
                 -EndDate ($cert.NotAfter) `
@@ -202,12 +217,21 @@ function main() {
                 -EndDate $($cert.NotAfter)"
 
             if (!$app) {
-                $app = New-azADApplication -DisplayName $aadDisplayName `
-                    -HomePage $uri `
-                    -IdentifierUris $uri `
-                    -Password $securePassword `
-                    -replyUrls $replyUrls `
-                    -EndDate ($cert.NotAfter)
+                if ($replyUrls) {
+                    $app = New-azADApplication -DisplayName $aadDisplayName `
+                        -HomePage $uri `
+                        -IdentifierUris $uri `
+                        -Password $securePassword `
+                        -replyUrls $replyUrls `
+                        -EndDate ($cert.NotAfter)
+                }
+                else {
+                    $app = New-azADApplication -DisplayName $aadDisplayName `
+                        -HomePage $uri `
+                        -IdentifierUris $uri `
+                        -Password $securePassword `
+                        -EndDate ($cert.NotAfter)
+                }
             }
         }
         elseif ($logontype -ieq 'key') {
