@@ -771,9 +771,10 @@ namespace CollectSFData.Common
                     retval = IsKustoConfigured();
                 }
 
-                if (!KustoCluster.ToLower().Contains("//ingest-"))
+                if (!Regex.IsMatch(KustoCluster, KustoUrlPattern))
                 {
-                    Log.Warning($"KustoCluster url does not contain 'ingest-' {KustoCluster}");
+                    string errMessage = $"invalid kusto url. should match pattern {KustoUrlPattern}\r\nexample: https://ingest-{{kustocluster}}.{{location optional}}.kusto.windows.net/{{kustodatabase}}";
+                    Log.Error(errMessage);
                 }
             }
 
