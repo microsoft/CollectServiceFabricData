@@ -42,7 +42,6 @@ namespace CollectSFData.Kusto
         private static int maxKustoClientTimeMs = 300 * 1000;
         private AzureResourceManager _arm = new AzureResourceManager();
         private Http _httpClient = Http.ClientFactory();
-        private string _pattern = "https://(?<ingest>ingest-){0,1}(?<clusterName>.+?)\\.(?<location>.+?)\\.(?<domainName>.+?)(/|$)(?<databaseName>.+?){0,1}(/|$)(?<tableName>.+?){0,1}(/|$)";
 
         public KustoEndpointInfo()
         {
@@ -55,9 +54,9 @@ namespace CollectSFData.Kusto
 
             DeleteSourceOnSuccess = !Config.KustoUseBlobAsSource;
 
-            if (Regex.IsMatch(Config.KustoCluster, _pattern))
+            if (Regex.IsMatch(Config.KustoCluster, KustoUrlPattern))
             {
-                Match matches = Regex.Match(Config.KustoCluster, _pattern);
+                Match matches = Regex.Match(Config.KustoCluster, KustoUrlPattern);
                 string domainName = matches.Groups["domainName"].Value;
                 DatabaseName = matches.Groups["databaseName"].Value;
                 TableName = Config.KustoTable;
@@ -72,7 +71,7 @@ namespace CollectSFData.Kusto
             }
             else
             {
-                string errMessage = $"invalid url. should match pattern {_pattern}";
+                string errMessage = $"invalid kusto url.";
                 Log.Error(errMessage);
                 throw new ArgumentException(errMessage);
             }
