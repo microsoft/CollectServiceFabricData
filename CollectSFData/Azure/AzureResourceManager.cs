@@ -84,23 +84,12 @@ namespace CollectSFData.Azure
 
                     foreach (string scope in Scopes)
                     {
-                        TokenCacheHelper.EnableSerialization(_confidentialClientApp.AppTokenCache);//.UserTokenCache);
+                        TokenCacheHelper.EnableSerialization(_confidentialClientApp.AppTokenCache);
                         AuthenticationResult = _confidentialClientApp
-                            .AcquireTokenForClient(new List<string>() { scope }) //_defaultScope)
+                            .AcquireTokenForClient(new List<string>() { scope })
                             .ExecuteAsync().Result;
-                        Log.Info($"authentication result:", ConsoleColor.Green, null, AuthenticationResult);
+                        Log.Info($"scope authentication result:", ConsoleColor.Green, null, AuthenticationResult);
                     }
-                    // With client credentials flows the scopes is ALWAYS of the shape "resource/.default",
-                    // as the application permissions need to be set statically(in the portal or by PowerShell), and then granted by a tenant administrator
-                    /*
-                    if (Scopes.Count > 0)
-                    {
-                        Log.Info($"adding scopes {Scopes.Count}");
-                        AuthenticationResult = _confidentialClientApp
-                            .AcquireTokenSilent(Scopes, _confidentialClientApp.GetAccountsAsync().Result.FirstOrDefault())
-                            .ExecuteAsync().Result;
-                    }
-                    */
                 }
                 else
                 {
@@ -140,10 +129,21 @@ namespace CollectSFData.Azure
             }
             catch (MsalUiRequiredException)
             {
-                AuthenticationResult = _publicClientApp
+                if (!Config.IsClientIdConfigured())
+                {
+                    AuthenticationResult = _publicClientApp
                     .AcquireTokenInteractive(_defaultScope)
                     .ExecuteAsync().Result;
-                return Authenticate(throwOnError, resource, true);
+                    return Authenticate(throwOnError, resource, true);
+                }
+
+                if (throwOnError)
+                {
+                    throw;
+                }
+
+                IsAuthenticated = false;
+                return false;
             }
             catch (AggregateException ae)
             {
