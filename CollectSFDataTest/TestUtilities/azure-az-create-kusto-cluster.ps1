@@ -13,8 +13,9 @@ param(
     $skuName = 'Dev(No SLA)_Standard_D11_v2', #'Dev(No SLA)_Standard_E2a_V4', # Dev(No SLA)_Standard_D11_v2
     [ValidateSet('basic', 'standard')]
     $skuTier = 'basic',
-    $dabaseKind = 'readwrite',
-    $appRegistrationId
+    $databaseKind = 'readwrite',
+    $appRegistrationId,
+    [switch]$force
 )
 
 $PSModuleAutoLoadingPreference = 2
@@ -42,7 +43,7 @@ $kustoClusters
 
 if (($kustoClusters.Name -imatch $clusterName)) {
     write-error "cluster exists $clustername"
-    return
+    if(!$force) { return }
 }
 
 $availableSkus = Get-AzKustoClusterSku | ? location -ieq $resourceGroupLocation | ? tier -ieq $skuTier
@@ -51,7 +52,7 @@ $availableSkus | convertto-json
 
 if(!($availableSkus | ? name -ieq $skuName)) {
     write-error "$skuName unavailable in $resourceGroupLocation"
-    return
+    if(!$force) { return }
 }
 
 $cluster = New-AzKustoCluster -name $clusterName `
@@ -63,10 +64,10 @@ $cluster = New-AzKustoCluster -name $clusterName `
 
 $cluster | convertto-json 
 
-$database = New-AzKustoDatabase
-    -ClusterName $clusterName `
+$database = New-AzKustoDatabase -ClusterName $clusterName `
     -Name $databaseName `
     -ResourceGroupName $resourceGroupName `
+    -Location $resourceGroupLocation `
     -Kind $databaseKind
 
 $database | convertto-json
@@ -104,13 +105,17 @@ $principal = Add-AzKustoDatabasePrincipal -ClusterName $clusterName `
 
 $principal | convertto-json
 
+<#
 $assignment = New-AzKustoDatabasePrincipalAssignment -ClusterName $clusterName `
     -DatabaseName $databaseName `
+    -ResourceGroupName $resourceGroupName `
     -PrincipalAssignmentName $appRegistrationId `
     -PrincipalId $appRegistrationId `
     -PrincipalType 'App' `
     -Role 'Admin'
 
 $assignment | convertto-json
-
-write-host 'finished'
+#>
+$global:cluster = $cluster
+write-host 'finished. object stored in `$global:cluster'
+write-host "data ingestion uri: $($cluster.DataIngestionUri)"

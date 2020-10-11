@@ -9,6 +9,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.IdentityModel;
 using System.Linq;
 using System.Net.Http;
 using System.Threading;
@@ -76,10 +77,30 @@ namespace CollectSFData.Azure
                        .WithLogging(MsalLoggerCallback, LogLevel.Verbose, true, true)
                        .Build();
 
-                    TokenCacheHelper.EnableSerialization(_confidentialClientApp.AppTokenCache);//.UserTokenCache);
-                    AuthenticationResult = _confidentialClientApp
-                        .AcquireTokenForClient(_defaultScope)
-                        .ExecuteAsync().Result;
+                    if (Scopes.Count < 1)
+                    {
+                        Scopes = _defaultScope;
+                    }
+
+                    foreach (string scope in Scopes)
+                    {
+                        TokenCacheHelper.EnableSerialization(_confidentialClientApp.AppTokenCache);//.UserTokenCache);
+                        AuthenticationResult = _confidentialClientApp
+                            .AcquireTokenForClient(new List<string>() { scope }) //_defaultScope)
+                            .ExecuteAsync().Result;
+                        Log.Info($"authentication result:", ConsoleColor.Green, null, AuthenticationResult);
+                    }
+                    // With client credentials flows the scopes is ALWAYS of the shape "resource/.default",
+                    // as the application permissions need to be set statically(in the portal or by PowerShell), and then granted by a tenant administrator
+                    /*
+                    if (Scopes.Count > 0)
+                    {
+                        Log.Info($"adding scopes {Scopes.Count}");
+                        AuthenticationResult = _confidentialClientApp
+                            .AcquireTokenSilent(Scopes, _confidentialClientApp.GetAccountsAsync().Result.FirstOrDefault())
+                            .ExecuteAsync().Result;
+                    }
+                    */
                 }
                 else
                 {
@@ -94,14 +115,14 @@ namespace CollectSFData.Azure
                     AuthenticationResult = _publicClientApp
                         .AcquireTokenSilent(_defaultScope, _publicClientApp.GetAccountsAsync().Result.FirstOrDefault())
                         .ExecuteAsync().Result;
-                }
 
-                if (Scopes.Count > 0)
-                {
-                    Log.Info($"adding scopes {Scopes.Count}");
-                    AuthenticationResult = _publicClientApp
-                        .AcquireTokenSilent(Scopes, _publicClientApp.GetAccountsAsync().Result.FirstOrDefault())
-                        .ExecuteAsync().Result;
+                    if (Scopes.Count > 0)
+                    {
+                        Log.Info($"adding scopes {Scopes.Count}");
+                        AuthenticationResult = _publicClientApp
+                            .AcquireTokenSilent(Scopes, _publicClientApp.GetAccountsAsync().Result.FirstOrDefault())
+                            .ExecuteAsync().Result;
+                    }
                 }
 
                 BearerToken = AuthenticationResult.AccessToken;
