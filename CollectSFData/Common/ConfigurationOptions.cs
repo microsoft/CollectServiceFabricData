@@ -773,8 +773,9 @@ namespace CollectSFData.Common
 
                 if (!Regex.IsMatch(KustoCluster, KustoUrlPattern))
                 {
-                    string errMessage = $"invalid kusto url. should match pattern {KustoUrlPattern}\r\nexample: https://ingest-{{kustocluster}}.{{location optional}}.kusto.windows.net/{{kustodatabase}}";
+                    string errMessage = $"invalid kusto url. should match pattern {KustoUrlPattern}\r\nexample: https://ingest-{{kustocluster}}.{{optional location}}.kusto.windows.net/{{kustodatabase}}";
                     Log.Error(errMessage);
+                    retval = false;
                 }
             }
 
