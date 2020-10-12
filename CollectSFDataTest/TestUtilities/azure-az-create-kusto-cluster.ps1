@@ -55,6 +55,16 @@ if(!($availableSkus | ? name -ieq $skuName)) {
     if(!$force) { return }
 }
 
+
+write-host "New-AzKustoCluster -name $clusterName `
+    -ResourceGroupName $resourceGroupName `
+    -Location $resourceGroupLocation `
+    -SkuName $skuName `
+    -SkuTier $skuTier `
+    -EnablePurge
+"
+write-host 'creating cluster will take around 15 minutes'
+
 $cluster = New-AzKustoCluster -name $clusterName `
     -ResourceGroupName $resourceGroupName `
     -Location $resourceGroupLocation `
@@ -63,6 +73,14 @@ $cluster = New-AzKustoCluster -name $clusterName `
     -EnablePurge
 
 $cluster | convertto-json 
+
+write-host "$database = New-AzKustoDatabase -ClusterName $clusterName `
+    -Name $databaseName `
+    -ResourceGroupName $resourceGroupName `
+    -Location $resourceGroupLocation `
+    -Kind $databaseKind
+"
+write-host "creating database"
 
 $database = New-AzKustoDatabase -ClusterName $clusterName `
     -Name $databaseName `
@@ -97,6 +115,14 @@ Type <DatabasePrincipalType>: Database principal type.
 [Email <String>]: Database principal email if exists.
 [Fqn <String>]: Database principal fully qualified name.
 #>
+
+write-host "Add-AzKustoDatabasePrincipal -ClusterName $clusterName `
+    -DatabaseName $databaseName `
+    -ResourceGroupName $resourceGroupName `
+    -Value (@{Name = $appRegistrationId; Role = 'Admin'; Type = 'App'; AppId = $appRegistrationId })
+"
+
+write-host "adding principal"
 
 $principal = Add-AzKustoDatabasePrincipal -ClusterName $clusterName `
     -DatabaseName $databaseName `
