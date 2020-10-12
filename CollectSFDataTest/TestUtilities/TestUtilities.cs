@@ -7,7 +7,6 @@
 //https://github.com/nunit/docs/wiki/Tips-And-Tricks
 //https://github.com/nunit/nunit-csharp-samples
 
-using CollectSFData;
 using CollectSFData.Azure;
 using CollectSFData.Common;
 using CollectSFData.DataFile;
@@ -242,19 +241,10 @@ namespace CollectSFDataTests
                     Console.Error.WriteLine(errorLine);
                     output.StandardError += errorLine;
                 }
-
             }
 
             output.ExitCode = process.ExitCode;
             return output;
-        }
-
-        private void ProcessExited(object sender, EventArgs e)
-        {
-            //Log.Info($"sender", sender);
-            //Log.Info($"args", e);
-            hasExited = true;
-
         }
 
         public ProcessOutput ExecuteTest()
@@ -421,6 +411,13 @@ namespace CollectSFDataTests
                     Assert.AreEqual(true, endpoints.IsValid());
                 }
             }
+        }
+
+        private void ProcessExited(object sender, EventArgs e)
+        {
+            //Log.Info($"sender", sender);
+            //Log.Info($"args", e);
+            hasExited = true;
         }
     }
 }

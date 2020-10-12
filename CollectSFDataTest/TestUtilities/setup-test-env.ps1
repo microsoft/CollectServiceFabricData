@@ -16,16 +16,11 @@ $error.clear()
 
 class TestSettings {
     TestSettings() {}
-    # needed ? not currently used
-    $testAadUser = $null
-    $testAadPassword = $null
-    $testAadKeyVault = $null
-    $testAadCertificateThumbprint = $null
-    $testAadSourceVaultValue = $null
-    $aadCertificateUrlValue = $null
       
     # for file download and gather tests
     $testAzStorageAccount = "collectsfdatatests"
+    $testAzClientId = ""
+    $testAzClientSecret = ""
 
     # for azure cluster deployments
     $adminUserName = $null
@@ -48,48 +43,67 @@ class TestEnv {
     [switch]$reset = $reset
     [string]$configurationFile = $configurationFile
     [string]$tempDir = $tempDir
-    
+
     TestEnv() {
         $this.CheckTempDir()
         $this.CheckTemplate()
         $this.ReadConfig($this.configurationFile)
-        $this.CheckAzureConfig()
+        
+        if ($this.CheckAzureConfig()) {
+            $this.CheckKustoConfig()
+        }
+        
     }
 
-    [void] CheckAzureConfig() {
+    [bool] CheckAzureConfig() {
         $settings = $this.testSettings
         if (!$settings.AzureClientId -or !$settings.AzureClientSecret -or !$settings.AzureResourceGroup -or !$settings.AzureResourceGroupLocation) {
             Write-Warning "azure settings not configured. storage tests may fail"
-            return
+            return $false
         }
 
+        <#
         write-host "checking azure config" -ForegroundColor Cyan
         $credential = new-object -typename System.Management.Automation.PSCredential `
             -argumentlist @(
             $settings.AzureClientId, 
             ($settings.AzureClientSecret | convertto-securestring -Force -AsPlainText)
         )
+        #>
 
         if (!(get-module -ListAvailable -Name az.accounts)) {
-            install-module Az.Accounts -UseWindowsPowerShell
-            import-module Az.Accounts -UseWindowsPowerShell
+            install-module Az.Accounts #-UseWindowsPowerShell
+            import-module Az.Accounts #-UseWindowsPowerShell
         }
 
         if (!(get-module -ListAvailable -Name az.storage)) {
-            install-module Az.Storage -UseWindowsPowerShell
-            import-module Az.Storage -UseWindowsPowerShell
+            install-module Az.Storage #-UseWindowsPowerShell
+            import-module Az.Storage #-UseWindowsPowerShell
         }
 
         if (!(get-module -ListAvailable -Name Az.Resources)) {
-            install-module Az.Resources -UseWindowsPowerShell
-            import-module Az.Resources -UseWindowsPowerShell
+            install-module Az.Resources #-UseWindowsPowerShell
+            import-module Az.Resources #-UseWindowsPowerShell
         }
 
         # bug Could not load type 'System.Security.Cryptography.SHA256Cng' from assembly 'System.Core, Version=4.0.0.0,
+        # https://github.com/PowerShell/PowerShell/issues/10473
         # Cng is not in .net core but the az modules havent been updated
         # possible cause is credential
+        # need cert to use appid
         #connect-AzAccount -TenantId $settings.AzureTenantId -Credential $credential -ServicePrincipal
-        connect-AzAccount -TenantId $settings.AzureTenantId -applications -ApplicationId $settings.AzureClientId -ServicePrincipal
+        # https://docs.microsoft.com/en-us/powershell/module/az.accounts/connect-azaccount?view=azps-4.7.0#example-7--connect-using-certificates
+        # .\azure-az-create-aad-application-spn.ps1 -aadDisplayName collectsfdatatestcert -logonType cert
+        write-host "connect-AzAccount -TenantId $($settings.AzureTenantId) `
+            -ApplicationId $($settings.testAzClientId) `
+            -ServicePrincipal `
+            -CertificateThumbprint $($settings.testAzClientSecret)
+        "
+        connect-AzAccount -TenantId $settings.AzureTenantId `
+            -ApplicationId $settings.testAzClientId `
+            -ServicePrincipal `
+            -CertificateThumbprint $settings.testAzClientSecret
+        
         get-azcontext | fl *
 
         write-host "checking resource group $($settings.AzureResourceGroup)"
@@ -129,7 +143,86 @@ class TestEnv {
         write-host "setting test token $global:sasUri"
         $settings.SasKey = $global:sasuri
         $this.SaveConfig()
+        return $true
+    }
 
+    [bool] CheckKustoConfig() {
+        $settings = $this.testSettings
+        if (!$settings.AzureClientId -or !$settings.AzureClientSecret -or !$settings.AzureResourceGroup -or !$settings.AzureResourceGroupLocation) {
+            Write-Warning "azure settings not configured. kusto tests may fail"
+            return $false
+        }
+
+        if (!(get-module -ListAvailable -Name Az.Kusto)) {
+            install-module Az.Kusto
+            import-module Az.Kusto
+        }
+        
+        $pattern = "https://(?<ingest>ingest-){0,1}(?<clusterName>.+?)\.(?<location>.+?)\.(?<domainName>.+?)(/|$)(?<databaseName>.+?){0,1}(/|$)(?<tableName>.+?){0,1}(/|$)"
+
+        if ([regex]::IsMatch($settings.KustoCluster, $pattern)) {
+            $results = [regex]::Matches($settings.KustoCluster, $pattern)
+            $Global:results = $results
+            $ingest = $results[0].Groups['ingest']
+            $clusterName = $results[0].Groups['clusterName']
+            $location = $results[0].Groups['location']
+            $domainName = $results[0].Groups['domainName']
+            $databaseName = $results[0].Groups['databaseName']
+            $hostName = "$ingest$clusterName.$location.$domainName"
+
+            write-host "hostName: $hostName"
+            write-host "ingest: $ingest"
+            write-host "clusterName: $clusterName"
+            write-host "location: $location"
+            write-host "domainName $domainName"
+            write-host "databaseName $databaseName"
+
+            write-host "Test-NetConnection -ComputerName $hostName -port 443"
+            $pingResults = Test-NetConnection -ComputerName $hostName -port 443 -ErrorAction SilentlyContinue
+            $pingResults | convertto-json
+
+            if (!$pingResults.TcpTestSucceeded) {
+                write-warning "unable to ping kusto ingest url"
+            }
+            else {
+                $error.Clear()
+                write-host "able to ping kusto ingest url"
+                return $true
+            }
+
+            if ($location -ieq 'kusto') {
+                write-host "not a user kusto cluster"
+                return $true
+            }
+
+            write-host "checking test resource group for kusto cluster"
+            $rgClusters = Get-AzKustoCluster -ResourceGroupName $settings.AzureResourceGroup
+            $rgClusters
+            
+            write-host "checking subscriptions for kusto cluster"
+            $subClusters = Get-AzKustoCluster -ResourceGroupName $settings.AzureResourceGroup
+            $subClusters
+
+            if (!$rgClusters -and !$subClusters) {
+                write-warning 'no kusto clusters found. create new kusto cluster with new-azkustocluster command 
+                    or provide valid kusto ingest url to test kusto functions'
+                write-host "example command: New-AzKustoCluster -Name collectsfdatatest `
+                    -ResourceGroupName $($settings.AzureResourceGroup) `
+                    -location $($settings.AzureResourceGroupLocation) `
+                    -SkuName 'Dev(No SLA)_Standard_D11_v2' `
+                    -SkuTier basic `
+                    -EnablePurge
+                "
+            }
+
+            return $false
+        }
+        else {
+            write-warning "unable to determine kusto settings"
+            return $false
+        }
+
+        return $true
     }
 
     [void] CheckTempDir() {
@@ -148,7 +241,8 @@ class TestEnv {
             $this.SaveConfig()
             write-host "edit file directly and save: $this.configurationFile" -foregroundcolor green
             write-host "create azure app id / spn for azure storage / gather tests. .\azure-az-create-aad-application-spn.ps1 can be used to create one progammatically."
-            write-host ".\azure-az-create-aad-application-spn.ps1 -aadDisplayName collectsfdata -uri http://collectsfdata"
+            write-host ".\azure-az-create-aad-application-spn.ps1 -aadDisplayName collectsfdatatestcert -logonType cert"
+            write-host ".\azure-az-create-aad-application-spn.ps1 -aadDisplayName collectsfdatatest -uri http://collectsfdatatest -logontype certthumb"
             . $this.configurationFile
         }
     }
@@ -188,6 +282,7 @@ class TestEnv {
 $error.Clear()
 $global:testEnv = [TestEnv]::new()
 write-host ($PSBoundParameters | out-string)
+
 
 if ($error) {
     write-warning ($error | out-string)
