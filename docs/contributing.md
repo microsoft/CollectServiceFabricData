@@ -63,11 +63,22 @@ using output from .\azure-az-create-aad-application-spn.ps1, enter:
 
 ## Kusto Setup
 
+to create a test kusto cluster for testing, the below script can be used. Pass resource group location and application registration id (azureclientid) to script.  
+script will create dev kusto cluster and database. Script will add app registration id as a database admin.  
+output will display 'kustocluster' kusto ingest url with database.
+
 .\azure-az-create-kusto-cluster.ps1 -resourceGroupLocation {{ location }} -appRegistrationId {{ app registration id for 'collectsfdata' }}
+
+example output:
+
+```text
+finished. object stored in `$global:cluster
+data ingestion uri: https://ingest-collectsfdataunittest.eastus.kusto.windows.net/collectsfdatadb
+```
 
 ## Testing
 
-
+todo
 
 ## Creating pull requests
 
