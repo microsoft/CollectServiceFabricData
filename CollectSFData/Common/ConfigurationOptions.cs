@@ -733,7 +733,7 @@ namespace CollectSFData.Common
             bool needsAad = IsKustoConfigured() | IsKustoPurgeRequested() | IsLogAnalyticsConfigured();
             needsAad |= LogAnalyticsCreate | LogAnalyticsRecreate | IsLogAnalyticsPurgeRequested();
 
-            if (needsAad)
+            if (needsAad | IsClientIdConfigured())
             {
                 AzureResourceManager arm = new AzureResourceManager();
                 retval = arm.Authenticate();
@@ -771,9 +771,11 @@ namespace CollectSFData.Common
                     retval = IsKustoConfigured();
                 }
 
-                if (!KustoCluster.ToLower().Contains("//ingest-"))
+                if (!Regex.IsMatch(KustoCluster, KustoUrlPattern))
                 {
-                    Log.Warning($"KustoCluster url does not contain 'ingest-' {KustoCluster}");
+                    string errMessage = $"invalid kusto url. should match pattern {KustoUrlPattern}\r\nexample: https://ingest-{{kustocluster}}.{{optional location}}.kusto.windows.net/{{kustodatabase}}";
+                    Log.Error(errMessage);
+                    retval = false;
                 }
             }
 

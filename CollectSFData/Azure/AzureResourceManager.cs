@@ -4,10 +4,11 @@
 // ------------------------------------------------------------
 
 using CollectSFData.Common;
-using Microsoft.IdentityModel.Clients.ActiveDirectory;
+using Microsoft.Identity.Client;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Threading;
@@ -16,26 +17,24 @@ namespace CollectSFData.Azure
 {
     public class AzureResourceManager : Instance
     {
-        private static TokenCache _tokenCache = new TokenCache();
-        private readonly Uri _replyUrl = new Uri("urn:ietf:wg:oauth:2.0:oob");
-        private string _baseAuthUrl = "https://login.microsoftonline.com/";
+        private string _commonTenantId = "common";
+        private IConfidentialClientApplication _confidentialClientApp;
+        private List<string> _defaultScope = new List<string>() { ".default" };
         private string _getSubscriptionRestUri = "https://management.azure.com/subscriptions/{subscriptionId}?api-version=2016-06-01";
         private Http _httpClient = Http.ClientFactory();
         private string _listSubscriptionsRestUri = "https://management.azure.com/subscriptions?api-version=2016-06-01";
+        private IPublicClientApplication _publicClientApp;
         private string _resource;
         private Timer _timer;
         private DateTimeOffset _tokenExpirationHalfLife;
         private string _wellKnownClientId = "1950a258-227b-4e31-a9cf-717495945fc2";
-
         public AuthenticationResult AuthenticationResult { get; private set; }
-
         public string BearerToken { get; private set; }
-
         public bool IsAuthenticated { get; private set; }
-
+        public List<string> Scopes { get; set; } = new List<string>();
         public SubscriptionRecordResult[] Subscriptions { get; private set; } = new SubscriptionRecordResult[] { };
 
-        public bool Authenticate(bool throwOnError = false, string resource = ManagementAzureCom, PromptBehavior prompt = PromptBehavior.Never)
+        public bool Authenticate(bool throwOnError = false, string resource = ManagementAzureCom, bool prompt = false)
         {
             Log.Debug("azure ad:enter");
             _resource = resource;
@@ -56,22 +55,62 @@ namespace CollectSFData.Azure
 
             try
             {
-                AuthenticationContext authContext = new AuthenticationContext(
-                    _baseAuthUrl + (string.IsNullOrEmpty(Config.AzureTenantId) ? "common" : Config.AzureTenantId), _tokenCache);
+                if (string.IsNullOrEmpty(Config.AzureTenantId))
+                {
+                    Config.AzureTenantId = _commonTenantId;
+                }
 
                 if (Config.IsClientIdConfigured())
                 {
                     // no prompt with clientid and secret
-                    AuthenticationResult = authContext.AcquireTokenAsync(resource,
-                        new ClientCredential(Config.AzureClientId, Config.AzureClientSecret)).Result;
+                    _confidentialClientApp = ConfidentialClientApplicationBuilder
+                       .CreateWithApplicationOptions(new ConfidentialClientApplicationOptions
+                       {
+                           ClientId = Config.AzureClientId,
+                           RedirectUri = resource,
+                           ClientSecret = Config.AzureClientSecret,
+                           TenantId = Config.AzureTenantId,
+                           ClientName = Config.AzureClientId
+                       })
+                       .WithAuthority(AzureCloudInstance.AzurePublic, Config.AzureTenantId)
+                       .WithLogging(MsalLoggerCallback, LogLevel.Verbose, true, true)
+                       .Build();
+
+                    if (Scopes.Count < 1)
+                    {
+                        Scopes = _defaultScope;
+                    }
+
+                    foreach (string scope in Scopes)
+                    {
+                        TokenCacheHelper.EnableSerialization(_confidentialClientApp.AppTokenCache);
+                        AuthenticationResult = _confidentialClientApp
+                            .AcquireTokenForClient(new List<string>() { scope })
+                            .ExecuteAsync().Result;
+                        Log.Debug($"scope authentication result:", AuthenticationResult);
+                    }
                 }
                 else
                 {
-                    // normal azure auth with prompt if needed
-                    AuthenticationResult = authContext.AcquireTokenAsync(resource,
-                        _wellKnownClientId,
-                        _replyUrl,
-                        new PlatformParameters(prompt)).Result;
+                    _publicClientApp = PublicClientApplicationBuilder
+                        .Create(_wellKnownClientId)
+                        .WithAuthority(AzureCloudInstance.AzurePublic, Config.AzureTenantId)
+                        .WithLogging(MsalLoggerCallback, LogLevel.Verbose, true, true)
+                        .WithDefaultRedirectUri()
+                        .Build();
+
+                    TokenCacheHelper.EnableSerialization(_publicClientApp.UserTokenCache);
+                    AuthenticationResult = _publicClientApp
+                        .AcquireTokenSilent(_defaultScope, _publicClientApp.GetAccountsAsync().Result.FirstOrDefault())
+                        .ExecuteAsync().Result;
+
+                    if (Scopes.Count > 0)
+                    {
+                        Log.Info($"adding scopes {Scopes.Count}");
+                        AuthenticationResult = _publicClientApp
+                            .AcquireTokenSilent(Scopes, _publicClientApp.GetAccountsAsync().Result.FirstOrDefault())
+                            .ExecuteAsync().Result;
+                    }
                 }
 
                 BearerToken = AuthenticationResult.AccessToken;
@@ -87,18 +126,36 @@ namespace CollectSFData.Azure
 
                 return true;
             }
+            catch (MsalUiRequiredException)
+            {
+                if (!Config.IsClientIdConfigured())
+                {
+                    AuthenticationResult = _publicClientApp
+                    .AcquireTokenInteractive(_defaultScope)
+                    .ExecuteAsync().Result;
+                    return Authenticate(throwOnError, resource, true);
+                }
+
+                if (throwOnError)
+                {
+                    throw;
+                }
+
+                IsAuthenticated = false;
+                return false;
+            }
             catch (AggregateException ae)
             {
                 Log.Exception($"aggregate exception:{ae}");
 
-                if (ae.GetBaseException() is AdalException)
+                if (ae.GetBaseException() is MsalException)
                 {
-                    AdalException ad = ae.GetBaseException() as AdalException;
-                    Log.Exception($"adal exception:{ad}");
+                    MsalException me = ae.GetBaseException() as MsalException;
+                    Log.Exception($"msal exception:{me}");
 
-                    if (ad.ErrorCode.Contains("interaction_required") && prompt == PromptBehavior.Never)
+                    if (me.ErrorCode.Contains("interaction_required") && !prompt)
                     {
-                        return Authenticate(throwOnError, resource, PromptBehavior.Auto);
+                        return Authenticate(throwOnError, resource, true);
                     }
                 }
 
@@ -110,7 +167,7 @@ namespace CollectSFData.Azure
 
                 if (throwOnError)
                 {
-                    throw e;
+                    throw;
                 }
 
                 IsAuthenticated = false;
@@ -149,6 +206,14 @@ namespace CollectSFData.Azure
 
             Log.Info($"resourcegroup exists {resourceId}");
             return true;
+        }
+
+        public void MsalLoggerCallback(LogLevel level, string message, bool containsPII)
+        {
+            if (!containsPII | (containsPII & Config.LogDebug))
+            {
+                Log.Info($"{level} {message}");
+            }
         }
 
         public bool PopulateSubscriptions()
