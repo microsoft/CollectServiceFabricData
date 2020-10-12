@@ -13,9 +13,9 @@ namespace CollectSFData.Common
 {
     public class CustomTaskManager : Instance
     {
+        private static readonly Task _taskMonitor = new Task(TaskMonitor);
         private static SynchronizedList<CustomTaskManager> _allInstances = new SynchronizedList<CustomTaskManager>();
         private static CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
-        private static readonly Task _taskMonitor = new Task(TaskMonitor);
         private static CustomTaskScheduler _customScheduler; // init in constructor after starting _taskMonitor to avoid exception
         private string CallerName;
 

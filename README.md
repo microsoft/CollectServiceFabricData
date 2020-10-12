@@ -33,7 +33,7 @@ Service Fabric diagnostic data can be large depending on utilization and size of
 Depending on configuration, resource usage of cpu, memory, network, disk, and disk space can be high. Below are general resource guidelines for execution of utility.
 
 - Windows 10 / Windows 2016+ image x64
-- .net 4.6.2+
+- .net 4.7.2+
 - 16+ GB RAM
 - 4+ cpu
 - 100 GB free drive space preferably on ssd for fabriclogs if caching locally to disk (UseMemoryStream = false)
