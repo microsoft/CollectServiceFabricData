@@ -118,4 +118,4 @@ $assignment | convertto-json
 #>
 $global:cluster = $cluster
 write-host 'finished. object stored in `$global:cluster'
-write-host "data ingestion uri: $($cluster.DataIngestionUri)"
+write-host "data ingestion uri: $($cluster.DataIngestionUri)/$databaseName"
