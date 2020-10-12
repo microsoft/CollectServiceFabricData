@@ -10,7 +10,6 @@ using Kusto.Data;
 using Kusto.Data.Common;
 using Kusto.Data.Net.Client;
 using Kusto.Data.Results;
-using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
@@ -43,7 +42,6 @@ namespace CollectSFData.Kusto
         private static int maxKustoClientTimeMs = 300 * 1000;
         private AzureResourceManager _arm = new AzureResourceManager();
         private Http _httpClient = Http.ClientFactory();
-        private string _pattern = "https://(?<ingest>ingest-){0,1}(?<clusterName>.+?)\\.(?<location>.+?)\\.(?<domainName>.+?)(/|$)(?<databaseName>.+?){0,1}(/|$)(?<tableName>.+?){0,1}(/|$)";
 
         public KustoEndpointInfo()
         {
@@ -56,9 +54,9 @@ namespace CollectSFData.Kusto
 
             DeleteSourceOnSuccess = !Config.KustoUseBlobAsSource;
 
-            if (Regex.IsMatch(Config.KustoCluster, _pattern))
+            if (Regex.IsMatch(Config.KustoCluster, KustoUrlPattern))
             {
-                Match matches = Regex.Match(Config.KustoCluster, _pattern);
+                Match matches = Regex.Match(Config.KustoCluster, KustoUrlPattern);
                 string domainName = matches.Groups["domainName"].Value;
                 DatabaseName = matches.Groups["databaseName"].Value;
                 TableName = Config.KustoTable;
@@ -73,7 +71,7 @@ namespace CollectSFData.Kusto
             }
             else
             {
-                string errMessage = $"invalid url. should match pattern {_pattern}";
+                string errMessage = $"invalid kusto url.";
                 Log.Error(errMessage);
                 throw new ArgumentException(errMessage);
             }
@@ -104,7 +102,14 @@ namespace CollectSFData.Kusto
 
         public void Authenticate(bool throwOnError = false, bool prompt = false)
         {
-            if (Config.IsKustoConfigured() && _arm.Authenticate(throwOnError, ClusterIngestUrl, prompt ? PromptBehavior.Auto : PromptBehavior.Never))
+            _arm.Scopes = new List<string>() { $"{ClusterIngestUrl}/kusto.read", $"{ClusterIngestUrl}/kusto.write" };
+
+            if (Config.IsClientIdConfigured())
+            {
+                _arm.Scopes = new List<string>() { $"{ClusterIngestUrl}/.default" };
+            }
+
+            if (Config.IsKustoConfigured() && _arm.Authenticate(throwOnError, ClusterIngestUrl, prompt))
             {
                 DatabaseConnection = new KustoConnectionStringBuilder(ClusterIngestUrl) { FederatedSecurity = true, InitialCatalog = DatabaseName, UserToken = _arm.BearerToken };
                 ManagementConnection = new KustoConnectionStringBuilder(ManagementUrl) { FederatedSecurity = true, InitialCatalog = DatabaseName, UserToken = _arm.BearerToken };
