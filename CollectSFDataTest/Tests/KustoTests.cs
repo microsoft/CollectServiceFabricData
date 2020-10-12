@@ -21,7 +21,6 @@ namespace CollectSFDataTests
         {
             TestUtilities utils = DefaultUtilities();
 
-            // force auth
             utils.ConfigurationOptions.KustoCluster = "https://ingest-testcluster.eastus.kusto.windows.net/testdatabase";
             utils.ConfigurationOptions.KustoTable = "test";
 
@@ -35,7 +34,6 @@ namespace CollectSFDataTests
         {
             TestUtilities utils = DefaultUtilities();
 
-            // force auth
             utils.ConfigurationOptions.KustoCluster = "https://ingest-testcluster.kusto.windows.net/testdatabase";
             utils.ConfigurationOptions.KustoTable = "test";
 
