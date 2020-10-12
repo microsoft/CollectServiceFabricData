@@ -82,19 +82,13 @@
         "resolved": "1.1.1",
         "contentHash": "vsI1L6Bx602aQ/8051nrRbAWGxCQQX7IKT/9XApnEYfzLPBX7LcCZuwnDyD1bHTm2D8GcMweVSPr1H2rAfAgbA=="
       },
-      "Microsoft.Identity.Client": {
+      "Microsoft.IdentityModel.Clients.ActiveDirectory": {
         "type": "Direct",
-        "requested": "[4.19.0, )",
-        "resolved": "4.19.0",
-        "contentHash": "cmFGDXNr0xT/tLpQxlzHZaM6C/Ppy/pvxj+l912swtrH43+Ae7ZMb9bLYKd8My6V3JsXFtJ2rj4jrQVTbEWUfg=="
-      },
-      "Microsoft.Identity.Client.Extensions.Msal": {
-        "type": "Direct",
-        "requested": "[2.15.0, )",
-        "resolved": "2.15.0",
-        "contentHash": "2zkJppx+7M8PmKRBeGYUyCFFOtnb05BNXIobLwNrZHmQ/IGeMVlC/i4KjtrlHR1puOEE+d8/ZtjJB1BunaZm5g==",
+        "requested": "[5.2.0, )",
+        "resolved": "5.2.0",
+        "contentHash": "5zCom0plcWSAuPp2B/Fo7XFKdrPUOaE+1dhVW5Ui2Gny7YYv1fDJ1Z8GeZEJuCd3rKN4UBO834wPEhU5gIPQMw==",
         "dependencies": {
-          "Microsoft.Identity.Client": "4.19.0"
+          "System.Net.Http": "4.3.4"
         }
       },
       "Microsoft.Rest.ClientRuntime": {
@@ -156,14 +150,6 @@
           "Microsoft.IO.RecyclableMemoryStream": "1.2.2",
           "Microsoft.IdentityModel.Clients.ActiveDirectory": "5.2.0",
           "WindowsAzure.Storage": "9.3.2"
-        }
-      },
-      "Microsoft.IdentityModel.Clients.ActiveDirectory": {
-        "type": "Transitive",
-        "resolved": "5.2.0",
-        "contentHash": "5zCom0plcWSAuPp2B/Fo7XFKdrPUOaE+1dhVW5Ui2Gny7YYv1fDJ1Z8GeZEJuCd3rKN4UBO834wPEhU5gIPQMw==",
-        "dependencies": {
-          "System.Net.Http": "4.3.4"
         }
       },
       "Microsoft.IO.RecyclableMemoryStream": {
