@@ -91,8 +91,8 @@ jobs:
         run: |
           $nugetPackage = (get-item "$($env:release_path)\*.nupkg").FullName
           $nugetPackageName = (get-item "$($env:release_path)\*.nupkg").Name
-          echo "::set-env name=nuget_package::$nugetPackage"
-          echo "::set-env name=nuget_package_name::$nugetPackageName"
+          echo "::set-output name=nuget_package::$nugetPackage"
+          echo "::set-output name=nuget_package_name::$nugetPackageName"
 
       - name: nuget push
         shell: cmd
@@ -121,7 +121,7 @@ jobs:
           compress-archive -path "$($env:release_path)_upload\*" -destinationPath "$($env:release_path)\$($env:project_name).zip" -force
           $fileVersion = [io.fileinfo]::new("$($env:release_path)\$($env:project_name).exe").VersionInfo.FileVersion
           echo "::log-command parameter1=$fileVersion::fileVersion"
-          echo "::set-env name=file_version::v$fileVersion"
+          echo "::set-output name=file_version::v$fileVersion"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
