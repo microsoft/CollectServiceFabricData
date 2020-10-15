@@ -117,5 +117,6 @@
             | invoke TypeAndTextContains("normal cert check trace", "Common.CryptoUtility", "CryptAcquireCertificatePrivateKey failed. Error:0x80090014")
             | invoke TypeAndTextContains("normal cert check trace", "Common.CryptoUtility", "All tries to get private key filename failed")
             | invoke TypeAndTextContains("not an error", "HttpGateway.HttpClaimsAuthHandler" , "Authorization header not found")
+            | invoke TypeAndTextContains("not an error", "NamingGateway.FabricGatewayManager", "Failed to retrieve thumbprint for httpgateway server certificate: CredentialAlreadyLoaded")
     }
 
