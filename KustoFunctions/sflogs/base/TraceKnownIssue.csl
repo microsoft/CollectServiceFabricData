@@ -151,5 +151,8 @@
         TypeAndTextContains(T, "docker container not responsive", "ManagedHosting.ContainerEventManager", "Failed to connect to DockerService at named pipe 'docker_engine'"),
         TypeAndTextContains(T, "container activation issues", "ManagedHosting.ActivateContainerOperation", "Failed to start Container"),
         TypeAndTextContains(T, "possible container hns nat issue", "FabricDeployer.FabricDeployer", "Failed to set up container network"),
-        TypeAndTextMatches(T, "patch orchestration has active repair tasks", "POA-CoordinatorService.VerboseMessage", "Total [1-9][0-9]* repair tasks were found for POS")
+        TypeAndTextMatches(T, "patch orchestration has active repair tasks", "POA-CoordinatorService.VerboseMessage", "Total [1-9][0-9]* repair tasks were found for POS"),
+        TypeAndTextContains(T, "lease join issue", "Join.Establish", "Restarting as lease establish with"),
+        TypeAndTextContains(T, "sfrp cert issue / common cert link", "InfrastructureService.WrpStreamChannel", "The underlying connection was closed: Could not establish trust relationship"),
+        TypeAndTextContains(T, "cert issue", "InfrastructureService.ClusterCommandProcessor", "CreateOperationStatusAsync: Exception encountered: System.Fabric.FabricServerAuthenticationFailedException")
     }
