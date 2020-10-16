@@ -97,6 +97,7 @@ jobs:
 
       - name: set nuget package
         shell: powershell
+        id: set_nuget_package
         run: |
           $nugetPackage = (get-item "$($env:release_path)\*.nupkg").FullName
           $nugetPackageName = (get-item "$($env:release_path)\*.nupkg").Name
@@ -107,7 +108,7 @@ jobs:
         shell: cmd
         run: |
           echo #not working needs codesign
-          echo nuget.exe push %nuget_package% %nuget_api_key% -Verbosity Detailed -Source https://api.nuget.org/v3/index.json -SkipDuplicate -NonInteractive
+          echo nuget.exe push ${{ steps.set_nuget_package.outputs.nuget_package }} %nuget_api_key% -Verbosity Detailed -Source https://api.nuget.org/v3/index.json -SkipDuplicate -NonInteractive
           echo # working in fork, GPR blocked on upstream 
           echo nuget.exe sources add -Name 'GPR' -Verbosity Detailed -Source https://nuget.pkg.github.com/%github_owner%/index.json -NonInteractive -UserName %GITHUB_ACTOR% -Password %GITHUB_TOKEN%
           echo nuget.exe setapikey %nuget_api_key% -Source 'GPR' -Verbosity Detailed -NonInteractive
@@ -120,6 +121,7 @@ jobs:
 
       - name: prepare release asset
         shell: powershell
+        id: prepare_release_asset
         # workflows do not have same permissions across forks. pr from same repo (branch to branch)
         run: |
           md "$($env:release_path)_upload"
@@ -140,7 +142,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ env.file_version }}
+          tag_name: ${{ steps.prepare_release_asset.outputs.file_version }}
           release_name: ${{ env.project_name }}
           draft: false
           prerelease: ${{ contains(github.event.pull_request.labels.*.name, 'Pre-release') }}
@@ -163,7 +165,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ${{ env.nuget_package }}
-          asset_name: ${{ env.nuget_package_name }}
+          asset_path: ${{ steps.set_nuget_package.outputs.nuget_package }}
+          asset_name: ${{ steps.set_nuget_package.outputs.nuget_package_name }}
           asset_content_type: application/zip
 
