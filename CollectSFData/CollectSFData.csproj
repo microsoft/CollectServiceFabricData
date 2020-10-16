@@ -90,7 +90,7 @@
     <Compile Include="DataFile\FileTypes.cs" />
     <Compile Include="DataFile\FileManager.cs" />
     <Compile Include="Kusto\KustoConnection.cs" />
-    <Compile Include="Common\Program.cs" />
+    <Compile Include="Collector.cs" />
     <Compile Include="Kusto\KustoRestTable.cs" />
     <Compile Include="Kusto\KustoRestTableOfContentsV1.cs" />
     <Compile Include="Kusto\KustoRestResponseV1.cs" />

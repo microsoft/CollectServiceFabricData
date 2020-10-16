@@ -18,7 +18,7 @@ namespace CollectSFData.Common
     using System.Threading;
     using System.Threading.Tasks;
 
-    public class Program : Instance
+    public class Collector : Instance
     {
         private KustoConnection _kusto = null;
         private LogAnalyticsConnection _logAnalytics = null;
@@ -30,7 +30,7 @@ namespace CollectSFData.Common
 
         public static int Main(string[] args)
         {
-            return new Program().Execute(args);
+            return new Collector().Execute(args);
         }
 
         public string DetermineClusterId()
