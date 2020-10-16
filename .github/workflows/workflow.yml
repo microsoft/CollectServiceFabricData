@@ -40,15 +40,23 @@ jobs:
 
       - name: nuget build / pack
         shell: cmd
-        run: nuget.exe pack %project_name%\%project_name%.csproj -Verbosity Detailed -outputdirectory %artifacts_path% -NonInteractive -Build -Properties Configuration=Release
+        run: |
+          set
+          nuget.exe pack %project_name%\%project_name%.csproj -Verbosity Detailed -outputdirectory %artifacts_path% -NonInteractive -Build -Properties Configuration=Release
+          dir
 
       - name: build output
         shell: cmd
-        run: dir %release_path% /s
+        run: |
+          set
+          dir
+          dir %release_path% /s
 
       - name: copy artifacts
         shell: cmd
         run: |
+          set
+          dir
           md %artifacts_path%
           copy %release_path%\*.config %artifacts_path%
           copy %release_path%\*.exe %artifacts_path%
