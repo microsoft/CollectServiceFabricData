@@ -9,6 +9,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CollectSFDataTest", "CollectSFDataTest\CollectSFDataTest.csproj", "{98B1F46C-807C-4DE0-ACC2-047718E1A4AE}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CollectSFData", "CollectSFData\CollectSFData.csproj", "{E910AD37-507C-480F-BEC5-6E5F2B9A3155}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -31,6 +33,14 @@ Global
 		{98B1F46C-807C-4DE0-ACC2-047718E1A4AE}.Release|Any CPU.Build.0 = Release|Any CPU
 		{98B1F46C-807C-4DE0-ACC2-047718E1A4AE}.Release|x64.ActiveCfg = Release|Any CPU
 		{98B1F46C-807C-4DE0-ACC2-047718E1A4AE}.Release|x64.Build.0 = Release|Any CPU
+		{E910AD37-507C-480F-BEC5-6E5F2B9A3155}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E910AD37-507C-480F-BEC5-6E5F2B9A3155}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E910AD37-507C-480F-BEC5-6E5F2B9A3155}.Debug|x64.ActiveCfg = Debug|x64
+		{E910AD37-507C-480F-BEC5-6E5F2B9A3155}.Debug|x64.Build.0 = Debug|x64
+		{E910AD37-507C-480F-BEC5-6E5F2B9A3155}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E910AD37-507C-480F-BEC5-6E5F2B9A3155}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E910AD37-507C-480F-BEC5-6E5F2B9A3155}.Release|x64.ActiveCfg = Release|Any CPU
+		{E910AD37-507C-480F-BEC5-6E5F2B9A3155}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
