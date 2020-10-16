@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using CollectSFData;
-using CollectSFData.Common;
+﻿using CollectSFData.Common;
 
 namespace CollectSFData
 {
@@ -14,8 +8,8 @@ namespace CollectSFData
         {
             Collector collector = new Collector();
             ConfigurationOptions options = new ConfigurationOptions();
-            //options.DefaultConfig();
-            return collector.Collect(args);
+            options.DefaultConfig();
+            return collector.Collect(args, options);
         }
     }
 }
