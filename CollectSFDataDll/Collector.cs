@@ -119,9 +119,14 @@ namespace CollectSFData
 
         public int Collect(string[] args)
         {
+            return Collect(args, null);
+        }
+
+        public int Collect(string[] args, ConfigurationOptions options)
+        {
             try
             {
-                if (!Config.PopulateConfig(args))
+                if (!Config.PopulateConfig(args, options))
                 {
                     Config.SaveConfigFile();
                     return 1;
