@@ -28,7 +28,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\CollectSFData\CollectSFDataDll.csproj" />
+    <ProjectReference Include="..\CollectSFDataDll\CollectSFDataDll.csproj" />
   </ItemGroup>
 
 </Project>
