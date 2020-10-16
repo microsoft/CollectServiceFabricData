@@ -1,4 +1,10 @@
-﻿using System.Reflection;
+﻿// ------------------------------------------------------------
+// Copyright (c) Microsoft Corporation.  All rights reserved.
+// Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
+// ------------------------------------------------------------
+
+using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 // General Information about an assembly is controlled through the following
@@ -19,7 +25,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("e910ad37-507c-480f-bec5-6e5f2b9a3155")]
+[assembly: Guid("e9639942-3161-4093-aa72-c462c8048e68")]
 
 // Version information for an assembly consists of the following four values:
 //
@@ -31,3 +37,4 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Build and Revision Numbers
 // by using the '*' as shown below:
 [assembly: AssemblyVersion("2.7.*")]
+[assembly: InternalsVisibleTo("CollectSFData.Test")]

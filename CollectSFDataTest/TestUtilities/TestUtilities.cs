@@ -7,6 +7,7 @@
 //https://github.com/nunit/docs/wiki/Tips-And-Tricks
 //https://github.com/nunit/nunit-csharp-samples
 
+using CollectSFData;
 using CollectSFData.Azure;
 using CollectSFData.Common;
 using CollectSFData.DataFile;
@@ -175,9 +176,9 @@ namespace CollectSFDataTests
                 SaveTempOptions();
                 //Program.Config = new ConfigurationOptions();
                 //Program program = new Program();
-                var program = new Mock<Program>();
+                var program = new Mock<Collector>();
                 //Moq.Language.Flow.ISetup<Program, int> result = program.Setup(p => p.Execute(TempArgs));
-                program.Setup(p => p.Execute(TempArgs));
+                program.Setup(p => p.Collect(TempArgs));
 
                 Assert.IsNotNull(program);
 
@@ -257,7 +258,7 @@ namespace CollectSFDataTests
 
                 SaveTempOptions();
                 //Instance.Config = new ConfigurationOptions();
-                Program program = new Program();
+                Collector program = new Collector();
                 Assert.IsNotNull(program);
 
                 StartConsoleRedirection();
@@ -266,7 +267,7 @@ namespace CollectSFDataTests
                 //
                 // populate default collectsfdata.options.json
                 //int result = program.Execute(TempArgs);
-                int result = program.Execute(new string[] { });
+                int result = program.Collect(new string[] { });
                 Log.Info(">>>>test result<<<<", result);
                 ProcessOutput output = StopConsoleRedirection();
 
