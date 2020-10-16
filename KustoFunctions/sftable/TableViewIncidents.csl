@@ -1,5 +1,5 @@
 .create-or-alter function with (docstring = "function to create incidents TableView view for sftable",folder = "sftable") 
-    TableViewincidents(T:string) {
+    TableViewIncidents(T:string) {
         TableView(T)
         | where RelativeUri endswith "incidents"
         | project Timestamp,
