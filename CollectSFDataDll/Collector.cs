@@ -3,9 +3,10 @@
 // Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
-namespace CollectSFData.Common
+namespace CollectSFData
 {
     using CollectSFData.Azure;
+    using CollectSFData.Common;
     using CollectSFData.DataFile;
     using CollectSFData.Kusto;
     using CollectSFData.LogAnalytics;
@@ -30,7 +31,7 @@ namespace CollectSFData.Common
 
         public static int Main(string[] args)
         {
-            return new Collector().Execute(args);
+            return new Collector().Collect(args);
         }
 
         public string DetermineClusterId()
@@ -116,7 +117,7 @@ namespace CollectSFData.Common
             }
         }
 
-        public int Execute(string[] args)
+        public int Collect(string[] args)
         {
             try
             {
