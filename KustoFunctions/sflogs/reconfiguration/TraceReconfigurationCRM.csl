@@ -12,4 +12,5 @@
             @'TargetNode: ' targetNode
             @'MoveCost: ' moveCost
         | project Timestamp,Level, phase, action, service, decisionId, partitionId, sourceNode, targetNode, moveCost
+        | order by Timestamp asc
     }
