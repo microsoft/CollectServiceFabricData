@@ -239,6 +239,17 @@ namespace CollectSFData.Common
             }
         }
 
+        public bool DefaultConfig()
+        {
+            if (File.Exists(DefaultOptionsFile))
+            {
+                MergeConfig(DefaultOptionsFile);
+                return true;
+            }
+
+            return false;
+        }
+
         public void DisplayStatus()
         {
             Log.Min($"      Gathering: {FileType.ToString()}", ConsoleColor.White);
@@ -312,15 +323,19 @@ namespace CollectSFData.Common
             return !string.IsNullOrEmpty(LogAnalyticsPurge);
         }
 
-        public bool PopulateConfig(string[] args)
+        public bool PopulateConfig(string[] args, ConfigurationOptions options = null)
         {
             try
             {
                 _tempPath = FileManager.NormalizePath(Path.GetTempPath().TrimEnd(Path.DirectorySeparatorChar));
 
-                if (File.Exists(DefaultOptionsFile))
+                if (options != null)
                 {
-                    MergeConfigFile(DefaultOptionsFile);
+                    MergeConfig(options);
+                }
+                else if (!DefaultConfig() && args.Length == 0)
+                {
+                    MergeConfig(DefaultOptionsFile);
                 }
                 else if (args.Length == 0)
                 {
@@ -334,7 +349,7 @@ namespace CollectSFData.Common
                     if (!args[0].StartsWith("/?") && !args[0].StartsWith("-") && args[0].EndsWith(".json") && File.Exists(args[0]))
                     {
                         ConfigurationFile = args[0];
-                        MergeConfigFile(ConfigurationFile);
+                        MergeConfig(ConfigurationFile);
                         Log.Info($"setting options to {DefaultOptionsFile}", ConsoleColor.Yellow);
                     }
                     else if (args[0].StartsWith("/?") | args[0].StartsWith("-?") | args[0].StartsWith("--?"))
@@ -367,7 +382,7 @@ namespace CollectSFData.Common
                 {
                     foreach (string file in ConfigurationFile.Split(','))
                     {
-                        MergeConfigFile(file);
+                        MergeConfig(file);
                     }
 
                     MergeCmdLine();
@@ -388,6 +403,7 @@ namespace CollectSFData.Common
                     return true;
                 }
 
+                Log.Info(_cmdLineArgs.CmdLineApp.GetHelpText());
                 return false;
             }
             catch (Exception e)
@@ -573,9 +589,20 @@ namespace CollectSFData.Common
             }
         }
 
-        private void MergeConfigFile(string optionsFile)
+        public void MergeConfig(string optionsFile)
         {
             JObject fileOptions = ReadConfigFile(optionsFile);
+            MergeConfig(fileOptions);
+        }
+
+        public void MergeConfig(ConfigurationOptions configurationOptions)
+        {
+            JObject options = JObject.FromObject(configurationOptions);
+            MergeConfig(options);
+        }
+
+        public void MergeConfig(JObject fileOptions)
+        {
             object instanceValue = null;
 
             if (fileOptions == null || !fileOptions.HasValues)
@@ -623,15 +650,25 @@ namespace CollectSFData.Common
                         break;
 
                     case JTokenType.String:
+                        instanceValue = token.Value<string>();
+                        break;
+
                     case JTokenType.Uri:
+                        instanceValue = token.Value<string>();
+                        break;
+
                     case JTokenType.Date:
+                        // issue with date and datetimeoffset
+                        instanceValue = token.ToObject<DateTimeOffset>();
+                        break;
+
                     case JTokenType.Guid:
                         instanceValue = token.Value<string>();
                         break;
 
                     default:
-                        Log.Error($"jtoken type unknown:", token);
-                        throw new ArgumentException();
+                        Log.Debug($"jtoken type unknown:", token);
+                        continue;
                 }
 
                 SetPropertyValue(instanceProperty, instanceValue);
