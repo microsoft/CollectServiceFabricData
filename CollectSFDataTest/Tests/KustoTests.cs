@@ -3,13 +3,10 @@
 // Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
-using CollectSFData.Azure;
-using CollectSFData.Common;
 using CollectSFData.DataFile;
 using CollectSFData.Kusto;
 using NUnit.Framework;
 using System;
-using System.IO;
 
 namespace CollectSFDataTests
 {
