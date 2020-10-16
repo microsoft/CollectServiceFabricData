@@ -6,6 +6,7 @@
             column_ifexists("EventType",""),
             column_ifexists("EventVersion",""),
             column_ifexists("TaskName",""),
+            column_ifexists("description",""),
             column_ifexists("dca_version",""),
             column_ifexists("category",""),
             column_ifexists("eventInstanceId",""),
@@ -23,6 +24,11 @@
             column_ifexists("isSeedNode",""),
             column_ifexists("nodeVersion",""),
             column_ifexists("upgradeDomain",""),
+            column_ifexists("property",""), 
+            column_ifexists("healthState",""),
+            column_ifexists("removeWhenExpired",""),
+            column_ifexists("sourceId",""),
+            column_ifexists("sourceUtcTimestamp",""),
             column_ifexists("PartitionKey",""),
             column_ifexists("RowKey","")
         | project-away Column*
