@@ -18,9 +18,9 @@
     <tags>servicefabric</tags>
   </metadata>
   <files>
-      <file src="bin\x64\$configuration$\*.dll" target="lib\net472" />
-      <file src="configurationFiles\collectsfdata.options.json" target="lib\net472" />
-      <file src="bin\x64\$configuration$\*.config" target="lib\net472" />
-      <file src="FabricSupport.png" target="images\" />
+      <file src="..\bin\x64\$configuration$\*.dll" target="lib\net472" />
+      <file src="..\configurationFiles\collectsfdata.options.json" target="lib\net472" />
+      <file src="..\bin\x64\$configuration$\*.config" target="lib\net472" />
+      <file src="..\FabricSupport.png" target="images\" />
   </files>
 </package>
