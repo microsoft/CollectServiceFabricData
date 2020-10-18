@@ -12,10 +12,9 @@
     <GenerateAssemblyTitleAttribute>false</GenerateAssemblyTitleAttribute>
     <GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
     <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
+    <ApplicationIcon>..\FabricSupport.ico</ApplicationIcon>
+    <RootNamespace>CollectSFDataDll</RootNamespace>
   </PropertyGroup>
-  <ItemGroup>
-    <Content Include="FabricSupport.ico" />
-  </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Azure.KeyVault">
       <Version>3.0.4</Version>
@@ -57,5 +56,4 @@
       <Version>12.0.2</Version>
     </PackageReference>
   </ItemGroup>
-  <PropertyGroup />
 </Project>
