@@ -171,7 +171,7 @@ namespace CollectSFData.Azure
             while (token != null)
             {
                 Log.Info($"querying table:{cloudTable.Name} total:{tableRecords}", query);
-                TableQuerySegment<DynamicTableEntity> tableSegment = cloudTable.ExecuteQuerySegmentedAsync(query, token, null, null).Result;
+                TableQuerySegment tableSegment = cloudTable.ExecuteQuerySegmentedAsync(query, token, null, null).Result;
                 token = tableSegment.ContinuationToken;
 
                 results = FormatRecordResults(cloudTable, tableSegment);
@@ -231,7 +231,7 @@ namespace CollectSFData.Azure
             }
         }
 
-        private List<CsvTableRecord> FormatRecordResults(CloudTable cloudTable, TableQuerySegment<DynamicTableEntity> tableSegment)
+        private List<CsvTableRecord> FormatRecordResults(CloudTable cloudTable, TableQuerySegment tableSegment)
         {
             List<CsvTableRecord> results = new List<CsvTableRecord>();
 
