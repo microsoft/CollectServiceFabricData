@@ -26,6 +26,9 @@ namespace CollectSFData.Azure
 
         public bool Connect()
         {
+            TableContinuationToken tableToken = null;
+            CancellationToken cancellationToken = new CancellationToken();
+
             if (!Config.SasEndpointInfo.IsPopulated())
             {
                 Log.Warning("no table or token info. exiting:", Config.SasEndpointInfo);
@@ -36,7 +39,16 @@ namespace CollectSFData.Azure
             {
                 CloudTable table = new CloudTable(new Uri(Config.SasEndpointInfo.TableEndpoint + Config.SasEndpointInfo.SasToken));
                 _tableClient = table.ServiceClient;
-                TableList.AddRange(_tableClient.ListTables());
+
+                TableResultSegment tables = _tableClient.ListTablesSegmentedAsync(
+                    null,
+                    MaxResults,
+                    tableToken,
+                    new TableRequestOptions(),
+                    null,
+                    cancellationToken).Result;
+
+                TableList.AddRange(tables);
                 return true;
             }
             catch (Exception e)
