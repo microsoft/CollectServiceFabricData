@@ -18,6 +18,7 @@
   </PropertyGroup>
   <PropertyGroup>
     <StartupObject>CollectSFData.Program</StartupObject>
+    <ApplicationIcon>..\FabricSupport.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
     <None Include="App.config" />
