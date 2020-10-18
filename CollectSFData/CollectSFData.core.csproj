@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFrameworks>netcoreapp3.1;net472</TargetFrameworks>
     <Platforms>AnyCPU;x64</Platforms>
     <ProjectGuid>{E910AD37-507C-480F-BEC5-6E5F2B9A3155}</ProjectGuid>
     <OutputType>Exe</OutputType>
