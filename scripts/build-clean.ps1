@@ -1,3 +1,5 @@
+$error.clear()
+$ErrorActionPreference = 'continue'
 $currentLocation = (get-location).Path
 
 Set-Location ..\$PSScriptRoot
