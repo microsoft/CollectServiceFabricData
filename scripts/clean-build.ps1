@@ -4,7 +4,7 @@ $currentLocation =(get-location).Path
 $currentLocation
 
 write-host $PSScriptRoot
-Set-Location ..\$PSScriptRoot
+Set-Location $PSScriptRoot\..
 
 rd .\bin -re -fo
 rd .\obj -re -fo
