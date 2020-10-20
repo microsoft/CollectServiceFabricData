@@ -1,7 +1,8 @@
-﻿using CollectSFData.Common;
+﻿using CollectSFData;
+using CollectSFData.Common;
 using System;
 
-namespace CollectSFData
+namespace CollectSFDataExe
 {
     internal class Program
     {
