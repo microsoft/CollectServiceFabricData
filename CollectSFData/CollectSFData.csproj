@@ -1,7 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>netcoreapp3.1;net472</TargetFrameworks>
-    <Platforms>AnyCPU;x64</Platforms>
+    <Platforms>x64</Platforms>
+    <PlatformTarget>x64</PlatformTarget>
+    <TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);CopyProjectReferencesToPackage</TargetsForTfmSpecificBuildOutput>
     <ProjectGuid>{E910AD37-507C-480F-BEC5-6E5F2B9A3155}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <RootNamespace>CollectSFData</RootNamespace>
@@ -12,21 +14,81 @@
     <GenerateAssemblyTitleAttribute>false</GenerateAssemblyTitleAttribute>
     <GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
     <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <VersionSuffix>2.7.$([System.DateTime]::UtcNow.ToString(yyMMdd)).$([System.DateTime]::UtcNow.ToString(HHmmss))</VersionSuffix>
+    <AssemblyVersion Condition=" '$(VersionSuffix)' != '' ">$(VersionSuffix)</AssemblyVersion>
+    <Version Condition=" '$(VersionSuffix)' != '' ">$(VersionSuffix)</Version>
+    <FileVersion>$(Version)</FileVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <Deterministic>false</Deterministic>
   </PropertyGroup>
   <PropertyGroup>
-    <StartupObject>CollectSFData.Program</StartupObject>
+    <StartupObject>CollectSFDataExe.Program</StartupObject>
     <ApplicationIcon>..\FabricSupport.ico</ApplicationIcon>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netcoreapp3.1|x64'">
+    <OutputPath>..\bin\debug</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netcoreapp3.1|x64'">
+    <OutputPath>..\bin\release</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+  </PropertyGroup>
+  <ItemGroup>
+    <!--
+    https://github.com/NuGet/Home/issues/3891
+    https://docs.microsoft.com/en-us/nuget/create-packages/creating-a-package-msbuild  
+    https://docs.microsoft.com/en-us/nuget/reference/msbuild-targets
+  -->
+    <!-- 
+  <_PackageFiles Include="$(OutputPath)\$(TargetFrameworks)\CollectSFDataDll.dll">
+    <BuildAction>None</BuildAction>
+    <PackagePath>$(TargetDir)</PackagePath>
+  </_PackageFiles>-->
+    <!--    <ProjectReference Include="..\ClassLibrary2\ClassLibrary2.csproj" PrivateAssets="all" />-->
+    <!--<ProjectReference Include="..\ClassLibrary3\ClassLibrary3.csproj" Condition="'$(TargetFramework)' == 'net47'" PrivateAssets="all" />-->
+  </ItemGroup>
+  <Target Name="CopyProjectReferencesToPackage" DependsOnTargets="ResolveReferences">
+    <ItemGroup>
+      <BuildOutputInPackage Include="@(ReferenceCopyLocalPaths->WithMetadataValue('ReferenceSourceTarget', 'ProjectReference'))" />
+    </ItemGroup>
+  </Target>
+  <PropertyGroup>
+    <IsPackable>true</IsPackable>
+    <PackageVersion>$(AssemblyVersion)</PackageVersion>
+    <PackageId>Microsoft.ServiceFabric.CollectSFData</PackageId>
+    <Title>$(AssemblyName)</Title>
+    <PackageVersion>$(Version)</PackageVersion>
+    <Authors>Microsoft</Authors>
+    <PackageDescription></PackageDescription>
+    <Description>.net framework utility to manage service fabric support logs.</Description>
+    <Copyright>© Microsoft Corporation. All rights reserved.</Copyright>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageIcon>images\FabricSupport.png</PackageIcon>
+    <PackageIconUrl>http://raw.githubusercontent.com/microsoft/CollectServiceFabricData/master/CollectSFData/FabricSupport.ico</PackageIconUrl>
+    <PackageReleaseNotes></PackageReleaseNotes>
+    <PackageTags>servicefabric</PackageTags>
+    <!--<NuspecFile>./CollectSFData.nuspec</NuspecFile>-->
+    <RepositoryUrl>https://github.com/microsoft/CollectServiceFabricData</RepositoryUrl>
+    <IncludeBuildOutput>true</IncludeBuildOutput>
   </PropertyGroup>
   <ItemGroup>
     <None Include="App.config" />
+    <None Include="..\FabricSupport.png" Pack="true" PackagePath="images" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CollectSFDataDll\CollectSFDataDll.csproj">
+      <PrivateAssets>all</PrivateAssets>
       <Project>{e9639942-3161-4093-aa72-c462c8048e68}</Project>
       <Name>CollectSFDataDll</Name>
     </ProjectReference>
   </ItemGroup>
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="echo Output written to $(TargetDir)" />
+    <Exec Command="copy ..\configurationFiles\collectsfdata.options.json $(TargetDir)" />
+    <!--<Exec Command="copy bin\Release\$(TargetFramework)\*.dll $(TargetDir)" />-->
+  </Target>
 </Project>
