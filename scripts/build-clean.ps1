@@ -1,7 +1,9 @@
 $error.clear()
 $ErrorActionPreference = 'continue'
-$currentLocation = (get-location).Path
+$currentLocation =(get-location).Path
+$currentLocation
 
+write-host $PSScriptRoot
 Set-Location ..\$PSScriptRoot
 
 rd .\bin -re -fo
