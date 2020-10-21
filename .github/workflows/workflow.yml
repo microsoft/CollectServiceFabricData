@@ -34,12 +34,13 @@ jobs:
 
       - name: dotnet restore
         shell: cmd
-        run: dotnet.exe restore %project_name%.sln -v detailed
+        run: dotnet restore %project_name%.sln -v detailed
 
       - name: dotnet build / pack
         shell: cmd
         run: |
           set
+          dotnet restore %project_name%\%project_name%.csproj -v detailed
           dotnet build %project_name%\%project_name%.csproj -v detailed -o %artifacts_path% -c Release
           dir
 
