@@ -30,19 +30,15 @@ jobs:
         shell: cmd
         run: set
 
-      - name: nuget download
+      - name: dotnet restore
         shell: cmd
-        run: curl https://dist.nuget.org/win-x86-commandline/latest/nuget.exe --output nuget.exe
+        run: dotnet.exe restore -v detailed
 
-      - name: nuget restore
-        shell: cmd
-        run: nuget.exe restore -Verbosity Detailed -NonInteractive -DirectDownload
-
-      - name: nuget build / pack
+      - name: dotnet build / pack
         shell: cmd
         run: |
           set
-          nuget.exe pack %project_name%\%project_name%.csproj -Verbosity Detailed -outputdirectory %artifacts_path% -NonInteractive -Build -Properties Configuration=Release
+          dotnet build %project_name%\%project_name%.csproj -v detailed -o %artifacts_path% -c Release
           dir
 
       - name: build output
@@ -94,30 +90,6 @@ jobs:
       - name: release output
         shell: cmd
         run: dir %release_path% /s
-
-      - name: set nuget package
-        shell: powershell
-        id: set_nuget_package
-        run: |
-          $nugetPackage = (get-item "$($env:release_path)\*.nupkg").FullName
-          $nugetPackageName = (get-item "$($env:release_path)\*.nupkg").Name
-          echo "::set-output name=nuget_package::$nugetPackage"
-          echo "::set-output name=nuget_package_name::$nugetPackageName"
-
-      - name: nuget push
-        shell: cmd
-        run: |
-          echo #not working needs codesign
-          echo nuget.exe push ${{ steps.set_nuget_package.outputs.nuget_package }} %nuget_api_key% -Verbosity Detailed -Source https://api.nuget.org/v3/index.json -SkipDuplicate -NonInteractive
-          echo # working in fork, GPR blocked on upstream 
-          echo nuget.exe sources add -Name 'GPR' -Verbosity Detailed -Source https://nuget.pkg.github.com/%github_owner%/index.json -NonInteractive -UserName %GITHUB_ACTOR% -Password %GITHUB_TOKEN%
-          echo nuget.exe setapikey %nuget_api_key% -Source 'GPR' -Verbosity Detailed -NonInteractive
-          echo nuget.exe push %artifacts_path%\*.nupkg -Verbosity Detailed -Source 'GPR' -SkipDuplicate -NonInteractive -apikey %nuget_api_key%
-
-        env:
-          nuget_api_key: ${{ secrets.ACTIONS_NUGET_PUSH_API_KEY }}
-          nuget_token: ${{ secrets.ACTIONS_NUGET_PUSH_TOKEN }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: prepare release asset
         shell: powershell
