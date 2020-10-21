@@ -1,8 +1,8 @@
 name: CI CollectSFData
 
 env:
-  artifacts_path: bin\x64\artifacts
-  release_path: bin\x64\release
+  artifacts_path: bin\artifacts
+  release_path: bin\release
   release_config: configurationFiles\collectsfdata.options.json
   project_name: CollectSFData
   github_owner: ${{ github.event.repository.owner.name }}
@@ -28,7 +28,9 @@ jobs:
 
       - name: environment
         shell: cmd
-        run: set
+        run: |
+          set
+          dotnet --info
 
       - name: dotnet restore
         shell: cmd
