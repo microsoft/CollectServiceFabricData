@@ -32,7 +32,7 @@ jobs:
 
       - name: dotnet restore
         shell: cmd
-        run: dotnet.exe restore -v detailed
+        run: dotnet.exe restore %project_name%.csproj -v detailed
 
       - name: dotnet build / pack
         shell: cmd
