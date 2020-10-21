@@ -32,7 +32,7 @@ jobs:
 
       - name: dotnet restore
         shell: cmd
-        run: dotnet.exe restore %project_name%.csproj -v detailed
+        run: dotnet.exe restore %project_name%.sln -v detailed
 
       - name: dotnet build / pack
         shell: cmd
@@ -139,4 +139,3 @@ jobs:
           asset_path: ${{ steps.set_nuget_package.outputs.nuget_package }}
           asset_name: ${{ steps.set_nuget_package.outputs.nuget_package_name }}
           asset_content_type: application/zip
-
