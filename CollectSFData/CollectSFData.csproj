@@ -22,16 +22,11 @@
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <Deterministic>false</Deterministic>
+    <OutputPath>..\bin\$(Configuration)</OutputPath>
   </PropertyGroup>
   <PropertyGroup>
     <StartupObject>CollectSFDataExe.Program</StartupObject>
     <ApplicationIcon>..\FabricSupport.ico</ApplicationIcon>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netcoreapp3.1|x64'">
-    <OutputPath>..\bin\debug</OutputPath>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netcoreapp3.1|x64'">
-    <OutputPath>..\bin\release</OutputPath>
   </PropertyGroup>
   <PropertyGroup>
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
