@@ -11,5 +11,5 @@
             @'SourceNode: ' sourceNode
             @'TargetNode: ' targetNode
             @'MoveCost: ' moveCost
-        | project Timestamp,Level, phase, action, service, decisionId, partitionId, sourceNode, targetNode, moveCost
+        | project Timestamp,Level, phase, action, service=trim("\\s+", tostring(service)), decisionId, partitionId, sourceNode, targetNode, moveCost
     }
