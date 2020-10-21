@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>netcoreapp3.1;net472</TargetFrameworks>
-    <Platforms>AnyCPU;x64</Platforms>
+    <Platforms>x64</Platforms>
     <OutputType>Library</OutputType>
     <RestorePackagesWithLockFile>false</RestorePackagesWithLockFile>
     <Deterministic>false</Deterministic>
