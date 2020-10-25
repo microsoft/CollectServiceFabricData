@@ -2,7 +2,7 @@ name: CI CollectSFData
 
 env:
   artifacts_path: bin\artifacts
-  release_path: bin\release
+  release_path: obj\release
   release_config: configurationFiles\collectsfdata.options.json
   project_name: CollectSFData
   github_owner: ${{ github.event.repository.owner.name }}
@@ -40,7 +40,7 @@ jobs:
         shell: cmd
         run: |
           set
-          dotnet build %project_name%\%project_name%.csproj -v detailed -o %artifacts_path% -c Release
+          dotnet build %project_name%\%project_name%.csproj -v detailed -c Release
           dir
 
       - name: build output
@@ -50,15 +50,17 @@ jobs:
           dir /s
 
       - name: copy artifacts
-        shell: cmd
+        shell: powershell
         run: |
-          set
+          [environment]::GetEnvironmentVariables()
           dir
-          copy %release_path%\*.config %artifacts_path%
-          copy %release_path%\*.exe %artifacts_path%
-          copy %release_path%\*.dll %artifacts_path%
-          copy %release_path%\*.pdb %artifacts_path%
-          copy %release_config% %artifacts_path%
+          copy %release_path%\*.config %artifacts_path% -recurse
+          copy %release_path%\*.exe %artifacts_path% -recurse
+          copy %release_path%\*.dll %artifacts_path% -recurse
+          copy %release_path%\*.pdb %artifacts_path% -recurse
+          copy %release_path%\*.json %artifacts_path% -recurse
+          copy %release_path%\*.nupkg %artifacts_path% -recurse
+          copy %release_config% %artifacts_path% -recurse
 
       - name: artifacts output
         shell: cmd
