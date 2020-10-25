@@ -54,13 +54,8 @@ jobs:
         run: |
           [environment]::GetEnvironmentVariables()
           dir
-          copy %release_path%\*.config %artifacts_path% -recurse
-          copy %release_path%\*.exe %artifacts_path% -recurse
-          copy %release_path%\*.dll %artifacts_path% -recurse
-          copy %release_path%\*.pdb %artifacts_path% -recurse
-          copy %release_path%\*.json %artifacts_path% -recurse
-          copy %release_path%\*.nupkg %artifacts_path% -recurse
-          copy %release_config% %artifacts_path% -recurse
+          copy $env:release_path\* $env:artifacts_path -recurse
+          copy $env:release_config $env:artifacts_path -recurse
 
       - name: artifacts output
         shell: cmd
