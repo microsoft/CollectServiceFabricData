@@ -92,6 +92,14 @@ jobs:
         shell: cmd
         run: dir %release_path% /s
 
+      - name: set nuget package
+        shell: powershell
+        run: |
+          $nugetPackage = (get-item "$($env:release_path)\*.nupkg").FullName
+          $nugetPackageName = (get-item "$($env:release_path)\*.nupkg").Name
+          echo "::set-output name=nuget_package::$nugetPackage"
+          echo "::set-output name=nuget_package_name::$nugetPackageName"
+        
       - name: prepare release asset
         shell: powershell
         id: prepare_release_asset
