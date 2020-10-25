@@ -55,7 +55,7 @@ jobs:
           [environment]::GetEnvironmentVariables()
           $errorActionPreference = 'continue'
           dir
-          copy "$($env:release_path)\*" "$($env:artifacts_path)" -recurse -force
+          copy "$($env:release_path)" "$($env:artifacts_path)" -recurse -force
           copy "$($env:release_config)" "$($env:artifacts_path)" -recurse -force
 
       - name: artifacts output
