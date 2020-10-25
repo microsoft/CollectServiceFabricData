@@ -2,9 +2,9 @@ name: CI CollectSFData
 
 env:
   project_name: CollectSFData
-  artifacts_path: bin\artifacts
-  release_path: CollectSFData\obj\Release
-  release_config: configurationFiles\collectsfdata.options.json
+  artifacts_path: .\bin\artifacts
+  release_path: .\CollectSFData\obj\Release
+  release_config: .\configurationFiles\collectsfdata.options.json
   github_owner: ${{ github.event.repository.owner.name }}
 
 on:
@@ -54,12 +54,12 @@ jobs:
         run: |
           [environment]::GetEnvironmentVariables()
           dir
-          copy $env:release_path\* $env:artifacts_path -recurse
-          copy $env:release_config $env:artifacts_path -recurse
+          copy "$($env:release_path)\*" "$($env:artifacts_path)" -recurse
+          copy "$($env:release_config)" "$($env:artifacts_path)" -recurse
 
       - name: artifacts output
-        shell: cmd
-        run: dir %artifacts_path% /s
+        shell: powershell
+        run: dir "$($env:artifacts_path)" -recurse
 
       - name: upload artifacts
         uses: actions/upload-artifact@v1
@@ -86,8 +86,8 @@ jobs:
           path: ${{ env.release_path }}
 
       - name: release output
-        shell: cmd
-        run: dir %release_path% /s
+        shell: powershell
+        run: dir "$($env:release_path)" -recurse
 
       - name: set nuget package
         shell: powershell
@@ -133,7 +133,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: .\${{ env.release_path }}\${{ env.project_name }}.zip
+          asset_path: ${{ env.release_path }}\${{ env.project_name }}.zip
           asset_name: ${{ env.project_name }}.zip
           asset_content_type: application/zip
 
