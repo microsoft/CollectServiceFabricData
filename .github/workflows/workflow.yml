@@ -1,10 +1,10 @@
 name: CI CollectSFData
 
 env:
-  artifacts_path: bin\artifacts
-  release_path: obj\release
-  release_config: configurationFiles\collectsfdata.options.json
   project_name: CollectSFData
+  artifacts_path: bin\artifacts
+  release_path: ${{ env.project_name }}\obj\Release
+  release_config: configurationFiles\collectsfdata.options.json
   github_owner: ${{ github.event.repository.owner.name }}
 
 on:
@@ -103,11 +103,11 @@ jobs:
         id: prepare_release_asset
         run: |
           md "$($env:release_path)_upload"
-          copy "$($env:release_path)\*.config" "$($env:release_path)_upload"
-          copy "$($env:release_path)\*.exe" "$($env:release_path)_upload"
-          copy "$($env:release_path)\*.dll" "$($env:release_path)_upload"
-          copy "$($env:release_path)\*.json" "$($env:release_path)_upload"
-          copy "$($env:release_path)\*.pdb" "$($env:release_path)_upload"
+          $releaseFramework = "$($env:release_path)\net472"
+          copy "$($releaseFramework)\*.config" "$($env:release_path)_upload"
+          copy "$($releaseFramework)\*.exe" "$($env:release_path)_upload"
+          copy "$($releaseFramework)\*.dll" "$($env:release_path)_upload"
+          copy "$($releaseFramework)\*.json" "$($env:release_path)_upload"
           compress-archive -path "$($env:release_path)_upload\*" -destinationPath "$($env:release_path)\$($env:project_name).zip" -force
           $fileVersion = [io.fileinfo]::new("$($env:release_path)\$($env:project_name).exe").VersionInfo.FileVersion
           echo "::log-command parameter1=$fileVersion::fileVersion"
