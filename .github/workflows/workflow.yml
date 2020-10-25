@@ -94,6 +94,7 @@ jobs:
 
       - name: set nuget package
         shell: powershell
+        id: set_nuget_package
         run: |
           $nugetPackage = (get-item "$($env:release_path)\*.nupkg").FullName
           $nugetPackageName = (get-item "$($env:release_path)\*.nupkg").Name
