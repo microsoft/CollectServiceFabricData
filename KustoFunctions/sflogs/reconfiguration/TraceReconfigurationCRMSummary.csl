@@ -2,6 +2,6 @@
     TraceReconfigurationCRMSummary (T:string) {
         TraceReconfigurationCRM(T)
         | order by phase asc 
-        | summarize count() by trim("\\s", tostring(phase))
+        | summarize count() by trim("\\s+", tostring(phase))
         | order by count_ desc
     }
