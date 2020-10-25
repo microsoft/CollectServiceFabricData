@@ -15,7 +15,7 @@
     <GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
     <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <VersionSuffix>2.7.$([System.DateTime]::UtcNow.ToString(yyMMdd)).$([System.DateTime]::UtcNow.ToString(HHmmss))</VersionSuffix>
+    <VersionSuffix>2.7.$([System.DateTime]::UtcNow.ToString(yyMM)).$([System.DateTime]::UtcNow.ToString(ddHHmmss))</VersionSuffix>
     <AssemblyVersion Condition=" '$(VersionSuffix)' != '' ">$(VersionSuffix)</AssemblyVersion>
     <Version Condition=" '$(VersionSuffix)' != '' ">$(VersionSuffix)</Version>
     <FileVersion>$(Version)</FileVersion>
