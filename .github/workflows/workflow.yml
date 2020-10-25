@@ -3,7 +3,7 @@ name: CI CollectSFData
 env:
   project_name: CollectSFData
   artifacts_path: .\bin\artifacts
-  release_path: .\CollectSFData\obj\Release
+  release_path: .\CollectSFData\bin\Release
   release_config: .\configurationFiles\collectsfdata.options.json
   github_owner: ${{ github.event.repository.owner.name }}
 
@@ -53,9 +53,10 @@ jobs:
         shell: powershell
         run: |
           [environment]::GetEnvironmentVariables()
+          $errorActionPreference = 'continue'
           dir
-          copy "$($env:release_path)\*" "$($env:artifacts_path)" -recurse
-          copy "$($env:release_config)" "$($env:artifacts_path)" -recurse
+          copy "$($env:release_path)\*" "$($env:artifacts_path)" -recurse -force
+          copy "$($env:release_config)" "$($env:artifacts_path)" -recurse -force
 
       - name: artifacts output
         shell: powershell
