@@ -3,7 +3,7 @@ name: CI CollectSFData
 env:
   project_name: CollectSFData
   artifacts_path: bin\artifacts
-  release_path: ${{ env.project_name }}\obj\Release
+  release_path: CollectSFData\obj\Release
   release_config: configurationFiles\collectsfdata.options.json
   github_owner: ${{ github.event.repository.owner.name }}
 
