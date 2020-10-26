@@ -2,6 +2,7 @@
   <PropertyGroup>
     <TargetFrameworks>netcoreapp3.1;net472</TargetFrameworks>
     <Platforms>x64</Platforms>
+    <RuntimeIdentifiers>win-x64;ubuntu.18.04-x64</RuntimeIdentifiers>
     <OutputType>Library</OutputType>
     <RestorePackagesWithLockFile>false</RestorePackagesWithLockFile>
     <Deterministic>false</Deterministic>
