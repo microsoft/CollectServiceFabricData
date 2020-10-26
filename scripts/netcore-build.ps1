@@ -15,3 +15,8 @@ dotnet run -- -h
 dotnet publish .\CollectSFData.csproj -r win-x64 -c Release --no-dependencies -p:PublishedTrimmed=true
 
 dotnet publish .\CollectSFData\CollectSFData.csproj -f netcoreapp3.1 -r win-x64 -c Release --self-contained $true -p:PublishSingleFile=true -p:PublishedTrimmed=false
+
+
+dotnet store --manifest .\CollectSFData\CollectSFData.csproj --runtime win10-x64 --framework netcoreapp3.1 --skip-optimization
+
+dotnet publish .\CollectSFData\CollectSFData.csproj --manifest C:\Users\jagilber\.dotnet\store\x64\netcoreapp3.1\artifact.xml -f netcoreapp3.1 -r win-x64 -c Release --self-contained $true -p:PublishSingleFile=true -p:PublishedTrimmed=false --force 
