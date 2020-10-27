@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+    <metadata>
+        <id>Microsoft.ServiceFabric.CollectSFData</id>
+        <version>$version$</version>
+        <!--<version>2.7.0</version>-->
+        <title>CollectSFData</title>
+        <authors>Microsoft</authors>
+        <owners></owners>
+        <license type="expression">MIT</license>
+        <projectUrl>https://github.com/microsoft/CollectServiceFabricData</projectUrl>
+        <iconUrl>http://raw.githubusercontent.com/microsoft/CollectServiceFabricData/master/CollectSFData/FabricSupport.ico</iconUrl>
+        <icon>images\FabricSupport.png</icon>
+        <requireLicenseAcceptance>false</requireLicenseAcceptance>
+        <description>.net framework console utility to manage service fabric support logs.</description>
+        <releaseNotes></releaseNotes>
+        <copyright>© Microsoft Corporation. All rights reserved.</copyright>
+        <tags>servicefabric</tags>
+        <dependencies>
+            <group targetFramework=".NETFramework4.7.2" />
+            <group targetFramework=".NETCoreApp3.1" />
+        </dependencies>
+    </metadata>
+    <files>
+        <file src="..\bin\$configuration$\net472\*.exe" target="lib\net472" />
+        <file src="..\bin\$configuration$\net472\*.dll" target="lib\net472" />
+        <file src="..\configurationFiles\collectsfdata.options.json" target="lib\net472" />
+        <file src="..\bin\$configuration$\net472\*.config" target="lib\net472" />
+        <file src="..\bin\$configuration$\netcoreapp3.1\*.exe" target="lib\netcoreapp3.1" />
+        <file src="..\bin\$configuration$\netcoreapp3.1\*.dll" target="lib\netcoreapp3.1" />
+        <file src="..\configurationFiles\collectsfdata.options.json" target="lib\netcoreapp3.1" />
+        <file src="..\bin\$configuration$\netcoreapp3.1\*.config" target="lib\netcoreapp3.1" />
+        <file src="..\FabricSupport.png" target="images\" />
+    </files>
+</package>

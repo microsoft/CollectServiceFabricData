@@ -2,8 +2,8 @@
   <PropertyGroup>
     <TargetFrameworks>netcoreapp3.1;net472</TargetFrameworks>
     <Platforms>x64</Platforms>
+    <RuntimeIdentifiers>win-x64;ubuntu.18.04-x64</RuntimeIdentifiers>
     <PlatformTarget>x64</PlatformTarget>
-    <TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);CopyProjectReferencesToPackage</TargetsForTfmSpecificBuildOutput>
     <ProjectGuid>{E910AD37-507C-480F-BEC5-6E5F2B9A3155}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <RootNamespace>CollectSFData</RootNamespace>
@@ -15,6 +15,7 @@
     <GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
     <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <NoWarn>7035</NoWarn>
     <VersionSuffix>2.7.$([System.DateTime]::UtcNow.ToString(yyMM)).$([System.DateTime]::UtcNow.ToString(ddHHmmss))</VersionSuffix>
     <AssemblyVersion Condition=" '$(VersionSuffix)' != '' ">$(VersionSuffix)</AssemblyVersion>
     <Version Condition=" '$(VersionSuffix)' != '' ">$(VersionSuffix)</Version>
@@ -31,25 +32,6 @@
   <PropertyGroup>
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
   </PropertyGroup>
-  <ItemGroup>
-    <!--
-    https://github.com/NuGet/Home/issues/3891
-    https://docs.microsoft.com/en-us/nuget/create-packages/creating-a-package-msbuild  
-    https://docs.microsoft.com/en-us/nuget/reference/msbuild-targets
-  -->
-    <!-- 
-  <_PackageFiles Include="$(OutputPath)\$(TargetFrameworks)\CollectSFDataDll.dll">
-    <BuildAction>None</BuildAction>
-    <PackagePath>$(TargetDir)</PackagePath>
-  </_PackageFiles>-->
-    <!--    <ProjectReference Include="..\ClassLibrary2\ClassLibrary2.csproj" PrivateAssets="all" />-->
-    <!--<ProjectReference Include="..\ClassLibrary3\ClassLibrary3.csproj" Condition="'$(TargetFramework)' == 'net47'" PrivateAssets="all" />-->
-  </ItemGroup>
-  <Target Name="CopyProjectReferencesToPackage" DependsOnTargets="ResolveReferences">
-    <ItemGroup>
-      <BuildOutputInPackage Include="@(ReferenceCopyLocalPaths->WithMetadataValue('ReferenceSourceTarget', 'ProjectReference'))" />
-    </ItemGroup>
-  </Target>
   <PropertyGroup>
     <IsPackable>true</IsPackable>
     <PackageVersion>$(AssemblyVersion)</PackageVersion>
@@ -66,9 +48,11 @@
     <PackageIconUrl>http://raw.githubusercontent.com/microsoft/CollectServiceFabricData/master/CollectSFData/FabricSupport.ico</PackageIconUrl>
     <PackageReleaseNotes></PackageReleaseNotes>
     <PackageTags>servicefabric</PackageTags>
-    <!--<NuspecFile>./CollectSFData.nuspec</NuspecFile>-->
+    <NuspecProperties>configuration=$(Configuration);version=$(Version)</NuspecProperties>
+    <NuspecFile>./CollectSFData.nuspec</NuspecFile>
     <RepositoryUrl>https://github.com/microsoft/CollectServiceFabricData</RepositoryUrl>
     <IncludeBuildOutput>true</IncludeBuildOutput>
+    <RepositoryType>git</RepositoryType>
   </PropertyGroup>
   <ItemGroup>
     <None Include="App.config" />
@@ -86,4 +70,59 @@
     <Exec Command="copy ..\configurationFiles\collectsfdata.options.json $(TargetDir)" />
     <!--<Exec Command="copy bin\Release\$(TargetFramework)\*.dll $(TargetDir)" />-->
   </Target>
+  <!-- dotnet build will not include ref project references for .netcoreapp3.1 unless references are duplicated here -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Azure.KeyVault">
+      <PrivateAssets>all</PrivateAssets>
+      <Version>3.0.4</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Azure.KeyVault.Core">
+      <PrivateAssets>all</PrivateAssets>
+      <Version>3.0.4</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Azure.Kusto.Data">
+      <PrivateAssets>all</PrivateAssets>
+      <Version>8.0.1</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Azure.Kusto.Ingest">
+      <PrivateAssets>all</PrivateAssets>
+      <Version>8.0.1</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Azure.Storage.Blob">
+      <PrivateAssets>all</PrivateAssets>
+      <Version>11.1.0</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Azure.Storage.Common">
+      <PrivateAssets>all</PrivateAssets>
+      <Version>11.1.0</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Azure.Storage.Queue">
+      <PrivateAssets>all</PrivateAssets>
+      <Version>11.1.0</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.CommandLineUtils">
+      <PrivateAssets>all</PrivateAssets>
+      <Version>1.1.1</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Identity.Client">
+      <PrivateAssets>all</PrivateAssets>
+      <Version>4.19.0</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Identity.Client.Extensions.Msal">
+      <PrivateAssets>all</PrivateAssets>
+      <Version>2.15.0</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Rest.ClientRuntime">
+      <PrivateAssets>all</PrivateAssets>
+      <Version>2.3.20</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Rest.ClientRuntime.Azure">
+      <PrivateAssets>all</PrivateAssets>
+      <Version>3.3.19</Version>
+    </PackageReference>
+    <PackageReference Include="Newtonsoft.Json">
+      <PrivateAssets>all</PrivateAssets>
+      <Version>12.0.2</Version>
+    </PackageReference>
+  </ItemGroup> 
 </Project>
