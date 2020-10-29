@@ -53,7 +53,6 @@ jobs:
         shell: powershell
         run: |
           [environment]::GetEnvironmentVariables()
-          $errorActionPreference = 'continue'
           dir
           copy "$($env:release_path)" "$($env:artifacts_path)" -recurse -force
           copy "$($env:release_config)" "$($env:artifacts_path)" -recurse -force
@@ -110,7 +109,7 @@ jobs:
           copy "$($releaseFramework)\*.dll" "$($env:release_path)_upload"
           copy "$($releaseFramework)\*.json" "$($env:release_path)_upload"
           compress-archive -path "$($env:release_path)_upload\*" -destinationPath "$($env:release_path)\$($env:project_name).zip" -force
-          $fileVersion = [io.fileinfo]::new("$($env:release_path)\$($env:project_name).exe").VersionInfo.FileVersion
+          $fileVersion = [io.fileinfo]::new("$($env:releaseFramework)\$($env:project_name).exe").VersionInfo.FileVersion
           echo "::log-command parameter1=$fileVersion::fileVersion"
           echo "::set-output name=file_version::v$fileVersion"
         env:
