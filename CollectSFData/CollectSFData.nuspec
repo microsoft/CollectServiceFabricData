@@ -23,10 +23,12 @@
     </metadata>
     <files>
         <file src="..\bin\$configuration$\net472\*.exe" target="lib\net472" />
+        <file src="..\bin\$configuration$\net472\*.json" target="lib\net472" />
         <file src="..\bin\$configuration$\net472\*.dll" target="lib\net472" />
         <file src="..\configurationFiles\collectsfdata.options.json" target="lib\net472" />
         <file src="..\bin\$configuration$\net472\*.config" target="lib\net472" />
         <file src="..\bin\$configuration$\netcoreapp3.1\*.exe" target="lib\netcoreapp3.1" />
+        <file src="..\bin\$configuration$\netcoreapp3.1\*.json" target="lib\netcoreapp3.1" />
         <file src="..\bin\$configuration$\netcoreapp3.1\*.dll" target="lib\netcoreapp3.1" />
         <file src="..\configurationFiles\collectsfdata.options.json" target="lib\netcoreapp3.1" />
         <file src="..\bin\$configuration$\netcoreapp3.1\*.config" target="lib\netcoreapp3.1" />
