@@ -68,8 +68,6 @@
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
     <Exec Command="echo Output written to $(TargetDir)" />
     <Exec Command="copy ..\configurationFiles\collectsfdata.options.json $(TargetDir)" />
-    <!-- deps.json causing runtime issues in netcoreapp3.1 due to packageref conflicts MSB3277. removing for now 
-    <Exec Command="del $(TargetDir)\*.deps.json  /f /q" /> -->
   </Target>
   <!-- dotnet build will not include ref project references for .netcoreapp3.1 unless references are duplicated here -->
   <ItemGroup>
@@ -141,5 +139,5 @@
       <PrivateAssets>all</PrivateAssets>
       <Version>4.7.0</Version>
     </PackageReference>
-    </ItemGroup>
-  </Project>
+  </ItemGroup>
+</Project>
