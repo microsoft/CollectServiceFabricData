@@ -67,7 +67,7 @@
   </ItemGroup>
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
     <Exec Command="echo Output written to $(TargetDir)" />
-    <Exec Command="copy ..\configurationFiles\collectsfdata.options.json $(TargetDir)" />
+    <!-- <Exec Command="copy ..\configurationFiles\collectsfdata.options.json $(TargetDir)" /> -->
   </Target>
   <!-- dotnet build will not include ref project references for .netcoreapp3.1 unless references are duplicated here -->
   <ItemGroup>
