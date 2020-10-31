@@ -403,7 +403,7 @@ namespace CollectSFData.Common
                     return true;
                 }
 
-                Log.Info($"see {CodeRepository} for additional information. ");
+                Log.Warning($"review console output above for errors and warnings. refer to {CodeRepository} for additional information.");
                 return false;
             }
             catch (Exception e)
