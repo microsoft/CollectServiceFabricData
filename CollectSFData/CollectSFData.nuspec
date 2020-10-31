@@ -12,7 +12,7 @@
         <iconUrl>http://raw.githubusercontent.com/microsoft/CollectServiceFabricData/master/CollectSFData/FabricSupport.ico</iconUrl>
         <icon>images\FabricSupport.png</icon>
         <requireLicenseAcceptance>false</requireLicenseAcceptance>
-        <description>.net framework console utility to manage service fabric support logs.</description>
+        <description>.net framework / .net core console utility / dll to manage service fabric support logs.</description>
         <releaseNotes></releaseNotes>
         <copyright>© Microsoft Corporation. All rights reserved.</copyright>
         <tags>servicefabric</tags>
