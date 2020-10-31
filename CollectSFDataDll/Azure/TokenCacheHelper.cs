@@ -4,6 +4,7 @@
 // ------------------------------------------------------------
 
 using Microsoft.Identity.Client;
+using System;
 using System.IO;
 using System.Security.Cryptography;
 
@@ -11,8 +12,18 @@ namespace CollectSFData.Azure
 {
     public static class TokenCacheHelper
     {
-        public static readonly string CacheFilePath = System.Reflection.Assembly.GetExecutingAssembly().Location + ".msalcache.bin3";
+        private static string friendlyName = Path.GetFileNameWithoutExtension(AppDomain.CurrentDomain.FriendlyName);
+        private static string appDataFolder = $"{Environment.GetEnvironmentVariable("LOCALAPPDATA")}\\{friendlyName}";
+        public static readonly string CacheFilePath = $"{appDataFolder}\\{friendlyName}.msalcache.bin3";
         private static readonly object FileLock = new object();
+
+        static TokenCacheHelper()
+        {
+            if (!Directory.Exists(appDataFolder))
+            {
+                Directory.CreateDirectory(appDataFolder);
+            }
+        }
 
         public static void AfterAccessNotification(TokenCacheNotificationArgs args)
         {
