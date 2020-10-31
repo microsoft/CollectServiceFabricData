@@ -28,6 +28,12 @@ namespace CollectSFData.Azure
         private Timer _timer;
         private DateTimeOffset _tokenExpirationHalfLife;
         private string _wellKnownClientId = "1950a258-227b-4e31-a9cf-717495945fc2";
+
+        public AzureResourceManager()
+        {
+            Log.Info($"enter: token cache path: {TokenCacheHelper.CacheFilePath}");
+        }
+
         public AuthenticationResult AuthenticationResult { get; private set; }
         public string BearerToken { get; private set; }
         public bool IsAuthenticated { get; private set; }
