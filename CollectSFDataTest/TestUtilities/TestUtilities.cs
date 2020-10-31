@@ -258,16 +258,17 @@ namespace CollectSFDataTests
 
                 SaveTempOptions();
                 //Instance.Config = new ConfigurationOptions();
-                Collector program = new Collector();
-                Assert.IsNotNull(program);
+                Collector collector = new Collector();
+                Assert.IsNotNull(collector);
 
                 StartConsoleRedirection();
                 Log.Info(">>>>Starting test<<<<\r\n", ConfigurationOptions);
                 // cant call with args
                 //
                 // populate default collectsfdata.options.json
-                //int result = program.Execute(TempArgs);
-                int result = program.Collect(new string[] { });
+                int result = collector.Collect(TempArgs);
+                //int result = program.Collect(new string[] { });
+
                 Log.Info(">>>>test result<<<<", result);
                 ProcessOutput output = StopConsoleRedirection();
 
