@@ -403,7 +403,7 @@ namespace CollectSFData.Common
                     return true;
                 }
 
-                Log.Info(_cmdLineArgs.CmdLineApp.GetHelpText());
+                Log.Info($"see {CodeRepository} for additional information. ");
                 return false;
             }
             catch (Exception e)
@@ -659,7 +659,15 @@ namespace CollectSFData.Common
 
                     case JTokenType.Date:
                         // issue with date and datetimeoffset
-                        instanceValue = token.ToObject<DateTimeOffset>();
+                        if (instanceProperty.PropertyType.Equals(typeof(string)))
+                        {
+                            instanceValue = token.Value<string>();
+                        }
+                        else
+                        {
+                            instanceValue = token.ToObject<DateTimeOffset>();
+                        }
+
                         break;
 
                     case JTokenType.Guid:
