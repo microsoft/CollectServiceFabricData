@@ -2,7 +2,7 @@
 using CollectSFData.Common;
 using System;
 
-namespace CollectSFDataExe
+namespace CollectSFData
 {
     internal class Program
     {
