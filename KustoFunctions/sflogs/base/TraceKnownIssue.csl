@@ -114,6 +114,7 @@
         TypeContains(T, "ReplicationQueueWarning", "ReplicationQueueWarning"),
         TypeContains(T, "ReplicationQueueFull", "ReplicationQueueFull"),
         TypeContains(T,"api slow", "api.slow"),
+        TypeAndTextContains(T, "possible cluster / gateway down","InfrastructureService.ClusterCommandProcessor","exception"),
         TextContains(T,"slow progress", "DueToSlowProgress=True"),
         TypeContains(T, "node performance issues lease slow send", "Lease.SlowSendCompletion"),
         TypeContains(T, "node performance issues lease send queue full", "Lease.SendQueueFull"),
