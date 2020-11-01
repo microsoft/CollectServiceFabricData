@@ -112,6 +112,7 @@
         TextContains(T, "disk full", "0x80070070"),
         TypeContains(T, "cluster down", "FMM.FTInBuildQuorumLoss@00000000-0000-0000-0000-000000000001"),
         TypeContains(T, "out of memory", ".OUT_OF_MEMORY"),
+        TypeAndTextContains(T, "possible cluster / gateway down","InfrastructureService.ClusterCommandProcessor","exception"),
         TextContains(T, "stuck replica", "is stuck"),
         TypeContains(T, "ReplicationQueueWarning", "ReplicationQueueWarning"),
         TypeContains(T, "ReplicationQueueFull", "ReplicationQueueFull"),
