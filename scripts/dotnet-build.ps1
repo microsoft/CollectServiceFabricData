@@ -10,7 +10,8 @@ param(
     $configuration = 'release',
     [ValidateSet('win-x64', 'ubuntu.18.04-x64')]
     $runtimeIdentifier = 'win-x64',
-    [switch]$publish
+    [switch]$publish,
+    [switch]$clean
 )
 
 $ErrorActionPreference = 'continue'
@@ -23,6 +24,10 @@ $frameworksPattern = "\<TargetFrameworks\>(.+?)\</TargetFrameworks\>"
 $ignoreCase = [text.regularExpressions.regexOptions]::IgnoreCase
 
 function main() {
+
+    if ($clean) {
+        . "$psscriptroot\clean-build.ps1"
+    }
 
     $csproj = create-tempProject -projectFile $csproj
     $dllcsproj = create-tempProject -projectFile $dllcsproj
@@ -48,14 +53,14 @@ function main() {
 }
 
 function create-tempProject($projectFile) {
-    $projContent = Get-Content -raw $csproj
+    $projContent = Get-Content -raw $projectFile
 
     if (!([regex]::IsMatch($projContent, $targetFramework, $ignoreCase))) {
         $currentFrameworks = [regex]::Match($projContent, $frameworksPattern, $ignoreCase).Groups[1].Value
         write-host "current frameworks: $currentFrameworks" -ForegroundColor Green
         write-host "copying and adding target framework to csproj $targetFramework" -ForegroundColor Green
         $projContent = [regex]::Replace($projContent, $currentFrameworks, "$currentFrameworks;$targetFramework", $ignoreCase)
-        $tempProject = $csproj.Replace(".csproj", ".$targetFramework.csproj")
+        $tempProject = $projectFile.Replace(".csproj", ".$targetFramework.csproj")
         write-host "saving to $tempProject" -ForegroundColor Green
         $projContent | out-file $tempProject
         [void]$global:tempFiles.add($tempProject)
