@@ -1,28 +1,20 @@
 $error.clear()
 $ErrorActionPreference = 'continue'
-$currentLocation =(get-location).Path
-$currentLocation
+$projectDir = resolve-path "$psscriptroot\.."
+$projectDirs = @("$projectDir", "$projectDir\CollectSFData", "$projectDir\CollectSFDataDll", "$projectDir\CollectSFDataTest")
 
-write-host $PSScriptRoot
-Set-Location $PSScriptRoot\..
+write-host "project dir: $projectDir" -ForegroundColor Green
 
-rd .\bin -re -fo
-rd .\obj -re -fo
+foreach ($dir in $projectDirs) {
+    write-host "checking $dir" -ForegroundColor Green
 
+    if ((test-path "$dir\bin")) {
+        write-warning "removing $dir\bin"
+        rd "$dir\bin" -re -fo
+    }
 
-cd .\CollectSFData
-rd .\bin -re -fo
-rd .\obj -re -fo
-cd ..
-
-cd .\CollectSFDataDll
-rd .\bin -re -fo
-rd .\obj -re -fo
-cd ..
-
-cd .\CollectSFDataTest
-rd .\bin -re -fo
-rd .\obj -re -fo
-cd ..
-
-set-location $currentLocation
+    if ((test-path "$dir\obj")) {
+        write-warning "removing $dir\obj"
+        rd "$dir\obj" -re -fo
+    }
+}
