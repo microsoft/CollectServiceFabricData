@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace CollectSFData.Azure
 {
@@ -87,9 +88,13 @@ namespace CollectSFData.Azure
                         Scopes = _defaultScope;
                     }
 
-                    foreach (string scope in Scopes)
+                    if (Environment.OSVersion.Platform.Equals(PlatformID.Win32NT))
                     {
                         TokenCacheHelper.EnableSerialization(_confidentialClientApp.AppTokenCache);
+                    }
+
+                    foreach (string scope in Scopes)
+                    {
                         AuthenticationResult = _confidentialClientApp
                             .AcquireTokenForClient(new List<string>() { scope })
                             .ExecuteAsync().Result;
@@ -105,7 +110,11 @@ namespace CollectSFData.Azure
                         .WithDefaultRedirectUri()
                         .Build();
 
-                    TokenCacheHelper.EnableSerialization(_publicClientApp.UserTokenCache);
+                    if (Environment.OSVersion.Platform.Equals(PlatformID.Win32NT))
+                    {
+                        TokenCacheHelper.EnableSerialization(_publicClientApp.UserTokenCache);
+                    }
+
                     AuthenticationResult = _publicClientApp
                         .AcquireTokenSilent(_defaultScope, _publicClientApp.GetAccountsAsync().Result.FirstOrDefault())
                         .ExecuteAsync().Result;
@@ -132,12 +141,14 @@ namespace CollectSFData.Azure
 
                 return true;
             }
-            catch (MsalUiRequiredException)
+            catch (MsalClientException)
             {
+                Log.Warning("MsalClientException");
+
                 if (!Config.IsClientIdConfigured())
                 {
                     AuthenticationResult = _publicClientApp
-                    .AcquireTokenInteractive(_defaultScope)
+                    .AcquireTokenWithDeviceCode(_defaultScope, MsalDeviceCodeCallback)
                     .ExecuteAsync().Result;
                     return Authenticate(throwOnError, resource, true);
                 }
@@ -150,11 +161,68 @@ namespace CollectSFData.Azure
                 IsAuthenticated = false;
                 return false;
             }
+
+            catch (MsalUiRequiredException)
+            {
+                Log.Warning("MsalUiRequiredException");
+
+                if (!Config.IsClientIdConfigured())
+                {
+                    try
+                    {
+                        AuthenticationResult = _publicClientApp
+                        .AcquireTokenInteractive(_defaultScope)
+                        .ExecuteAsync().Result;
+                        return Authenticate(throwOnError, resource, true);
+                    }
+                    catch (AggregateException ae)
+                    {
+                        Log.Warning($"AggregateException");
+                        Log.Exception($"AggregateException:{ae}");
+
+                        if (ae.GetBaseException() is MsalClientException)
+                        {
+                            AuthenticationResult = _publicClientApp
+                            .AcquireTokenWithDeviceCode(_defaultScope, MsalDeviceCodeCallback)
+                            .ExecuteAsync().Result;
+                            return Authenticate(throwOnError, resource, true);
+                        }
+                    }
+                }
+
+                if (throwOnError)
+                {
+                    throw;
+                }
+
+                IsAuthenticated = false;
+                return false;
+            }
             catch (AggregateException ae)
             {
-                Log.Exception($"aggregate exception:{ae}");
+                Log.Warning($"AggregateException");
 
-                if (ae.GetBaseException() is MsalException)
+                Log.Exception($"AggregateException:{ae}");
+
+                if (ae.GetBaseException() is MsalClientException)
+                {
+                    if (!Config.IsClientIdConfigured())
+                    {
+                        AuthenticationResult = _publicClientApp
+                        .AcquireTokenWithDeviceCode(_defaultScope, MsalDeviceCodeCallback)
+                        .ExecuteAsync().Result;
+                        return Authenticate(throwOnError, resource, true);
+                    }
+
+                    if (throwOnError)
+                    {
+                        throw;
+                    }
+
+                    IsAuthenticated = false;
+                    return false;
+                }
+                else if (ae.GetBaseException() is MsalException)
                 {
                     MsalException me = ae.GetBaseException() as MsalException;
                     Log.Exception($"msal exception:{me}");
@@ -218,7 +286,8 @@ namespace CollectSFData.Azure
         {
             if (!containsPII | (containsPII & Config.LogDebug))
             {
-                Log.Info($"{level} {message}");
+                string formattedMessage = message.Replace(" [", "\r\n [");
+                Log.Info($"{level} {formattedMessage}");
             }
         }
 
@@ -289,6 +358,12 @@ namespace CollectSFData.Azure
             method = method ?? _httpClient.Method;
             _httpClient.SendRequest(uri: uri, authToken: BearerToken, jsonBody: body, httpMethod: method);
             return _httpClient;
+        }
+
+        private Task MsalDeviceCodeCallback(DeviceCodeResult arg)
+        {
+            Log.Highlight($"device code info:", arg);
+            return Task.FromResult(0);
         }
     }
 }
