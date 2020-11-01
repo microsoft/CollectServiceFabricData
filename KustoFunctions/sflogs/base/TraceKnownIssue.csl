@@ -110,11 +110,13 @@
         // use Any* only when needed
         TextContains(T, "out of disk space", "does not have enough disk space to operate"),
         TextContains(T, "disk full", "0x80070070"),
+        TypeContains(T, "cluster down", "FMM.FTInBuildQuorumLoss@00000000-0000-0000-0000-000000000001"),
+        TypeContains(T, "out of memory", ".OUT_OF_MEMORY"),
+        TypeAndTextContains(T, "possible cluster / gateway down","InfrastructureService.ClusterCommandProcessor","exception"),
         TextContains(T, "stuck replica", "is stuck"),
         TypeContains(T, "ReplicationQueueWarning", "ReplicationQueueWarning"),
         TypeContains(T, "ReplicationQueueFull", "ReplicationQueueFull"),
         TypeContains(T,"api slow", "api.slow"),
-        TypeAndTextContains(T, "possible cluster / gateway down","InfrastructureService.ClusterCommandProcessor","exception"),
         TextContains(T,"slow progress", "DueToSlowProgress=True"),
         TypeContains(T, "node performance issues lease slow send", "Lease.SlowSendCompletion"),
         TypeContains(T, "node performance issues lease send queue full", "Lease.SendQueueFull"),
@@ -155,6 +157,5 @@
         TypeAndTextMatches(T, "patch orchestration has active repair tasks", "POA-CoordinatorService.VerboseMessage", "Total [1-9][0-9]* repair tasks were found for POS"),
         TypeAndTextContains(T, "lease join issue", "Join.Establish", "Restarting as lease establish with"),
         TypeAndTextContains(T, "sfrp cert issue / common cert link", "InfrastructureService.WrpStreamChannel", "The underlying connection was closed: Could not establish trust relationship"),
-        TypeAndTextContains(T, "cert issue", "InfrastructureService.ClusterCommandProcessor", "CreateOperationStatusAsync: Exception encountered: System.Fabric.FabricServerAuthenticationFailedException"),
-        TypeContains(T, "cluster down", "FMM.FTInBuildQuorumLoss@00000000-0000-0000-0000-000000000001")
+        TypeAndTextContains(T, "cert issue", "InfrastructureService.ClusterCommandProcessor", "CreateOperationStatusAsync: Exception encountered: System.Fabric.FabricServerAuthenticationFailedException")
     }
