@@ -236,7 +236,7 @@ namespace CollectSFData.Kusto
             }
         }
 
-        private List<string> Command(string command)
+        public List<string> Command(string command)
         {
             Log.Info($"command:{command}", ConsoleColor.Blue);
             if (_kustoAdminClient == null)
