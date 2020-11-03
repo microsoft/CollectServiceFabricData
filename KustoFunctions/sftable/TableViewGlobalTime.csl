@@ -2,7 +2,6 @@
     TableViewGlobalTime(T:string) {
         TableViewTask(T,'FabricNode')
         | where RelativeUri endswith 'time'
-        | project-away EventVersion, dca_version
         | project-reorder Timestamp, localTime, epoch, lowerBound, upperBound, TaskName, PartitionKey, RowKey, * asc
         | order by Timestamp asc
     }
