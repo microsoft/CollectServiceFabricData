@@ -327,7 +327,7 @@ namespace CollectSFData.Common
         {
             try
             {
-                _tempPath = FileManager.NormalizePath(Path.GetTempPath().TrimEnd(Path.DirectorySeparatorChar));
+                _tempPath = FileManager.NormalizePath(Path.GetTempPath() + _workDir);
 
                 if (options != null)
                 {
@@ -446,7 +446,7 @@ namespace CollectSFData.Common
 
             if (!IsCacheLocationPreConfigured())
             {
-                options.Remove("CacheLocation");
+                options.Property("CacheLocation").Value = null;
             }
 
             Log.Info($"options results:", options);
@@ -474,8 +474,8 @@ namespace CollectSFData.Common
                 & SasEndpointInfo.IsPopulated())
             {
                 // add working dir to outputlocation so it can be deleted
-                string workDirPath = $"{CacheLocation}{Path.DirectorySeparatorChar}{_workDir}";
-                Log.Warning($"outputlocation not empty and DeleteCache is enabled, creating csfd work subdir {workDirPath}");
+                string workDirPath = $"{CacheLocation}{Path.DirectorySeparatorChar}{Path.GetFileName(Path.GetTempFileName())}";
+                Log.Warning($"outputlocation not empty and DeleteCache is enabled, creating work subdir {workDirPath}");
 
                 if (!Directory.Exists(workDirPath))
                 {
