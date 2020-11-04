@@ -218,6 +218,7 @@ namespace CollectSFData.DataFile
         private IList<CsvCounterRecord> ExtractPerfCsvData(FileObject fileObject)
         {
             List<CsvCounterRecord> csvRecords = new List<CsvCounterRecord>();
+            string counterPattern = @"\\\\.+?\\(?<object>.+?)(?<instance>\(.*?\)){0,1}\\(?<counter>.+)";
 
             try
             {
@@ -234,6 +235,7 @@ namespace CollectSFData.DataFile
                         if (counterValues.Length > headerIndex)
                         {
                             string stringValue = counterValues[headerIndex].Trim('"').Trim(' ');
+                            Match counterInfo = Regex.Match(headers[headerIndex], counterPattern);
 
                             if (!string.IsNullOrEmpty(stringValue))
                             {
@@ -244,6 +246,9 @@ namespace CollectSFData.DataFile
                                         Timestamp = Convert.ToDateTime(counterValues[0].Trim('"').Trim(' ')),
                                         CounterName = headers[headerIndex],
                                         CounterValue = Decimal.Parse(stringValue, NumberStyles.AllowExponent | NumberStyles.AllowDecimalPoint),
+                                        Object = counterInfo.Groups["object"].Value,
+                                        Counter = counterInfo.Groups["counter"].Value,
+                                        Instance = counterInfo.Groups["instance"].Value,
                                         NodeName = fileObject.NodeName,
                                         FileType = fileObject.FileDataType.ToString(),
                                         RelativeUri = fileObject.RelativeUri

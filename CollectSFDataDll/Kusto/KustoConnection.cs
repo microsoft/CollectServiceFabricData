@@ -68,20 +68,6 @@ namespace CollectSFData.Kusto
                 _monitorTask.Dispose();
                 IngestResourceIdKustoTableMapping();
 
-                if (Config.FileType == FileTypesEnum.counter)
-                {
-                    List<string> result = Endpoint.Command($".set-or-replace async {Config.KustoTable} with (extend_schema=true) <| "
-                        + $"let T = '{Config.KustoTable}';"
-                        + @"let counterPattern = @'\\\\.+?\\(?P<object>.+?)(?P<instance>\(.*?\)){0,1}\\(?P<counter>.+)';"
-                        + "table(T)"
-                        + "| extend counterInfo = extract_all(counterPattern, dynamic(['object','counter','instance']), CounterName)"
-                        + "| extend object = tostring(counterInfo[0][0])"
-                        + "| extend counter = tostring(counterInfo[0][1])"
-                        + @"| extend instance = trim(@'^\(|\)$', tostring(counterInfo[0][2]))"
-                        + "| project-away counterInfo");
-                    Log.Info("counter append async object id:", result);
-                }
-
                 if (_failureCount > 0)
                 {
                     TotalErrors += _failureCount;
