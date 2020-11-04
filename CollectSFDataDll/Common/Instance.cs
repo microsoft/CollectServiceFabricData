@@ -14,6 +14,7 @@ namespace CollectSFData.Common
         public static long DiscoveredMaxDateTicks = DateTime.MinValue.Ticks;
         public static long DiscoveredMinDateTicks = DateTime.MaxValue.Ticks;
         public static FileManager FileMgr = new FileManager();
+        public static bool IsWindows = Environment.OSVersion.Platform.Equals(PlatformID.Win32NT);
         public static DateTime StartTime = DateTime.Now;
         public static int TotalErrors = 0;
         public static int TotalFilesConverted = 0;
