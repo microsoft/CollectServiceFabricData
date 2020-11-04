@@ -19,32 +19,44 @@ namespace CollectSFData.Azure
 
         static TokenCacheHelper()
         {
-            if (!Directory.Exists(appDataFolder))
+            try
             {
-                Directory.CreateDirectory(appDataFolder);
+                if (!Directory.Exists(appDataFolder))
+                {
+                    Directory.CreateDirectory(appDataFolder);
+                }
             }
+            catch { /* todo implement */ }
         }
 
         public static void AfterAccessNotification(TokenCacheNotificationArgs args)
         {
-            if (args.HasStateChanged)
+            try
             {
-                lock (FileLock)
+                if (args.HasStateChanged)
                 {
-                    File.WriteAllBytes(CacheFilePath,
-                        ProtectedData.Protect(args.TokenCache.SerializeMsalV3(), null, DataProtectionScope.CurrentUser));
+                    lock (FileLock)
+                    {
+                        File.WriteAllBytes(CacheFilePath,
+                            ProtectedData.Protect(args.TokenCache.SerializeMsalV3(), null, DataProtectionScope.CurrentUser));
+                    }
                 }
             }
+            catch { /* todo implement */ }
         }
 
         public static void BeforeAccessNotification(TokenCacheNotificationArgs args)
         {
-            lock (FileLock)
+            try
             {
-                args.TokenCache.DeserializeMsalV3(File.Exists(CacheFilePath)
-                        ? ProtectedData.Unprotect(File.ReadAllBytes(CacheFilePath), null, DataProtectionScope.CurrentUser)
-                        : null);
+                lock (FileLock)
+                {
+                    args.TokenCache.DeserializeMsalV3(File.Exists(CacheFilePath)
+                            ? ProtectedData.Unprotect(File.ReadAllBytes(CacheFilePath), null, DataProtectionScope.CurrentUser)
+                            : null);
+                }
             }
+            catch { /* todo implement */ }
         }
 
         public static void EnableSerialization(ITokenCache tokenCache)
