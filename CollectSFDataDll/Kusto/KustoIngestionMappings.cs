@@ -36,7 +36,10 @@ namespace CollectSFData.Kusto
             {
                 new KustoCsvSchema() { Name = "Timestamp", DataType = "datetime", Ordinal = count++ },
                 new KustoCsvSchema() { Name = "CounterName", DataType = "string",  Ordinal = count++ },
-                new KustoCsvSchema() { Name = "CounterValue", DataType = "float",  Ordinal = count }
+                new KustoCsvSchema() { Name = "CounterValue", DataType = "float",  Ordinal = count++ },
+                new KustoCsvSchema() { Name = "Object", DataType = "string",  Ordinal = count++ },
+                new KustoCsvSchema() { Name = "Counter", DataType = "string",  Ordinal = count++ },
+                new KustoCsvSchema() { Name = "Instance", DataType = "string",  Ordinal = count }
             };
 
             return AddConstants(mapping);
