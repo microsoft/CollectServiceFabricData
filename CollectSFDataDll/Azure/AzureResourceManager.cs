@@ -69,77 +69,14 @@ namespace CollectSFData.Azure
 
                 if (Config.IsClientIdConfigured())
                 {
-                    // no prompt with clientid and secret
-                    _confidentialClientApp = ConfidentialClientApplicationBuilder
-                       .CreateWithApplicationOptions(new ConfidentialClientApplicationOptions
-                       {
-                           ClientId = Config.AzureClientId,
-                           RedirectUri = resource,
-                           ClientSecret = Config.AzureClientSecret,
-                           TenantId = Config.AzureTenantId,
-                           ClientName = Config.AzureClientId
-                       })
-                       .WithAuthority(AzureCloudInstance.AzurePublic, Config.AzureTenantId)
-                       .WithLogging(MsalLoggerCallback, LogLevel.Verbose, true, true)
-                       .Build();
-
-                    if (Scopes.Count < 1)
-                    {
-                        Scopes = _defaultScope;
-                    }
-
-                    if (Environment.OSVersion.Platform.Equals(PlatformID.Win32NT))
-                    {
-                        TokenCacheHelper.EnableSerialization(_confidentialClientApp.AppTokenCache);
-                    }
-
-                    foreach (string scope in Scopes)
-                    {
-                        AuthenticationResult = _confidentialClientApp
-                            .AcquireTokenForClient(new List<string>() { scope })
-                            .ExecuteAsync().Result;
-                        Log.Debug($"scope authentication result:", AuthenticationResult);
-                    }
+                    CreateConfidentialClient(resource);
                 }
                 else
                 {
-                    _publicClientApp = PublicClientApplicationBuilder
-                        .Create(_wellKnownClientId)
-                        .WithAuthority(AzureCloudInstance.AzurePublic, Config.AzureTenantId)
-                        .WithLogging(MsalLoggerCallback, LogLevel.Verbose, true, true)
-                        .WithDefaultRedirectUri()
-                        .Build();
-
-                    if (Environment.OSVersion.Platform.Equals(PlatformID.Win32NT))
-                    {
-                        TokenCacheHelper.EnableSerialization(_publicClientApp.UserTokenCache);
-                    }
-
-                    AuthenticationResult = _publicClientApp
-                        .AcquireTokenSilent(_defaultScope, _publicClientApp.GetAccountsAsync().Result.FirstOrDefault())
-                        .ExecuteAsync().Result;
-
-                    if (Scopes.Count > 0)
-                    {
-                        Log.Info($"adding scopes {Scopes.Count}");
-                        AuthenticationResult = _publicClientApp
-                            .AcquireTokenSilent(Scopes, _publicClientApp.GetAccountsAsync().Result.FirstOrDefault())
-                            .ExecuteAsync().Result;
-                    }
+                    CreatePublicClient(prompt);
                 }
 
-                BearerToken = AuthenticationResult.AccessToken;
-                long tickDiff = ((AuthenticationResult.ExpiresOn.ToLocalTime().Ticks - DateTime.Now.Ticks) / 2) + DateTime.Now.Ticks;
-                _tokenExpirationHalfLife = new DateTimeOffset(new DateTime(tickDiff));
-
-                Log.Info($"authentication result:", ConsoleColor.Green, null, AuthenticationResult);
-                Log.Highlight($"aad token expiration: {AuthenticationResult.ExpiresOn.ToLocalTime()}");
-                Log.Highlight($"aad token half life expiration: {_tokenExpirationHalfLife}");
-
-                _timer = new Timer(Reauthenticate, null, Convert.ToInt32((_tokenExpirationHalfLife - DateTime.Now).TotalMilliseconds), Timeout.Infinite);
-                IsAuthenticated = true;
-
-                return true;
+                return SetToken();
             }
             catch (MsalClientException)
             {
@@ -147,10 +84,8 @@ namespace CollectSFData.Azure
 
                 if (!Config.IsClientIdConfigured())
                 {
-                    AuthenticationResult = _publicClientApp
-                    .AcquireTokenWithDeviceCode(_defaultScope, MsalDeviceCodeCallback)
-                    .ExecuteAsync().Result;
-                    return Authenticate(throwOnError, resource, true);
+                    CreatePublicClient(true, true);
+                    return SetToken();
                 }
 
                 if (throwOnError)
@@ -161,7 +96,6 @@ namespace CollectSFData.Azure
                 IsAuthenticated = false;
                 return false;
             }
-
             catch (MsalUiRequiredException)
             {
                 Log.Warning("MsalUiRequiredException");
@@ -170,23 +104,23 @@ namespace CollectSFData.Azure
                 {
                     try
                     {
-                        AuthenticationResult = _publicClientApp
-                        .AcquireTokenInteractive(_defaultScope)
-                        .ExecuteAsync().Result;
-                        return Authenticate(throwOnError, resource, true);
+                        CreatePublicClient(true, false);
+                        return SetToken();
                     }
                     catch (AggregateException ae)
                     {
                         Log.Warning($"AggregateException");
-                        Log.Exception($"AggregateException:{ae}");
 
                         if (ae.GetBaseException() is MsalClientException)
                         {
-                            AuthenticationResult = _publicClientApp
-                            .AcquireTokenWithDeviceCode(_defaultScope, MsalDeviceCodeCallback)
-                            .ExecuteAsync().Result;
-                            return Authenticate(throwOnError, resource, true);
+                            Log.Warning($"innerexception:MsalClientException");
+                            CreatePublicClient(true, true);
+                            return SetToken();
                         }
+
+                        Log.Exception($"AggregateException:{ae}");
+                        IsAuthenticated = false;
+                        return false;
                     }
                 }
 
@@ -202,16 +136,13 @@ namespace CollectSFData.Azure
             {
                 Log.Warning($"AggregateException");
 
-                Log.Exception($"AggregateException:{ae}");
-
                 if (ae.GetBaseException() is MsalClientException)
                 {
+                    Log.Warning($"innerexception:MsalClientException");
                     if (!Config.IsClientIdConfigured())
                     {
-                        AuthenticationResult = _publicClientApp
-                        .AcquireTokenWithDeviceCode(_defaultScope, MsalDeviceCodeCallback)
-                        .ExecuteAsync().Result;
-                        return Authenticate(throwOnError, resource, true);
+                        CreatePublicClient(true, true);
+                        return SetToken();
                     }
 
                     if (throwOnError)
@@ -219,18 +150,24 @@ namespace CollectSFData.Azure
                         throw;
                     }
 
+                    Log.Exception($"AggregateException:{ae}");
                     IsAuthenticated = false;
                     return false;
                 }
                 else if (ae.GetBaseException() is MsalException)
                 {
+                    Log.Warning($"innerexception:MsalException");
                     MsalException me = ae.GetBaseException() as MsalException;
-                    Log.Exception($"msal exception:{me}");
 
                     if (me.ErrorCode.Contains("interaction_required") && !prompt)
                     {
-                        return Authenticate(throwOnError, resource, true);
+                        CreatePublicClient(true, false);
+                        return SetToken();
                     }
+
+                    Log.Exception($"msal exception:{me}");
+                    IsAuthenticated = false;
+                    return false;
                 }
 
                 return false;
@@ -360,10 +297,108 @@ namespace CollectSFData.Azure
             return _httpClient;
         }
 
+        private void CreateConfidentialClient(string resource)
+        {
+            Log.Info($"enter: {resource}");
+            // no prompt with clientid and secret
+            _confidentialClientApp = ConfidentialClientApplicationBuilder
+               .CreateWithApplicationOptions(new ConfidentialClientApplicationOptions
+               {
+                   ClientId = Config.AzureClientId,
+                   RedirectUri = resource,
+                   ClientSecret = Config.AzureClientSecret,
+                   TenantId = Config.AzureTenantId,
+                   ClientName = Config.AzureClientId
+               })
+               .WithAuthority(AzureCloudInstance.AzurePublic, Config.AzureTenantId)
+               .WithLogging(MsalLoggerCallback, LogLevel.Verbose, true, true)
+               .Build();
+
+            if (Scopes.Count < 1)
+            {
+                Scopes = _defaultScope;
+            }
+
+            if (IsWindows)
+            {
+                TokenCacheHelper.EnableSerialization(_confidentialClientApp.AppTokenCache);
+            }
+
+            foreach (string scope in Scopes)
+            {
+                AuthenticationResult = _confidentialClientApp
+                    .AcquireTokenForClient(new List<string>() { scope })
+                    .ExecuteAsync().Result;
+                Log.Debug($"scope authentication result:", AuthenticationResult);
+            }
+        }
+
+        private void CreatePublicClient(bool prompt, bool useDevice = false)
+        {
+            Log.Info($"enter: {prompt} {useDevice}");
+            _publicClientApp = PublicClientApplicationBuilder
+                .Create(_wellKnownClientId)
+                .WithAuthority(AzureCloudInstance.AzurePublic, Config.AzureTenantId)
+                .WithLogging(MsalLoggerCallback, LogLevel.Verbose, true, true)
+                .WithDefaultRedirectUri()
+                .Build();
+
+            if (IsWindows)
+            {
+                TokenCacheHelper.EnableSerialization(_publicClientApp.UserTokenCache);
+            }
+
+            if (prompt)
+            {
+                if (useDevice)
+                {
+                    AuthenticationResult = _publicClientApp
+                         .AcquireTokenWithDeviceCode(_defaultScope, MsalDeviceCodeCallback)
+                         .ExecuteAsync().Result;
+                }
+                else
+                {
+                    AuthenticationResult = _publicClientApp
+                        .AcquireTokenInteractive(_defaultScope)
+                        .ExecuteAsync().Result;
+                }
+            }
+            else
+            {
+                AuthenticationResult = _publicClientApp
+                    .AcquireTokenSilent(_defaultScope, _publicClientApp.GetAccountsAsync().Result.FirstOrDefault())
+                    .ExecuteAsync().Result;
+            }
+
+            if (Scopes.Count > 0)
+            {
+                Log.Info($"adding scopes {Scopes.Count}");
+                AuthenticationResult = _publicClientApp
+                    .AcquireTokenSilent(Scopes, _publicClientApp.GetAccountsAsync().Result.FirstOrDefault())
+                    .ExecuteAsync().Result;
+            }
+        }
+
         private Task MsalDeviceCodeCallback(DeviceCodeResult arg)
         {
-            Log.Highlight($"device code info:", arg);
+            Log.Info($"device code info:", ConsoleColor.Cyan, null, arg);
             return Task.FromResult(0);
+        }
+
+        private bool SetToken()
+        {
+            BearerToken = AuthenticationResult.AccessToken;
+            long tickDiff = ((AuthenticationResult.ExpiresOn.ToLocalTime().Ticks - DateTime.Now.Ticks) / 2) + DateTime.Now.Ticks;
+            _tokenExpirationHalfLife = new DateTimeOffset(new DateTime(tickDiff));
+
+            Log.Info($"authentication result:", ConsoleColor.Green, null, AuthenticationResult);
+            Log.Highlight($"aad token expiration: {AuthenticationResult.ExpiresOn.ToLocalTime()}");
+            Log.Highlight($"aad token half life expiration: {_tokenExpirationHalfLife}");
+
+            _timer = new Timer(Reauthenticate, null, Convert.ToInt32((_tokenExpirationHalfLife - DateTime.Now).TotalMilliseconds), Timeout.Infinite);
+            IsAuthenticated = true;
+
+            return true;
         }
     }
 }
