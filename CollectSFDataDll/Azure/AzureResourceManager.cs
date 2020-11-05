@@ -43,6 +43,7 @@ namespace CollectSFData.Azure
 
         public bool Authenticate(bool throwOnError = false, string resource = ManagementAzureCom, bool prompt = false)
         {
+            Exception ex = new Exception();
             Log.Debug("azure ad:enter");
             _resource = resource;
 
@@ -78,27 +79,21 @@ namespace CollectSFData.Azure
 
                 return SetToken();
             }
-            catch (MsalClientException)
+            catch (MsalClientException e)
             {
                 Log.Warning("MsalClientException");
+                ex = e;
 
                 if (!Config.IsClientIdConfigured())
                 {
                     CreatePublicClient(true, true);
                     return SetToken();
                 }
-
-                if (throwOnError)
-                {
-                    throw;
-                }
-
-                IsAuthenticated = false;
-                return false;
             }
-            catch (MsalUiRequiredException)
+            catch (MsalUiRequiredException e)
             {
                 Log.Warning("MsalUiRequiredException");
+                ex = e;
 
                 if (!Config.IsClientIdConfigured())
                 {
@@ -119,24 +114,15 @@ namespace CollectSFData.Azure
                         }
 
                         Log.Exception($"AggregateException:{ae}");
-                        IsAuthenticated = false;
-                        return false;
                     }
                 }
-
-                if (throwOnError)
-                {
-                    throw;
-                }
-
-                IsAuthenticated = false;
-                return false;
             }
-            catch (AggregateException ae)
+            catch (AggregateException e)
             {
                 Log.Warning($"AggregateException");
+                ex = e;
 
-                if (ae.GetBaseException() is MsalClientException)
+                if (e.GetBaseException() is MsalClientException)
                 {
                     Log.Warning($"innerexception:MsalClientException");
                     if (!Config.IsClientIdConfigured())
@@ -144,20 +130,12 @@ namespace CollectSFData.Azure
                         CreatePublicClient(true, true);
                         return SetToken();
                     }
-
-                    if (throwOnError)
-                    {
-                        throw;
-                    }
-
-                    Log.Exception($"AggregateException:{ae}");
-                    IsAuthenticated = false;
-                    return false;
                 }
-                else if (ae.GetBaseException() is MsalException)
+                else if (e.GetBaseException() is MsalException)
                 {
                     Log.Warning($"innerexception:MsalException");
-                    MsalException me = ae.GetBaseException() as MsalException;
+                    ex = e;
+                    MsalException me = e.GetBaseException() as MsalException;
 
                     if (me.ErrorCode.Contains("interaction_required") && !prompt)
                     {
@@ -166,24 +144,22 @@ namespace CollectSFData.Azure
                     }
 
                     Log.Exception($"msal exception:{me}");
-                    IsAuthenticated = false;
-                    return false;
                 }
-
-                return false;
             }
             catch (Exception e)
             {
                 Log.Exception($"{e}");
-
-                if (throwOnError)
-                {
-                    throw;
-                }
-
-                IsAuthenticated = false;
-                return false;
             }
+
+            IsAuthenticated = false;
+
+            if (throwOnError)
+            {
+                Log.Exception($"Authentication exception throwOnError:{ex}");
+                throw ex;
+            }
+
+            return false;
         }
 
         public bool CheckResource(string resourceId)
@@ -223,8 +199,7 @@ namespace CollectSFData.Azure
         {
             if (!containsPII | (containsPII & Config.LogDebug))
             {
-                string formattedMessage = message.Replace(" [", "\r\n [");
-                Log.Info($"{level} {formattedMessage}");
+                Log.Info($"{level} {message.Replace(" [", "\r\n [")}");
             }
         }
 
