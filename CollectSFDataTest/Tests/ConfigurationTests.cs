@@ -4,12 +4,13 @@
 // ------------------------------------------------------------
 
 using CollectSFData.DataFile;
+using CollectSFDataTest.Utilities;
 using NUnit.Framework;
 using System;
 using System.IO;
 using System.Text.RegularExpressions;
 
-namespace CollectSFDataTests
+namespace CollectSFDataTest
 {
     [TestFixture]
     public class ConfigurationTests : TestUtilities
