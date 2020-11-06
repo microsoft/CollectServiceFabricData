@@ -248,9 +248,9 @@ namespace CollectSFData.DataFile
                                         Timestamp = Convert.ToDateTime(counterValues[0].Trim('"').Trim(' ')),
                                         CounterName = headers[headerIndex],
                                         CounterValue = Decimal.Parse(stringValue, NumberStyles.AllowExponent | NumberStyles.AllowDecimalPoint),
-                                        Object = counterInfo.Groups["object"].Value,
-                                        Counter = counterInfo.Groups["counter"].Value,
-                                        Instance = counterInfo.Groups["instance"].Value,
+                                        Object = counterInfo.Groups["object"].Value.Replace("\"","").Trim(),
+                                        Counter = counterInfo.Groups["counter"].Value.Replace("\"","").Trim(),
+                                        Instance = counterInfo.Groups["instance"].Value.Replace("\"","").Trim().Trim('(').Trim(')'),
                                         NodeName = fileObject.NodeName,
                                         FileType = fileObject.FileDataType.ToString(),
                                         RelativeUri = fileObject.RelativeUri
