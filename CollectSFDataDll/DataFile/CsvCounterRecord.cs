@@ -37,7 +37,7 @@ namespace CollectSFData.DataFile
 
         public override string ToString()
         {
-            return $"{Timestamp:o},{CounterName},{CounterValue},{NodeName},{FileType},{RelativeUri},{ResourceUri}{Environment.NewLine}";
+            return $"{Timestamp:o},{CounterName},{CounterValue},\"{Object}\",\"{Counter}\",\"{Instance}\",{NodeName},{FileType},{RelativeUri},{ResourceUri}{Environment.NewLine}";
         }
     }
 }
