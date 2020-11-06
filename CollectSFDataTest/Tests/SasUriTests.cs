@@ -4,7 +4,6 @@
 // ------------------------------------------------------------
 
 using CollectSFData.Azure;
-using NUnit.Framework;
 using System;
 
 namespace CollectSFDataTests

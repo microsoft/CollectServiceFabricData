@@ -1,6 +1,4 @@
-﻿using CollectSFData;
-using CollectSFData.Common;
-using System;
+﻿using System;
 
 namespace CollectSFData
 {
@@ -14,10 +12,11 @@ namespace CollectSFData
             }
 
             Collector collector = new Collector();
-            ConfigurationOptions options = new ConfigurationOptions();
-            options.DefaultConfig();
 
-            return collector.Collect(args, options);
+            // to modify config
+            //collector.Instance.Config.Validate();
+
+            return collector.Collect(args);
         }
     }
 }
