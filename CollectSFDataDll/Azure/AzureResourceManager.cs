@@ -41,7 +41,7 @@ namespace CollectSFData.Azure
         public List<string> Scopes { get; set; } = new List<string>();
         public SubscriptionRecordResult[] Subscriptions { get; private set; } = new SubscriptionRecordResult[] { };
 
-        public bool Authenticate(bool throwOnError = false, string resource = ManagementAzureCom, bool prompt = false)
+        public bool Authenticate(bool throwOnError = false, string resource = ManagementAzureCom)
         {
             Exception ex = new Exception();
             Log.Debug("azure ad:enter");
@@ -68,15 +68,7 @@ namespace CollectSFData.Azure
                     Config.AzureTenantId = _commonTenantId;
                 }
 
-                if (Config.IsClientIdConfigured())
-                {
-                    CreateConfidentialClient(resource);
-                }
-                else
-                {
-                    CreatePublicClient(prompt);
-                }
-
+                CreateClient(false, false, resource);
                 return SetToken();
             }
             catch (MsalClientException e)
@@ -84,9 +76,8 @@ namespace CollectSFData.Azure
                 Log.Warning("MsalClientException");
                 ex = e;
 
-                if (!Config.IsClientIdConfigured())
+                if (CreateClient(true, true, resource))
                 {
-                    CreatePublicClient(true, true);
                     return SetToken();
                 }
             }
@@ -95,26 +86,27 @@ namespace CollectSFData.Azure
                 Log.Warning("MsalUiRequiredException");
                 ex = e;
 
-                if (!Config.IsClientIdConfigured())
+                try
                 {
-                    try
+                    if (CreateClient(true, false, resource))
                     {
-                        CreatePublicClient(true, false);
                         return SetToken();
                     }
-                    catch (AggregateException ae)
-                    {
-                        Log.Warning($"AggregateException");
+                }
+                catch (AggregateException ae)
+                {
+                    Log.Warning($"AggregateException");
 
-                        if (ae.GetBaseException() is MsalClientException)
+                    if (ae.GetBaseException() is MsalClientException)
+                    {
+                        Log.Warning($"innerexception:MsalClientException");
+                        if (CreateClient(true, true, resource))
                         {
-                            Log.Warning($"innerexception:MsalClientException");
-                            CreatePublicClient(true, true);
                             return SetToken();
                         }
-
-                        Log.Exception($"AggregateException:{ae}");
                     }
+
+                    Log.Exception($"AggregateException:{ae}");
                 }
             }
             catch (AggregateException e)
@@ -125,25 +117,11 @@ namespace CollectSFData.Azure
                 if (e.GetBaseException() is MsalClientException)
                 {
                     Log.Warning($"innerexception:MsalClientException");
-                    if (!Config.IsClientIdConfigured())
+
+                    if (CreateClient(true, true, resource))
                     {
-                        CreatePublicClient(true, true);
                         return SetToken();
                     }
-                }
-                else if (e.GetBaseException() is MsalException)
-                {
-                    Log.Warning($"innerexception:MsalException");
-                    ex = e;
-                    MsalException me = e.GetBaseException() as MsalException;
-
-                    if (me.ErrorCode.Contains("interaction_required") && !prompt)
-                    {
-                        CreatePublicClient(true, false);
-                        return SetToken();
-                    }
-
-                    Log.Exception($"msal exception:{me}");
                 }
             }
             catch (Exception e)
@@ -160,6 +138,24 @@ namespace CollectSFData.Azure
             }
 
             return false;
+        }
+
+        private bool CreateClient(bool prompt, bool deviceLogin = false, string resource = "")
+        {
+            if (Config.IsClientIdConfigured() & prompt)
+            {
+                return false;
+            }
+            else if (Config.IsClientIdConfigured() & !prompt)
+            {
+                CreateConfidentialClient(resource);
+                return true;
+            }
+            else
+            {
+                CreatePublicClient(prompt, deviceLogin);
+                return true;
+            }
         }
 
         public bool CheckResource(string resourceId)
@@ -308,9 +304,9 @@ namespace CollectSFData.Azure
             }
         }
 
-        private void CreatePublicClient(bool prompt, bool useDevice = false)
+        private void CreatePublicClient(bool prompt, bool deviceLogin = false)
         {
-            Log.Info($"enter: {prompt} {useDevice}");
+            Log.Info($"enter: {prompt} {deviceLogin}");
             _publicClientApp = PublicClientApplicationBuilder
                 .Create(_wellKnownClientId)
                 .WithAuthority(AzureCloudInstance.AzurePublic, Config.AzureTenantId)
@@ -325,7 +321,7 @@ namespace CollectSFData.Azure
 
             if (prompt)
             {
-                if (useDevice)
+                if (deviceLogin)
                 {
                     AuthenticationResult = _publicClientApp
                          .AcquireTokenWithDeviceCode(_defaultScope, MsalDeviceCodeCallback)
