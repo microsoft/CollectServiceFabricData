@@ -10,19 +10,39 @@ namespace CollectSFData.Common
 {
     public class Instance : Constants
     {
-        public static ConfigurationOptions Config = new ConfigurationOptions();
-        public static long DiscoveredMaxDateTicks = DateTime.MinValue.Ticks;
-        public static long DiscoveredMinDateTicks = DateTime.MaxValue.Ticks;
-        public static FileManager FileMgr = new FileManager();
-        public static bool IsWindows = Environment.OSVersion.Platform.Equals(PlatformID.Win32NT);
-        public static DateTime StartTime = DateTime.Now;
-        public static int TotalErrors = 0;
-        public static int TotalFilesConverted = 0;
-        public static int TotalFilesDownloaded = 0;
-        public static int TotalFilesEnumerated = 0;
-        public static int TotalFilesFormatted = 0;
-        public static int TotalFilesMatched = 0;
-        public static int TotalFilesSkipped = 0;
-        public static int TotalRecords = 0;
+        private static readonly Instance _instance = new Instance();
+        private static object _instanceLock = new object();
+
+        static Instance()
+        {
+            // set instances in static ctor
+            if (_instance.Config == null)
+            {
+                _instance.Config = new ConfigurationOptions();
+                _instance.FileMgr = new FileManager();
+            }
+        }
+
+        public static Instance Singleton()
+        {
+            return _instance;
+        }
+
+        private Instance()
+        {
+        }
+
+        public ConfigurationOptions Config;
+        public FileManager FileMgr;
+        public bool IsWindows = Environment.OSVersion.Platform.Equals(PlatformID.Win32NT);
+        public DateTime StartTime = DateTime.Now;
+        public int TotalErrors = 0;
+        public int TotalFilesConverted = 0;
+        public int TotalFilesDownloaded = 0;
+        public int TotalFilesEnumerated = 0;
+        public int TotalFilesFormatted = 0;
+        public int TotalFilesMatched = 0;
+        public int TotalFilesSkipped = 0;
+        public int TotalRecords = 0;
     }
 }

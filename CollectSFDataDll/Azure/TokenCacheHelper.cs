@@ -3,6 +3,7 @@
 // Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
+using CollectSFData.Common;
 using Microsoft.Identity.Client;
 using System;
 using System.IO;
@@ -12,21 +13,24 @@ namespace CollectSFData.Azure
 {
     public static class TokenCacheHelper
     {
-        private static string friendlyName = Path.GetFileNameWithoutExtension(AppDomain.CurrentDomain.FriendlyName);
-        private static string appDataFolder = $"{Environment.GetEnvironmentVariable("LOCALAPPDATA")}\\{friendlyName}";
-        public static readonly string CacheFilePath = $"{appDataFolder}\\{friendlyName}.msalcache.bin3";
-        private static readonly object FileLock = new object();
+        private static readonly object _fileLock = new object();
+        private static string _friendlyName = Path.GetFileNameWithoutExtension(AppDomain.CurrentDomain.FriendlyName);
+        private static string _appDataFolder = $"{Environment.GetEnvironmentVariable("LOCALAPPDATA")}\\{_friendlyName}";
+        public static readonly string CacheFilePath = $"{_appDataFolder}\\{_friendlyName}.msalcache.bin3";
 
         static TokenCacheHelper()
         {
             try
             {
-                if (!Directory.Exists(appDataFolder))
+                if (!Directory.Exists(_appDataFolder))
                 {
-                    Directory.CreateDirectory(appDataFolder);
+                    Directory.CreateDirectory(_appDataFolder);
                 }
             }
-            catch { /* todo implement */ }
+            catch
+            {
+                Log.Warning($"unable to create directory {_appDataFolder}");
+            }
         }
 
         public static void AfterAccessNotification(TokenCacheNotificationArgs args)
@@ -35,28 +39,34 @@ namespace CollectSFData.Azure
             {
                 if (args.HasStateChanged)
                 {
-                    lock (FileLock)
+                    lock (_fileLock)
                     {
                         File.WriteAllBytes(CacheFilePath,
                             ProtectedData.Protect(args.TokenCache.SerializeMsalV3(), null, DataProtectionScope.CurrentUser));
                     }
                 }
             }
-            catch { /* todo implement */ }
+            catch
+            {
+                Log.Warning($"unable to write file {CacheFilePath}");
+            }
         }
 
         public static void BeforeAccessNotification(TokenCacheNotificationArgs args)
         {
             try
             {
-                lock (FileLock)
+                lock (_fileLock)
                 {
                     args.TokenCache.DeserializeMsalV3(File.Exists(CacheFilePath)
                             ? ProtectedData.Unprotect(File.ReadAllBytes(CacheFilePath), null, DataProtectionScope.CurrentUser)
                             : null);
                 }
             }
-            catch { /* todo implement */ }
+            catch
+            {
+                Log.Warning($"unable to read file {CacheFilePath}");
+            }
         }
 
         public static void EnableSerialization(ITokenCache tokenCache)

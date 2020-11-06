@@ -24,6 +24,7 @@ namespace CollectSFData.Common
     {
         private static readonly string _workDir = "csfd";
         private readonly CommandLineArguments _cmdLineArgs = new CommandLineArguments();
+        private bool _defaultConfigLoaded;
         private string _endTime;
         private bool _logDebugEnabled;
         private string _startTime;
@@ -32,6 +33,7 @@ namespace CollectSFData.Common
 
         public ConfigurationOptions()
         {
+            DefaultConfig();
             _cmdLineArgs.CmdLineApp.OnExecute(() => MergeCmdLine());
             _cmdLineArgs.InitFromCmdLine();
 
@@ -244,6 +246,7 @@ namespace CollectSFData.Common
             if (File.Exists(DefaultOptionsFile))
             {
                 MergeConfig(DefaultOptionsFile);
+                _defaultConfigLoaded = true;
                 return true;
             }
 
@@ -323,21 +326,13 @@ namespace CollectSFData.Common
             return !string.IsNullOrEmpty(LogAnalyticsPurge);
         }
 
-        public bool PopulateConfig(string[] args, ConfigurationOptions options = null)
+        public bool PopulateConfig(string[] args)
         {
             try
             {
                 _tempPath = FileManager.NormalizePath(Path.GetTempPath() + _workDir);
 
-                if (options != null)
-                {
-                    MergeConfig(options);
-                }
-                else if (!DefaultConfig() && args.Length == 0)
-                {
-                    MergeConfig(DefaultOptionsFile);
-                }
-                else if (args.Length == 0)
+                if (args.Length == 0 & !_defaultConfigLoaded)
                 {
                     Log.Last(_cmdLineArgs.CmdLineApp.GetHelpText());
                     return false;
@@ -748,7 +743,7 @@ namespace CollectSFData.Common
             return (ConfigurationOptions)MemberwiseClone();
         }
 
-        private bool Validate()
+        public bool Validate()
         {
             try
             {
@@ -772,7 +767,7 @@ namespace CollectSFData.Common
             }
         }
 
-        private bool ValidateAad()
+        public bool ValidateAad()
         {
             bool retval = true;
             bool needsAad = IsKustoConfigured() | IsKustoPurgeRequested() | IsLogAnalyticsConfigured();
@@ -802,7 +797,7 @@ namespace CollectSFData.Common
             return retval;
         }
 
-        private bool ValidateDestination()
+        public bool ValidateDestination()
         {
             bool retval = true;
 
@@ -890,7 +885,7 @@ namespace CollectSFData.Common
             return retval;
         }
 
-        private bool ValidateFileType()
+        public bool ValidateFileType()
         {
             bool retval = true;
 
@@ -916,7 +911,7 @@ namespace CollectSFData.Common
             return retval;
         }
 
-        private bool ValidateSasKey()
+        public bool ValidateSasKey()
         {
             if (!string.IsNullOrEmpty(SasKey))
             {
@@ -927,7 +922,7 @@ namespace CollectSFData.Common
             return true;
         }
 
-        private bool ValidateSource()
+        public bool ValidateSource()
         {
             bool retval = true;
 
@@ -940,7 +935,7 @@ namespace CollectSFData.Common
             return retval;
         }
 
-        private bool ValidateTime()
+        public bool ValidateTime()
         {
             bool retval = true;
 

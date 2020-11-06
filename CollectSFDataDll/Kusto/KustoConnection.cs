@@ -19,8 +19,10 @@ using System.Threading.Tasks;
 
 namespace CollectSFData.Kusto
 {
-    public class KustoConnection : Instance
+    public class KustoConnection : Constants
     {
+        private Instance _instance = Instance.Singleton();
+        private ConfigurationOptions Config => _instance.Config;
         private const int _maxMessageCount = 32;
         private readonly CustomTaskManager _kustoTasks = new CustomTaskManager(true);
         private readonly SynchronizedList<string> _messageList = new SynchronizedList<string>();
@@ -28,7 +30,7 @@ namespace CollectSFData.Kusto
         private readonly CancellationTokenSource _tokenSource = new CancellationTokenSource();
         private SynchronizedList<string> _failIngestedUris = new SynchronizedList<string>();
         private int _failureCount;
-        private DateTime _failureQueryTime = StartTime.ToUniversalTime();
+        private DateTime _failureQueryTime;
         private string _ingestCursor = "''";
         private SynchronizedList<string> _ingestedUris = new SynchronizedList<string>();
         private IEnumerator<string> _ingestionQueueEnumerator;
@@ -54,7 +56,7 @@ namespace CollectSFData.Kusto
             }
             else
             {
-                IngestMultipleFiles(FileMgr.ProcessFile(fileObject));
+                IngestMultipleFiles(_instance.FileMgr.ProcessFile(fileObject));
             }
         }
 
@@ -70,7 +72,7 @@ namespace CollectSFData.Kusto
 
                 if (_failureCount > 0)
                 {
-                    TotalErrors += _failureCount;
+                    _instance.TotalErrors += _failureCount;
                     Log.Error($"Ingestion error total:({_failureCount})");
                 }
 
@@ -88,6 +90,7 @@ namespace CollectSFData.Kusto
         {
             Endpoint = new KustoEndpointInfo();
             Endpoint.Authenticate();
+            _failureQueryTime = _instance.StartTime.ToUniversalTime();
             _tempContainerEnumerator = Endpoint.IngestionResources.TempStorageContainers.GetEnumerator();
             _ingestionQueueEnumerator = Endpoint.IngestionResources.IngestionQueues.GetEnumerator();
 
@@ -349,7 +352,7 @@ namespace CollectSFData.Kusto
             _ingestCursor = _ingestedUris.Count() < 1 ? "''" : _ingestCursor;
             successUris.AddRange(Endpoint.Query($"['{Endpoint.TableName}']" +
                 $"| where cursor_after({_ingestCursor})" +
-                $"| where ingestion_time() > todatetime('{StartTime.ToUniversalTime().ToString("o")}')" +
+                $"| where ingestion_time() > todatetime('{_instance.StartTime.ToUniversalTime().ToString("o")}')" +
                 $"| distinct RelativeUri"));
 
             _ingestCursor = Endpoint.Cursor;
