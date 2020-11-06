@@ -18,23 +18,23 @@ class TestSettings {
     TestSettings() {}
       
     # for file download and gather tests
-    $testAzStorageAccount = "collectsfdatatests"
-    $testAzClientId = ""
-    $testAzClientSecret = ""
+    [string]$testAzStorageAccount = "collectsfdatatests"
+    [string]$testAzClientId = ""
+    [string]$testAzClientSecret = ""
 
     # for azure cluster deployments
-    $adminUserName = $null
-    $adminPassword = $null
+    [string]$adminUserName = $null
+    [string]$adminPassword = $null
       
     # existing collectsfdata variables
-    $AzureClientId = $null
-    $AzureClientSecret = $null
-    $AzureResourceGroup = $null
-    $AzureResourceGroupLocation = $null
-    $AzureSubscriptionId = $null
-    $AzureTenantId = $null
-    $KustoCluster = $null
-    $SasKey = $null
+    [string]$AzureClientId = $null
+    [string]$AzureClientSecret = $null
+    [string]$AzureResourceGroup = $null
+    [string]$AzureResourceGroupLocation = $null
+    [string]$AzureSubscriptionId = $null
+    [string]$AzureTenantId = $null
+    [string]$KustoCluster = $null
+    [string]$SasKey = $null
 }
 
 class TestEnv {
