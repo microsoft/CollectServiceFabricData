@@ -15,6 +15,7 @@ using Moq;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
@@ -23,27 +24,8 @@ using System.Management.Automation.Runspaces;
 using System.Text;
 using System.Threading;
 
-namespace CollectSFDataTests
+namespace CollectSFDataTest.Utilities
 {
-    public class ProcessOutput
-    {
-        public int ExitCode { get; set; } = 0;
-
-        public string StandardError { get; set; } = "";
-
-        public string StandardOutput { get; set; } = "";
-
-        public bool HasErrors()
-        {
-            return !string.IsNullOrEmpty(StandardError) | ExitCode > 0;
-        }
-
-        public override string ToString()
-        {
-            return JsonConvert.SerializeObject(this, Formatting.Indented);
-        }
-    }
-
     [TestFixture]
     public class TestUtilities
     {
@@ -52,6 +34,9 @@ namespace CollectSFDataTests
         public string[] TempArgs;
         private static object _executing = new object();
         private bool hasExited = false;
+        public Collector Collector;
+        public List<string> LogMessageQueue = new List<string>();
+        public bool LogMessageQueueEnabled { get; set; }
 
         static TestUtilities()
         {
@@ -315,10 +300,22 @@ namespace CollectSFDataTests
         {
             //Instance.Config = new ConfigurationOptions();
             //Instance.FileMgr = new FileManager();
+            Collector = new Collector();
+            Log.MessageLogged += Log_MessageLogged;
             WriteConsole("TestContext", Context);
             TestContext.WriteLine($"starting test: {Context?.Test.Name}");
             consoleOutBuilder = new StringBuilder();
             consoleErrBuilder = new StringBuilder();
+        }
+
+        private void Log_MessageLogged(object sender, LogMessage args)
+        {
+            if (LogMessageQueueEnabled)
+            {
+                LogMessageQueue.Add(args.Message);
+            }
+
+            WriteConsole(args.Message);
         }
 
         public void StartConsoleRedirection()

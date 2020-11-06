@@ -2,7 +2,7 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <IsPackable>false</IsPackable>
-    <StartupObject>CollectSFDataTests.TestUtilities</StartupObject>
+    <StartupObject>CollectSFDataTest.Utilities.TestUtilities</StartupObject>
     <OutputType>Exe</OutputType>
     <Platforms>x64</Platforms>
     <PlatformTarget>x64</PlatformTarget>
