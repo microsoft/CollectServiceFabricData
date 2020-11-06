@@ -5,7 +5,6 @@
 
 using CollectSFData.DataFile;
 using CollectSFData.Kusto;
-using NUnit.Framework;
 using System;
 
 namespace CollectSFDataTests

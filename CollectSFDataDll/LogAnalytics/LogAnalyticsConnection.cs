@@ -20,10 +20,12 @@ using System.Threading;
 
 namespace CollectSFData.LogAnalytics
 {
-    public class LogAnalyticsConnection : Instance
+    public class LogAnalyticsConnection : Constants
     {
         private readonly AzureResourceManager _arm = new AzureResourceManager();
         private string _armAuthResource = "https://management.core.windows.net";
+        private Instance _instance = Instance.Singleton();
+        private ConfigurationOptions Config => _instance.Config;
         private readonly AzureResourceManager _laArm = new AzureResourceManager();
         private LogAnalyticsWorkspaceModel _currentWorkspaceModelModel = new LogAnalyticsWorkspaceModel();
         private Http _httpClient = Http.ClientFactory();
@@ -46,7 +48,7 @@ namespace CollectSFData.LogAnalytics
                 return;
             }
 
-            ImportJson(FileMgr.ProcessFile(fileObject));
+            ImportJson(_instance.FileMgr.ProcessFile(fileObject));
         }
 
         public bool Connect()
@@ -118,7 +120,7 @@ namespace CollectSFData.LogAnalytics
                     Log.Error($"json saved to {fileObject.FileUri}");
                 }
 
-                TotalErrors++;
+                _instance.TotalErrors++;
             }
         }
 
