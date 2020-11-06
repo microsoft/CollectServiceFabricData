@@ -12,7 +12,7 @@ Visual Studio 2019 with .netcoreapp3.1 and powershell 7.0 for CollectSFDataTest
 ## Setup
 
 there is currently a bug with powershell core and azure authentication cmdlets using Cng cryptography.
-.\setup-test-env.ps1 will not authenticate to azure properly using spn credentials until the connect-azaccount module is updated. until then, running of script outside of visual studio to set configuration settings in test configuration file may be required.
+.\scripts\setup-test-env.ps1 will not authenticate to azure properly using spn credentials until the connect-azaccount module is updated. until then, running of script outside of visual studio to set configuration settings in test configuration file may be required.
 
 ### App registration (user) setup
 
@@ -24,21 +24,21 @@ msal confidentialclient does not require replyurls.
 
 the following script will create an app registration using certificate logon for confidentialclient msal .net core authentication
 
-- .\azure-az-create-aad-application-spn.ps1 -aadDisplayName collectsfdatatestclient -uri http://collectsfdatatestclient -logontype cert
+- .\scripts\azure-az-create-aad-application-spn.ps1 -aadDisplayName collectsfdatatestclient -uri http://collectsfdatatestclient -logontype cert
 
 #### **collectsfdata azureclientid and azureclientsecret setup**
 
 the following script will create an app registration using certificate thumbprint logon for confidentialclient msal .net authentication
 
-- .\azure-az-create-aad-application-spn.ps1 -aadDisplayName collectsfdata -uri http://collectsfdata -logontype certthumb
+- .\scripts\azure-az-create-aad-application-spn.ps1 -aadDisplayName collectsfdata -uri http://collectsfdata -logontype certthumb
 
 ### Environment Setup
 
-- .\setup-test-env.ps1
+- .\scripts\setup-test-env.ps1
 
-.\setup-test-env.ps1 creates the following configuration file: $env:LocalAppData\collectsfdata\collectSfDataTestProperties.json
+.\scripts\setup-test-env.ps1 creates the following configuration file: $env:LocalAppData\collectsfdata\collectSfDataTestProperties.json
 
-using output from .\azure-az-create-aad-application-spn.ps1, enter:
+using output from .\scripts\azure-az-create-aad-application-spn.ps1, enter:
 - AzureClientId
 - AzureClientSecret
 - AzureTenantId
@@ -67,7 +67,7 @@ to create a test kusto cluster for testing, the below script can be used. Pass r
 script will create dev kusto cluster and database. Script will add app registration id as a database admin.  
 output will display 'kustocluster' kusto ingest url with database.
 
-.\azure-az-create-kusto-cluster.ps1 -resourceGroupLocation {{ location }} -appRegistrationId {{ app registration id for 'collectsfdata' }}
+.\scripts\azure-az-create-kusto-cluster.ps1 -resourceGroupLocation {{ location }} -appRegistrationId {{ app registration id for 'collectsfdata' }}
 
 example output:
 
