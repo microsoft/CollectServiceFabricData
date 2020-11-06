@@ -313,8 +313,8 @@ namespace CollectSFData.Common
 
         public bool IsLogAnalyticsConfigured()
         {
-            return !string.IsNullOrEmpty(LogAnalyticsId)
-                & !string.IsNullOrEmpty(LogAnalyticsKey)
+            return (!string.IsNullOrEmpty(LogAnalyticsId) | LogAnalyticsCreate)
+                & (!string.IsNullOrEmpty(LogAnalyticsKey) | LogAnalyticsCreate)
                 & !string.IsNullOrEmpty(LogAnalyticsName);
         }
 
