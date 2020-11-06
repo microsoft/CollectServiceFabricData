@@ -79,6 +79,8 @@ namespace CollectSFDataTests
 
         public static string DefaultOptionsFile => $"{WorkingDir}\\..\\..\\..\\..\\..\\configurationFiles\\collectsfdata.options.json";
 
+        public static string ScriptsDir => $"{WorkingDir}\\..\\..\\..\\..\\..\\scripts";
+
         public static string TempDir => $"{WorkingDir}\\..\\..\\Temp";
 
         public static string[] TestArgs => new string[2] { "-config", TestOptionsFile };
@@ -88,7 +90,7 @@ namespace CollectSFDataTests
 
         public static string TestPropertiesFile => $"{Environment.GetEnvironmentVariable("LOCALAPPDATA")}\\collectsfdata\\collectSfDataTestProperties.json";
 
-        public static string TestPropertiesSetupScript => $"{TestUtilitiesDir}\\setup-test-env.ps1";
+        public static string TestPropertiesSetupScript => $"{ScriptsDir}\\setup-test-env.ps1";
 
         public static string TestUtilitiesDir => $"{WorkingDir}\\..\\..\\..\\..\\TestUtilities";
 
