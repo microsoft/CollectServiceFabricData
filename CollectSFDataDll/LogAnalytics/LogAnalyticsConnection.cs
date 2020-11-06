@@ -23,11 +23,12 @@ namespace CollectSFData.LogAnalytics
     public class LogAnalyticsConnection : Instance
     {
         private readonly AzureResourceManager _arm = new AzureResourceManager();
+        private string _armAuthResource = "https://management.core.windows.net";
         private readonly AzureResourceManager _laArm = new AzureResourceManager();
         private LogAnalyticsWorkspaceModel _currentWorkspaceModelModel = new LogAnalyticsWorkspaceModel();
         private Http _httpClient = Http.ClientFactory();
         private SynchronizedList<string> _ingestedUris = new SynchronizedList<string>();
-        private string _logAnalyticsApiVer = "api-version=2015-11-01-preview";
+        private string _logAnalyticsApiVer = "api-version=2020-08-01";
         private string _logAnalyticsAuthResource = "https://api.loganalytics.io";
         private string _logAnalyticsCustomLogSuffix = ".ods.opinsights.azure.com/api/logs?api-version=2016-04-01";
         private string _logAnalyticsQueryEndpoint = "https://api.loganalytics.io/v1/workspaces/";
@@ -52,7 +53,7 @@ namespace CollectSFData.LogAnalytics
         {
             if (Config.LogAnalyticsCreate | Config.LogAnalyticsRecreate | Config.Unique)
             {
-                _arm.Authenticate();
+                Authenticate();
                 GetCurrentWorkspace();
 
                 if (Config.LogAnalyticsRecreate)
@@ -426,7 +427,7 @@ namespace CollectSFData.LogAnalytics
                 string uri = $"{_logAnalyticsQueryEndpoint}{Config.LogAnalyticsId}/query";
                 Log.Info($"post uri:{uri}", ConsoleColor.Blue, null, query);
 
-                _laArm.Authenticate(true, _logAnalyticsAuthResource);
+                Authenticate();
                 _httpClient.SendRequest(
                             uri: uri,
                             authToken: _laArm.BearerToken,
@@ -453,6 +454,33 @@ namespace CollectSFData.LogAnalytics
             {
                 Log.Exception($"post exception:{e}");
                 return null;
+            }
+        }
+
+        private void Authenticate()
+        {
+            if (!_arm.IsAuthenticated)
+            {
+                _arm.Scopes = new List<string>() { $"{_armAuthResource}//user_impersonation" };
+
+                if (Config.IsClientIdConfigured())
+                {
+                    _arm.Scopes = new List<string>() { $"{_armAuthResource}//.default" };
+                }
+
+                _arm.Authenticate(false, _armAuthResource);
+            }
+
+            if (!_laArm.IsAuthenticated)
+            {
+                _laArm.Scopes = new List<string>() { $"{_logAnalyticsAuthResource}//user_impersonation" };
+
+                if (Config.IsClientIdConfigured())
+                {
+                    _laArm.Scopes = new List<string>() { $"{_logAnalyticsAuthResource}//.default" };
+                }
+
+                _laArm.Authenticate(true, _logAnalyticsAuthResource);
             }
         }
 

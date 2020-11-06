@@ -100,7 +100,7 @@ namespace CollectSFData.Kusto
         private KustoConnectionStringBuilder ManagementConnection { get; set; }
         private Timer queryTimer { get; set; } // = new Timer(DisposeClient, kustoQueryClient, maxKustoClientTimeMs, maxKustoClientTimeMs);
 
-        public void Authenticate(bool throwOnError = false, bool prompt = false)
+        public void Authenticate(bool throwOnError = false)
         {
             _arm.Scopes = new List<string>() { $"{ClusterIngestUrl}/kusto.read", $"{ClusterIngestUrl}/kusto.write" };
 
@@ -109,7 +109,7 @@ namespace CollectSFData.Kusto
                 _arm.Scopes = new List<string>() { $"{ClusterIngestUrl}/.default" };
             }
 
-            if (Config.IsKustoConfigured() && _arm.Authenticate(throwOnError, ClusterIngestUrl, prompt))
+            if (Config.IsKustoConfigured() && _arm.Authenticate(throwOnError, ClusterIngestUrl))
             {
                 DatabaseConnection = new KustoConnectionStringBuilder(ClusterIngestUrl) { FederatedSecurity = true, InitialCatalog = DatabaseName, UserToken = _arm.BearerToken };
                 ManagementConnection = new KustoConnectionStringBuilder(ManagementUrl) { FederatedSecurity = true, InitialCatalog = DatabaseName, UserToken = _arm.BearerToken };
