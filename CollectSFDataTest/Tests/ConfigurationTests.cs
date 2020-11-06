@@ -4,6 +4,7 @@
 // ------------------------------------------------------------
 
 using CollectSFData.DataFile;
+using NUnit.Framework;
 using System;
 using System.IO;
 using System.Text.RegularExpressions;
