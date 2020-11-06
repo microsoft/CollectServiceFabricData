@@ -4,11 +4,12 @@
 // ------------------------------------------------------------
 
 using CollectSFData.DataFile;
+using CollectSFDataTest.Utilities;
 using CollectSFData.Kusto;
 using NUnit.Framework;
 using System;
 
-namespace CollectSFDataTests
+namespace CollectSFDataTest
 {
     [TestFixture]
     public class KustoTests : TestUtilities
