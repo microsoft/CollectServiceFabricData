@@ -31,9 +31,18 @@ namespace CollectSFData
         private ConfigurationOptions Config => Instance.Config;
         public Instance Instance { get; } = Instance.Singleton();
 
+        public Collector(bool isConsole = false)
+        {
+            Log.IsConsole = isConsole;
+        }
         public static int Main(string[] args)
         {
             return new Collector().Collect(args);
+        }
+
+        public int Collect()
+        {
+            return Collect(new string[] { });
         }
 
         public int Collect(string[] args)
