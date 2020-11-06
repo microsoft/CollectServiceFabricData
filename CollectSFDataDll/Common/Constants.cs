@@ -3,6 +3,7 @@
 // Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
+using System;
 using System.Diagnostics;
 
 namespace CollectSFData.Common
@@ -18,6 +19,8 @@ namespace CollectSFData.Common
         public const string DefaultDatePattern = "MM/dd/yyyy HH:mm zzz";
         public const string DefaultOptionsFile = "collectsfdata.options.json";
         public const int DefaultStartTimeHours = -2;
+        public static long DiscoveredMaxDateTicks = DateTime.MinValue.Ticks;
+        public static long DiscoveredMinDateTicks = DateTime.MaxValue.Ticks;
         public const string DumpExtension = ".dmp";
         public const string FalseStringPattern = @"(false|0|off|null)";
         public const string FileFilterPattern = @"(?:.+_){6}(\d{20})_";

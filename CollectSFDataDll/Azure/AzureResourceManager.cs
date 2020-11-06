@@ -16,13 +16,15 @@ using System.Threading.Tasks;
 
 namespace CollectSFData.Azure
 {
-    public class AzureResourceManager : Instance
+    public class AzureResourceManager : Constants
     {
         private string _commonTenantId = "common";
         private IConfidentialClientApplication _confidentialClientApp;
         private List<string> _defaultScope = new List<string>() { ".default" };
         private string _getSubscriptionRestUri = "https://management.azure.com/subscriptions/{subscriptionId}?api-version=2016-06-01";
         private Http _httpClient = Http.ClientFactory();
+        private Instance _instance = Instance.Singleton();
+        private ConfigurationOptions Config => _instance.Config;
         private string _listSubscriptionsRestUri = "https://management.azure.com/subscriptions?api-version=2016-06-01";
         private IPublicClientApplication _publicClientApp;
         private string _resource;
@@ -290,7 +292,7 @@ namespace CollectSFData.Azure
                 Scopes = _defaultScope;
             }
 
-            if (IsWindows)
+            if (_instance.IsWindows)
             {
                 TokenCacheHelper.EnableSerialization(_confidentialClientApp.AppTokenCache);
             }
@@ -314,7 +316,7 @@ namespace CollectSFData.Azure
                 .WithDefaultRedirectUri()
                 .Build();
 
-            if (IsWindows)
+            if (_instance.IsWindows)
             {
                 TokenCacheHelper.EnableSerialization(_publicClientApp.UserTokenCache);
             }
