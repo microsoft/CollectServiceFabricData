@@ -11,8 +11,10 @@ using System.Threading.Tasks;
 
 namespace CollectSFData.Common
 {
-    public class CustomTaskManager : Instance
+    public class CustomTaskManager : Constants
     {
+        private static Instance _instance = Instance.Singleton();
+        private static ConfigurationOptions Config => _instance.Config;
         private static readonly Task _taskMonitor = new Task(TaskMonitor);
         private static SynchronizedList<CustomTaskManager> _allInstances = new SynchronizedList<CustomTaskManager>();
         private static CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
@@ -33,6 +35,7 @@ namespace CollectSFData.Common
                 if (_taskMonitor.Status == TaskStatus.Created)
                 {
                     _taskMonitor.Start();
+                    //Config = _instance.Config;
                     _customScheduler = new CustomTaskScheduler(Config);
 
                     Log.Info($"starting taskmonitor. status: {_taskMonitor.Status}", ConsoleColor.White);
@@ -135,7 +138,7 @@ namespace CollectSFData.Common
                 foreach (Task badTask in instance.AllTasks.FindAll(x => x.Status > TaskStatus.RanToCompletion))
                 {
                     Log.Error("task failure: ", badTask);
-                    TotalErrors++;
+                    _instance.TotalErrors++;
                 }
 
                 instance.AllTasks.RemoveAll(x => x.IsCompleted);
@@ -153,8 +156,8 @@ namespace CollectSFData.Common
                     $"incomplete:{instance.AllTasks.Count(x => !x.IsCompleted)} " +
                     $"queued:{instance.QueuedTaskObjects.Count()} " +
                     $"GC:{GC.GetTotalMemory(false)} " +
-                    $"total records:{TotalRecords} " +
-                    $"rps:{TotalRecords / (DateTime.Now - StartTime).TotalSeconds}", ConsoleColor.Magenta);
+                    $"total records:{_instance.TotalRecords} " +
+                    $"rps:{_instance.TotalRecords / (DateTime.Now - _instance.StartTime).TotalSeconds}", ConsoleColor.Magenta);
             }
 
             return instance.AllTasks.Count(x => !x.IsCompleted);
