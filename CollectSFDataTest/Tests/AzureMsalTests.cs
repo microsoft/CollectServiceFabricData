@@ -3,13 +3,19 @@
 // Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
+using CollectSFData;
 using CollectSFData.Azure;
+using CollectSFData.Common;
 using CollectSFData.DataFile;
+using CollectSFDataTest.Utilities;
+using Markdig.Extensions.Yaml;
 using NUnit.Framework;
 using System;
 using System.IO;
+using System.Linq;
+using System.Text;
 
-namespace CollectSFDataTests
+namespace CollectSFDataTest
 {
     [TestFixture]
     public class AzureMsalTests : TestUtilities
@@ -18,9 +24,16 @@ namespace CollectSFDataTests
         public void AzureMsalClientBadIdTest()
         {
             TestUtilities utils = DefaultUtilities();
+            ConfigurationOptions config = utils.Collector.Instance.Config;
+
             DeleteTokenCache();
 
-            utils.ConfigurationOptions.AzureClientId = "test";
+            utils.Collector.Collect();
+
+            bool test = utils.LogMessageQueue.Contains("fail");
+
+            config.AzureClientId = "test";
+            config.ValidateAad();
 
             ProcessOutput results = utils.ExecuteTest();
 
@@ -41,12 +54,14 @@ namespace CollectSFDataTests
         public void AzureMsalUserAuthTest()
         {
             TestUtilities utils = DefaultUtilities();
-            utils.ConfigurationOptions.AzureClientId = null;
-            utils.ConfigurationOptions.AzureClientSecret = null;
-            utils.ConfigurationOptions.AzureResourceGroup = null;
-            utils.ConfigurationOptions.AzureResourceGroupLocation = null;
-            utils.ConfigurationOptions.AzureSubscriptionId = null;
-            utils.ConfigurationOptions.AzureTenantId = null;
+            ConfigurationOptions config = utils.Collector.Instance.Config;
+
+            config.AzureClientId = null;
+            config.AzureClientSecret = null;
+            config.AzureResourceGroup = null;
+            config.AzureResourceGroupLocation = null;
+            config.AzureSubscriptionId = null;
+            config.AzureTenantId = null;
 
             ProcessOutput results = utils.ExecuteTest();
 
@@ -70,23 +85,26 @@ namespace CollectSFDataTests
         private TestUtilities DefaultUtilities()
         {
             TestUtilities utils = new TestUtilities();
-            utils.ConfigurationOptions.SasKey = TestUtilities.TestProperties.SasKey;
-            utils.ConfigurationOptions.CacheLocation = TestUtilities.TempDir;
-            utils.ConfigurationOptions.StartTimeStamp = DateTime.MinValue.ToString("o");
-            utils.ConfigurationOptions.EndTimeStamp = DateTime.Now.ToString("o");
-            utils.ConfigurationOptions.AzureClientId = TestUtilities.TestProperties.AzureClientId;
-            utils.ConfigurationOptions.AzureClientSecret = TestUtilities.TestProperties.AzureClientSecret;
-            utils.ConfigurationOptions.AzureResourceGroup = TestUtilities.TestProperties.AzureResourceGroup;
-            utils.ConfigurationOptions.AzureResourceGroupLocation = TestUtilities.TestProperties.AzureResourceGroupLocation;
-            utils.ConfigurationOptions.AzureSubscriptionId = TestUtilities.TestProperties.AzureSubscriptionId;
-            utils.ConfigurationOptions.AzureTenantId = TestUtilities.TestProperties.AzureTenantId;
-            utils.ConfigurationOptions.List = true;
+            utils.LogMessageQueueEnabled = true;
+            ConfigurationOptions config = utils.Collector.Instance.Config;
+
+            config.SasKey = TestUtilities.TestProperties.SasKey;
+            config.CacheLocation = TestUtilities.TempDir;
+            config.StartTimeStamp = DateTime.MinValue.ToString("o");
+            config.EndTimeStamp = DateTime.Now.ToString("o");
+            config.AzureClientId = TestUtilities.TestProperties.AzureClientId;
+            config.AzureClientSecret = TestUtilities.TestProperties.AzureClientSecret;
+            config.AzureResourceGroup = TestUtilities.TestProperties.AzureResourceGroup;
+            config.AzureResourceGroupLocation = TestUtilities.TestProperties.AzureResourceGroupLocation;
+            config.AzureSubscriptionId = TestUtilities.TestProperties.AzureSubscriptionId;
+            config.AzureTenantId = TestUtilities.TestProperties.AzureTenantId;
+            config.List = true;
 
             // force auth
-            //utils.ConfigurationOptions.KustoCluster = TestUtilities.TestProperties.KustoCluster;
-            //utils.ConfigurationOptions.KustoTable = "test";
+            //config.KustoCluster = TestUtilities.TestProperties.KustoCluster;
+            //config.KustoTable = "test";
 
-            utils.ConfigurationOptions.GatherType = FileTypesEnum.trace.ToString();
+            config.GatherType = FileTypesEnum.trace.ToString();
             return utils;
         }
     }
