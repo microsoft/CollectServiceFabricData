@@ -21,9 +21,9 @@ namespace CollectSFData.Common
         private static ConsoleColor _highlightBackground = Console.ForegroundColor;
         private static ConsoleColor _highlightForeground = Console.BackgroundColor;
         private static JsonSerializerSettings _jsonSerializerSettings;
-        private static SynchronizedList<MessageObject> _lastMessageList = new SynchronizedList<MessageObject>();
+        private static SynchronizedList<LogMessage> _lastMessageList = new SynchronizedList<LogMessage>();
         private static string _logFile;
-        private static SynchronizedList<MessageObject> _messageList = new SynchronizedList<MessageObject>();
+        private static SynchronizedList<LogMessage> _messageList = new SynchronizedList<LogMessage>();
         private static StreamWriter _streamWriter;
         private static Task _taskWriter;
         private static CancellationTokenSource _taskWriterCancellationToken;
@@ -41,8 +41,13 @@ namespace CollectSFData.Common
             Start();
         }
 
+        public delegate void LogMessageHandler(object sender, LogMessage args);
+
+        public static event LogMessageHandler MessageLogged;
+
         private static event EventHandler<Newtonsoft.Json.Serialization.ErrorEventArgs> JsonErrorHandler;
 
+        public static bool IsConsole { get; set; }
         public static bool LogDebugEnabled { get; set; }
 
         public static string LogFile { get => _logFile; set => _logFile = CheckLogFile(value) ? value : string.Empty; }
@@ -122,6 +127,11 @@ namespace CollectSFData.Common
                                 bool isError = false,
                                 [CallerMemberName] string callerName = "")
         {
+            if (!IsConsole && MessageLogged == null)
+            {
+                return;
+            }
+
             if (jsonSerializer != null)
             {
                 try
@@ -139,28 +149,14 @@ namespace CollectSFData.Common
                 message = $"{Thread.CurrentThread.ManagedThreadId}:{callerName}:{message}{jsonSerializer}";
             }
 
-            if (lastMessage)
+            QueueMessage(lastMessage, new LogMessage()
             {
-                _lastMessageList.Add(new MessageObject()
-                {
-                    TimeStamp = DateTime.Now.ToString("o") + "::",
-                    Message = message,
-                    BackgroundColor = backgroundColor,
-                    ForegroundColor = foregroundColor,
-                    IsError = isError
-                });
-            }
-            else
-            {
-                _messageList.Add(new MessageObject()
-                {
-                    TimeStamp = DateTime.Now.ToString("o") + "::",
-                    Message = message,
-                    BackgroundColor = backgroundColor,
-                    ForegroundColor = foregroundColor,
-                    IsError = isError
-                });
-            }
+                TimeStamp = DateTime.Now.ToString("o") + "::",
+                Message = message,
+                BackgroundColor = backgroundColor,
+                ForegroundColor = foregroundColor,
+                IsError = isError
+            });
         }
 
         public static void Info(string message, object jsonSerializer, [CallerMemberName] string callerName = "")
@@ -240,6 +236,18 @@ namespace CollectSFData.Common
             Info($"json serialization error: {e.ErrorContext.OriginalObject} {e.ErrorContext.Path}");
         }
 
+        private static void QueueMessage(bool lastMessage, LogMessage logMessage)
+        {
+            if (lastMessage)
+            {
+                _lastMessageList.Add(logMessage);
+            }
+            else
+            {
+                _messageList.Add(logMessage);
+            }
+        }
+
         private static void ResetColor(ConsoleColor? foregroundColor = null, ConsoleColor? backgroundColor = null)
         {
             if (foregroundColor != null | backgroundColor != null)
@@ -268,9 +276,10 @@ namespace CollectSFData.Common
             {
                 while (_messageList.Any())
                 {
-                    foreach (MessageObject result in _messageList.DeListAll())
+                    foreach (LogMessage result in _messageList.DeListAll())
                     {
                         WriteMessage(result);
+
                         if (LogFileEnabled)
                         {
                             WriteFile(result);
@@ -284,7 +293,7 @@ namespace CollectSFData.Common
             CloseFile();
         }
 
-        private static void WriteFile(MessageObject result)
+        private static void WriteFile(LogMessage result)
         {
             if (_streamWriter == null)
             {
@@ -294,36 +303,33 @@ namespace CollectSFData.Common
             _streamWriter.WriteLine(result.TimeStamp + result.Message);
         }
 
-        private static void WriteMessage(MessageObject message)
+        private static void WriteMessage(LogMessage message)
         {
-            System.Diagnostics.Debug.Print(message.Message);
-            SetColor(message.ForegroundColor, message.BackgroundColor);
-            if (_displayingProgress)
+            if (IsConsole)
             {
-                _displayingProgress = false;
-                Console.WriteLine(Environment.NewLine);
+                System.Diagnostics.Debug.Print(message.Message);
+                SetColor(message.ForegroundColor, message.BackgroundColor);
+                if (_displayingProgress)
+                {
+                    _displayingProgress = false;
+                    Console.WriteLine(Environment.NewLine);
+                }
+
+                if (message.IsError)
+                {
+                    LogErrors++;
+                    Console.Error.WriteLine(message.Message);
+                }
+                else
+                {
+                    Console.WriteLine(message.Message);
+                }
+
+                ResetColor(message.ForegroundColor, message.BackgroundColor);
             }
 
-            if (message.IsError)
-            {
-                LogErrors++;
-                Console.Error.WriteLine(message.Message);
-            }
-            else
-            {
-                Console.WriteLine(message.Message);
-            }
-
-            ResetColor(message.ForegroundColor, message.BackgroundColor);
-        }
-
-        public class MessageObject
-        {
-            public ConsoleColor? BackgroundColor { get; set; }
-            public ConsoleColor? ForegroundColor { get; set; }
-            public bool IsError { get; set; }
-            public string Message { get; set; }
-            public string TimeStamp { get; set; }
+            LogMessageHandler logMessage = MessageLogged;
+            logMessage?.Invoke(null, message);
         }
     }
 }
