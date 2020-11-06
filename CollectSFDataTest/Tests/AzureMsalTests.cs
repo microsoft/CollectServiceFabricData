@@ -5,6 +5,7 @@
 
 using CollectSFData.Azure;
 using CollectSFData.DataFile;
+using NUnit.Framework;
 using System;
 using System.IO;
 
