@@ -15,13 +15,13 @@ using System.Threading.Tasks;
 
 namespace CollectSFData.Azure
 {
-    public class TableManager : Instance
+    public class TableManager : Constants
     {
+        private Instance _instance = Instance.Singleton();
+        private ConfigurationOptions Config => _instance.Config;
         private readonly CustomTaskManager _tableTasks = new CustomTaskManager(true);
         private CloudTableClient _tableClient;
-
         public Action<FileObject> IngestCallback { get; set; }
-
         public List<CloudTable> TableList { get; set; } = new List<CloudTable>();
 
         public bool Connect()
@@ -84,7 +84,7 @@ namespace CollectSFData.Azure
 
             Log.Info("finished table enumeration");
             _tableTasks.Wait();
-            Log.Highlight($"processed table count:{ resultsCount.ToString("#,#") } minutes:{ (DateTime.Now - StartTime).TotalMinutes.ToString("F3") } ");
+            Log.Highlight($"processed table count:{ resultsCount.ToString("#,#") } minutes:{ (DateTime.Now - _instance.StartTime).TotalMinutes.ToString("F3") } ");
         }
 
         public string QueryTablesForClusterId()
@@ -166,7 +166,7 @@ namespace CollectSFData.Azure
             List<CsvTableRecord> results = new List<CsvTableRecord>();
             int tableRecords = 0;
             TableQuery query = GenerateTimeQuery(maxResults);
-            TotalFilesEnumerated++;
+            _instance.TotalFilesEnumerated++;
 
             while (token != null)
             {
@@ -225,17 +225,18 @@ namespace CollectSFData.Azure
                     FileObject fileObject = new FileObject($"{cloudTable.Name}.{chunkCount++}{TableExtension}", Config.CacheLocation);
                     fileObject.Stream.Write(resultsChunk.ToList());
 
-                    TotalFilesDownloaded++;
+                    _instance.TotalFilesDownloaded++;
                     IngestCallback?.Invoke(fileObject);
                 }
             }
             else
             {
-                TotalFilesSkipped++;
+                _instance.TotalFilesSkipped++;
             }
         }
 
-#if NETCOREAPP 
+#if NETCOREAPP
+
         private List<CsvTableRecord> FormatRecordResults(CloudTable cloudTable, TableQuerySegment tableSegment)
 #else
         private List<CsvTableRecord> FormatRecordResults(CloudTable cloudTable, TableQuerySegment<DynamicTableEntity> tableSegment)

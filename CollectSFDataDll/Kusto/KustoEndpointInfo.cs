@@ -35,8 +35,10 @@ namespace CollectSFData.Kusto
         public IList<string> TempStorageContainers { get; set; } = new List<string>();
     }
 
-    public class KustoEndpointInfo : Instance
+    public class KustoEndpointInfo : Constants
     {
+        private Instance _instance = Instance.Singleton();
+        private ConfigurationOptions Config => _instance.Config;
         private static ICslAdminProvider _kustoAdminClient;
         private static ICslQueryProvider _kustoQueryClient;
         private static int maxKustoClientTimeMs = 300 * 1000;

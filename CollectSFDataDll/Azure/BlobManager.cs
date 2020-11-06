@@ -17,14 +17,17 @@ using System.Threading.Tasks;
 
 namespace CollectSFData.Azure
 {
-    public class BlobManager : Instance
+    public class BlobManager : Constants
     {
         private readonly CustomTaskManager _blobChildTasks = new CustomTaskManager(true) { CreationOptions = TaskCreationOptions.AttachedToParent };
         private readonly CustomTaskManager _blobTasks = new CustomTaskManager(true);
         private CloudStorageAccount _account;
         private CloudBlobClient _blobClient;
-        private object DateTimeMaxLock = new object();
-        private object DateTimeMinLock = new object();
+        private Instance _instance = Instance.Singleton();
+        private ConfigurationOptions Config => _instance.Config;
+
+        private object _dateTimeMaxLock = new object();
+        private object _dateTimeMinLock = new object();
         public List<CloudBlobContainer> ContainerList { get; set; } = new List<CloudBlobContainer>();
 
         public Action<FileObject> IngestCallback { get; set; }
@@ -289,12 +292,12 @@ namespace CollectSFData.Azure
                 }
 
                 IngestCallback?.Invoke(fileObject);
-                Interlocked.Increment(ref TotalFilesDownloaded);
+                Interlocked.Increment(ref _instance.TotalFilesDownloaded);
             }
             else
             {
                 Log.Warning($"destination file exists. skipping download:\r\n file: {fileObject}");
-                Interlocked.Increment(ref TotalFilesSkipped);
+                Interlocked.Increment(ref _instance.TotalFilesSkipped);
             }
         }
 
@@ -323,7 +326,7 @@ namespace CollectSFData.Azure
                     continue;
                 }
 
-                Interlocked.Increment(ref TotalFilesEnumerated);
+                Interlocked.Increment(ref _instance.TotalFilesEnumerated);
 
                 if (Regex.IsMatch(blob.Uri.ToString(), FileFilterPattern, RegexOptions.IgnoreCase))
                 {
@@ -331,7 +334,7 @@ namespace CollectSFData.Azure
 
                     if (ticks < Config.StartTimeUtc.Ticks | ticks > Config.EndTimeUtc.Ticks)
                     {
-                        Interlocked.Increment(ref TotalFilesSkipped);
+                        Interlocked.Increment(ref _instance.TotalFilesSkipped);
                         Log.Debug($"exclude:bloburi file ticks {new DateTime(ticks).ToString("o")} outside of time range:{blob.Uri}");
 
                         SetMinMaxDate(ref segmentMinDateTicks, ref segmentMaxDateTicks, ticks);
@@ -350,7 +353,7 @@ namespace CollectSFData.Azure
                 }
                 catch (StorageException se)
                 {
-                    Interlocked.Increment(ref TotalErrors);
+                    Interlocked.Increment(ref _instance.TotalErrors);
                     Log.Exception($"getting ref for {blob.Uri}, skipping. {se.Message}");
                     continue;
                 }
@@ -362,7 +365,7 @@ namespace CollectSFData.Azure
 
                     if (!string.IsNullOrEmpty(Config.UriFilter) && !Regex.IsMatch(blob.Uri.ToString(), Config.UriFilter, RegexOptions.IgnoreCase))
                     {
-                        Interlocked.Increment(ref TotalFilesSkipped);
+                        Interlocked.Increment(ref _instance.TotalFilesSkipped);
                         Log.Debug($"blob:{blob.Uri} does not match uriFilter pattern:{Config.UriFilter}, skipping...");
                         continue;
                     }
@@ -370,14 +373,14 @@ namespace CollectSFData.Azure
                     if (Config.FileType != FileTypesEnum.any
                         && !FileTypes.MapFileTypeUri(blob.Uri.AbsolutePath).Equals(Config.FileType))
                     {
-                        Interlocked.Increment(ref TotalFilesSkipped);
+                        Interlocked.Increment(ref _instance.TotalFilesSkipped);
                         Log.Debug($"skipping uri with incorrect file type: {FileTypes.MapFileTypeUri(blob.Uri.AbsolutePath)}");
                         continue;
                     }
 
                     if (lastModified >= Config.StartTimeUtc && lastModified <= Config.EndTimeUtc)
                     {
-                        Interlocked.Increment(ref TotalFilesMatched);
+                        Interlocked.Increment(ref _instance.TotalFilesMatched);
 
                         if (Config.List)
                         {
@@ -406,7 +409,7 @@ namespace CollectSFData.Azure
                     }
                     else
                     {
-                        Interlocked.Increment(ref TotalFilesSkipped);
+                        Interlocked.Increment(ref _instance.TotalFilesSkipped);
                         Log.Debug($"exclude:bloburi {lastModified.ToString("o")} outside of time range:{blob.Uri}");
 
                         SetMinMaxDate(ref segmentMinDateTicks, ref segmentMaxDateTicks, lastModified.Ticks);
@@ -416,7 +419,7 @@ namespace CollectSFData.Azure
                 else
                 {
                     Log.Error("unable to read blob modified date", blobRef);
-                    TotalErrors++;
+                    _instance.TotalErrors++;
                 }
             }
         }
@@ -428,7 +431,7 @@ namespace CollectSFData.Azure
                 if (ticks < segmentMinDateTicks)
                 {
                     Log.Debug($"set new discovered min time range ticks: {new DateTime(ticks).ToString("o")}");
-                    lock (DateTimeMinLock)
+                    lock (_dateTimeMinLock)
                     {
                         segmentMinDateTicks = DiscoveredMinDateTicks = Math.Min(DiscoveredMinDateTicks, ticks);
                     }
@@ -437,7 +440,7 @@ namespace CollectSFData.Azure
                 if (ticks > segmentMaxDateTicks)
                 {
                     Log.Debug($"set new discovered max time range ticks: {new DateTime(ticks).ToString("o")}");
-                    lock (DateTimeMaxLock)
+                    lock (_dateTimeMaxLock)
                     {
                         segmentMaxDateTicks = DiscoveredMaxDateTicks = Math.Max(DiscoveredMaxDateTicks, ticks);
                     }

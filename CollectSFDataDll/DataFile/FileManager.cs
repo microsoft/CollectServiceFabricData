@@ -16,8 +16,10 @@ using System.Text.RegularExpressions;
 
 namespace CollectSFData.DataFile
 {
-    public class FileManager : Instance
+    public class FileManager : Constants
     {
+        private Instance _instance = Instance.Singleton();
+        private ConfigurationOptions Config => _instance.Config;
         private readonly CustomTaskManager _fileTasks = new CustomTaskManager(true);
 
         public static string NormalizePath(string path, string directorySeparator = "/")
@@ -194,7 +196,7 @@ namespace CollectSFData.DataFile
             }
 
             convertFileProc.WaitForExit();
-            TotalFilesConverted++;
+            _instance.TotalFilesConverted++;
             fileObject.Stream.ReadFromFile(outputFile);
             DeleteFile(outputFile);
 
@@ -357,8 +359,8 @@ namespace CollectSFData.DataFile
         private FileObjectCollection PopulateCollection<T>(FileObject fileObject, IList<T> records) where T : IRecord
         {
             FileObjectCollection collection = new FileObjectCollection() { fileObject };
-            TotalFilesFormatted++;
-            TotalRecords += records.Count;
+            _instance.TotalFilesFormatted++;
+            _instance.TotalRecords += records.Count;
 
             if (Config.IsKustoConfigured())
             {
