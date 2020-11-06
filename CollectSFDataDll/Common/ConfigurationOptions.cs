@@ -33,7 +33,6 @@ namespace CollectSFData.Common
 
         public ConfigurationOptions()
         {
-            DefaultConfig();
             _cmdLineArgs.CmdLineApp.OnExecute(() => MergeCmdLine());
             _cmdLineArgs.InitFromCmdLine();
 
@@ -42,6 +41,7 @@ namespace CollectSFData.Common
             _startTime = defaultOffset.AddHours(DefaultStartTimeHours).ToString(DefaultDatePattern);
             EndTimeUtc = defaultOffset.UtcDateTime;
             _endTime = defaultOffset.ToString(DefaultDatePattern);
+            DefaultConfig();
         }
 
         public string AzureClientId { get; set; }
