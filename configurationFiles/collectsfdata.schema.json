@@ -338,12 +338,15 @@
     },
     "LogDebug": {
       "$id": "#/properties/LogDebug",
-      "type": "boolean",
-      "title": "LogDebug true to display and log additional logging for troubleshooting utility",
-      "default": false,
+      "type": "integer",
+      "title": "LogDebug 0-not used, 1-exception, 2-error, 3-warning, 4-info, 5-debug. use logdebug levels for troubleshooting utility",
+      "default": 3,
       "examples": [
-        false,
-        true
+        1,
+        2,
+        3,
+        4,
+        5
       ]
     },
     "LogFile": {
