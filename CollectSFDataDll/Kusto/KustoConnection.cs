@@ -478,6 +478,8 @@ namespace CollectSFData.Kusto
                     }
                     else if (message.SucceededOn + _messageTimeToLive < DateTime.Now)
                     {
+                        // remove sas key
+                        message.IngestionSourcePath = Regex.Replace(message.IngestionSourcePath, @"\?(.*)", "");
                         Log.Warning($"cleaning stale message", message);
                         RemoveMessageFromQueue(Endpoint.IngestionResources.SuccessNotificationsQueue, success);
                     }
