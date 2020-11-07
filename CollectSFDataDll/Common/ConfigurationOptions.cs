@@ -123,7 +123,7 @@ namespace CollectSFData.Common
 
         public bool KustoUseBlobAsSource { get; set; }
 
-        public bool KustoUseIngestMessage { get; set; } = true; // todo: remove
+        public bool KustoUseIngestMessage { get; set; }
 
         public bool List { get; set; }
 
