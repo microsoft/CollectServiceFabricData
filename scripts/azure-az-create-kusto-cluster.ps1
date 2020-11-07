@@ -43,16 +43,16 @@ $kustoClusters
 
 if (($kustoClusters.Name -imatch $clusterName)) {
     write-error "cluster exists $clustername"
-    if(!$force) { return }
+    if (!$force) { return }
 }
 
 $availableSkus = Get-AzKustoClusterSku | ? location -ieq $resourceGroupLocation | ? tier -ieq $skuTier
 write-host "available skus in $resourceGroupLocation"
 $availableSkus | convertto-json
 
-if(!($availableSkus | ? name -ieq $skuName)) {
+if (!($availableSkus | ? name -ieq $skuName)) {
     write-error "$skuName unavailable in $resourceGroupLocation"
-    if(!$force) { return }
+    if (!$force) { return }
 }
 
 
@@ -116,21 +116,22 @@ Type <DatabasePrincipalType>: Database principal type.
 [Fqn <String>]: Database principal fully qualified name.
 #>
 
-write-host "Add-AzKustoDatabasePrincipal -ClusterName $clusterName `
+if ($appRegistrationId -and (get-azadapplication -applicationId $appRegistrationId)) {
+    write-host "Add-AzKustoDatabasePrincipal -ClusterName $clusterName `
     -DatabaseName $databaseName `
     -ResourceGroupName $resourceGroupName `
     -Value (@{Name = $appRegistrationId; Role = 'Admin'; Type = 'App'; AppId = $appRegistrationId })
 "
 
-write-host "adding principal"
+    write-host "adding principal"
 
-$principal = Add-AzKustoDatabasePrincipal -ClusterName $clusterName `
-    -DatabaseName $databaseName `
-    -ResourceGroupName $resourceGroupName `
-    -Value (@{Name = $appRegistrationId; Role = 'Admin'; Type = 'App'; AppId = $appRegistrationId })
+    $principal = Add-AzKustoDatabasePrincipal -ClusterName $clusterName `
+        -DatabaseName $databaseName `
+        -ResourceGroupName $resourceGroupName `
+        -Value (@{Name = $appRegistrationId; Role = 'Admin'; Type = 'App'; AppId = $appRegistrationId })
 
-$principal | convertto-json
-
+    $principal | convertto-json
+}
 <#
 $assignment = New-AzKustoDatabasePrincipalAssignment -ClusterName $clusterName `
     -DatabaseName $databaseName `
