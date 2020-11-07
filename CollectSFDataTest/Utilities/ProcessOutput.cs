@@ -4,6 +4,7 @@
 // ------------------------------------------------------------
 
 using Newtonsoft.Json;
+using System.Collections.Generic;
 
 namespace CollectSFDataTest.Utilities
 {
@@ -14,6 +15,8 @@ namespace CollectSFDataTest.Utilities
         public string StandardError { get; set; } = "";
 
         public string StandardOutput { get; set; } = "";
+        
+        public List<string> LogMessages { get; internal set; }
 
         public bool HasErrors()
         {
