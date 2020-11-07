@@ -274,10 +274,13 @@ namespace CollectSFDataTest.Utilities
             LogMessageQueue.Clear();
             Assert.IsNotNull(output);
 
-            if (!result)
+            Log.Error($"result {result}");
+
+            output.ExitCode = Convert.ToInt32(result);
+            output.ExitBool = Convert.ToBoolean(result);
+            if (!output.ExitBool)
             {
-                Log.Error($"result {result}");
-                output.ExitCode = Convert.ToInt32(result);
+                output.ExitCode = -1;
             }
 
             WriteConsole($">>>>test result<<<<", output);
