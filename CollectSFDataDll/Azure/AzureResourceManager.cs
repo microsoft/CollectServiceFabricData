@@ -195,7 +195,7 @@ namespace CollectSFData.Azure
 
         public void MsalLoggerCallback(LogLevel level, string message, bool containsPII)
         {
-            if (!containsPII | (containsPII & Config.LogDebug > 4))
+            if (!containsPII | (containsPII & Config.LogDebug >= LoggingLevel.Verbose))
             {
                 Log.Info($"{level} {message.Replace(" [", "\r\n [")}");
             }
@@ -360,18 +360,26 @@ namespace CollectSFData.Azure
 
         private bool SetToken()
         {
-            BearerToken = AuthenticationResult.AccessToken;
-            long tickDiff = ((AuthenticationResult.ExpiresOn.ToLocalTime().Ticks - DateTime.Now.Ticks) / 2) + DateTime.Now.Ticks;
-            _tokenExpirationHalfLife = new DateTimeOffset(new DateTime(tickDiff));
+            if (AuthenticationResult?.AccessToken != null)
+            {
+                BearerToken = AuthenticationResult.AccessToken;
+                long tickDiff = ((AuthenticationResult.ExpiresOn.ToLocalTime().Ticks - DateTime.Now.Ticks) / 2) + DateTime.Now.Ticks;
+                _tokenExpirationHalfLife = new DateTimeOffset(new DateTime(tickDiff));
 
-            Log.Info($"authentication result:", ConsoleColor.Green, null, AuthenticationResult);
-            Log.Highlight($"aad token expiration: {AuthenticationResult.ExpiresOn.ToLocalTime()}");
-            Log.Highlight($"aad token half life expiration: {_tokenExpirationHalfLife}");
+                Log.Debug($"authentication result:", AuthenticationResult);
+                Log.Highlight($"aad token expiration: {AuthenticationResult.ExpiresOn.ToLocalTime()}");
+                Log.Highlight($"aad token half life expiration: {_tokenExpirationHalfLife}");
 
-            _timer = new Timer(Reauthenticate, null, Convert.ToInt32((_tokenExpirationHalfLife - DateTime.Now).TotalMilliseconds), Timeout.Infinite);
-            IsAuthenticated = true;
+                _timer = new Timer(Reauthenticate, null, Convert.ToInt32((_tokenExpirationHalfLife - DateTime.Now).TotalMilliseconds), Timeout.Infinite);
+                IsAuthenticated = true;
 
-            return true;
+                return true;
+            }
+            else 
+            {
+                Log.Info($"authentication result:", ConsoleColor.Green, null, AuthenticationResult);
+                return false;
+            }
         }
     }
 }
