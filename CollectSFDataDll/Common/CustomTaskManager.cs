@@ -130,7 +130,7 @@ namespace CollectSFData.Common
                     $"scheduled:{instance.AllTasks.Count()} " +
                     $"queued:{instance.QueuedTaskObjects.Count()}";
 
-                if (Config.LogDebug > 4)
+                if (Config.LogDebug >= LoggingLevel.Verbose)
                 {
                     instance.AllTasks.ForEach(x => taskUpdate += $"\r\n  ID:{x.Id.ToString().PadRight(6)} {x.Status.ToString().PadRight(15)} ({x.CreationOptions.ToString()})");
                 }

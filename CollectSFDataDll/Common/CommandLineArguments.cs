@@ -476,7 +476,7 @@ namespace CollectSFData.Common
                     CommandOptionType.SingleValue);
 
             LogDebug = CmdLineApp.Option("-debug|--logDebug",
-                    $"[int] 0-not used, 1-exception, 2-error, 3-warning, 4-info, 5-debug." + 
+                    $"[int] 0-disabled, 1-exception, 2-error, 3-warning, 4-info, 5-debug." + 
                     $"{newLine} use logdebug levels for troubleshooting utility",
                     CommandOptionType.SingleValue);
 
