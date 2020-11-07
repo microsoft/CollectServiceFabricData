@@ -26,7 +26,7 @@ namespace CollectSFData.Common
         private readonly CommandLineArguments _cmdLineArgs = new CommandLineArguments();
         private bool _defaultConfigLoaded;
         private string _endTime;
-        private bool _logDebugEnabled;
+        private int _logDebug;
         private string _startTime;
         private string _tempPath;
         private int _threads;
@@ -143,10 +143,10 @@ namespace CollectSFData.Common
 
         public string LogAnalyticsWorkspaceSku { get; set; } = "PerGB2018";
 
-        public bool LogDebug
+        public int LogDebug
         {
-            get => Log.LogDebugEnabled = _logDebugEnabled;
-            set => Log.LogDebugEnabled = _logDebugEnabled = value;
+            get => Log.LogDebug = _logDebug;
+            set => Log.LogDebug = _logDebug = value;
         }
 
         public string LogFile { get; set; }
@@ -523,20 +523,20 @@ namespace CollectSFData.Common
                 {
                     if (!instanceProperties.Any(x => x.Name.Equals(argumentProperty.Name)))
                     {
-                        Log.Debug($"options / arguments properties mismatch", argumentProperty);
+                        Log.Debug($"options / arguments properties mismatch: {argumentProperty.Name}");
                         throw new Exception($"options / arguments properties mismatch:{argumentProperty.Name}");
                     }
 
                     if (!((CommandOption)argumentProperty.GetValue(_cmdLineArgs)).HasValue())
                     {
-                        Log.Debug($"empty / null argument value. skipping", argumentProperty);
+                        Log.Debug($"empty / null argument value. skipping: {argumentProperty.Name}");
                         continue;
                     }
 
                     PropertyInfo instanceProperty = instanceProperties.First(x => x.Name.Equals(argumentProperty.Name));
                     object instanceValue = ((CommandOption)argumentProperty.GetValue(_cmdLineArgs)).Value();
-                    Log.Debug($"argumentProperty:", argumentProperty);
-                    Log.Debug($"instanceProperty:", instanceProperty);
+                    Log.Debug($"argumentProperty: {argumentProperty.Name}");
+                    Log.Debug($"instanceProperty: {instanceProperty.Name}");
 
                     if (instanceProperty.PropertyType == typeof(string))
                     {
@@ -610,11 +610,11 @@ namespace CollectSFData.Common
 
             foreach (KeyValuePair<string, JToken> fileOption in fileOptions)
             {
-                Log.Debug($"JObject config option:", fileOption);
+                Log.Debug($"JObject config option:{fileOption.Key}");
 
                 if (!instanceProperties.Any(x => Regex.IsMatch(x.Name, fileOption.Key.Replace("$", ""), RegexOptions.IgnoreCase)))
                 {
-                    Log.Error($"unknown config file option:", fileOption);
+                    Log.Error($"unknown config file option:{fileOption.Key}");
                 }
             }
 
@@ -628,7 +628,7 @@ namespace CollectSFData.Common
 
                 JToken token = fileOptions.ToObject<Dictionary<string, JToken>>()
                     .First(x => Regex.IsMatch(x.Key, instanceProperty.Name, RegexOptions.IgnoreCase)).Value;
-                Log.Debug($"token:", token);
+                Log.Debug($"token:{token.Type}");
 
                 switch (token.Type)
                 {
@@ -670,7 +670,7 @@ namespace CollectSFData.Common
                         break;
 
                     default:
-                        Log.Debug($"jtoken type unknown:", token);
+                        Log.Debug($"jtoken type unknown:{token}");
                         continue;
                 }
 
@@ -719,7 +719,7 @@ namespace CollectSFData.Common
         private void SetPropertyValue(PropertyInfo propertyInstance, object instanceValue)
         {
             object thisValue = propertyInstance.GetValue(this);
-            Log.Debug($"checking:{propertyInstance.Name}:{thisValue} -> {instanceValue}", propertyInstance);
+            Log.Debug($"checking:{propertyInstance.Name}:{thisValue} -> {instanceValue}");
 
             if (thisValue != null && thisValue.Equals(instanceValue))
             {
@@ -729,8 +729,14 @@ namespace CollectSFData.Common
 
             if (propertyInstance.CanWrite)
             {
-                propertyInstance.SetValue(this, instanceValue);
-                Log.Debug($"modifying:{propertyInstance.Name} {thisValue} -> {instanceValue}", ConsoleColor.White);
+                try
+                {
+                    propertyInstance.SetValue(this, instanceValue);
+                }
+                catch(Exception e) 
+                {
+                    Log.Exception($"exception modifying:{propertyInstance.Name} {thisValue} -> {instanceValue}", e);
+                }
             }
             else
             {
