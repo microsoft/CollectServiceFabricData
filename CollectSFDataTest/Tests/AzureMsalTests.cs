@@ -34,7 +34,7 @@ namespace CollectSFDataTest
              }, utils.Collector.Instance.Config);
 
             Assert.IsTrue(results.ToString().Contains("client_id_must_be_guid"), results.ToString());
-            Assert.IsTrue(!results.HasErrors(), results.ToString());
+            Assert.IsTrue(results.HasErrors(), results.ToString());
         }
 
         [Test(Description = "Azure Msal Client test", TestOf = typeof(AzureResourceManager))]
@@ -53,16 +53,17 @@ namespace CollectSFDataTest
         public void AzureMsalUserAuthTest()
         {
             TestUtilities utils = DefaultUtilities();
-            ConfigurationOptions config = utils.Collector.Instance.Config;
+            ProcessOutput results = utils.ExecuteTest((config) =>
+            {
+                config.AzureClientId = null;
+                config.AzureClientSecret = null;
+                config.AzureResourceGroup = null;
+                config.AzureResourceGroupLocation = null;
+                config.AzureSubscriptionId = null;
+                config.AzureTenantId = null;
 
-            config.AzureClientId = null;
-            config.AzureClientSecret = null;
-            config.AzureResourceGroup = null;
-            config.AzureResourceGroupLocation = null;
-            config.AzureSubscriptionId = null;
-            config.AzureTenantId = null;
-
-            ProcessOutput results = utils.ExecuteTest();
+                return config.ValidateAad();
+            }, utils.Collector.Instance.Config);
 
             /* known cng error in .net core that test is running as and azure-az modules
              * fix is to use cert thumb as secret but cert may have to be real / from ca
