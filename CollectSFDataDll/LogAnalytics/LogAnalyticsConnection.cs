@@ -114,7 +114,7 @@ namespace CollectSFData.LogAnalytics
             {
                 Log.Error($"error importing: {fileObject.FileUri} retry:{retry}");
 
-                if (retry == 1 && Config.LogDebug)
+                if (retry == 1 && Config.LogDebug > 4)
                 {
                     File.WriteAllBytes(fileObject.FileUri, fileObject.Stream.Get().ToArray());
                     Log.Error($"json saved to {fileObject.FileUri}");

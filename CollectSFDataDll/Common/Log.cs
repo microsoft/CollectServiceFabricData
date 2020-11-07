@@ -48,7 +48,8 @@ namespace CollectSFData.Common
         private static event EventHandler<Newtonsoft.Json.Serialization.ErrorEventArgs> JsonErrorHandler;
 
         public static bool IsConsole { get; set; }
-        public static bool LogDebugEnabled { get; set; }
+        
+        public static int LogDebug { get; set; }
 
         public static string LogFile { get => _logFile; set => _logFile = CheckLogFile(value) ? value : string.Empty; }
 
@@ -73,7 +74,7 @@ namespace CollectSFData.Common
                 color = ConsoleColor.Yellow;
             }
 
-            Info(message, color, null, jsonSerializer, callerName: callerName);
+            Process(message, color, null, jsonSerializer, callerName: callerName);
         }
 
         public static void Close()
@@ -97,28 +98,51 @@ namespace CollectSFData.Common
 
         public static void Debug(string message, object jsonSerializer = null, [CallerMemberName] string callerName = "")
         {
-            if (LogDebugEnabled)
+            if (LogDebug > 4)
             {
-                Info("debug: " + message, ConsoleColor.Black, ConsoleColor.Gray, jsonSerializer, callerName: callerName);
+                Process("debug: " + message, ConsoleColor.Black, ConsoleColor.Gray, jsonSerializer, callerName: callerName);
             }
         }
 
         public static void Error(string message, object jsonSerializer = null, [CallerMemberName] string callerName = "")
         {
-            Info("error: " + message, ConsoleColor.Red, ConsoleColor.Black, jsonSerializer, isError: true, callerName: callerName);
+            if (LogDebug > 1)
+            {
+                Process("error: " + message, ConsoleColor.Red, ConsoleColor.Black, jsonSerializer, isError: true, callerName: callerName);
+            }
         }
 
         public static void Exception(string message, object jsonSerializer = null, [CallerMemberName] string callerName = "")
         {
-            Info("exception: " + message, ConsoleColor.Black, ConsoleColor.Yellow, jsonSerializer, isError: true, callerName: callerName);
+            if (LogDebug > 0)
+            {
+                Process("exception: " + message, ConsoleColor.Black, ConsoleColor.Yellow, jsonSerializer, isError: true, callerName: callerName);
+            }
         }
 
         public static void Highlight(string message, object jsonSerializer = null, [CallerMemberName] string callerName = "")
         {
-            Info(message, _highlightForeground, _highlightBackground, jsonSerializer, callerName: callerName);
+            if (LogDebug > 2)
+            {
+                Process(message, _highlightForeground, _highlightBackground, jsonSerializer, callerName: callerName);
+            }
         }
 
         public static void Info(string message,
+                                        ConsoleColor? foregroundColor = null,
+                                        ConsoleColor? backgroundColor = null,
+                                        object jsonSerializer = null,
+                                        bool minimal = false,
+                                        bool lastMessage = false,
+                                        bool isError = false,
+                                        [CallerMemberName] string callerName = "")
+        {
+            if (LogDebug > 3)
+            {
+                Process(message, foregroundColor, backgroundColor, jsonSerializer, minimal, lastMessage, isError, callerName);
+            }
+        }
+        private static void Process(string message,
                                 ConsoleColor? foregroundColor = null,
                                 ConsoleColor? backgroundColor = null,
                                 object jsonSerializer = null,
@@ -161,7 +185,10 @@ namespace CollectSFData.Common
 
         public static void Info(string message, object jsonSerializer, [CallerMemberName] string callerName = "")
         {
-            Info(message, null, null, jsonSerializer, callerName: callerName);
+            if (LogDebug > 3)
+            {
+                Process(message, null, null, jsonSerializer, callerName: callerName);
+            }
         }
 
         public static void Last(string message,
@@ -170,7 +197,10 @@ namespace CollectSFData.Common
                                 object jsonSerializer = null,
                                 [CallerMemberName] string callerName = "")
         {
-            Info(message, foregroundColor, backgroundColor, jsonSerializer, false, true, callerName: callerName);
+            if (LogDebug > 2)
+            {
+                Process(message, foregroundColor, backgroundColor, jsonSerializer, false, true, callerName: callerName);
+            }
         }
 
         public static void Min(string message,
@@ -179,7 +209,10 @@ namespace CollectSFData.Common
                                 object jsonSerializer = null,
                                 [CallerMemberName] string callerName = "")
         {
-            Info(message, foregroundColor, backgroundColor, jsonSerializer, true, callerName: callerName);
+            if (LogDebug > 3)
+            {
+                Process(message, foregroundColor, backgroundColor, jsonSerializer, true, callerName: callerName);
+            }
         }
 
         public static void Start()
@@ -191,7 +224,10 @@ namespace CollectSFData.Common
 
         public static void Warning(string message, object jsonSerializer = null, [CallerMemberName] string callerName = "")
         {
-            Info("warning: " + message, ConsoleColor.Yellow, ConsoleColor.Black, jsonSerializer, callerName: callerName);
+            if (LogDebug > 2)
+            {
+                Process("warning: " + message, ConsoleColor.Yellow, ConsoleColor.Black, jsonSerializer, callerName: callerName);
+            }
         }
 
         private static bool CheckLogFile(string logFile)
@@ -233,7 +269,7 @@ namespace CollectSFData.Common
         private static void Log_JsonErrorHandler(object sender, Newtonsoft.Json.Serialization.ErrorEventArgs e)
         {
             e.ErrorContext.Handled = true;
-            Info($"json serialization error: {e.ErrorContext.OriginalObject} {e.ErrorContext.Path}");
+            Process($"json serialization error: {e.ErrorContext.OriginalObject} {e.ErrorContext.Path}");
         }
 
         private static void QueueMessage(bool lastMessage, LogMessage logMessage)
