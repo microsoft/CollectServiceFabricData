@@ -132,10 +132,10 @@ namespace CollectSFData.Azure
             }
 
             IsAuthenticated = false;
+            Log.Last($"Authentication exception:", ConsoleColor.Yellow, null, ex);
 
             if (throwOnError)
             {
-                Log.Exception($"Authentication exception throwOnError:{ex}");
                 throw ex;
             }
 
