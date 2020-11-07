@@ -364,7 +364,7 @@ pause
     "KustoRecreateTable": false, // true to drop and create table before ingest
     "KustoTable": "<%username%>_<%case number%>", // enter username and case number for table name
     "KustoUseBlobAsSource": false, // if sf is > 6.5 and gathertype 'trace' this can be set to true for faster processing (some traces still not working in 6.5)
-    "LogDebug": false,
+    "LogDebug": 4,
     "LogFile": null,
     "NodeFilter": null, // regex / string match for one or more nodes ex: '_nt0_[0-4]' or '_nt0_0|_nt0_1|_nt0_2|_nt0_3|_nt0_4'
     "ResourceUri": null, // fill out for sf pg (future)
