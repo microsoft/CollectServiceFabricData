@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Management.Automation;
 using System.Management.Automation.Runspaces;
 using System.Text;
@@ -29,14 +30,14 @@ namespace CollectSFDataTest.Utilities
     [TestFixture]
     public class TestUtilities
     {
+        public Collector Collector = new Collector();
         public StringBuilder consoleErrBuilder = new StringBuilder();
         public StringBuilder consoleOutBuilder = new StringBuilder();
+        public List<string> LogMessageQueue = new List<string>();
         public string[] TempArgs;
         private static object _executing = new object();
+        private bool _logMessageQueueEnabled;
         private bool hasExited = false;
-        public Collector Collector;
-        public List<string> LogMessageQueue = new List<string>();
-        public bool LogMessageQueueEnabled { get; set; }
 
         static TestUtilities()
         {
@@ -61,27 +62,42 @@ namespace CollectSFDataTest.Utilities
         }
 
         public static TestContext Context { get; set; }
-
         public static string DefaultOptionsFile => $"{WorkingDir}\\..\\..\\..\\..\\..\\configurationFiles\\collectsfdata.options.json";
-
         public static string ScriptsDir => $"{WorkingDir}\\..\\..\\..\\..\\..\\scripts";
-
         public static string TempDir => $"{WorkingDir}\\..\\..\\Temp";
-
         public static string[] TestArgs => new string[2] { "-config", TestOptionsFile };
         public static string TestConfigurationsDir => $"{WorkingDir}\\..\\..\\..\\..\\TestConfigurations";
-
         public static TestProperties TestProperties { get; set; }
-
         public static string TestPropertiesFile => $"{Environment.GetEnvironmentVariable("LOCALAPPDATA")}\\collectsfdata\\collectSfDataTestProperties.json";
-
         public static string TestPropertiesSetupScript => $"{ScriptsDir}\\setup-test-env.ps1";
-
         public static string TestUtilitiesDir => $"{WorkingDir}\\..\\..\\..\\..\\TestUtilities";
-
         public static string WorkingDir { get; set; } = string.Empty;
+        public ConfigurationOptions ConfigurationOptions { get; set; }
 
-        public ConfigurationOptions ConfigurationOptions { get; set; } //= new ConfigurationOptions();
+        public bool LogMessageQueueEnabled
+        {
+            get
+            {
+                return _logMessageQueueEnabled;
+            }
+
+            set
+            {
+                if (_logMessageQueueEnabled != value)
+                {
+                    _logMessageQueueEnabled = value;
+
+                    if (value)
+                    {
+                        Log.MessageLogged += Log_MessageLogged;
+                    }
+                    else
+                    {
+                        Log.MessageLogged -= Log_MessageLogged;
+                    }
+                }
+            }
+        }
 
         public string TempOptionsFile { get; private set; } = $"{TempDir}\\collectsfdata.options.json";
 
@@ -235,6 +251,39 @@ namespace CollectSFDataTest.Utilities
             return output;
         }
 
+        public ProcessOutput ExecuteTest(Func<ConfigurationOptions, bool> func, ConfigurationOptions input = null)
+        {
+            LogMessageQueueEnabled = false;
+            Log.Close();
+            Log.Start();
+
+            LogMessageQueueEnabled = true;
+            Log.Info("enter");
+
+            StartConsoleRedirection();
+            Log.Info(">>>>Starting test<<<<\r\n", ConfigurationOptions);
+
+            var result = func(input);
+
+            Log.Close();
+            LogMessageQueueEnabled = false;
+
+            Log.Info(">>>>test result<<<<", result);
+            ProcessOutput output = StopConsoleRedirection();
+            output.LogMessages = LogMessageQueue.ToList();
+            LogMessageQueue.Clear();
+            Assert.IsNotNull(output);
+
+            if (!result)
+            {
+                Log.Error($"result {result}");
+                output.ExitCode = Convert.ToInt32(result);
+            }
+
+            WriteConsole($">>>>test result<<<<", output);
+            return output;
+        }
+
         public ProcessOutput ExecuteTest()
         {
             lock (_executing)
@@ -300,22 +349,12 @@ namespace CollectSFDataTest.Utilities
         {
             //Instance.Config = new ConfigurationOptions();
             //Instance.FileMgr = new FileManager();
-            Collector = new Collector();
-            Log.MessageLogged += Log_MessageLogged;
+            //Collector = new Collector();
+            // Log.MessageLogged += Log_MessageLogged;
             WriteConsole("TestContext", Context);
             TestContext.WriteLine($"starting test: {Context?.Test.Name}");
             consoleOutBuilder = new StringBuilder();
             consoleErrBuilder = new StringBuilder();
-        }
-
-        private void Log_MessageLogged(object sender, LogMessage args)
-        {
-            if (LogMessageQueueEnabled)
-            {
-                LogMessageQueue.Add(args.Message);
-            }
-
-            WriteConsole(args.Message);
         }
 
         public void StartConsoleRedirection()
@@ -356,6 +395,7 @@ namespace CollectSFDataTest.Utilities
         [TearDown]
         public void TearDown()
         {
+            //Log.MessageLogged -= Log_MessageLogged;
             WriteConsole($"standard out:\r\n{consoleOutBuilder}");
             WriteConsole($"standard err:\r\n{consoleErrBuilder}");
             WriteConsole($"finished test: {Context?.Test.Name}", Context);
@@ -412,6 +452,16 @@ namespace CollectSFDataTest.Utilities
                     Assert.AreEqual(true, endpoints.IsValid());
                 }
             }
+        }
+
+        private void Log_MessageLogged(object sender, LogMessage args)
+        {
+            if (LogMessageQueueEnabled)
+            {
+                LogMessageQueue.Add(args.Message);
+            }
+
+            WriteConsole(args.Message);
         }
 
         private void ProcessExited(object sender, EventArgs e)

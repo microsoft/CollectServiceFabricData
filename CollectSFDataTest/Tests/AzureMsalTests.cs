@@ -14,6 +14,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 
 namespace CollectSFDataTest
 {
@@ -24,28 +25,26 @@ namespace CollectSFDataTest
         public void AzureMsalClientBadIdTest()
         {
             TestUtilities utils = DefaultUtilities();
-            ConfigurationOptions config = utils.Collector.Instance.Config;
-
             DeleteTokenCache();
 
-            utils.Collector.Collect();
+            ProcessOutput results = utils.ExecuteTest((config) =>
+             {
+                 config.AzureClientId = "test";
+                 return config.ValidateAad();
+             }, utils.Collector.Instance.Config);
 
-            bool test = utils.LogMessageQueue.Contains("fail");
-
-            config.AzureClientId = "test";
-            config.ValidateAad();
-
-            ProcessOutput results = utils.ExecuteTest();
-
-            Assert.IsTrue(results.HasErrors(), results.ToString());
+            Assert.IsTrue(results.ToString().Contains("client_id_must_be_guid"), results.ToString());
+            Assert.IsTrue(!results.HasErrors(), results.ToString());
         }
 
         [Test(Description = "Azure Msal Client test", TestOf = typeof(AzureResourceManager))]
         public void AzureMsalClientTest()
         {
             TestUtilities utils = DefaultUtilities();
-
-            ProcessOutput results = utils.ExecuteTest();
+            ProcessOutput results = utils.ExecuteTest((config) =>
+            {
+                return config.ValidateAad();
+            }, utils.Collector.Instance.Config);
 
             Assert.IsFalse(results.HasErrors(), results.ToString());
         }
@@ -85,7 +84,7 @@ namespace CollectSFDataTest
         private TestUtilities DefaultUtilities()
         {
             TestUtilities utils = new TestUtilities();
-            utils.LogMessageQueueEnabled = true;
+            //utils.LogMessageQueueEnabled = true;
             ConfigurationOptions config = utils.Collector.Instance.Config;
 
             config.SasKey = TestUtilities.TestProperties.SasKey;
