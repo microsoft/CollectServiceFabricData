@@ -10,17 +10,19 @@ namespace CollectSFDataTest.Utilities
 {
     public class ProcessOutput
     {
+        public bool ExitBool { get; internal set; }
+
         public int ExitCode { get; set; } = 0;
 
+        public List<string> LogMessages { get; internal set; }
+        
         public string StandardError { get; set; } = "";
 
         public string StandardOutput { get; set; } = "";
-        
-        public List<string> LogMessages { get; internal set; }
 
         public bool HasErrors()
         {
-            return !string.IsNullOrEmpty(StandardError) | ExitCode > 0;
+            return !string.IsNullOrEmpty(StandardError) | (ExitCode != 0 & ExitBool == false);
         }
 
         public override string ToString()
