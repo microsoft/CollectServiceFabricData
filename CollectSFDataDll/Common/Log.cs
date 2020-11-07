@@ -50,7 +50,7 @@ namespace CollectSFData.Common
         private static event EventHandler<Newtonsoft.Json.Serialization.ErrorEventArgs> JsonErrorHandler;
 
         public static bool IsConsole { get; set; }
-        
+
         public static int LogDebug { get; set; }
 
         public static string LogFile { get => _logFile; set => _logFile = CheckLogFile(value) ? value : string.Empty; }
@@ -144,46 +144,6 @@ namespace CollectSFData.Common
                 Process(message, foregroundColor, backgroundColor, jsonSerializer, minimal, lastMessage, isError, callerName);
             }
         }
-        private static void Process(string message,
-                                ConsoleColor? foregroundColor = null,
-                                ConsoleColor? backgroundColor = null,
-                                object jsonSerializer = null,
-                                bool minimal = false,
-                                bool lastMessage = false,
-                                bool isError = false,
-                                [CallerMemberName] string callerName = "")
-        {
-            if (!IsConsole && MessageLogged == null)
-            {
-                return;
-            }
-
-            if (jsonSerializer != null)
-            {
-                try
-                {
-                    jsonSerializer = Environment.NewLine + JsonConvert.SerializeObject(jsonSerializer, Formatting.Indented, _jsonSerializerSettings);
-                }
-                catch (Exception e)
-                {
-                    message += Environment.NewLine + $"LOG:jsondeserialize error: {e.Message}";
-                }
-            }
-
-            if (!minimal)
-            {
-                message = $"{Thread.CurrentThread.ManagedThreadId}:{callerName}:{message}{jsonSerializer}";
-            }
-
-            QueueMessage(lastMessage, new LogMessage()
-            {
-                TimeStamp = DateTime.Now.ToString("o") + "::",
-                Message = message,
-                BackgroundColor = backgroundColor,
-                ForegroundColor = foregroundColor,
-                IsError = isError
-            });
-        }
 
         public static void Info(string message, object jsonSerializer, [CallerMemberName] string callerName = "")
         {
@@ -276,6 +236,47 @@ namespace CollectSFData.Common
             {
                 Process($"json serialization error: {e.ErrorContext.OriginalObject} {e.ErrorContext.Path}");
             }
+        }
+
+        private static void Process(string message,
+                                                                                                ConsoleColor? foregroundColor = null,
+                                ConsoleColor? backgroundColor = null,
+                                object jsonSerializer = null,
+                                bool minimal = false,
+                                bool lastMessage = false,
+                                bool isError = false,
+                                [CallerMemberName] string callerName = "")
+        {
+            if (!IsConsole & MessageLogged == null)
+            {
+                return;
+            }
+
+            if (jsonSerializer != null)
+            {
+                try
+                {
+                    jsonSerializer = Environment.NewLine + JsonConvert.SerializeObject(jsonSerializer, Formatting.Indented, _jsonSerializerSettings);
+                }
+                catch (Exception e)
+                {
+                    message += Environment.NewLine + $"LOG:jsondeserialize error: {e.Message}";
+                }
+            }
+
+            if (!minimal)
+            {
+                message = $"{Thread.CurrentThread.ManagedThreadId}:{callerName}:{message}{jsonSerializer}";
+            }
+
+            QueueMessage(lastMessage, new LogMessage()
+            {
+                TimeStamp = DateTime.Now.ToString("o") + "::",
+                Message = message,
+                BackgroundColor = backgroundColor,
+                ForegroundColor = foregroundColor,
+                IsError = isError
+            });
         }
 
         private static void QueueMessage(bool lastMessage, LogMessage logMessage)
