@@ -301,7 +301,7 @@ namespace CollectSFData.Common
 
         public bool IsClientIdConfigured()
         {
-            return AzureClientId?.Length > 0 & AzureClientSecret?.Length > 0;
+            return AzureClientId?.Length > 0 & AzureClientSecret?.Length > 0 & AzureTenantId?.Length > 0;
         }
 
         public bool IsKustoConfigured()
