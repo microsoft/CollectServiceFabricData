@@ -26,7 +26,7 @@ namespace CollectSFData.Common
         private readonly CommandLineArguments _cmdLineArgs = new CommandLineArguments();
         private bool _defaultConfigLoaded;
         private string _endTime;
-        private int _logDebug;
+        private int _logDebug = LoggingLevel.Info;
         private string _startTime;
         private string _tempPath;
         private int _threads;
@@ -263,7 +263,6 @@ namespace CollectSFData.Common
             Log.Min($"       End Time: {EndTimeStamp}", ConsoleColor.White);
             Log.Min($"            UTC: {EndTimeUtc.ToString(DefaultDatePattern)}", ConsoleColor.White);
             Log.Min($"          Local: {EndTimeUtc.ToLocalTime().ToString(DefaultDatePattern)}", ConsoleColor.White);
-            Log.Min($"        SAS key: {SasKey}", ConsoleColor.White);
             Log.Min($"        Threads: {Threads}", ConsoleColor.White);
             Log.Min($"  CacheLocation: {CacheLocation}", ConsoleColor.White);
             Log.Min($"     NodeFilter: {NodeFilter}", ConsoleColor.White);
@@ -706,7 +705,7 @@ namespace CollectSFData.Common
             {
                 Log.Info($"reading {configFile}", ConsoleColor.Yellow);
                 options = (JObject)JsonConvert.DeserializeObject(File.ReadAllText(configFile));
-                Log.Info($"options results:", options);
+                Log.Debug($"options results:", options);
                 return options;
             }
             catch (Exception e)
@@ -721,7 +720,8 @@ namespace CollectSFData.Common
             object thisValue = propertyInstance.GetValue(this);
             Log.Debug($"checking:{propertyInstance.Name}:{thisValue} -> {instanceValue}");
 
-            if (thisValue != null && thisValue.Equals(instanceValue))
+            if ((thisValue != null && thisValue.Equals(instanceValue))
+                | (thisValue == null & instanceValue == null))
             {
                 Log.Debug("value same. skipping.");
                 return;
@@ -732,6 +732,7 @@ namespace CollectSFData.Common
                 try
                 {
                     propertyInstance.SetValue(this, instanceValue);
+                    Log.Info($"set:{propertyInstance.Name}:{thisValue} -> {instanceValue}");
                 }
                 catch(Exception e) 
                 {
