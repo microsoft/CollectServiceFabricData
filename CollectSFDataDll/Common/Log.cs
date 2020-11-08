@@ -101,24 +101,27 @@ namespace CollectSFData.Common
 
         public static void Highlight(string message, object jsonSerializer = null, [CallerMemberName] string callerName = "")
         {
-            ConsoleColor color = ConsoleColor.White;
-
-            if (Regex.IsMatch(message, "succeed|success|true", RegexOptions.IgnoreCase))
+            if (LogDebug >= LoggingLevel.Warning)
             {
-                color = ConsoleColor.Green;
-            }
+                ConsoleColor color = ConsoleColor.White;
 
-            if (Regex.IsMatch(message, "fail|error|false", RegexOptions.IgnoreCase))
-            {
-                color = ConsoleColor.Red;
-            }
+                if (Regex.IsMatch(message, "succeed|success|true", RegexOptions.IgnoreCase))
+                {
+                    color = ConsoleColor.Green;
+                }
 
-            if (Regex.IsMatch(message, "exception|warn|terminate", RegexOptions.IgnoreCase))
-            {
-                color = ConsoleColor.Yellow;
-            }
+                if (Regex.IsMatch(message, "fail|error|false", RegexOptions.IgnoreCase))
+                {
+                    color = ConsoleColor.Red;
+                }
 
-            Process(message, color, null, jsonSerializer, callerName: callerName);
+                if (Regex.IsMatch(message, "exception|warn|terminate", RegexOptions.IgnoreCase))
+                {
+                    color = ConsoleColor.Yellow;
+                }
+
+                Process(message, color, null, jsonSerializer, callerName: callerName);
+            }
         }
 
         public static void Info(string message,
@@ -138,10 +141,7 @@ namespace CollectSFData.Common
 
         public static void Info(string message, object jsonSerializer, [CallerMemberName] string callerName = "")
         {
-            if (LogDebug >= LoggingLevel.Info)
-            {
-                Process(message, null, null, jsonSerializer, callerName: callerName);
-            }
+            Info(message, null, null, jsonSerializer, callerName: callerName);
         }
 
         public static void Last(string message,
