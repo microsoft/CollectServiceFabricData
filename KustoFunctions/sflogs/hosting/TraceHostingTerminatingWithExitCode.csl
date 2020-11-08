@@ -1,0 +1,12 @@
+.create-or-alter function with (docstring = "[T:string] where T=table name. function to enumerate processes terminated with exitcode",folder = "sflogs/hosting") 
+    TraceHostingTerminatingWithExitCode(T:string) {
+        let extractPattern_Program = @'(Program\s=\s)([^,]*)';
+        let extractPattern_ExitCode = @'(terminated with exitcode\s)([^.]*)';
+        table(T)
+        | where Level == "Warning"
+        | where Type contains 'hosting.codepackage'
+        | where Text contains 'terminated'
+        | extend Program = extract(extractPattern_Program, 2, Text, typeof(string))
+        | extend ExitCode = extract(extractPattern_ExitCode, 2, Text, typeof(string))
+        | project Timestamp, Level, NodeName, Program, ExitCode
+    }
