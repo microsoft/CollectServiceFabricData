@@ -13,7 +13,7 @@
   "KustoRecreateTable": false,
   "KustoTable": "",
   "KustoUseBlobAsSource": false,
-  "LogDebug": false,
+  "LogDebug": 4,
   "LogFile": null,
   "NodeFilter": null,
   "SasKey": "",

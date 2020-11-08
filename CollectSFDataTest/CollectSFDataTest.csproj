@@ -1,17 +1,17 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
-
     <IsPackable>false</IsPackable>
-
-    <StartupObject>CollectSFDataTests.TestUtilities</StartupObject>
-
+    <StartupObject>CollectSFDataTest.Utilities.TestUtilities</StartupObject>
     <OutputType>Exe</OutputType>
-
-    <Platforms>AnyCPU;x64</Platforms>
+    <Platforms>x64</Platforms>
+    <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
-
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="echo Output written to $(TargetDir)" />
+    <!-- copy deps.json -->
+    <Exec Command="copy ..\bin\$(Configuration)\$(TargetFramework)\*.json $(TargetDir)" />
+  </Target>
   <ItemGroup>
     <PackageReference Include="Microsoft.PowerShell.Commands.Diagnostics" Version="7.0.3" />
     <PackageReference Include="Microsoft.PowerShell.Commands.Management" Version="7.0.3" />
@@ -26,9 +26,8 @@
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.7.1" />
     <PackageReference Include="System.Management.Automation" Version="7.0.3" />
   </ItemGroup>
-
   <ItemGroup>
+    <ProjectReference Include="..\CollectSFDataDll\CollectSFDataDll.csproj" />
     <ProjectReference Include="..\CollectSFData\CollectSFData.csproj" />
   </ItemGroup>
-
 </Project>
