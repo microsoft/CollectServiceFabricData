@@ -9,12 +9,17 @@ using CollectSFData.Common;
 using CollectSFData.DataFile;
 using CollectSFDataTest.Utilities;
 using Markdig.Extensions.Yaml;
+using Microsoft.VisualBasic;
 using NUnit.Framework;
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
+
+//using System.Windows;
+//using System.Windows.Forms;
 
 namespace CollectSFDataTest
 {
@@ -49,10 +54,31 @@ namespace CollectSFDataTest
             Assert.IsFalse(results.HasErrors(), results.ToString());
         }
 
+        [Test(Description = "Azure Msal auth as device test", TestOf = typeof(AzureResourceManager))]
+        public void AzureMsalDeviceAuthTest()
+        {
+            ProcessOutput results = DefaultUtilities().ExecuteTest(() =>
+            {
+                AzureResourceManager arm = new AzureResourceManager();
+                AzureResourceManager.MsalMessage += AzureResourceManager_MsalMessage;
+                AzureResourceManager.MsalDeviceCode += AzureResourceManager_MsalDeviceCode;
+
+                bool result = arm.CreatePublicClient(true, true);
+                AzureResourceManager.MsalMessage -= AzureResourceManager_MsalMessage;
+                AzureResourceManager.MsalDeviceCode -= AzureResourceManager_MsalDeviceCode;
+
+                return result;
+            });
+
+            Assert.IsFalse(results.HasErrors(), results.ToString());
+        }
+
         [Test(Description = "Azure Msal auth as user test", TestOf = typeof(AzureResourceManager))]
         public void AzureMsalUserAuthTest()
         {
             TestUtilities utils = DefaultUtilities();
+            DeleteTokenCache();
+
             ProcessOutput results = utils.ExecuteTest((config) =>
             {
                 config.AzureClientId = null;
@@ -82,10 +108,23 @@ namespace CollectSFDataTest
             }
         }
 
+        private void AzureResourceManager_MsalDeviceCode(Microsoft.Identity.Client.DeviceCodeResult arg)
+        {
+            string message = $"\r\n*************\r\ndevice code received:\r\n{arg.UserCode}\r\n*************\r\n";
+            WriteConsole(message);
+
+            // display devicelogin page with usercode appended for copy into prompt
+            Process.Start(new ProcessStartInfo("cmd", $"/c start https://microsoft.com/devicelogin?{arg.UserCode}") { CreateNoWindow = true });
+        }
+
+        private void AzureResourceManager_MsalMessage(Microsoft.Identity.Client.LogLevel level, string message, bool containsPII)
+        {
+            WriteConsole(message);
+        }
+
         private TestUtilities DefaultUtilities()
         {
             TestUtilities utils = new TestUtilities();
-            //utils.LogMessageQueueEnabled = true;
             ConfigurationOptions config = utils.Collector.Instance.Config;
 
             config.SasKey = TestUtilities.TestProperties.SasKey;

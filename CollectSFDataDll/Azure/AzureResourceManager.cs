@@ -24,7 +24,6 @@ namespace CollectSFData.Azure
         private string _getSubscriptionRestUri = "https://management.azure.com/subscriptions/{subscriptionId}?api-version=2016-06-01";
         private Http _httpClient = Http.ClientFactory();
         private Instance _instance = Instance.Singleton();
-        private ConfigurationOptions Config => _instance.Config;
         private string _listSubscriptionsRestUri = "https://management.azure.com/subscriptions?api-version=2016-06-01";
         private IPublicClientApplication _publicClientApp;
         private string _resource;
@@ -37,8 +36,17 @@ namespace CollectSFData.Azure
             Log.Info($"enter: token cache path: {TokenCacheHelper.CacheFilePath}");
         }
 
+        public delegate void MsalDeviceCodeHandler(DeviceCodeResult arg);
+
+        public delegate void MsalHandler(LogLevel level, string message, bool containsPII);
+
+        public static event MsalDeviceCodeHandler MsalDeviceCode;
+
+        public static event MsalHandler MsalMessage;
+
         public AuthenticationResult AuthenticationResult { get; private set; }
         public string BearerToken { get; private set; }
+        private ConfigurationOptions Config => _instance.Config;
         public bool IsAuthenticated { get; private set; }
         public List<string> Scopes { get; set; } = new List<string>();
         public SubscriptionRecordResult[] Subscriptions { get; private set; } = new SubscriptionRecordResult[] { };
@@ -142,7 +150,19 @@ namespace CollectSFData.Azure
             return false;
         }
 
-        private bool CreateClient(bool prompt, bool deviceLogin = false, string resource = "")
+        public bool CheckResource(string resourceId)
+        {
+            string uri = $"{ManagementAzureCom}{resourceId}?{ArmApiVersion}";
+
+            if (_httpClient.SendRequest(uri: uri, authToken: BearerToken, httpMethod: HttpMethod.Head))
+            {
+                return _httpClient.StatusCode == System.Net.HttpStatusCode.NoContent;
+            }
+
+            return false;
+        }
+
+        public bool CreateClient(bool prompt, bool deviceLogin = false, string resource = "")
         {
             if (Config.IsClientIdConfigured() & prompt)
             {
@@ -160,16 +180,90 @@ namespace CollectSFData.Azure
             }
         }
 
-        public bool CheckResource(string resourceId)
+        public bool CreateConfidentialClient(string resource)
         {
-            string uri = $"{ManagementAzureCom}{resourceId}?{ArmApiVersion}";
+            Log.Info($"enter: {resource}");
+            // no prompt with clientid and secret
+            _confidentialClientApp = ConfidentialClientApplicationBuilder
+               .CreateWithApplicationOptions(new ConfidentialClientApplicationOptions
+               {
+                   ClientId = Config.AzureClientId,
+                   RedirectUri = resource,
+                   ClientSecret = Config.AzureClientSecret,
+                   TenantId = Config.AzureTenantId,
+                   ClientName = Config.AzureClientId
+               })
+               .WithAuthority(AzureCloudInstance.AzurePublic, Config.AzureTenantId)
+               .WithLogging(MsalLoggerCallback, LogLevel.Verbose, true, true)
+               .Build();
 
-            if (_httpClient.SendRequest(uri: uri, authToken: BearerToken, httpMethod: HttpMethod.Head))
+            if (Scopes.Count < 1)
             {
-                return _httpClient.StatusCode == System.Net.HttpStatusCode.NoContent;
+                Scopes = _defaultScope;
             }
 
-            return false;
+            if (_instance.IsWindows)
+            {
+                TokenCacheHelper.EnableSerialization(_confidentialClientApp.AppTokenCache);
+            }
+
+            foreach (string scope in Scopes)
+            {
+                AuthenticationResult = _confidentialClientApp
+                    .AcquireTokenForClient(new List<string>() { scope })
+                    .ExecuteAsync().Result;
+                Log.Debug($"scope authentication result:", AuthenticationResult);
+            }
+
+            return true;
+        }
+
+        public bool CreatePublicClient(bool prompt, bool deviceLogin = false)
+        {
+            Log.Info($"enter: {prompt} {deviceLogin}");
+            _publicClientApp = PublicClientApplicationBuilder
+                .Create(_wellKnownClientId)
+                .WithAuthority(AzureCloudInstance.AzurePublic, Config.AzureTenantId)
+                .WithLogging(MsalLoggerCallback, LogLevel.Verbose, true, true)
+                .WithDefaultRedirectUri()
+                .Build();
+
+            if (_instance.IsWindows)
+            {
+                TokenCacheHelper.EnableSerialization(_publicClientApp.UserTokenCache);
+            }
+
+            if (prompt)
+            {
+                if (deviceLogin)
+                {
+                    AuthenticationResult = _publicClientApp
+                         .AcquireTokenWithDeviceCode(_defaultScope, MsalDeviceCodeCallback)
+                         .ExecuteAsync().Result;
+                }
+                else
+                {
+                    AuthenticationResult = _publicClientApp
+                        .AcquireTokenInteractive(_defaultScope)
+                        .ExecuteAsync().Result;
+                }
+            }
+            else
+            {
+                AuthenticationResult = _publicClientApp
+                    .AcquireTokenSilent(_defaultScope, _publicClientApp.GetAccountsAsync().Result.FirstOrDefault())
+                    .ExecuteAsync().Result;
+            }
+
+            if (Scopes.Count > 0)
+            {
+                Log.Info($"adding scopes {Scopes.Count}");
+                AuthenticationResult = _publicClientApp
+                    .AcquireTokenSilent(Scopes, _publicClientApp.GetAccountsAsync().Result.FirstOrDefault())
+                    .ExecuteAsync().Result;
+            }
+
+            return true;
         }
 
         public bool CreateResourceGroup(string resourceId, string location)
@@ -193,12 +287,25 @@ namespace CollectSFData.Azure
             return true;
         }
 
+        public Task MsalDeviceCodeCallback(DeviceCodeResult arg)
+        {
+            Log.Info($"device code info:", ConsoleColor.Cyan, null, arg);
+
+            MsalDeviceCodeHandler deviceCodeMessage = MsalDeviceCode;
+            deviceCodeMessage?.Invoke(arg);
+
+            return Task.FromResult(0);
+        }
+
         public void MsalLoggerCallback(LogLevel level, string message, bool containsPII)
         {
             if (!containsPII | (containsPII & Config.LogDebug >= LoggingLevel.Verbose))
             {
                 Log.Info($"{level} {message.Replace(" [", "\r\n [")}");
             }
+
+            MsalHandler logMessage = MsalMessage;
+            logMessage?.Invoke(level, message, containsPII);
         }
 
         public bool PopulateSubscriptions()
@@ -270,95 +377,7 @@ namespace CollectSFData.Azure
             return _httpClient;
         }
 
-        private void CreateConfidentialClient(string resource)
-        {
-            Log.Info($"enter: {resource}");
-            // no prompt with clientid and secret
-            _confidentialClientApp = ConfidentialClientApplicationBuilder
-               .CreateWithApplicationOptions(new ConfidentialClientApplicationOptions
-               {
-                   ClientId = Config.AzureClientId,
-                   RedirectUri = resource,
-                   ClientSecret = Config.AzureClientSecret,
-                   TenantId = Config.AzureTenantId,
-                   ClientName = Config.AzureClientId
-               })
-               .WithAuthority(AzureCloudInstance.AzurePublic, Config.AzureTenantId)
-               .WithLogging(MsalLoggerCallback, LogLevel.Verbose, true, true)
-               .Build();
-
-            if (Scopes.Count < 1)
-            {
-                Scopes = _defaultScope;
-            }
-
-            if (_instance.IsWindows)
-            {
-                TokenCacheHelper.EnableSerialization(_confidentialClientApp.AppTokenCache);
-            }
-
-            foreach (string scope in Scopes)
-            {
-                AuthenticationResult = _confidentialClientApp
-                    .AcquireTokenForClient(new List<string>() { scope })
-                    .ExecuteAsync().Result;
-                Log.Debug($"scope authentication result:", AuthenticationResult);
-            }
-        }
-
-        private void CreatePublicClient(bool prompt, bool deviceLogin = false)
-        {
-            Log.Info($"enter: {prompt} {deviceLogin}");
-            _publicClientApp = PublicClientApplicationBuilder
-                .Create(_wellKnownClientId)
-                .WithAuthority(AzureCloudInstance.AzurePublic, Config.AzureTenantId)
-                .WithLogging(MsalLoggerCallback, LogLevel.Verbose, true, true)
-                .WithDefaultRedirectUri()
-                .Build();
-
-            if (_instance.IsWindows)
-            {
-                TokenCacheHelper.EnableSerialization(_publicClientApp.UserTokenCache);
-            }
-
-            if (prompt)
-            {
-                if (deviceLogin)
-                {
-                    AuthenticationResult = _publicClientApp
-                         .AcquireTokenWithDeviceCode(_defaultScope, MsalDeviceCodeCallback)
-                         .ExecuteAsync().Result;
-                }
-                else
-                {
-                    AuthenticationResult = _publicClientApp
-                        .AcquireTokenInteractive(_defaultScope)
-                        .ExecuteAsync().Result;
-                }
-            }
-            else
-            {
-                AuthenticationResult = _publicClientApp
-                    .AcquireTokenSilent(_defaultScope, _publicClientApp.GetAccountsAsync().Result.FirstOrDefault())
-                    .ExecuteAsync().Result;
-            }
-
-            if (Scopes.Count > 0)
-            {
-                Log.Info($"adding scopes {Scopes.Count}");
-                AuthenticationResult = _publicClientApp
-                    .AcquireTokenSilent(Scopes, _publicClientApp.GetAccountsAsync().Result.FirstOrDefault())
-                    .ExecuteAsync().Result;
-            }
-        }
-
-        private Task MsalDeviceCodeCallback(DeviceCodeResult arg)
-        {
-            Log.Info($"device code info:", ConsoleColor.Cyan, null, arg);
-            return Task.FromResult(0);
-        }
-
-        private bool SetToken()
+        public bool SetToken()
         {
             if (AuthenticationResult?.AccessToken != null)
             {
@@ -375,7 +394,7 @@ namespace CollectSFData.Azure
 
                 return true;
             }
-            else 
+            else
             {
                 Log.Info($"authentication result:", ConsoleColor.Green, null, AuthenticationResult);
                 return false;
