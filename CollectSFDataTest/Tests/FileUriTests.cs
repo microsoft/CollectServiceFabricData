@@ -4,9 +4,10 @@
 // ------------------------------------------------------------
 
 using CollectSFData.DataFile;
+using CollectSFDataTest.Utilities;
 using NUnit.Framework;
 
-namespace CollectSFDataTests
+namespace CollectSFDataTest
 {
     [TestFixture]
     public class FileUriTests : TestUtilities
