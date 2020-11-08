@@ -1,5 +1,5 @@
-.create-or-alter function with (docstring = '[T:string] where T=table name. function to enumerate CRM reconfiguration operations.', folder = 'sflogs/reconfiguration')
-    TraceReconfigurationCRM (T:string) {
+.create-or-alter function with (docstring = "[T:string] where T=table name. function to enumerate CRM reconfiguration operations.",folder = "sflogs/reconfiguration") 
+    TraceReconfigurationCRM(T:string) {
         table(T)
         | where Type contains "CRM.Operation" 
         | parse kind=regex Text with
@@ -11,6 +11,15 @@
             @'SourceNode: ' sourceNode
             @'TargetNode: ' targetNode
             @'MoveCost: ' moveCost
-        | project Timestamp,Level, phase, action, service, decisionId, partitionId, sourceNode, targetNode, moveCost
+        | project Timestamp,
+            Level, 
+            phase=trim("\\s+", tostring(phase)), 
+            action=trim("\\s+", tostring(action)), 
+            service=trim("\\s+", tostring(service)), 
+            decisionId=trim("\\s+", tostring(decisionId)), 
+            partitionId=trim("\\s+", tostring(partitionId)), 
+            sourceNode=trim("\\s+", tostring(sourceNode)), 
+            targetNode=trim("\\s+", tostring(targetNode)), 
+            moveCost=trim("\\s+", tostring(moveCost))
         | order by Timestamp asc
     }
