@@ -153,9 +153,11 @@
       "required": [
         "KustoTable"
       ],
-      "default": "",
+      "default": "https://ingest-{{kusto cluster}}.{{optional location}}.kusto.windows.net/{{kusto database}}",
       "examples": [
-        "https://ingest-kustocluster.eastus.kusto.windows.net/supportlogs"
+        "https://ingest-{{kusto cluster}}.{{optional location}}.kusto.windows.net/{{kusto database}}",
+        "https://ingest-sfcluster.eastus.kusto.windows.net/sflogdatabase",
+        "https://ingest-sfcluster.kusto.windows.net/sflogdatabase"
       ],
       "pattern": "^(https://.+?.kusto.windows.net).*$"
     },
@@ -338,12 +340,16 @@
     },
     "LogDebug": {
       "$id": "#/properties/LogDebug",
-      "type": "boolean",
-      "title": "LogDebug true to display and log additional logging for troubleshooting utility",
-      "default": false,
+      "type": "integer",
+      "title": "LogDebug 0-disabled, 1-exception, 2-error, 3-warning, 4-info, 5-debug. use logdebug levels for troubleshooting utility",
+      "default": 3,
       "examples": [
-        false,
-        true
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
       ]
     },
     "LogFile": {
