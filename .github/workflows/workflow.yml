@@ -1,10 +1,10 @@
 name: CI CollectSFData
 
 env:
-  artifacts_path: CollectSFData\bin\x64\artifacts
-  release_path: CollectSFData\bin\x64\release
-  release_config: configurationFiles\collectsfdata.options.json
   project_name: CollectSFData
+  artifacts_path: .\bin\artifacts
+  release_path: .\bin\Release
+  release_config: .\configurationFiles\collectsfdata.options.json
   github_owner: ${{ github.event.repository.owner.name }}
 
 on:
@@ -18,6 +18,7 @@ on:
       - "LogAnalyticsQueries/**"
     branches:
       - master
+      - dllmain
 jobs:
   build:
     runs-on: windows-latest
@@ -27,36 +28,38 @@ jobs:
 
       - name: environment
         shell: cmd
-        run: set
+        run: |
+          set
+          dotnet --info
 
-      - name: nuget download
+      - name: dotnet restore
         shell: cmd
-        run: curl https://dist.nuget.org/win-x86-commandline/latest/nuget.exe --output nuget.exe
+        run: dotnet restore %project_name%\%project_name%.csproj -v detailed
 
-      - name: nuget restore
+      - name: dotnet build / pack
         shell: cmd
-        run: nuget.exe restore -Verbosity Detailed -NonInteractive -DirectDownload
-
-      - name: nuget build / pack
-        shell: cmd
-        run: nuget.exe pack %project_name%\%project_name%.csproj -Verbosity Detailed -outputdirectory %artifacts_path% -NonInteractive -Build -Properties Configuration=Release
+        run: |
+          set
+          dotnet build %project_name%\%project_name%.csproj -v detailed -c Release
+          dir
 
       - name: build output
         shell: cmd
-        run: dir %release_path% /s
+        run: |
+          set
+          dir /s
 
       - name: copy artifacts
-        shell: cmd
+        shell: powershell
         run: |
-          md %artifacts_path%
-          copy %release_path%\*.config %artifacts_path%
-          copy %release_path%\*.exe %artifacts_path%
-          copy %release_path%\*.dll %artifacts_path%
-          copy %release_config% %artifacts_path%
+          [environment]::GetEnvironmentVariables()
+          dir
+          copy "$($env:release_path)" "$($env:artifacts_path)" -recurse -force
+          copy "$($env:release_config)" "$($env:artifacts_path)" -recurse -force
 
       - name: artifacts output
-        shell: cmd
-        run: dir %artifacts_path% /s
+        shell: powershell
+        run: dir "$($env:artifacts_path)" -recurse
 
       - name: upload artifacts
         uses: actions/upload-artifact@v1
@@ -83,45 +86,32 @@ jobs:
           path: ${{ env.release_path }}
 
       - name: release output
-        shell: cmd
-        run: dir %release_path% /s
+        shell: powershell
+        run: dir "$($env:release_path)" -recurse
 
       - name: set nuget package
         shell: powershell
+        id: set_nuget_package
         run: |
           $nugetPackage = (get-item "$($env:release_path)\*.nupkg").FullName
           $nugetPackageName = (get-item "$($env:release_path)\*.nupkg").Name
-          echo "::set-env name=nuget_package::$nugetPackage"
-          echo "::set-env name=nuget_package_name::$nugetPackageName"
-
-      - name: nuget push
-        shell: cmd
-        run: |
-          echo #not working needs codesign
-          echo nuget.exe push %nuget_package% %nuget_api_key% -Verbosity Detailed -Source https://api.nuget.org/v3/index.json -SkipDuplicate -NonInteractive
-          echo # working in fork, GPR blocked on upstream 
-          echo nuget.exe sources add -Name 'GPR' -Verbosity Detailed -Source https://nuget.pkg.github.com/%github_owner%/index.json -NonInteractive -UserName %GITHUB_ACTOR% -Password %GITHUB_TOKEN%
-          echo nuget.exe setapikey %nuget_api_key% -Source 'GPR' -Verbosity Detailed -NonInteractive
-          echo nuget.exe push %artifacts_path%\*.nupkg -Verbosity Detailed -Source 'GPR' -SkipDuplicate -NonInteractive -apikey %nuget_api_key%
-
-        env:
-          nuget_api_key: ${{ secrets.ACTIONS_NUGET_PUSH_API_KEY }}
-          nuget_token: ${{ secrets.ACTIONS_NUGET_PUSH_TOKEN }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
+          echo "::set-output name=nuget_package::$nugetPackage"
+          echo "::set-output name=nuget_package_name::$nugetPackageName"
+        
       - name: prepare release asset
         shell: powershell
-        # workflows do not have same permissions across forks. pr from same repo (branch to branch)
+        id: prepare_release_asset
         run: |
           md "$($env:release_path)_upload"
-          copy "$($env:release_path)\*.config" "$($env:release_path)_upload"
-          copy "$($env:release_path)\*.exe" "$($env:release_path)_upload"
-          copy "$($env:release_path)\*.dll" "$($env:release_path)_upload"
-          copy "$($env:release_path)\*.json" "$($env:release_path)_upload"
+          $releaseFramework = "$($env:release_path)\net472"
+          copy "$($releaseFramework)\*.config" "$($env:release_path)_upload"
+          copy "$($releaseFramework)\*.exe" "$($env:release_path)_upload"
+          copy "$($releaseFramework)\*.dll" "$($env:release_path)_upload"
+          copy "$($releaseFramework)\*.json" "$($env:release_path)_upload"
           compress-archive -path "$($env:release_path)_upload\*" -destinationPath "$($env:release_path)\$($env:project_name).zip" -force
-          $fileVersion = [io.fileinfo]::new("$($env:release_path)\$($env:project_name).exe").VersionInfo.FileVersion
+          $fileVersion = [io.fileinfo]::new("$($releaseFramework)\$($env:project_name).exe").VersionInfo.FileVersion
           echo "::log-command parameter1=$fileVersion::fileVersion"
-          echo "::set-env name=file_version::v$fileVersion"
+          echo "::set-output name=file_version::v$fileVersion"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -131,7 +121,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ env.file_version }}
+          tag_name: ${{ steps.prepare_release_asset.outputs.file_version }}
           release_name: ${{ env.project_name }}
           draft: false
           prerelease: ${{ contains(github.event.pull_request.labels.*.name, 'Pre-release') }}
@@ -143,7 +133,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: .\${{ env.release_path }}\${{ env.project_name }}.zip
+          asset_path: ${{ env.release_path }}\${{ env.project_name }}.zip
           asset_name: ${{ env.project_name }}.zip
           asset_content_type: application/zip
 
@@ -154,7 +144,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ${{ env.nuget_package }}
-          asset_name: ${{ env.nuget_package_name }}
+          asset_path: ${{ steps.set_nuget_package.outputs.nuget_package }}
+          asset_name: ${{ steps.set_nuget_package.outputs.nuget_package_name }}
           asset_content_type: application/zip
-
