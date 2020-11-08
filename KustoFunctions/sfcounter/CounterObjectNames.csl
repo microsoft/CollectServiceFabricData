@@ -1,0 +1,13 @@
+.create-or-alter function with (docstring = "service fabric counter log counter object names. arguments T:string table, node:dynamic node list or \'\'",folder = "sfcounter") 
+    CounterObjectNames(T:string,node:dynamic) {
+        let counterPattern = @"\\\\.+?\\(?P<object>.+?)(?P<instance>\(.*?\)){0,1}\\(?P<counter>.+)";
+        table(T)
+        | where (NodeName has_any (node) or isempty(node))
+            and CounterValue > 0
+        | extend counterInfo = extract_all(counterPattern, dynamic(['object','counter','instance']), CounterName)
+        | extend object = tostring(counterInfo[0][0])
+        | extend counter = tostring(counterInfo[0][1])
+        | extend instance = trim(@'\(|\)', tostring(counterInfo[0][2]))
+        | distinct object, counter, instance
+        | order by object asc, counter asc, instance asc
+    }

@@ -3,13 +3,25 @@
 // Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
+using CollectSFData;
 using CollectSFData.Azure;
+using CollectSFData.Common;
 using CollectSFData.DataFile;
+using CollectSFDataTest.Utilities;
+using Markdig.Extensions.Yaml;
+using Microsoft.VisualBasic;
 using NUnit.Framework;
 using System;
+using System.Diagnostics;
 using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading;
 
-namespace CollectSFDataTests
+//using System.Windows;
+//using System.Windows.Forms;
+
+namespace CollectSFDataTest
 {
     [TestFixture]
     public class AzureMsalTests : TestUtilities
@@ -20,10 +32,13 @@ namespace CollectSFDataTests
             TestUtilities utils = DefaultUtilities();
             DeleteTokenCache();
 
-            utils.ConfigurationOptions.AzureClientId = "test";
+            ProcessOutput results = utils.ExecuteTest((config) =>
+             {
+                 config.AzureClientId = "test";
+                 return config.ValidateAad();
+             }, utils.Collector.Instance.Config);
 
-            ProcessOutput results = utils.ExecuteTest();
-
+            Assert.IsTrue(results.ToString().Contains("client_id_must_be_guid"), results.ToString());
             Assert.IsTrue(results.HasErrors(), results.ToString());
         }
 
@@ -31,8 +46,29 @@ namespace CollectSFDataTests
         public void AzureMsalClientTest()
         {
             TestUtilities utils = DefaultUtilities();
+            ProcessOutput results = utils.ExecuteTest((config) =>
+            {
+                return config.ValidateAad();
+            }, utils.Collector.Instance.Config);
 
-            ProcessOutput results = utils.ExecuteTest();
+            Assert.IsFalse(results.HasErrors(), results.ToString());
+        }
+
+        [Test(Description = "Azure Msal auth as device test", TestOf = typeof(AzureResourceManager))]
+        public void AzureMsalDeviceAuthTest()
+        {
+            ProcessOutput results = DefaultUtilities().ExecuteTest(() =>
+            {
+                AzureResourceManager arm = new AzureResourceManager();
+                AzureResourceManager.MsalMessage += AzureResourceManager_MsalMessage;
+                AzureResourceManager.MsalDeviceCode += AzureResourceManager_MsalDeviceCode;
+
+                bool result = arm.CreatePublicClient(true, true);
+                AzureResourceManager.MsalMessage -= AzureResourceManager_MsalMessage;
+                AzureResourceManager.MsalDeviceCode -= AzureResourceManager_MsalDeviceCode;
+
+                return result;
+            });
 
             Assert.IsFalse(results.HasErrors(), results.ToString());
         }
@@ -41,14 +77,19 @@ namespace CollectSFDataTests
         public void AzureMsalUserAuthTest()
         {
             TestUtilities utils = DefaultUtilities();
-            utils.ConfigurationOptions.AzureClientId = null;
-            utils.ConfigurationOptions.AzureClientSecret = null;
-            utils.ConfigurationOptions.AzureResourceGroup = null;
-            utils.ConfigurationOptions.AzureResourceGroupLocation = null;
-            utils.ConfigurationOptions.AzureSubscriptionId = null;
-            utils.ConfigurationOptions.AzureTenantId = null;
+            DeleteTokenCache();
 
-            ProcessOutput results = utils.ExecuteTest();
+            ProcessOutput results = utils.ExecuteTest((config) =>
+            {
+                config.AzureClientId = null;
+                config.AzureClientSecret = null;
+                config.AzureResourceGroup = null;
+                config.AzureResourceGroupLocation = null;
+                config.AzureSubscriptionId = null;
+                config.AzureTenantId = null;
+
+                return config.ValidateAad();
+            }, utils.Collector.Instance.Config);
 
             /* known cng error in .net core that test is running as and azure-az modules
              * fix is to use cert thumb as secret but cert may have to be real / from ca
@@ -67,26 +108,42 @@ namespace CollectSFDataTests
             }
         }
 
+        private void AzureResourceManager_MsalDeviceCode(Microsoft.Identity.Client.DeviceCodeResult arg)
+        {
+            string message = $"\r\n*************\r\ndevice code received:\r\n{arg.UserCode}\r\n*************\r\n";
+            WriteConsole(message);
+
+            // display devicelogin page with usercode appended for copy into prompt
+            Process.Start(new ProcessStartInfo("cmd", $"/c start https://microsoft.com/devicelogin?{arg.UserCode}") { CreateNoWindow = true });
+        }
+
+        private void AzureResourceManager_MsalMessage(Microsoft.Identity.Client.LogLevel level, string message, bool containsPII)
+        {
+            WriteConsole(message);
+        }
+
         private TestUtilities DefaultUtilities()
         {
             TestUtilities utils = new TestUtilities();
-            utils.ConfigurationOptions.SasKey = TestUtilities.TestProperties.SasKey;
-            utils.ConfigurationOptions.CacheLocation = TestUtilities.TempDir;
-            utils.ConfigurationOptions.StartTimeStamp = DateTime.MinValue.ToString("o");
-            utils.ConfigurationOptions.EndTimeStamp = DateTime.Now.ToString("o");
-            utils.ConfigurationOptions.AzureClientId = TestUtilities.TestProperties.AzureClientId;
-            utils.ConfigurationOptions.AzureClientSecret = TestUtilities.TestProperties.AzureClientSecret;
-            utils.ConfigurationOptions.AzureResourceGroup = TestUtilities.TestProperties.AzureResourceGroup;
-            utils.ConfigurationOptions.AzureResourceGroupLocation = TestUtilities.TestProperties.AzureResourceGroupLocation;
-            utils.ConfigurationOptions.AzureSubscriptionId = TestUtilities.TestProperties.AzureSubscriptionId;
-            utils.ConfigurationOptions.AzureTenantId = TestUtilities.TestProperties.AzureTenantId;
-            utils.ConfigurationOptions.List = true;
+            ConfigurationOptions config = utils.Collector.Instance.Config;
+
+            config.SasKey = TestUtilities.TestProperties.SasKey;
+            config.CacheLocation = TestUtilities.TempDir;
+            config.StartTimeStamp = DateTime.MinValue.ToString("o");
+            config.EndTimeStamp = DateTime.Now.ToString("o");
+            config.AzureClientId = TestUtilities.TestProperties.AzureClientId;
+            config.AzureClientSecret = TestUtilities.TestProperties.AzureClientSecret;
+            config.AzureResourceGroup = TestUtilities.TestProperties.AzureResourceGroup;
+            config.AzureResourceGroupLocation = TestUtilities.TestProperties.AzureResourceGroupLocation;
+            config.AzureSubscriptionId = TestUtilities.TestProperties.AzureSubscriptionId;
+            config.AzureTenantId = TestUtilities.TestProperties.AzureTenantId;
+            config.List = true;
 
             // force auth
-            //utils.ConfigurationOptions.KustoCluster = TestUtilities.TestProperties.KustoCluster;
-            //utils.ConfigurationOptions.KustoTable = "test";
+            //config.KustoCluster = TestUtilities.TestProperties.KustoCluster;
+            //config.KustoTable = "test";
 
-            utils.ConfigurationOptions.GatherType = FileTypesEnum.trace.ToString();
+            config.GatherType = FileTypesEnum.trace.ToString();
             return utils;
         }
     }
