@@ -19,7 +19,7 @@
   "LogAnalyticsRecreate": false,
   "LogAnalyticsWorkspaceName": null,
   "LogAnalyticsWorkspaceSku": "PerGB2018",
-  "LogDebug": false,
+  "LogDebug": 4,
   "LogFile": null,
   "NodeFilter": null,
   "StartTimeStamp": "6/15/19 22:05:18 -04:00",

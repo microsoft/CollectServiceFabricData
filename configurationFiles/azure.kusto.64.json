@@ -12,7 +12,7 @@
   "KustoCompressed": true,
   "KustoRecreateTable": false,
   "KustoTable": "",
-  "LogDebug": false,
+  "LogDebug": 4,
   "LogFile": null,
   "NodeFilter": null,
   "SasKey": "",

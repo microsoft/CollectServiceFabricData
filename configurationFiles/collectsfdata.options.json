@@ -27,7 +27,7 @@
   "LogAnalyticsRecreate": false,
   "LogAnalyticsWorkspaceName": null,
   "LogAnalyticsWorkspaceSku": "PerGB2018",
-  "LogDebug": false,
+  "LogDebug": 4,
   "LogFile": null,
   "NodeFilter": null,
   "NoProgressTimeoutMin": 10,
