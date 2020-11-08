@@ -159,7 +159,7 @@
         "https://ingest-sfcluster.eastus.kusto.windows.net/sflogdatabase",
         "https://ingest-sfcluster.kusto.windows.net/sflogdatabase"
       ],
-      "pattern": "^(https://.+?.kusto.windows.net).*$"
+      "pattern": "^(https://ingest-.+?.kusto.windows.net/.+)$"
     },
     "KustoCompressed": {
       "$id": "#/properties/KustoCompressed",
@@ -350,7 +350,8 @@
         3,
         4,
         5
-      ]
+      ],
+      "pattern": "^([0-5])$"
     },
     "LogFile": {
       "$id": "#/properties/LogFile",
