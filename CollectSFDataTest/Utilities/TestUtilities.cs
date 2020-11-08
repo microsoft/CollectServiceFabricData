@@ -251,7 +251,19 @@ namespace CollectSFDataTest.Utilities
             return output;
         }
 
-        public ProcessOutput ExecuteTest(Func<ConfigurationOptions, bool> func, ConfigurationOptions input = null)
+        public ProcessOutput ExecuteTest(Func<bool> func)
+        {
+            return ExecuteTest((a) =>
+            {
+                Func<Func<bool>, bool> newFunc = (nf) =>
+                 {
+                     return nf();
+                 };
+                return newFunc(a);
+            }, func);
+        }
+
+        public ProcessOutput ExecuteTest<T>(Func<T, bool> func, T input)
         {
             LogMessageQueueEnabled = false;
             Log.Close();
