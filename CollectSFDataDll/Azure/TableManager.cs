@@ -361,7 +361,7 @@ namespace CollectSFData.Azure
         {
             // first record is header
             bool recordExists = EnumerateTable(_tableClient.GetTableReference(tableName), 1, true).Count() > 1;
-            Log.AutoColor($"record exists in table:{recordExists}");
+            Log.Highlight($"record exists in table:{recordExists}");
             return recordExists;
         }
     }
