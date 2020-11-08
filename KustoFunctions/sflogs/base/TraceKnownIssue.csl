@@ -121,6 +121,7 @@
         TypeContains(T, "node performance issues lease slow send", "Lease.SlowSendCompletion"),
         TypeContains(T, "node performance issues lease send queue full", "Lease.SendQueueFull"),
         TypeAndTextContains(T, "lease node heartbeat disabled", "LeaseAgent.Heartbeat", "is disabled"),
+        TypeContains(T, "cluster upgrade unhealthy", "HM.UpgradeClusterUnhealthy"),
         TextContains(T, "replica performance 0x80071cf7", "0x80071cf7"),
         TextContains(T, "communication errors", "failed with status -107374"),
         TextContains(T, "port exhaustion", "failed to bind to local port for connecting: 0x80072747"),
@@ -157,5 +158,7 @@
         TypeAndTextMatches(T, "patch orchestration has active repair tasks", "POA-CoordinatorService.VerboseMessage", "Total [1-9][0-9]* repair tasks were found for POS"),
         TypeAndTextContains(T, "lease join issue", "Join.Establish", "Restarting as lease establish with"),
         TypeAndTextContains(T, "sfrp cert issue / common cert link", "InfrastructureService.WrpStreamChannel", "The underlying connection was closed: Could not establish trust relationship"),
-        TypeAndTextContains(T, "cert issue", "InfrastructureService.ClusterCommandProcessor", "CreateOperationStatusAsync: Exception encountered: System.Fabric.FabricServerAuthenticationFailedException")
+        TypeAndTextContains(T, "sfrp communication /cert issue", "InfrastructureService.WrpStreamChannel", "ReturnWrpStreamChannelResponse thrown System.AggregateException: Failed to send request while retrying with all available certificates"),
+        TypeAndTextContains(T, "cert issue", "InfrastructureService.ClusterCommandProcessor", "CreateOperationStatusAsync: Exception encountered: System.Fabric.FabricServerAuthenticationFailedException"),
+        TypeAndTextContains(T, "possible desktop heap issue. dll init failed", "Hosting.ProcessActivationManager", "3221225794")
     }
