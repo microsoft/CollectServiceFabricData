@@ -1,5 +1,5 @@
-.create-or-alter function with (docstring = '[T:string] where T=table name. function to enumerate PLB reconfiguration scheduling reasons.', folder = 'sflogs/reconfiguration')
-    TraceReconfigurationPLB (T:string) {
+.create-or-alter function with (docstring = "[T:string] where T=table name. function to enumerate PLB reconfiguration scheduling reasons.",folder = "sflogs/reconfiguration") 
+    TraceReconfigurationPLB(T:string) {
         let replacePattern = @"(\t|^\s|\r)";
         table(T)
         | where Type contains 'PLB.SchedulerAction@'
@@ -7,20 +7,19 @@
         | extend decisionId = extract(@"DecisionId: (?P<decisionId>\S+)", 1, Text)
         | extend affects = split(extract(@"Affects Services with Metrics: \{ (?P<affects>.+?) \}", 1, Text), " ")
         | extend placement = extract(@"\t\tPlacement was scheduled because:.*?(?P<placement>.*?)(Balanc.*? was|Constraint .*? was)", 1, Text)
-        | extend placementList = split(replace(replacePattern, "",placement),'.')
+        | extend placementList = split(replace(replacePattern,"",placement),'.')
         | extend balancing = extract(@"\t\tBalance Checking was scheduled because:.*?(?P<balancing>.*?)(Placement was|Constraint .*? was)", 1, Text)
-        | extend balanceList = split(replace(replacePattern, "",balancing),'.')
+        | extend balanceList = split(replace(replacePattern,"",balancing),'.')
         | extend constraint = extract(@"\t\tConstraint Violation Checking was scheduled because:.*?(?P<constraint>.*?)(Balanc.*? was|Placement was)", 1, Text)
-        | extend constraintList = split(replace(replacePattern, "",constraint),'.')
+        | extend constraintList = split(replace(replacePattern,"",constraint),'.')
         | extend imbalance = extract(@"Imbalanced Metric Information:.*?Number of Metric Imbalances (?P<imbalances>.*)", 1, Text)
-        | extend imbalanceCount = extract(@"^(\d+?)", 1, imbalance)
-        | extend imbalanceList = split(replace(replacePattern, "",imbalance),'.')
-        | extend metric = extract(@"(?P<metric>--Metric:.*)", 1,imbalance)
+        | extend imbalanceCount = extract(@"^(\d+?)",1, imbalance)
+        | extend imbalanceList = split(replace(replacePattern,"",imbalance),'.')
+        | extend metric = extract(@"(?P<metric>--Metric:.*)",1,imbalance)
         | extend metricList = split(metric,"--Metric: ")
         | where isnotempty(placement) or isnotempty(balancing) or isnotempty(constraint)
         | project Timestamp, decisionId, placementList, balanceList, constraintList, affects, imbalanceCount, metricList, Text
     }
-
 
 // 
 //  ServiceDomainId: cfb627b6-c6a8-4978-bb7e-0e5730d62f01_PrimaryCount
@@ -38,32 +37,3 @@
 //			Constraint Violation Fixing was not the most overdue phase needing scheduling.
 //		
 //		Between Placement, Constraint Violation Fixing, and Balancing, it was both necessary and the longest overdue.
-
-// "Timestamp": 2020-10-20T00:03:50.151Z,
-// "decisionId": 50b0b068-eda4-4c6d-8588-3d25cbb5c70f,
-// "placementList": [""],
-// "balanceList": [
-// 	"The config for balancing load was enabled",
-// 	"Upgrades did not temporarily pause balancing",
-// 	"Enough time has passed since the previous round of Balancing",
-// 	"There are replicas that can be moved to fix potential imbalances of load",
-// 	"There have been significant changes since the last round of balancing",
-// 	"No nodes recently came up or went down",
-// 	""
-// ],
-// "constraintList": [""],
-// "affects": [
-// 	"Count",
-// 	"PrimaryCount",
-// 	"ReplicaCount",
-// 	"servicefabric:/_CpuCores",
-// 	"servicefabric:/_MemoryInMB"
-// ],
-// "Text": ServiceDomainId: 042f9c7d-0715-4c8f-a907-ad8de400ad35_PrimaryCount	DecisionId: 50b0b068-eda4-4c6d-8588-3d25cbb5c70f	Affects Services with Metrics: { Count PrimaryCount ReplicaCount servicefabric:/_CpuCores servicefabric:/_MemoryInMB }	Reasons for Decision: 		Balance Checking was scheduled because: 			The config for balancing load was enabled.			Upgrades did not temporarily pause balancing.			Enough time has passed since the previous round of Balancing.			There are replicas that can be moved to fix potential imbalances of load.			There have been significant changes since the last round of balancing.			No nodes recently came up or went down.					Constraint Fixing was not scheduled because: 			Constraint Fixing was not scheduled because there were no detected constraint violations.				Placement was not scheduled because: 			Placement was not the most overdue phase needing scheduling.				Between Placement, Constraint Violation Fixing, and Balancing, it was both necessary and the longest overdue.
-// 				Imbalanced Metric Information: 		Number of Metric Imbalances 1,
-//                  		--Metric: [Name, ActivityThreshold, BalancingThreshold, Subclustering, MayBenefitFromSubclustering]: [PrimaryCount, 0, 1.000000, false, true] 	--Minimum [Load, Node]: [2, nodeid:ddeaa79dff6b348da99cfad677187cdf -- ddeaa79dff6b348da99cfad677187cdf]
-//                         --Maximum [Load, Node]: [5, nodeid:3214bca27e67c878b2ab57728ed80f29 -- 3214bca27e67c878b2ab57728ed80f29]
-//                 		--Subclustered Minimum [Load, Node]: [0.000000,  -- 0]
-//                     	--Subclustered Maximum [Load, Node]: [0.000000,  -- 0]
-//                         --[Metric Imbalance Scope, isBalanced, needsDefrag_]: [Global, false, false]
-//                          		 			,
