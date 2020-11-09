@@ -13,7 +13,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Net.NetworkInformation;
+using System.Net.Http;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -217,13 +217,17 @@ namespace CollectSFData.Common
         public void CheckReleaseVersion()
         {
             string response = $"\r\n\tlocal running version: {Version}";
-            Http http = new Http();
+            Http http = Http.ClientFactory();
+            http.DisplayResponse = false;
+            http.DisplayError = false;
+
             Dictionary<string, string> headers = new Dictionary<string, string>();
             headers.Add("User-Agent", $"{AppDomain.CurrentDomain.FriendlyName}");
 
             try
             {
-                if (new Ping().Send(new Uri(CodeLatestRelease).Host).Status == IPStatus.Success && http.SendRequest(uri: CodeLatestRelease, headers: headers))
+                if (http.SendRequest(uri: CodeLatestRelease, headers: headers, httpMethod: HttpMethod.Head)
+                     && http.SendRequest(uri: CodeLatestRelease, headers: headers))
                 {
                     JToken downloadUrl = http.ResponseStreamJson.SelectToken("assets[0].browser_download_url");
                     JToken downloadVersion = http.ResponseStreamJson.SelectToken("tag_name");
@@ -240,6 +244,7 @@ namespace CollectSFData.Common
                 Log.Last(response);
             }
         }
+
 
         public bool DefaultConfig()
         {
@@ -705,7 +710,7 @@ namespace CollectSFData.Common
             {
                 Log.Info($"reading {configFile}", ConsoleColor.Yellow);
                 options = (JObject)JsonConvert.DeserializeObject(File.ReadAllText(configFile));
-                Log.Debug($"options results:", options);
+                Log.Info($"options results:", options);
                 return options;
             }
             catch (Exception e)
@@ -734,7 +739,7 @@ namespace CollectSFData.Common
                     propertyInstance.SetValue(this, instanceValue);
                     Log.Info($"set:{propertyInstance.Name}:{thisValue} -> {instanceValue}");
                 }
-                catch(Exception e) 
+                catch (Exception e)
                 {
                     Log.Exception($"exception modifying:{propertyInstance.Name} {thisValue} -> {instanceValue}", e);
                 }
