@@ -11,6 +11,7 @@ param(
     [ValidateSet('win-x64', 'ubuntu.18.04-x64')]
     $runtimeIdentifier = 'win-x64',
     [switch]$publish,
+    [string]$nugetFallbackFolder = "$($env:userprofile)\.dotnet\NuGetFallbackFolder",
     [switch]$clean
 )
 
@@ -22,6 +23,7 @@ $csproj = "$psscriptroot\..\CollectSFData\CollectSFData.csproj"
 $dllcsproj = "$psscriptroot\..\CollectSFDataDll\CollectSFDataDll.csproj"
 $frameworksPattern = "\<TargetFrameworks\>(.+?)\</TargetFrameworks\>"
 $ignoreCase = [text.regularExpressions.regexOptions]::IgnoreCase
+$nugetFile = "$psscriptroot\..\bin\$configuration\*.nupkg"
 
 function main() {
 
@@ -45,10 +47,19 @@ function main() {
 
     if ($global:tempFiles) {
         foreach ($file in $global:tempFiles) {
-            write-warning "removing temp file $file"
+            write-host "removing temp file $file" -ForegroundColor Yellow
             remove-item $file -Force
         }
     }
+
+    $nugetFile = resolve-path $nugetFile
+    
+    if((test-path $nugetFile)){
+        write-host "nuget add $nugetFile -source $nugetFallbackFolder" -ForegroundColor Green
+        nuget add $nugetFile -source $nugetFallbackFolder
+    }
+    
+
     return
 }
 
