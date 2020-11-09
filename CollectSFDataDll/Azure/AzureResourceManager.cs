@@ -289,7 +289,7 @@ namespace CollectSFData.Azure
 
         public Task MsalDeviceCodeCallback(DeviceCodeResult arg)
         {
-            Log.Info($"device code info:", ConsoleColor.Cyan, null, arg);
+            Log.Highlight($"device code info:", arg);
 
             MsalDeviceCodeHandler deviceCodeMessage = MsalDeviceCode;
             deviceCodeMessage?.Invoke(arg);
