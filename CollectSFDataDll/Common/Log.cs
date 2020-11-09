@@ -17,7 +17,6 @@ namespace CollectSFData.Common
     public static class Log
     {
         public static int LogErrors = 0;
-        private static bool _displayingProgress;
         private static ConsoleColor _highlightBackground = Console.ForegroundColor;
         private static ConsoleColor _highlightForeground = Console.BackgroundColor;
         private static JsonSerializerSettings _jsonSerializerSettings;
@@ -56,28 +55,6 @@ namespace CollectSFData.Common
         public static string LogFile { get => _logFile; set => _logFile = CheckLogFile(value) ? value : string.Empty; }
 
         public static bool LogFileEnabled => !string.IsNullOrEmpty(LogFile);
-
-        public static void AutoColor(string message, object jsonSerializer = null, [CallerMemberName] string callerName = "")
-        {
-            ConsoleColor color = ConsoleColor.White;
-
-            if (Regex.IsMatch(message, "succeed|success|true", RegexOptions.IgnoreCase))
-            {
-                color = ConsoleColor.Green;
-            }
-
-            if (Regex.IsMatch(message, "fail|error|false", RegexOptions.IgnoreCase))
-            {
-                color = ConsoleColor.Red;
-            }
-
-            if (Regex.IsMatch(message, "exception|warn|terminate", RegexOptions.IgnoreCase))
-            {
-                color = ConsoleColor.Yellow;
-            }
-
-            Process(message, color, null, jsonSerializer, callerName: callerName);
-        }
 
         public static void Close()
         {
@@ -126,7 +103,24 @@ namespace CollectSFData.Common
         {
             if (LogDebug >= LoggingLevel.Warning)
             {
-                Process(message, _highlightForeground, _highlightBackground, jsonSerializer, callerName: callerName);
+                ConsoleColor color = ConsoleColor.White;
+
+                if (Regex.IsMatch(message, "succeed|success|true", RegexOptions.IgnoreCase))
+                {
+                    color = ConsoleColor.Green;
+                }
+
+                if (Regex.IsMatch(message, "fail|error|false", RegexOptions.IgnoreCase))
+                {
+                    color = ConsoleColor.Red;
+                }
+
+                if (Regex.IsMatch(message, "exception|warn|terminate", RegexOptions.IgnoreCase))
+                {
+                    color = ConsoleColor.Yellow;
+                }
+
+                Process(message, color, null, jsonSerializer, callerName: callerName);
             }
         }
 
@@ -147,10 +141,7 @@ namespace CollectSFData.Common
 
         public static void Info(string message, object jsonSerializer, [CallerMemberName] string callerName = "")
         {
-            if (LogDebug >= LoggingLevel.Info)
-            {
-                Process(message, null, null, jsonSerializer, callerName: callerName);
-            }
+            Info(message, null, null, jsonSerializer, callerName: callerName);
         }
 
         public static void Last(string message,
@@ -352,11 +343,6 @@ namespace CollectSFData.Common
             {
                 System.Diagnostics.Debug.Print(message.Message);
                 SetColor(message.ForegroundColor, message.BackgroundColor);
-                if (_displayingProgress)
-                {
-                    _displayingProgress = false;
-                    Console.WriteLine(Environment.NewLine);
-                }
 
                 if (message.IsError)
                 {
