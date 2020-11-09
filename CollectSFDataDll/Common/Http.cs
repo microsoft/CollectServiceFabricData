@@ -20,24 +20,20 @@ namespace CollectSFData.Common
 
         private readonly CustomTaskManager _httpTasks = new CustomTaskManager(true);
 
-        public Http()
+        private Http()
         {
             _httpClient = new HttpClient { Timeout = Timeout.InfiniteTimeSpan };
             _httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
         }
 
+        public bool DisplayError { get; set; }
         public bool DisplayResponse { get; set; }
         public HttpContentHeaders Headers { get; set; }
-
         public HttpMethod Method { get; set; } = HttpMethod.Get;
-
         public HttpResponseMessage Response { get; private set; }
-
         public JObject ResponseStreamJson { get; private set; }
-
         public string ResponseStreamString { get; private set; }
         public HttpStatusCode StatusCode { get; private set; }
-
         public bool Success { get; set; }
 
         public static Http ClientFactory()
@@ -120,7 +116,11 @@ namespace CollectSFData.Common
                     return Success = true;
                 }
 
-                Log.Error("unsuccessful response:", Response);
+                if(DisplayError)
+                {
+                    Log.Error("unsuccessful response:", Response);
+                }
+                
                 return Success = false;
             }
             catch (WebException we)
