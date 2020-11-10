@@ -72,13 +72,13 @@
         <file src="..\bin\$configuration$\net472\*.exe" target="tools\net472" />
         <file src="..\bin\$configuration$\net472\*.dll" target="tools\net472" />
         <file src="..\bin\$configuration$\net472\CollectSFDataDll.dll" target="lib\net472" />
-        <file src="..\configurationFiles\collectsfdata.options.json" target="tools\net472" />
+        <file src="..\..\configurationFiles\collectsfdata.options.json" target="tools\net472" />
         <file src="..\bin\$configuration$\net472\*.config" target="tools\net472" />
         <file src="..\bin\$configuration$\netcoreapp3.1\*.exe" target="tools\netcoreapp3.1" />
         <file src="..\bin\$configuration$\netcoreapp3.1\*.runtimeconfig.json" target="tools\netcoreapp3.1" />
         <file src="..\bin\$configuration$\netcoreapp3.1\*.dll" target="tools\netcoreapp3.1" />
         <file src="..\bin\$configuration$\netcoreapp3.1\CollectSFDataDll.dll" target="lib\netcoreapp3.1" />
-        <file src="..\configurationFiles\collectsfdata.options.json" target="tools\netcoreapp3.1" />
+        <file src="..\..\configurationFiles\collectsfdata.options.json" target="tools\netcoreapp3.1" />
         <file src="..\bin\$configuration$\netcoreapp3.1\*.config" target="tools\netcoreapp3.1" />
         <file src="..\FabricSupport.png" target="images\" />
     </files>
