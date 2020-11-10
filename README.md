@@ -56,7 +56,7 @@ Configuration for date ingestion into Log Analytics as a custom log has these re
 
 ## Setup
 
-CollectSFData is a console only utility packaged in both a nuget package and github release zip.
+CollectSFData is both a console utility and dll packaged in both a nuget package and github release zip.
 Use the below steps to setup environment for use with CollectSFData.
 
 1. Ensure machine executing utility has comparable [requirements](#requirements)
@@ -80,6 +80,10 @@ If using Kusto, an existing online Kusto database with authentication is require
 - Authentication to Kusto database. This can be interactive or non-interactive using an Azure application id / spn.
 - Resource id should be your Kusto cluster URL, e.g. https://mycluster.kusto.windows.net or https://mycluster.kustomfa.windows.net.  
 - [Azure Data Explorer Pricing](https://azure.microsoft.com/en-us/pricing/details/data-explorer/).
+
+NOTE: when specifying kusto url for collectsfdata, url must be in the ingest url and in the format of https://ingest-{{kusto cluster}}{{. optional location }}.kusto.windows.net/{{kusto database}}  
+Example: https://ingest-sfcluster.eastus.kusto.windows.net/sfdatabase  
+Example: https://ingest-sfcluster.kusto.windows.net/sfdatabase  
 
 ### CollectSFData Setup with Log Analytics
 
@@ -164,7 +168,8 @@ Options:
                                          new workspace with LogAnalyticsCreate
   -laws|--logAnalyticsWorkspaceSku   [string] Log Analytics Workspace Sku to use when creating new
                                          workspace with LogAnalyticsCreate. default is PerGB2018
-  -debug|--logDebug                  [bool] output debug statements to console
+  -debug|--logDebug                  [int] 0-disabled, 1-exception, 2-error, 3-warning, 4-info, 5-debug.
+                                         use logdebug levels for troubleshooting utility
   -log|--logFile                     [string] file name and path to save console output
   -nf|--nodeFilter                   [string] string / regex Filter on node name or any string in blob url
                                          (case-insensitive comparison)
@@ -190,7 +195,7 @@ https://github.com/microsoft/CollectServiceFabricData
 
 ### Configuration File options
 
-Instead of or in addition to using command line arguments, default and specified json configuration files can be used. Arguments in the json configuration files are not case sensitive.  
+In addition to using command line arguments, default and specified json configuration files can be used. Arguments in the json configuration files are not case sensitive.  
 For additional json configuration files see [configurationFiles](/configurationFiles).
 
 ### Default JSON configuration file

@@ -30,7 +30,7 @@ $kusto.SetTable($table)
 $kusto.SetDatabase($database)
 $kusto.SetCluster($cluster)
 $kusto.parameters = @{'T'= $table}
-$kusto.ExecScript("..\KustoFunctions\sflogs\TraceKnownIssueSummary.csl", $kusto.parameters)
+$kusto.ExecScript("..\kusto\sflogs\TraceKnownIssueSummary.csl", $kusto.parameters)
 
 .EXAMPLE 
 $kusto.SetTable("test_$env:USERNAME").Import()
