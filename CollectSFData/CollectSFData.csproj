@@ -30,9 +30,6 @@
     <ApplicationIcon>..\FabricSupport.ico</ApplicationIcon>
   </PropertyGroup>
   <PropertyGroup>
-    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
-  </PropertyGroup>
-  <PropertyGroup>
     <IsPackable>true</IsPackable>
     <PackageVersion>$(AssemblyVersion)</PackageVersion>
     <PackageId>Microsoft.ServiceFabric.CollectSFData</PackageId>
