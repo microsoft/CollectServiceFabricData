@@ -1,0 +1,16 @@
+.create-or-alter function with (docstring = "[T:string] where T=table name. function to search service fabric sflogs for application related entries",folder = "sflogs/application") 
+    TraceAppUnhealthyStats(T:string) {
+        let extractPattern_HMEntityQueryCompleted = @"QueryEntityDetail\(([^\)]*)[^\[]*[^:]*:\s([^;]*)[^:]*:\s([^;]*)[^:]*:\s([^;]*)[^:]*:\s([^;]*)[^:]*:\s([^;]*)[^:]*:[^\d]*([^.]*)";
+        table(T)
+        | where Timestamp between (datetime(2020-10-26T10:01:33.995Z) .. datetime(2020-10-26T10:11:34.547Z))
+        | where Type startswith "HM.Entity_QueryCompleted@fabric"
+        | where (Text contains "Error")
+        | extend Entity = extract(extractPattern_HMEntityQueryCompleted, 1, Text, typeof(string))
+        | extend ReplicaStats = extract(extractPattern_HMEntityQueryCompleted, 2, Text, typeof(string))
+        | extend PartitionStats = extract(extractPattern_HMEntityQueryCompleted, 3, Text, typeof(string))
+        | extend ServiceStats = extract(extractPattern_HMEntityQueryCompleted, 4, Text, typeof(string))
+        | extend DeployedPackageStats = extract(extractPattern_HMEntityQueryCompleted, 5, Text, typeof(string)) 
+        | extend DeployedApplicationStats = extract(extractPattern_HMEntityQueryCompleted, 6, Text, typeof(string))
+        | extend EvaluationMessage = extract(extractPattern_HMEntityQueryCompleted, 7, Text, typeof(string))
+        | project Timestamp, Type, Text, Entity, ReplicaStats, PartitionStats, ServiceStats, DeployedPackageStats, DeployedApplicationStats, EvaluationMessage, NodeName
+    }
