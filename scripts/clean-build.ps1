@@ -1,6 +1,6 @@
 $error.clear()
 $ErrorActionPreference = 'continue'
-$projectDir = resolve-path "$psscriptroot\.."
+$projectDir = resolve-path "$psscriptroot\..\src"
 $projectDirs = @("$projectDir", "$projectDir\CollectSFData", "$projectDir\CollectSFDataDll", "$projectDir\CollectSFDataTest")
 
 write-host "project dir: $projectDir" -ForegroundColor Green
