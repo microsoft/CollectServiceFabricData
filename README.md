@@ -81,6 +81,10 @@ If using Kusto, an existing online Kusto database with authentication is require
 - Resource id should be your Kusto cluster URL, e.g. https://mycluster.kusto.windows.net or https://mycluster.kustomfa.windows.net.  
 - [Azure Data Explorer Pricing](https://azure.microsoft.com/en-us/pricing/details/data-explorer/).
 
+NOTE: when specifying kusto url for collectsfdata, url must be in the ingest url and in the format of https://ingest-{{kusto cluster}}{{. optional location }}.kusto.windows.net/{{kusto database}}  
+Example: https://ingest-sfcluster.eastus.kusto.windows.net/sfdatabase  
+Example: https://ingest-sfcluster.kusto.windows.net/sfdatabase  
+
 ### CollectSFData Setup with Log Analytics
 
 If using Log Analytics (OMS), an existing or new workspace is required. See [/docs/logAnalyticsQuickStart.md](/docs/logAnalyticsQuickStart.md)  
