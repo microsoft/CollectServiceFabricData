@@ -62,8 +62,8 @@ namespace CollectSFDataTest.Utilities
         }
 
         public static TestContext Context { get; set; }
-        public static string DefaultOptionsFile => $"{WorkingDir}\\..\\..\\..\\..\\..\\configurationFiles\\collectsfdata.options.json";
-        public static string ScriptsDir => $"{WorkingDir}\\..\\..\\..\\..\\..\\scripts";
+        public static string DefaultOptionsFile => $"{WorkingDir}\\..\\..\\..\\..\\..\\..\\configurationFiles\\collectsfdata.options.json";
+        public static string ScriptsDir => $"{WorkingDir}\\..\\..\\..\\..\\..\\..\\scripts";
         public static string TempDir => $"{WorkingDir}\\..\\..\\Temp";
         public static string[] TestArgs => new string[2] { "-config", TestOptionsFile };
         public static string TestConfigurationsDir => $"{WorkingDir}\\..\\..\\..\\..\\TestConfigurations";
