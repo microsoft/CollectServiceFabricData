@@ -71,7 +71,8 @@ Options:
                                          new workspace with LogAnalyticsCreate
   -laws|--logAnalyticsWorkspaceSku   [string] Log Analytics Workspace Sku to use when creating new
                                          workspace with LogAnalyticsCreate. default is PerGB2018
-  -debug|--logDebug                  [bool] output debug statements to console
+  -debug|--logDebug                  [int] 0-disabled, 1-exception, 2-error, 3-warning, 4-info, 5-debug.
+                                         use logdebug levels for troubleshooting utility
   -log|--logFile                     [string] file name and path to save console output
   -nf|--nodeFilter                   [string] string / regex Filter on node name or any string in blob url
                                          (case-insensitive comparison)
@@ -116,7 +117,7 @@ To use a default configuration file without having to specify on the command lin
   - **trace** - 'trace' will enumerate service fabric diagnostic logs (.dtr) zip blobs from 'fabriclogs*'
   - **any** - 'any' without other filters will enumerate all containers for blobs matching criteria.
 - **List** - bool. default false. if true, lists the blobs meeting all criteria for download but does not download the file.
-- **LogDebug** - bool. default false. if true, logs additional 'debug' output to console for troubleshooting.
+- **LogDebug** - int. default 4. if > 0, logs additional 'debug' output to console for troubleshooting. 0-disabled, 1-exception, 2-error, 3-warning, 4-info, 5-debug.
 - **LogFile** - optional. string. default null. if populated with file and path, will log all console output to specified file. file is recreated every execution if exists.
 - **CacheLocation** - required. string. path to blob download location. this path depending on configuration may need to have many GB free and should be premium / fast ssd disk for best performance. **NOTE:** this path should be as short as possible as downloaded file names lengths are close to MAX_PATH.
 - **SasKey** - required unless using existing data in 'outputlocation' cache from prior execution, then leave empty. string. string type options: account sas uri, service sas uri, or sas connection string. see [shared access signatures](https://docs.microsoft.com/en-us/rest/api/storageservices/delegating-access-with-a-shared-access-signature).
@@ -142,16 +143,14 @@ To use a default configuration file without having to specify on the command lin
 
 ### Example JSON configuration files
 
-#### example clean configuration without Kusto
+#### **example clean configuration without Kusto**
 
 ```json
 {
   "ContainerFilter": "",
   "DeleteCache": true,
   "GatherType": "[counter|exception|trace|table|any]",
-  "List": false,
   "LogDebug": 4,
-  "LogFile": null,
   "CacheLocation": "<%fast drive path with 100 GB free%>",
   "SasKey": "[account sas uri|service sas uri|sas uri connection string]",
   "StartTimeStamp": null,
@@ -162,16 +161,14 @@ To use a default configuration file without having to specify on the command lin
 }
 ```
 
-#### example clean configuration with Kusto
+#### **example clean configuration with Kusto**
 
 ```json
 {
   "ContainerFilter": "",
   "DeleteCache": true,
   "GatherType": "[counter|exception|trace|table|any]",
-  "List": false,
   "LogDebug": 4,
-  "LogFile": null,
   "CacheLocation": "<%fast drive path with 100 GB free%>",
   "SasKey": "[account sas uri|service sas uri|sas uri connection string]",
   "StartTimeStamp": null,
@@ -180,24 +177,19 @@ To use a default configuration file without having to specify on the command lin
   "UriFilter": "",
   "NodeFilter": "",
   "KustoCluster": "https://<kusto ingest url>.<location>.kusto.windows.net/<kusto database>",
-  //"AzureTenantId" : "",
-  //"AzureClientId": "",
-  //"AzureClientSecret":"<64bit encoded client secret>",
   "KustoRecreateTable": false,
   "KustoTable": "<%kusto table name%>"
 }
 ```
 
-#### example clean configuration with Log Analytics
+#### **example clean configuration with Log Analytics**
 
 ```json
 {
   "ContainerFilter": "",
   "DeleteCache": true,
   "GatherType": "[counter|exception|trace|table|any]",
-  "List": false,
   "LogDebug": 4,
-  "LogFile": null,
   "CacheLocation": "<%fast drive path with 100 GB free%>",
   "SasKey": "[account sas uri|service sas uri|sas uri connection string]",
   "StartTimeStamp": null,
@@ -205,26 +197,29 @@ To use a default configuration file without having to specify on the command lin
   "Threads": 8,
   "UriFilter": "",
   "NodeFilter": "",
-  //"AzureTenantId" : "",
-  //"AzureClientId": "",
-  //"AzureClientSecret":"<64bit encoded client secret>",
   "LogAnalyticsId" : "<% oms workspace id %>",
   "LogAnalyticsKey" : "<% oms primary / secondary key %>",
   "LogAnalyticsName" : "<% oms tag / name for ingest %>"
 }
 ```
 
-#### example configuration for downloading service fabric diagnostic trace logs
+#### **example configuration for downloading service fabric diagnostic trace logs**
+
+for download only:
+
+- Kusto* settings cannot not be configured.  
+- LogAnalytics* settings cannot be configured.  
+- CacheLocation has to be configured.  
+
+NOTE: for standalone clusters a central diagnostic store must be configured
 
 ```json
 {
+  "CacheLocation": "g:\\cases",
   "ContainerFilter": "",
   "DeleteCache": true,
   "GatherType": "trace",
-  "List": false,
   "LogDebug": 4,
-  "LogFile": null,
-  "CacheLocation": "g:\\cases",
   "SasKey": "https://sflogsxxxxxxxxxxxxx.blob.core.windows.net/?sv=2017-11-09&ss=bfqt&srt=sco&sp=rwdlacup&se=2018-12-05T23:51:08Z&st=2018-11-05T15:51:08Z&spr=https&sig=VYT1J9Ene1NktyCgsu1gEH%2FN%2BNH9zRhJO05auUPQkSA%3D",
   "StartTimeStamp": "10/31/2018 20:00:00 +00:00",
   "EndTimeStamp": "10/31/2018 22:30:00 +00:00",
@@ -234,7 +229,37 @@ To use a default configuration file without having to specify on the command lin
 }
 ```
 
-#### example configuration for downloading service fabric diagnostic trace logs and uploading to kusto.
+#### **example configuration for uploading downloaded service fabric diagnostic trace logs from above**
+
+for upload only:
+
+- Kusto* or LogAnalytics* has to be configured.
+- CacheLocation has to be configured.
+- Cachelocation has to be populated from [collectsfdata download](#example-configuration-for-downloading-service-fabric-diagnostic-trace-logs) with correct structure.
+- SasKey cannot not be configured.
+
+NOTE: for standalone clusters a central diagnostic store must be configured
+
+```json
+{
+  "CacheLocation": "g:\\cases",
+  "ContainerFilter": "",
+  "DeleteCache": true,
+  "GatherType": "trace",
+  "KustoCluster": "https://<kusto ingest url>.<location>.kusto.windows.net/<kusto database>",
+  "KustoRecreateTable": false,
+  "KustoTable": "<%kusto table name%>",
+  "LogDebug": 4,
+  "SasKey": null,
+  "StartTimeStamp": "10/31/2018 20:00:00 +00:00",
+  "EndTimeStamp": "10/31/2018 22:30:00 +00:00",
+  "Threads": 8,
+  "UriFilter": "",
+  "NodeFilter": "",
+}
+```
+
+#### **example configuration for downloading service fabric diagnostic trace logs and uploading to kusto**
 
 ```json
 {
@@ -243,7 +268,6 @@ To use a default configuration file without having to specify on the command lin
   "GatherType": "trace",
   "List": false,
   "LogDebug": 4,
-  "LogFile": null,
   "CacheLocation": "g:\\cases",
   "SasKey": "https://sflogsxxxxxxxxxxxxx.blob.core.windows.net/?sv=2017-11-09&ss=bfqt&srt=sco&sp=rwdlacup&se=2018-12-05T23:51:08Z&st=2018-11-05T15:51:08Z&spr=https&sig=VYT1J9Ene1NktyCgsu1gEH%2FN%2BNH9zRhJO05auUPQkSA%3D",
   "StartTimeStamp": "10/31/2018 20:00:00 +00:00",
@@ -257,7 +281,7 @@ To use a default configuration file without having to specify on the command lin
 }
 ```
 
-#### default configuration generated from collectsfdata -save collectsfdata.options.json
+#### **default configuration generated from collectsfdata -save collectsfdata.options.json**
 
 ```json
 {
