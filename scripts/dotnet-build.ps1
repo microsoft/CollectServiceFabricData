@@ -11,6 +11,7 @@ param(
     [ValidateSet('win-x64', 'ubuntu.18.04-x64')]
     $runtimeIdentifier = 'win-x64',
     [switch]$publish,
+    [string]$projectDir = (resolve-path "$psscriptroot\..\src"),
     [string]$nugetFallbackFolder = "$($env:userprofile)\.dotnet\NuGetFallbackFolder",
     [switch]$clean
 )
@@ -19,11 +20,11 @@ $ErrorActionPreference = 'continue'
 
 $error.Clear()
 $global:tempFiles = [collections.arraylist]::new()
-$csproj = "$psscriptroot\..\CollectSFData\CollectSFData.csproj"
-$dllcsproj = "$psscriptroot\..\CollectSFDataDll\CollectSFDataDll.csproj"
+$csproj = "$projectDir\CollectSFData\CollectSFData.csproj"
+$dllcsproj = "$projectDir\CollectSFDataDll\CollectSFDataDll.csproj"
 $frameworksPattern = "\<TargetFrameworks\>(.+?)\</TargetFrameworks\>"
 $ignoreCase = [text.regularExpressions.regexOptions]::IgnoreCase
-$nugetFile = "$psscriptroot\..\bin\$configuration\*.nupkg"
+$nugetFile = "$projectDir\bin\$configuration\*.nupkg"
 
 function main() {
 
