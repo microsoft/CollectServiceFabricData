@@ -12,6 +12,11 @@
     <GenerateAssemblyDescriptionAttribute>false</GenerateAssemblyDescriptionAttribute>
     <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
     <GenerateAssemblyTitleAttribute>false</GenerateAssemblyTitleAttribute>
+    <NoWarn>7035</NoWarn>
+    <VersionSuffix>2.7.$([System.DateTime]::UtcNow.ToString(yyMM)).$([System.DateTime]::UtcNow.ToString(ddHHmmss))</VersionSuffix>
+    <AssemblyVersion Condition=" '$(VersionSuffix)' != '' ">$(VersionSuffix)</AssemblyVersion>
+    <Version Condition=" '$(VersionSuffix)' != '' ">$(VersionSuffix)</Version>
+    <FileVersion>$(Version)</FileVersion>
     <GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
     <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
     <ApplicationIcon>..\FabricSupport.ico</ApplicationIcon>
