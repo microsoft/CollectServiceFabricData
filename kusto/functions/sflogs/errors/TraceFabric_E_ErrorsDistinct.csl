@@ -2,7 +2,7 @@
     TraceFabric_E_ErrorsDistinct(T:string) {
         let baseUri = CreateKustoWebQueryLink('');
         table(T)
-        | where Text contains "FABRIC_E" or Text contains "E_ABORT"
+        | where Text contains "FABRIC_E" or Text contains "E_ABORT" or Text contains "E_FAIL"
         | where Text !contains "FABRIC_E_CONNECTION_CLOSED_BY_REMOTE_END"
         | extend fabric_error = tostring(extract_all(@"(?P<fabric_error>FABRIC_E\w+)", dynamic(['fabric_error']), Text))
         | summarize count(fabric_error), First = arg_min(Timestamp, *), Last = arg_max(Timestamp, *) by fabric_error

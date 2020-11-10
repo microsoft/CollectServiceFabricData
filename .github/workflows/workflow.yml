@@ -13,12 +13,10 @@ on:
     paths-ignore:
       - "docs/**"
       - "configurationFiles/**"
-      - "KustoFunctions/**"
-      - "KustoQueries/**"
-      - "LogAnalyticsQueries/**"
+      - "kusto/**"
     branches:
       - master
-      - dllmain
+      - main
 jobs:
   build:
     runs-on: windows-latest
