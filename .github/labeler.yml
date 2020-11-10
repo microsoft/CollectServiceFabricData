@@ -2,8 +2,7 @@ Configuration File:
   - configurationFiles/**
 
 Executable:
-  - CollectSFData/**/*
-  - CollectSFData.sln
+  - src/*
 
 Kusto Query Language:
   - kusto/*
