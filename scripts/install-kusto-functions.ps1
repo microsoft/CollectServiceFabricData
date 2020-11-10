@@ -9,11 +9,11 @@ param(
     [string]$location = '',
     [switch]$test,
     [switch]$force,
-    [string]$kustoFunctionsDir = "$psscriptroot\..\KustoFunctions"
+    [string]$kustoDir = "$psscriptroot\..\kusto"
 )
 
 $ErrorActionPreference = 'continue'
-$kustoScripts = [io.directory]::getFiles($kustoFunctionsDir, '*.csl', [io.searchoption]::AllDirectories)
+$kustoScripts = [io.directory]::getFiles($kustoDir, '*.csl', [io.searchoption]::AllDirectories)
 $scriptErrors = [collections.arraylist]::new()
 $scriptSuccess = [collections.arraylist]::new()
 
