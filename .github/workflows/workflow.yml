@@ -2,8 +2,9 @@ name: CI CollectSFData
 
 env:
   project_name: CollectSFData
-  artifacts_path: .\bin\artifacts
-  release_path: .\bin\Release
+  project_root: .\src
+  artifacts_path: .\src\bin\artifacts
+  release_path: .\src\bin\Release
   release_config: .\configurationFiles\collectsfdata.options.json
   github_owner: ${{ github.event.repository.owner.name }}
 
@@ -32,13 +33,13 @@ jobs:
 
       - name: dotnet restore
         shell: cmd
-        run: dotnet restore %project_name%\%project_name%.csproj -v detailed
+        run: dotnet restore %project_root%\%project_name%\%project_name%.csproj -v detailed
 
       - name: dotnet build / pack
         shell: cmd
         run: |
           set
-          dotnet build %project_name%\%project_name%.csproj -v detailed -c Release
+          dotnet build %project_root%\%project_name%\%project_name%.csproj -v detailed -c Release
           dir
 
       - name: build output
