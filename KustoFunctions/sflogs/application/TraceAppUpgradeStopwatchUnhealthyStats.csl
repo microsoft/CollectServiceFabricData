@@ -1,0 +1,39 @@
+.create-or-alter function with (docstring = "[T:string] where T=table name. function to search service fabric sflogs for application related entries",folder = "sflogs/application") 
+    TraceAppUpgradeStopwatchUnhealthyStats(T:string) {
+        //Total elapsed upgrade time = persisted:overall + stopwatch:upgrade = 5:41:619 + 05.026 = 5:46.645
+        //Total elapsed upgrade domain time = persisted:UD + stopwatch:upgrade = 2:55.809 + 05.026 = 3:00.835
+        //Total elapsed health check time = persisted:health + stopwatch:health = 30.126 + 05.026 = 35.152
+        let extractPattern_PartitionId = @'00000000-0000-0000-0000-000000002000[^+]*\+([^:]*)';
+        let extractPattern_Mode = @'(mode=)([^\s]*)';
+        let extractPattern_State = @'(state=)([^\]]*)';
+        let extractPattern_Persisted = @'(persisted\[overall=)([^\s]*)\s(UD=)([^\s]*)\s(health=)([^\]]*)';
+        let extractPattern_Stopwatch = @'(stopwatch\[upgrade=)([^\s]*)\s(health=)([^\]]*)';
+        let extractPattern_Wait = @'(wait=)(\S*)';
+        let extractPattern_Retry = @'monitored\supgrade\shealth\scheck\s([^:]*)[^=]*=([^\s]*)[^=]*=([^\]]*)[^=]*=([^\n]*)';
+        table(T)
+        | where Timestamp between (datetime(2020-10-26T09:55:08.000Z) .. datetime(2020-10-26T11:53:24.000Z))
+        | where Type contains 'CM.UpgradeStart' 
+            or Type contains 'CM.UpgradeComplete' 
+            or Type contains 'rollback'
+            or Text contains 'stopwatch' //or Type in ('RM.HealthCheckAsyncOperation','RM.Replica')
+        | extend PartitionId = extract(extractPattern_PartitionId, 1, Text, typeof(string))
+        | extend Mode = extract(extractPattern_Mode, 2, Text, typeof(string))
+        | extend State = extract(extractPattern_State, 2, Text, typeof(string))
+        | extend PerOverall = extract(extractPattern_Persisted, 2, Text, typeof(string))
+        | extend PersistedOverall = todatetime(strcat("2020-01-01", " 00:", PerOverall))
+        | extend PerUD = extract(extractPattern_Persisted, 4, Text, typeof(string))
+        | extend PersistedUD = todatetime(strcat("2020-01-01", " 00:", PerUD))
+        | extend PerHealth = extract(extractPattern_Persisted, 6, Text, typeof(string))
+        | extend PersistedHealth = todatetime(strcat("2020-01-01", " 00:", PerHealth))
+        | extend SwUpgrade = extract(extractPattern_Stopwatch, 2, Text, typeof(string))
+        | extend StopwatchUpgrade = todatetime(strcat("2020-01-01", " 00:", SwUpgrade))
+        | extend SwHealth = extract(extractPattern_Stopwatch, 4, Text, typeof(string))
+        | extend StopwatchHealth = todatetime(strcat("2020-01-01", " 00:", SwHealth))
+        | extend Wait = extract(extractPattern_Wait, 2, Text, typeof(string))
+        | extend Retry = extract(extractPattern_Retry, 1, Text, typeof(string))
+        | extend RetryPersisted = extract(extractPattern_Retry, 2, Text, typeof(string))
+        | extend TotalUpgrade = (PersistedOverall-datetime(2020-01-01)) + (StopwatchUpgrade-datetime(2020-01-01))
+        | extend UdTime = (PersistedUD-datetime(2020-01-01)) + (StopwatchUpgrade-datetime(2020-01-01)) 
+        | extend HcTime = (PersistedHealth-datetime(2020-01-01)) + (StopwatchHealth-datetime(2020-01-01)) 
+        | project Timestamp, Type, Text, Mode, Retry, UdTime, HcTime, TotalUpgrade
+    }

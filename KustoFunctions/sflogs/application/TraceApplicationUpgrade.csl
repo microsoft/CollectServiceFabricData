@@ -1,0 +1,47 @@
+.create-or-alter function with (docstring = "[T:string] where T=table name, [A:string] where App=application table name. function to search service fabric sflogs for application related entries",folder = "sflogs/application") 
+    TraceApplicationUpgrade(T:string,A:string) {
+            let extractPattern_Context1 = @'(ApplicationUpgradeContext\()([^\)]*)\)\[([^,]*),\s([^,]*),\s([^,]*),\s([^,]*),\s([^\s]*)\s=\s([^,]*),\s([^\s]*)\s=\s';
+            let extractPattern_Context2 = @'(Monitoring = action:)([^,]*),\swait:([^,]*),\sstable:([^,]*),\sretry:([^,]*),\sud:([^,]*),\soverall:([^,]*)';
+            let extractPattern_AppHealthPolicy = @'(ApplicationHealthPolicy\s=\s{)"ConsiderWarningAsError":([^,]*),"MaxPercentUnhealthyDeployedApplications":([^,]*)';
+            let extractPattern_DefaultServiceTypeHealthPolicy = @'"DefaultServiceTypeHealthPolicy":{"MaxPercentUnhealthyServices":([^,]*),"MaxPercentUnhealthyPartitionsPerService":([^,]*),"MaxPercentUnhealthyReplicasPerPartition":([^}]*)';
+            let extractPattern_Interrupted = @'interrupted\s=\s([^\s]*)'; 
+            let extractPattern_PostHealthCheck = @'postHealthCheckComplete=([^\s]*)\sstart.utc=([^\s]*)\s([^\s]*)';
+            table(T)
+            | where Type contains 'CM.UpgradeStart' 
+                or Type contains 'CM.UpgradeComplete'
+                or Type contains 'rollback' 
+                or (Type startswith "FM.AppUpgrade@" and Type contains tostring(A)) 
+                or (Level in ('Error') 
+                    or (Level in ('Warning','Error') and Type contains "termination")
+                )
+            | extend UpgradeContext = extract(extractPattern_Context1, 2, Text, typeof(string))
+            | extend Application = extract(extractPattern_Context1, 3, Text, typeof(string))
+            | extend Version = extract(extractPattern_Context1, 4, Text, typeof(string))
+            | extend UgType = extract(extractPattern_Context1, 5, Text, typeof(string))
+            | extend UgMode = extract(extractPattern_Context1, 6, Text, typeof(string))
+            | extend ReplicaSetCheckTimeout = extract(extractPattern_Context1, 8, Text, typeof(string))
+            //
+            | extend Action = extract(extractPattern_Context2, 2, Text, typeof(string))
+            | extend HealthCheckWait = extract(extractPattern_Context2, 3, Text, typeof(string))
+            | extend StableWait = extract(extractPattern_Context2, 4, Text, typeof(string))
+            | extend retryTimeout = extract(extractPattern_Context2, 5, Text, typeof(string))
+            | extend udTimeout = extract(extractPattern_Context2, 6, Text, typeof(string))
+            | extend overallTimeout = extract(extractPattern_Context2, 7, Text, typeof(string))
+            //
+            | extend ConsiderWarningAsError = extract(extractPattern_AppHealthPolicy, 2, Text, typeof(string))
+            | extend MaxPercentUnhealthyDeployedApplications = extract(extractPattern_AppHealthPolicy, 3, Text, typeof(string))
+            //
+            | extend MaxPercentUnhealthyServices = extract(extractPattern_DefaultServiceTypeHealthPolicy, 1, Text, typeof(string))
+            | extend MaxPercentUnhealthyPartitionsPerService = extract(extractPattern_DefaultServiceTypeHealthPolicy, 2, Text, typeof(string))
+            | extend MaxPercentUnhealthyReplicasPerPartition = extract(extractPattern_DefaultServiceTypeHealthPolicy, 3, Text, typeof(string))
+            //
+            | extend UpgradeInterrupted = extract(extractPattern_Interrupted, 1, Text, typeof(string))
+            //
+            | extend postHealthCheckComplete = extract(extractPattern_PostHealthCheck, 1, Text, typeof(string))
+            | extend postHealthCheckStartDateUtc = extract(extractPattern_PostHealthCheck, 2, Text, typeof(string))
+            | extend postHealthCheckStartTimeUtc = extract(extractPattern_PostHealthCheck, 3, Text, typeof(string))
+            //
+            | project Timestamp, Level, Type, Text, UpgradeContext, Application, Version, UgType, UgMode, ReplicaSetCheckTimeout, Action, HealthCheckWait, StableWait, retryTimeout, 
+            udTimeout, overallTimeout, ConsiderWarningAsError, MaxPercentUnhealthyDeployedApplications, MaxPercentUnhealthyServices, MaxPercentUnhealthyPartitionsPerService, 
+            MaxPercentUnhealthyReplicasPerPartition, UpgradeInterrupted, postHealthCheckComplete, postHealthCheckStartDateUtc, postHealthCheckStartTimeUtc
+        }
