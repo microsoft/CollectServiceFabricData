@@ -1,5 +1,5 @@
 # [Choice] .NET Core version: 3.1, 2.1
-ARG VARIANT=3.1
+ARG VARIANT=5.0
 FROM mcr.microsoft.com/vscode/devcontainers/dotnetcore:${VARIANT}
 
 # [Option] Install Node.js
@@ -30,19 +30,19 @@ RUN if [ "$INSTALL_AZURE_CLI" = "true" ]; then bash /tmp/library-scripts/azcli-d
 # https://dot.net/v1/dotnet-install.sh
 
 
-RUN mkdir $HOME/dotnet_install && cd $HOME/dotnet_install
-RUN curl -H 'Cache-Control: no-cache' -L https://dot.net/v1/dotnet-install.sh -o dotnet-install.sh
+##RUN mkdir $HOME/dotnet_install && cd $HOME/dotnet_install
+##RUN curl -H 'Cache-Control: no-cache' -L https://dot.net/v1/dotnet-install.sh -o dotnet-install.sh
 
 # net 5 sdk links currently broken in script so specifying runtime only
 # dotnet_install: Error: Could not find/download: `.NET Core SDK` with version = 5.0.0
 # dotnet_install: Error: Refer to: https://aka.ms/dotnet-os-lifecycle for information on .NET Core support
 
 #RUN sudo bash dotnet-install.sh --architecture x64 --runtime-id linux-x64 --version 5.0.0 --verbose
-RUN sudo bash dotnet-install.sh --architecture x64 --runtime-id linux-x64 --version 5.0.0 --runtime dotnet --verbose
+##RUN sudo bash dotnet-install.sh --architecture x64 --runtime-id linux-x64 --version 5.0.0 --runtime dotnet --verbose
 
 # install sdk manually 
 # https://docs.microsoft.com/en-us/dotnet/core/install/linux-alpine#scripted-install
-RUN curl -H 'Cache-Control: no-cache' -L https://download.visualstudio.microsoft.com/download/pr/820db713-c9a5-466e-b72a-16f2f5ed00e2/628aa2a75f6aa270e77f4a83b3742fb8/dotnet-sdk-5.0.100-linux-x64.tar.gz -o dotnet-sdk-5.0.100-linux-x64.tar.gz
-RUN mkdir -p "$HOME/dotnet" && tar zxf dotnet-sdk-5.0.100-linux-x64.tar.gz -C "$HOME/dotnet"
-RUN export DOTNET_ROOT=$HOME/dotnet
-RUN export PATH=$PATH:$HOME/dotnet
+##RUN curl -H 'Cache-Control: no-cache' -L https://download.visualstudio.microsoft.com/download/pr/820db713-c9a5-466e-b72a-16f2f5ed00e2/628aa2a75f6aa270e77f4a83b3742fb8/dotnet-sdk-5.0.100-linux-x64.tar.gz -o dotnet-sdk-5.0.100-linux-x64.tar.gz
+##RUN mkdir -p "$HOME/dotnet" && tar zxf dotnet-sdk-5.0.100-linux-x64.tar.gz -C "$HOME/dotnet"
+##RUN export DOTNET_ROOT=$HOME/dotnet
+##RUN export PATH=$PATH:$HOME/dotnet
