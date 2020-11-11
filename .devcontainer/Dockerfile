@@ -44,5 +44,5 @@ RUN sudo bash dotnet-install.sh --architecture x64 --runtime-id linux-x64 --vers
 # https://docs.microsoft.com/en-us/dotnet/core/install/linux-alpine#scripted-install
 RUN curl -H 'Cache-Control: no-cache' -L https://download.visualstudio.microsoft.com/download/pr/820db713-c9a5-466e-b72a-16f2f5ed00e2/628aa2a75f6aa270e77f4a83b3742fb8/dotnet-sdk-5.0.100-linux-x64.tar.gz -o dotnet-sdk-5.0.100-linux-x64.tar.gz
 RUN mkdir -p "$HOME/dotnet" && tar zxf dotnet-sdk-5.0.100-linux-x64.tar.gz -C "$HOME/dotnet"
-RUN export DOTNET_ROOT=$HOME/dotnet
-RUN export PATH=$PATH:$HOME/dotnet
+##RUN export DOTNET_ROOT=$HOME/dotnet
+##RUN export PATH=$PATH:$HOME/dotnet
