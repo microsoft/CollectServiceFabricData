@@ -117,7 +117,14 @@ namespace CollectSFData.DataFile
             Open();
             Log.Debug($"enter: memoryStream length: {_memoryStream.Length}");
             _memoryStream.Position = 0;
-            return new BinaryFormatter().Deserialize(_memoryStream) as IList<T>;
+            IList<T> list = default(IList<T>);
+
+            using (StreamReader reader = new StreamReader(_memoryStream))
+            {
+                list.Add((T)reader.ReadLine().Cast<T>());
+            }
+
+            return list;
         }
 
         public IList<string> Read()
@@ -201,8 +208,16 @@ namespace CollectSFData.DataFile
             Log.Debug($"enter: record length: {records.Count}");
             _memoryStream = null;
             Open();
-            new BinaryFormatter().Serialize(_memoryStream, records);
-            return _memoryStream;
+
+            using (StreamWriter writer = new StreamWriter(_memoryStream))
+            {
+                foreach(T record in records)
+                {
+                    writer.Write(record);
+                }
+            }
+
+           return _memoryStream;
         }
 
         private MemoryStream Open()

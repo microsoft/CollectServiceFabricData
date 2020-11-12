@@ -53,7 +53,7 @@ function main() {
         }
     }
 
-    $nugetFile = resolve-path $nugetFile
+    $nugetFile = (resolve-path $nugetFile)[-1]
     
     if((test-path $nugetFile)){
         write-host "nuget add $nugetFile -source $nugetFallbackFolder" -ForegroundColor Green
