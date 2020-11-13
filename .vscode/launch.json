@@ -16,9 +16,9 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceFolder}/bin/Debug/netcoreapp3.1/CollectSFData.dll",
+            "program": "${workspaceFolder}/src/bin/Debug/netcoreapp3.1/CollectSFData.dll",
             "args": [],
-            "cwd": "${workspaceFolder}/bin/Debug/netcoreapp3.1",
+            "cwd": "${workspaceFolder}/src/bin/Debug/netcoreapp3.1",
             "console": "internalConsole",
             "stopAtEntry": false
         },
