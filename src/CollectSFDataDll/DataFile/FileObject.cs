@@ -42,7 +42,9 @@ namespace CollectSFData.DataFile
         public long Length { get; set; }
 
         public string NodeName { get; private set; } = FileDataTypesEnum.unknown.ToString();
-
+        
+        public int RecordCount {get; set;}
+        
         public string RelativeUri => Regex.Replace(_fileUri ?? "", BaseUri ?? "", "", RegexOptions.IgnoreCase).TrimStart('/');
 
         public StreamManager Stream { get; set; }
