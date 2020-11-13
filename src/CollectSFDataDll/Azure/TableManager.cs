@@ -223,7 +223,7 @@ namespace CollectSFData.Azure
                     }
 
                     FileObject fileObject = new FileObject($"{cloudTable.Name}.{chunkCount++}{TableExtension}", Config.CacheLocation);
-                    fileObject.Stream.Write(resultsChunk.ToList());
+                    fileObject.Stream.Write(resultsChunk);
 
                     _instance.TotalFilesDownloaded++;
                     IngestCallback?.Invoke(fileObject);
@@ -268,10 +268,10 @@ namespace CollectSFData.Azure
                         Timestamp = result.Timestamp.UtcDateTime,
                         EventTimeStamp = actualTimeStamp,
                         ETag = result.ETag,
-                        PartitionKey = $"\"{result.PartitionKey}\"",
-                        RowKey = $"\"{result.RowKey}\"",
-                        PropertyName = $"\"{entity.Key}\"",
-                        PropertyValue = $"\"{entity.Value.Replace("\"", "\"\"")}\"",
+                        PartitionKey = result.PartitionKey,
+                        RowKey = result.RowKey,
+                        PropertyName = entity.Key,
+                        PropertyValue = entity.Value,
                         RelativeUri = cloudTable.Name,
                         ResourceUri = Config.ResourceUri
                     });
