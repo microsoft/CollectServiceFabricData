@@ -380,9 +380,9 @@ namespace CollectSFData.Kusto
 
             foreach (string uri in _failIngestedUris)
             {
-                if (_messageList.Any(x => Regex.IsMatch(x, Regex.Escape(new Uri(uri).AbsolutePath.TrimStart('/')), RegexOptions.IgnoreCase)))
+                if (_messageList.Any(x => Regex.IsMatch(uri, x, RegexOptions.IgnoreCase)))
                 {
-                    _messageList.RemoveAll(x => Regex.IsMatch(x, Regex.Escape(new Uri(uri).AbsolutePath.TrimStart('/')), RegexOptions.IgnoreCase));
+                    _messageList.RemoveAll(x => Regex.IsMatch(uri, x, RegexOptions.IgnoreCase));
                     Log.Error($"removing failed ingested relativeuri from _messageList[{_messageList.Count()}]: {uri}");
                 }
             }
