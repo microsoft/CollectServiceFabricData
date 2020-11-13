@@ -9,14 +9,16 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Text.RegularExpressions;
+using Newtonsoft.Json;
 
 namespace CollectSFData.DataFile
 {
     public class StreamManager : Constants
     {
+        public int StreamBufferSize { get; set; } = 1024;
+        public bool LeaveStreamOpen { get; set; } = true;
         private FileObject _fileObject;
         private MemoryStream _memoryStream = new MemoryStream();
 
@@ -44,8 +46,7 @@ namespace CollectSFData.DataFile
                 throw new ArgumentException();
             }
 
-            Open();
-            _memoryStream.Position = 0;
+            Open(true);
 
             Log.Debug($"compressing memoryStream start. start size: {fileObject.Length} dest size: {_memoryStream.Length} position: {_memoryStream.Position}");
             fileObject.Length = _memoryStream.Length;
@@ -97,7 +98,6 @@ namespace CollectSFData.DataFile
                 }
 
                 uncompressedStream.Position = 0;
-                fileObject.Length = _memoryStream.Length;
                 fileObject.Stream.Set(uncompressedStream);
 
                 Log.Debug($"decompressing memoryStream complete. size: {uncompressedStream.Length} position: {uncompressedStream.Position}");
@@ -107,24 +107,38 @@ namespace CollectSFData.DataFile
 
         public MemoryStream Get()
         {
-            Open();
-            _memoryStream.Position = 0;
+            Open(true);
             return _memoryStream;
         }
 
-        public IList<T> Read<T>()
+        public IEnumerable<T> Read<T>()
         {
-            Open();
+            Open(true);
             Log.Debug($"enter: memoryStream length: {_memoryStream.Length}");
-            _memoryStream.Position = 0;
-            IList<T> list = default(IList<T>);
+            char[] trimChars = new char[] { '[', ',', ']' };
 
-            using (StreamReader reader = new StreamReader(_memoryStream))
+            using (StreamReader reader = new StreamReader(_memoryStream, Encoding.UTF8, false, StreamBufferSize, LeaveStreamOpen))
             {
-                list.Add((T)reader.ReadLine().Cast<T>());
-            }
+                if (LeaveStreamOpen)
+                {
+                    while (reader.Peek() >= 0)
+                    {
+                        T record = JsonConvert.DeserializeObject<T>(reader.ReadLine().Trim(trimChars));
 
-            return list;
+                        if (record != null)
+                        {
+                            yield return record;
+                        }
+                    }
+                }
+                else
+                {
+                    foreach (T record in JsonConvert.DeserializeObject<List<T>>(reader.ReadToEnd()))
+                    {
+                        yield return record;
+                    };
+                }
+            }
         }
 
         public IList<string> Read()
@@ -149,11 +163,10 @@ namespace CollectSFData.DataFile
 
         public IEnumerable<string> ReadLine()
         {
-            Open();
+            Open(true);
             Log.Debug($"enter: memoryStream length: {_memoryStream.Length}");
-            _memoryStream.Position = 0;
 
-            using (StreamReader reader = new StreamReader(_memoryStream, Encoding.UTF8))
+            using (StreamReader reader = new StreamReader(_memoryStream, Encoding.UTF8, false, StreamBufferSize, LeaveStreamOpen))
             {
                 string line;
 
@@ -164,11 +177,18 @@ namespace CollectSFData.DataFile
             }
         }
 
+        private void ResetPosition()
+        {
+            if (_memoryStream != null)
+            {
+                _memoryStream.Position = 0;
+            }
+        }
+
         public void SaveToFile(string fileUri = null)
         {
             fileUri = fileUri ?? _fileObject.FileUri;
-            Open();
-            _memoryStream.Position = 0;
+            Open(true);
 
             Directory.CreateDirectory(Path.GetDirectoryName(fileUri));
             Log.Info($"writing memoryStream ({_memoryStream.Length} bytes) to file: {fileUri}", ConsoleColor.Green);
@@ -178,49 +198,91 @@ namespace CollectSFData.DataFile
                 _memoryStream.CopyTo(fileStream);
             }
 
-            _memoryStream.Position = 0;
+            ResetPosition();
         }
 
-        public void Set(MemoryStream stream)
+        private void Set(MemoryStream stream)
         {
             if (_memoryStream != stream)
             {
                 _memoryStream = stream;
             }
+
+            SetFileObjectLength();
         }
 
         public void Set(byte[] byteArray)
         {
-            if (_memoryStream.CanWrite && byteArray.Length <= _memoryStream.Length)
-            {
-                _memoryStream.SetLength(byteArray.Length);
-                _memoryStream.Position = 0;
-                _memoryStream.Write(byteArray, 0, byteArray.Length);
-            }
-            else
-            {
-                _memoryStream = new MemoryStream(byteArray);
-            }
+            Open(true);
+            _memoryStream.Write(byteArray, 0, byteArray.Length);
+            SetFileObjectLength();
         }
 
+        public MemoryStream Write<T>(T record)
+        {
+            return Write<T>(new List<T>(){record});
+        }
+        
         public MemoryStream Write<T>(IList<T> records)
         {
             Log.Debug($"enter: record length: {records.Count}");
-            _memoryStream = null;
-            Open();
 
-            using (StreamWriter writer = new StreamWriter(_memoryStream))
+            if (LeaveStreamOpen)
             {
-                foreach(T record in records)
+                Open();
+
+                if (_memoryStream.Position > 0)
                 {
-                    writer.Write(record);
+                    byte[] lastByte = new byte[1];
+                    _memoryStream.Position--;
+                    _memoryStream.Read(lastByte, 0, 1);
+
+                    string lastChar = Encoding.UTF8.GetString(lastByte);
+
+                    Log.Info($"last character:{lastChar}");
+
+                    if (lastChar.Equals("]"))
+                    {
+                        _memoryStream.Position--;
+                    }
                 }
             }
+            else
+            {
+                _memoryStream = null;
+                Open();
+                _fileObject.RecordCount = 0;
+            }
 
-           return _memoryStream;
+            _fileObject.RecordCount += records.Count;
+
+            using (StreamWriter writer = new StreamWriter(_memoryStream, Encoding.UTF8, StreamBufferSize, LeaveStreamOpen))
+            {
+                if (_memoryStream.Position == 0)
+                {
+                    writer.Write("[");
+                }
+
+                if (LeaveStreamOpen)
+                {
+                    foreach (T record in records)
+                    {
+                        writer.Write($"{JsonConvert.SerializeObject(record)},{Environment.NewLine}");
+                    }
+                }
+                else
+                {
+                    writer.Write($"{JsonConvert.SerializeObject(records)}{Environment.NewLine}");
+                }
+
+                writer.Write("]");
+            }
+
+            SetFileObjectLength();
+            return _memoryStream;
         }
 
-        private MemoryStream Open()
+        private MemoryStream Open(bool resetPosition = false)
         {
             if (_memoryStream == null)
             {
@@ -235,9 +297,20 @@ namespace CollectSFData.DataFile
             else
             {
                 Log.Debug($"stream already open. stream length: {_memoryStream.Length}");
+
+                if (resetPosition)
+                {
+                    ResetPosition();
+                }
             }
 
+            SetFileObjectLength();
             return _memoryStream;
+        }
+
+        private void SetFileObjectLength()
+        {
+            _fileObject.Length = _memoryStream.Length;
         }
     }
 }
