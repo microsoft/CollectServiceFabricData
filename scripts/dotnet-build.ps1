@@ -6,8 +6,8 @@
 param(
     [ValidateSet('net472', 'netcoreapp2.2', 'netcoreapp3.1', 'net5')]
     $targetFramework = 'net5',
-    [ValidateSet('debug', 'release')]
-    $configuration = 'release',
+    [ValidateSet('all', 'debug', 'release')]
+    $configuration = 'all',
     [ValidateSet('win-x64', 'ubuntu.18.04-x64')]
     $runtimeIdentifier = 'win-x64',
     [switch]$publish,
@@ -24,7 +24,6 @@ $csproj = "$projectDir\CollectSFData\CollectSFData.csproj"
 $dllcsproj = "$projectDir\CollectSFDataDll\CollectSFDataDll.csproj"
 $frameworksPattern = "\<TargetFrameworks\>(.+?)\</TargetFrameworks\>"
 $ignoreCase = [text.regularExpressions.regexOptions]::IgnoreCase
-$nugetFile = "$projectDir\bin\$configuration\*.nupkg"
 
 function main() {
 
@@ -38,32 +37,41 @@ function main() {
     write-host "dotnet restore $csproj" -ForegroundColor Green
     dotnet restore $csproj
 
-    write-host "dotnet build $csproj -c $configuration" -ForegroundColor Green
-    dotnet build $csproj -c $configuration
-
-    if ($publish) {
-        write-host "dotnet publish $csproj -f $targetFramework -r $runtimeIdentifier -c $configuration --self-contained $true -p:PublishSingleFile=true -p:PublishedTrimmed=true" -ForegroundColor Green
-        dotnet publish $csproj -f $targetFramework -r $runtimeIdentifier -c $configuration --self-contained $true -p:PublishSingleFile=true -p:PublishedTrimmed=true
+    if($configuration -ieq 'all'){
+        build-configuration 'debug'
+        build-configuration 'release'
+    }
+    else{
+        build-configuration $configuration
     }
 
     if ($global:tempFiles) {
         foreach ($file in $global:tempFiles) {
-            write-host "removing temp file $file" -ForegroundColor Yellow
+            write-host "removing temp file $file" -ForegroundColor Cyan
             remove-item $file -Force
         }
     }
 
-    $nugetFile = resolve-path $nugetFile
+    return
+}
+
+function build-configuration($configuration){
+    write-host "dotnet build $csproj -c $configuration" -ForegroundColor Magenta
+    dotnet build $csproj -c $configuration
+
+    if ($publish) {
+        write-host "dotnet publish $csproj -f $targetFramework -r $runtimeIdentifier -c $configuration --self-contained $true -p:PublishSingleFile=true -p:PublishedTrimmed=true" -ForegroundColor Magenta
+        dotnet publish $csproj -f $targetFramework -r $runtimeIdentifier -c $configuration --self-contained $true -p:PublishSingleFile=true -p:PublishedTrimmed=true
+    }
+
+    $nugetFile = "$projectDir\bin\$configuration\*.nupkg"
+    $nugetFile = (resolve-path $nugetFile)[-1]
     
     if((test-path $nugetFile)){
         write-host "nuget add $nugetFile -source $nugetFallbackFolder" -ForegroundColor Green
         nuget add $nugetFile -source $nugetFallbackFolder
     }
-    
-
-    return
 }
-
 function create-tempProject($projectFile) {
     $projContent = Get-Content -raw $projectFile
 
