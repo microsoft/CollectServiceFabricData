@@ -60,7 +60,7 @@ namespace CollectSFData.DataFile
                 Log.Info($"downloaded:{fileObject.FileUri}", ConsoleColor.DarkCyan, ConsoleColor.DarkBlue);
             }
 
-            if (fileObject.DownloadAction != null && fileObject.Stream.Get().Length < 1 && !fileObject.Exists)
+            if (fileObject.DownloadAction != null && fileObject.Length < 1 && !fileObject.Exists)
             {
                 string error = $"memoryStream does not exist and file does not exist {fileObject.FileUri}";
                 Log.Error(error);
@@ -69,7 +69,7 @@ namespace CollectSFData.DataFile
 
             if (!fileObject.FileType.Equals(FileTypesEnum.any))
             {
-                if (fileObject.Stream.Get().Length < 1 & fileObject.Exists)
+                if (fileObject.Length < 1 & fileObject.Exists)
                 {
                     // for cached directory uploads
                     fileObject.Stream.ReadFromFile();
@@ -248,9 +248,9 @@ namespace CollectSFData.DataFile
                                         Timestamp = Convert.ToDateTime(counterValues[0].Trim('"').Trim(' ')),
                                         CounterName = headers[headerIndex],
                                         CounterValue = Decimal.Parse(stringValue, NumberStyles.AllowExponent | NumberStyles.AllowDecimalPoint),
-                                        Object = counterInfo.Groups["object"].Value.Replace("\"","").Trim(),
-                                        Counter = counterInfo.Groups["counter"].Value.Replace("\"","").Trim(),
-                                        Instance = counterInfo.Groups["instance"].Value.Replace("\"","").Trim().Trim('(').Trim(')'),
+                                        Object = counterInfo.Groups["object"].Value.Replace("\"", "").Trim(),
+                                        Counter = counterInfo.Groups["counter"].Value.Replace("\"", "").Trim(),
+                                        Instance = counterInfo.Groups["instance"].Value.Replace("\"", "").Trim().Trim('(').Trim(')'),
                                         NodeName = fileObject.NodeName,
                                         FileType = fileObject.FileDataType.ToString(),
                                         RelativeUri = fileObject.RelativeUri
@@ -278,9 +278,9 @@ namespace CollectSFData.DataFile
         {
             Log.Debug($"enter:{fileObject.FileUri}");
             fileObject.FileUri = RelogBlg(fileObject);
-            IList<CsvCounterRecord> records = ExtractPerfCsvData(fileObject);
+            fileObject.Stream.Write(ExtractPerfCsvData(fileObject));
 
-            return PopulateCollection(fileObject, records);
+            return PopulateCollection<CsvCounterRecord>(fileObject);
         }
 
         private FileObjectCollection FormatDtrFile(FileObject fileObject)
@@ -297,7 +297,8 @@ namespace CollectSFData.DataFile
             };
 
             Log.Last($"{fileObject.LastModified} {fileObject.FileUri}{Config.SasEndpointInfo.SasToken}", ConsoleColor.Cyan);
-            return PopulateCollection(fileObject, records);
+            fileObject.Stream.Write(records);
+            return PopulateCollection<CsvExceptionRecord>(fileObject);
         }
 
         private FileObjectCollection FormatSetupFile(FileObject fileObject)
@@ -308,9 +309,7 @@ namespace CollectSFData.DataFile
         private FileObjectCollection FormatTableFile(FileObject fileObject)
         {
             Log.Debug($"enter:{fileObject.FileUri}");
-            IList<CsvTableRecord> records = fileObject.Stream.Read<CsvTableRecord>();
-
-            return PopulateCollection(fileObject, records);
+            return PopulateCollection<CsvTableRecord>(fileObject);
         }
 
         private FileObjectCollection FormatTraceFile<T>(FileObject fileObject) where T : ITraceRecord, new()
@@ -347,7 +346,9 @@ namespace CollectSFData.DataFile
                 }
 
                 Log.Debug($"finished format:{fileObject.FileUri}");
-                return PopulateCollection(fileObject, records.Cast<IRecord>().ToList());
+
+                fileObject.Stream.Write(records);
+                return PopulateCollection<DtrTraceRecord>(fileObject);
             }
             catch (Exception e)
             {
@@ -356,18 +357,18 @@ namespace CollectSFData.DataFile
             }
         }
 
-        private FileObjectCollection PopulateCollection<T>(FileObject fileObject, IList<T> records) where T : IRecord
+        private FileObjectCollection PopulateCollection<T>(FileObject fileObject)
         {
             FileObjectCollection collection = new FileObjectCollection() { fileObject };
             _instance.TotalFilesFormatted++;
-            _instance.TotalRecords += records.Count;
+            _instance.TotalRecords += fileObject.RecordCount;
 
             if (Config.IsKustoConfigured())
             {
                 // kusto native format is Csv
                 // kusto json ingest is 2 to 3 times slower and does *not* use standard json format. uses json document per line no comma
                 // using csv and compression for best performance
-                collection = SerializeCsv(fileObject, records);
+                collection = SerializeCsv(fileObject, fileObject.Stream.Read<T>());
 
                 if (Config.KustoCompressed)
                 {
@@ -377,11 +378,10 @@ namespace CollectSFData.DataFile
             else if (Config.IsLogAnalyticsConfigured())
             {
                 // la is kusto based but only accepts non compressed json format ingest
-                collection = SerializeJson(fileObject, records);
+                collection = SerializeJson<T>(fileObject);
             }
 
             collection.ForEach(x => SaveToCache(x));
-            records.Clear();
             return collection;
         }
 
@@ -400,7 +400,7 @@ namespace CollectSFData.DataFile
             }
         }
 
-        private FileObjectCollection SerializeCsv<T>(FileObject fileObject, IList<T> records)
+        private FileObjectCollection SerializeCsv<T>(FileObject fileObject, IEnumerable<T> records)
         {
             Log.Debug("enter");
             FileObjectCollection collection = new FileObjectCollection() { fileObject };
@@ -417,7 +417,6 @@ namespace CollectSFData.DataFile
                 if (csvSerializedBytes.Count + recordBytes.Length > MaxCsvTransmitBytes)
                 {
                     fileObject.Stream.Set(csvSerializedBytes.ToArray());
-                    fileObject.Length = fileObject.Stream.Get().Length;
                     csvSerializedBytes.Clear();
 
                     fileObject = new FileObject($"{sourceFile}.{counter}{CsvExtension}", fileObject.BaseUri);
@@ -431,57 +430,47 @@ namespace CollectSFData.DataFile
             }
 
             fileObject.Stream.Set(csvSerializedBytes.ToArray());
-            fileObject.Length = fileObject.Stream.Get().Length;
 
             Log.Debug($"csv serialized size: {csvSerializedBytes.Count} file: {fileObject.FileUri}");
             return collection;
         }
 
-        private FileObjectCollection SerializeJson<T>(FileObject fileObject, IList<T> records)
+        private FileObjectCollection SerializeJson<T>(FileObject fileObject)
         {
             Log.Debug("enter");
-            FileObjectCollection collection = new FileObjectCollection() { fileObject };
-            int counter = 0;
-
             string sourceFile = fileObject.FileUri.ToLower().Replace(JsonExtension, "");
             fileObject.FileUri = $"{sourceFile}{JsonExtension}";
-            List<byte> jsonSerializedBytes = new List<byte>();
+            FileObjectCollection collection = new FileObjectCollection();
 
-            byte[] leftBracket = Encoding.UTF8.GetBytes("[");
-            byte[] rightBracket = Encoding.UTF8.GetBytes("]");
-            byte[] comma = Encoding.UTF8.GetBytes(",");
-
-            jsonSerializedBytes.AddRange(leftBracket);
-
-            foreach (T record in records)
+            if (fileObject.Length > MaxJsonTransmitBytes)
             {
-                byte[] recordBytes = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(record, new JsonSerializerSettings() { }));
+                FileObject newFileObject = new FileObject($"{sourceFile}", fileObject.BaseUri);
+                int recordsCount = 0;
 
-                if (jsonSerializedBytes.Count + recordBytes.Length + rightBracket.Length > MaxJsonTransmitBytes)
+                foreach (T record in fileObject.Stream.Read<T>())
                 {
-                    jsonSerializedBytes.AddRange(rightBracket);
-                    fileObject.Stream.Set(jsonSerializedBytes.ToArray());
-                    fileObject.Length = fileObject.Stream.Get().Length;
-                    jsonSerializedBytes.Clear();
+                    recordsCount++;
 
-                    fileObject = new FileObject($"{sourceFile}.{counter}{JsonExtension}", fileObject.BaseUri);
-                    jsonSerializedBytes.AddRange(leftBracket);
-
-                    Log.Debug($"json serialized size: {jsonSerializedBytes.Count} file: {fileObject.FileUri}");
-                    collection.Add(fileObject);
+                    if (newFileObject.Length < WarningJsonTransmitBytes)
+                    {
+                        newFileObject.Stream.Write<T>(record);
+                    }
+                    else{
+                        newFileObject.FileUri = $"{sourceFile}.{recordsCount}{JsonExtension}";
+                        collection.Add(newFileObject);
+                        newFileObject = new FileObject($"{sourceFile}", fileObject.BaseUri);
+                    }
                 }
 
-                jsonSerializedBytes.AddRange(recordBytes);
-                jsonSerializedBytes.AddRange(comma);
-                counter++;
+                newFileObject.FileUri = $"{sourceFile}.{recordsCount}{JsonExtension}";
+                collection.Add(newFileObject);
+            }
+            else
+            {
+                collection.Add(fileObject);
             }
 
-            jsonSerializedBytes.RemoveRange(jsonSerializedBytes.Count - comma.Length, comma.Length);
-            jsonSerializedBytes.AddRange(rightBracket);
-            fileObject.Stream.Set(jsonSerializedBytes.ToArray());
-            fileObject.Length = fileObject.Stream.Get().Length;
-
-            Log.Debug($"json serialized size: {jsonSerializedBytes.Count} file: {fileObject.FileUri}");
+            Log.Debug($"json serialized size: {fileObject.Length} file: {fileObject.FileUri}");
             return collection;
         }
     }
