@@ -29,20 +29,21 @@ RUN if [ "$INSTALL_AZURE_CLI" = "true" ]; then bash /tmp/library-scripts/azcli-d
 #    [--version <VERSION>]
 # https://dot.net/v1/dotnet-install.sh
 
+# https://docs.microsoft.com/en-us/dotnet/core/install/linux-ubuntu#1804-
+RUN wget https://packages.microsoft.com/config/ubuntu/18.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
+RUN sudo dpkg -i packages-microsoft-prod.deb
 
-RUN mkdir $HOME/dotnet_install && cd $HOME/dotnet_install
-RUN curl -H 'Cache-Control: no-cache' -L https://dot.net/v1/dotnet-install.sh -o dotnet-install.sh
+# sdk
+RUN sudo apt-get update; \
+  sudo apt-get install -y apt-transport-https && \
+  sudo apt-get update && \
+  sudo apt-get install -y dotnet-sdk-5.0
 
-# net 5 sdk links currently broken in script so specifying runtime only
-# dotnet_install: Error: Could not find/download: `.NET Core SDK` with version = 5.0.0
-# dotnet_install: Error: Refer to: https://aka.ms/dotnet-os-lifecycle for information on .NET Core support
+# runtime asp
+# RUN sudo apt-get update; \
+#  sudo apt-get install -y apt-transport-https && \
+#  sudo apt-get update && \
+#  sudo apt-get install -y aspnetcore-runtime-5.0
 
-#RUN sudo bash dotnet-install.sh --architecture x64 --runtime-id linux-x64 --version 5.0.0 --verbose
-RUN sudo bash dotnet-install.sh --architecture x64 --runtime-id linux-x64 --version 5.0.0 --runtime dotnet --verbose
-
-# install sdk manually 
-# https://docs.microsoft.com/en-us/dotnet/core/install/linux-alpine#scripted-install
-RUN curl -H 'Cache-Control: no-cache' -L https://download.visualstudio.microsoft.com/download/pr/820db713-c9a5-466e-b72a-16f2f5ed00e2/628aa2a75f6aa270e77f4a83b3742fb8/dotnet-sdk-5.0.100-linux-x64.tar.gz -o dotnet-sdk-5.0.100-linux-x64.tar.gz
-RUN mkdir -p "$HOME/dotnet" && tar zxf dotnet-sdk-5.0.100-linux-x64.tar.gz -C "$HOME/dotnet"
-##RUN export DOTNET_ROOT=$HOME/dotnet
-##RUN export PATH=$PATH:$HOME/dotnet
+# runtime net5
+RUN sudo apt-get install -y dotnet-runtime-5.0
