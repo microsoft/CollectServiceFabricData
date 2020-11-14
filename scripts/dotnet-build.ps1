@@ -5,7 +5,7 @@
 #>
 param(
     [ValidateSet('net472', 'netcoreapp2.2', 'netcoreapp3.1', 'net5')]
-    $targetFramework = 'net5',
+    [string[]]$targetFramework = @('net5'),
     [ValidateSet('all', 'debug', 'release')]
     $configuration = 'all',
     [ValidateSet('win-x64', 'ubuntu.18.04-x64')]
@@ -74,13 +74,15 @@ function build-configuration($configuration){
 }
 function create-tempProject($projectFile) {
     $projContent = Get-Content -raw $projectFile
+    $targetFrameworkString = @($targetFramework) -join ";"
 
-    if (!([regex]::IsMatch($projContent, $targetFramework, $ignoreCase))) {
+    if (!([regex]::IsMatch($projContent, ">$targetFrameworkString<", $ignoreCase))) {
         $currentFrameworks = [regex]::Match($projContent, $frameworksPattern, $ignoreCase).Groups[1].Value
         write-host "current frameworks: $currentFrameworks" -ForegroundColor Green
-        write-host "copying and adding target framework to csproj $targetFramework" -ForegroundColor Green
-        $projContent = [regex]::Replace($projContent, $currentFrameworks, "$currentFrameworks;$targetFramework", $ignoreCase)
-        $tempProject = $projectFile.Replace(".csproj", ".$targetFramework.csproj")
+        write-host "copying and adding target framework to csproj $targetFrameworkString" -ForegroundColor Green
+        # $projContent = [regex]::Replace($projContent, $currentFrameworks, "$currentFrameworks;$targetFramework", $ignoreCase)
+        $projContent = [regex]::Replace($projContent, $currentFrameworks, $targetFrameworkString, $ignoreCase)
+        $tempProject = $projectFile.Replace(".csproj", ".temp.csproj")
         write-host "saving to $tempProject" -ForegroundColor Green
         $projContent | out-file $tempProject
         [void]$global:tempFiles.add($tempProject)
