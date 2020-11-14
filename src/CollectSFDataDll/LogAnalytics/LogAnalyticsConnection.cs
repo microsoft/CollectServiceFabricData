@@ -70,7 +70,7 @@ namespace CollectSFData.LogAnalytics
 
                 if (Config.Unique)
                 {
-                    _ingestedUris.AddRange(PostQueryList($"['{Config.LogAnalyticsName}_CL']|distinct RelativeUri_s"));
+                    _ingestedUris.AddRange(PostQueryList($"['{Config.LogAnalyticsName}_CL']|distinct RelativeUri_s", false));
                     Log.Info($"listResults:", _ingestedUris);
                 }
             }
@@ -419,7 +419,7 @@ namespace CollectSFData.LogAnalytics
             }
         }
 
-        private LogAnalyticsQueryResults PostQuery(string query)
+        private LogAnalyticsQueryResults PostQuery(string query, bool displayError = true)
         {
             LogAnalyticsQueryResults laResults = new LogAnalyticsQueryResults();
             string jsonBody = $"{{\"query\": \"{query}\"}}";
@@ -440,7 +440,11 @@ namespace CollectSFData.LogAnalytics
 
                 if (!_httpClient.Success)
                 {
-                    Log.Error("unsuccessful response:", _httpClient.Response);
+                    if(displayError)
+                    {
+                        Log.Error("unsuccessful response:", _httpClient.Response);
+                    }
+
                     return null;
                 }
                 else
@@ -486,9 +490,9 @@ namespace CollectSFData.LogAnalytics
             }
         }
 
-        private List<string> PostQueryList(string query)
+        private List<string> PostQueryList(string query, bool displayError = true)
         {
-            LogAnalyticsQueryResults results = PostQuery(query);
+            LogAnalyticsQueryResults results = PostQuery(query, displayError);
             List<string> listResults = new List<string>();
 
             if (results?.tables.Length > 0)
