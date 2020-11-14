@@ -18,7 +18,8 @@ namespace CollectSFData.DataFile
     public class StreamManager : Constants
     {
         public int StreamBufferSize { get; set; } = 1024;
-        public bool LeaveStreamOpen { get; set; } = true;
+        public bool LeaveStreamOpen { get; set; } = false;
+        public long Length => (long)Open().Length;
         private FileObject _fileObject;
         private MemoryStream _memoryStream = new MemoryStream();
 
@@ -49,7 +50,7 @@ namespace CollectSFData.DataFile
             Open(true);
 
             Log.Debug($"compressing memoryStream start. start size: {fileObject.Length} dest size: {_memoryStream.Length} position: {_memoryStream.Position}");
-            fileObject.Length = _memoryStream.Length;
+            //fileObject.Length = _memoryStream.Length;
 
             MemoryStream compressedStream = new MemoryStream();
 
@@ -115,7 +116,7 @@ namespace CollectSFData.DataFile
         {
             Open(true);
             Log.Debug($"enter: memoryStream length: {_memoryStream.Length}");
-            char[] trimChars = new char[] { '[', ',', ']' };
+            char[] trimChars = new char[] { '[', ']', ',' };
 
             using (StreamReader reader = new StreamReader(_memoryStream, Encoding.UTF8, false, StreamBufferSize, LeaveStreamOpen))
             {
@@ -123,7 +124,8 @@ namespace CollectSFData.DataFile
                 {
                     while (reader.Peek() >= 0)
                     {
-                        T record = JsonConvert.DeserializeObject<T>(reader.ReadLine().Trim(trimChars));
+                        string stringRecord = reader.ReadLine().Trim(trimChars);
+                        T record = JsonConvert.DeserializeObject<T>(stringRecord);
 
                         if (record != null)
                         {
@@ -133,10 +135,15 @@ namespace CollectSFData.DataFile
                 }
                 else
                 {
-                    foreach (T record in JsonConvert.DeserializeObject<List<T>>(reader.ReadToEnd()))
+                    T[] records = JsonConvert.DeserializeObject<T[]>(reader.ReadToEnd());
+
+                    foreach (T record in records)
                     {
-                        yield return record;
-                    };
+                        if (record != null)
+                        {
+                            yield return record;
+                        }
+                    }
                 }
             }
         }
@@ -177,12 +184,9 @@ namespace CollectSFData.DataFile
             }
         }
 
-        private void ResetPosition()
+        public void ResetPosition()
         {
-            if (_memoryStream != null)
-            {
-                _memoryStream.Position = 0;
-            }
+            Open(true);
         }
 
         public void SaveToFile(string fileUri = null)
@@ -205,24 +209,23 @@ namespace CollectSFData.DataFile
         {
             if (_memoryStream != stream)
             {
+                _memoryStream.SetLength(stream.Length);
                 _memoryStream = stream;
             }
-
-            SetFileObjectLength();
         }
 
         public void Set(byte[] byteArray)
         {
             Open(true);
+            _memoryStream.SetLength(byteArray.Length);
             _memoryStream.Write(byteArray, 0, byteArray.Length);
-            SetFileObjectLength();
         }
 
         public MemoryStream Write<T>(T record)
         {
-            return Write<T>(new List<T>(){record});
+            return Write<T>(new List<T>() { record });
         }
-        
+
         public MemoryStream Write<T>(IList<T> records)
         {
             Log.Debug($"enter: record length: {records.Count}");
@@ -239,11 +242,11 @@ namespace CollectSFData.DataFile
 
                     string lastChar = Encoding.UTF8.GetString(lastByte);
 
-                    Log.Info($"last character:{lastChar}");
+                    Log.Debug($"last character:{lastChar}");
 
                     if (lastChar.Equals("]"))
                     {
-                        _memoryStream.Position--;
+                        //_memoryStream.Position--;
                     }
                 }
             }
@@ -260,7 +263,7 @@ namespace CollectSFData.DataFile
             {
                 if (_memoryStream.Position == 0)
                 {
-                    writer.Write("[");
+                 //   writer.Write("[");
                 }
 
                 if (LeaveStreamOpen)
@@ -275,10 +278,9 @@ namespace CollectSFData.DataFile
                     writer.Write($"{JsonConvert.SerializeObject(records)}{Environment.NewLine}");
                 }
 
-                writer.Write("]");
+              //  writer.Write("]");
             }
 
-            SetFileObjectLength();
             return _memoryStream;
         }
 
@@ -300,17 +302,11 @@ namespace CollectSFData.DataFile
 
                 if (resetPosition)
                 {
-                    ResetPosition();
+                    _memoryStream.Position = 0;
                 }
             }
 
-            SetFileObjectLength();
             return _memoryStream;
-        }
-
-        private void SetFileObjectLength()
-        {
-            _fileObject.Length = _memoryStream.Length;
         }
     }
 }

@@ -39,12 +39,12 @@ namespace CollectSFData.DataFile
 
         public DateTimeOffset LastModified { get; set; }
 
-        public long Length { get; set; }
+        public long Length => (long)Stream?.Length;
 
         public string NodeName { get; private set; } = FileDataTypesEnum.unknown.ToString();
-        
-        public int RecordCount {get; set;}
-        
+
+        public int RecordCount { get; set; }
+
         public string RelativeUri => Regex.Replace(_fileUri ?? "", BaseUri ?? "", "", RegexOptions.IgnoreCase).TrimStart('/');
 
         public StreamManager Stream { get; set; }
