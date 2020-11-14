@@ -261,7 +261,7 @@ namespace CollectSFData.Azure
             Log.Info($"exit {cloudBlobDirectory.Uri}");
         }
 
-        private void InvokeCallback(IListBlobItem blob, FileObject fileObject)
+        private void InvokeCallback(IListBlobItem blob, FileObject fileObject, int sourceLength)
         {
             if (!fileObject.Exists)
             {
@@ -271,7 +271,7 @@ namespace CollectSFData.Azure
                     ParallelOperationThreadCount = Config.Threads
                 };
 
-                if (fileObject.Length > MaxStreamTransmitBytes)
+                if (sourceLength > MaxStreamTransmitBytes)
                 {
                     fileObject.DownloadAction = () =>
                     {
@@ -392,7 +392,6 @@ namespace CollectSFData.Azure
                         {
                             IngestCallback?.Invoke(new FileObject(blob.Uri.AbsolutePath, Config.SasEndpointInfo.BlobEndpoint)
                             {
-                                Length = blobRef.Properties.Length,
                                 LastModified = lastModified
                             });
                             continue;
@@ -400,12 +399,11 @@ namespace CollectSFData.Azure
 
                         FileObject fileObject = new FileObject(blob.Uri.AbsolutePath, Config.CacheLocation)
                         {
-                            Length = blobRef.Properties.Length,
                             LastModified = lastModified
                         };
 
                         Log.Info($"queueing blob with timestamp: {lastModified}\r\n file: {blob.Uri.AbsolutePath}");
-                        InvokeCallback(blob, fileObject);
+                        InvokeCallback(blob, fileObject, (int)blobRef.Properties.Length);
                     }
                     else
                     {

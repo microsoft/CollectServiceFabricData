@@ -346,7 +346,8 @@ namespace CollectSFData.DataFile
                 }
 
                 Log.Debug($"finished format:{fileObject.FileUri}");
-
+            
+                fileObject.Stream.ResetPosition();
                 fileObject.Stream.Write(records);
                 return PopulateCollection<DtrTraceRecord>(fileObject);
             }
@@ -368,7 +369,7 @@ namespace CollectSFData.DataFile
                 // kusto native format is Csv
                 // kusto json ingest is 2 to 3 times slower and does *not* use standard json format. uses json document per line no comma
                 // using csv and compression for best performance
-                collection = SerializeCsv(fileObject, fileObject.Stream.Read<T>());
+                collection = SerializeCsv<T>(fileObject);
 
                 if (Config.KustoCompressed)
                 {
@@ -400,7 +401,7 @@ namespace CollectSFData.DataFile
             }
         }
 
-        private FileObjectCollection SerializeCsv<T>(FileObject fileObject, IEnumerable<T> records)
+        private FileObjectCollection SerializeCsv<T>(FileObject fileObject)
         {
             Log.Debug("enter");
             FileObjectCollection collection = new FileObjectCollection() { fileObject };
@@ -410,7 +411,7 @@ namespace CollectSFData.DataFile
             fileObject.FileUri = $"{sourceFile}{CsvExtension}";
             List<byte> csvSerializedBytes = new List<byte>();
 
-            foreach (T record in records)
+            foreach (T record in fileObject.Stream.Read<T>())
             {
                 byte[] recordBytes = Encoding.UTF8.GetBytes(record.ToString());
 
@@ -430,7 +431,6 @@ namespace CollectSFData.DataFile
             }
 
             fileObject.Stream.Set(csvSerializedBytes.ToArray());
-
             Log.Debug($"csv serialized size: {csvSerializedBytes.Count} file: {fileObject.FileUri}");
             return collection;
         }
