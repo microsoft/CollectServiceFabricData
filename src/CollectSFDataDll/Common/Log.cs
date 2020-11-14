@@ -105,12 +105,12 @@ namespace CollectSFData.Common
             {
                 ConsoleColor color = ConsoleColor.White;
 
-                if (Regex.IsMatch(message, "succeed|success|true", RegexOptions.IgnoreCase))
+                if (Regex.IsMatch(message, "succeed|success|info", RegexOptions.IgnoreCase))
                 {
                     color = ConsoleColor.Green;
                 }
 
-                if (Regex.IsMatch(message, "fail|error|false", RegexOptions.IgnoreCase))
+                if (Regex.IsMatch(message, "fail|error|critical", RegexOptions.IgnoreCase))
                 {
                     color = ConsoleColor.Red;
                 }
@@ -150,7 +150,7 @@ namespace CollectSFData.Common
                                 object jsonSerializer = null,
                                 [CallerMemberName] string callerName = "")
         {
-            if (LogDebug >= LoggingLevel.Error)
+            if (LogDebug >= LoggingLevel.Warning)
             {
                 Process(message, foregroundColor, backgroundColor, jsonSerializer, false, true, callerName: callerName);
             }
