@@ -453,7 +453,7 @@ namespace CollectSFData.DataFile
 
                     if (newFileObject.Length < WarningJsonTransmitBytes)
                     {
-                        newFileObject.Stream.Write<T>(record);
+                        newFileObject.Stream.Write<T>(new List<T>{record}, true);
                     }
                     else{
                         newFileObject.FileUri = $"{sourceFile}.{recordsCount}{JsonExtension}";
