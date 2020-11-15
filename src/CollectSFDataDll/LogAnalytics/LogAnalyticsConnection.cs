@@ -104,7 +104,7 @@ namespace CollectSFData.LogAnalytics
         {
             int retry = 0;
 
-            if (fileObject.Stream.Get().Length < 1 && (!fileObject.FileUri.ToLower().EndsWith(JsonExtension) | !fileObject.Exists))
+            if (fileObject.Stream.Length < 1 && (!fileObject.FileUri.ToLower().EndsWith(JsonExtension) | !fileObject.Exists))
             {
                 Log.Warning($"no json data to send: {fileObject.FileUri}");
                 return;
@@ -374,7 +374,7 @@ namespace CollectSFData.LogAnalytics
         private bool PostData(FileObject fileObject, bool connectivityCheck = false)
         {
             Log.Debug("enter");
-            string jsonBody = Config.UseMemoryStream || connectivityCheck ? new StreamReader(fileObject.Stream.Get()).ReadToEnd() : File.ReadAllText(fileObject.FileUri);
+            string jsonBody = Config.UseMemoryStream || connectivityCheck ? fileObject.Stream.ReadToEnd() : File.ReadAllText(fileObject.FileUri);
             fileObject.Stream.Close();
             byte[] jsonBytes = Encoding.UTF8.GetBytes(jsonBody);
 

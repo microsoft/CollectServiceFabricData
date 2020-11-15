@@ -278,7 +278,7 @@ namespace CollectSFData.DataFile
         {
             Log.Debug($"enter:{fileObject.FileUri}");
             fileObject.FileUri = RelogBlg(fileObject);
-            fileObject.Stream.Write(ExtractPerfCsvData(fileObject));
+            fileObject.Stream.Write<CsvCounterRecord>(ExtractPerfCsvData(fileObject));
 
             return PopulateCollection<CsvCounterRecord>(fileObject);
         }
