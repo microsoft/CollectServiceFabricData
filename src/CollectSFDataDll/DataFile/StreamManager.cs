@@ -18,7 +18,7 @@ namespace CollectSFData.DataFile
     public class StreamManager : Constants
     {
         public int StreamBufferSize { get; set; } = 1024;
-        public bool LeaveStreamOpen { get; set; } = true;
+        private bool _leaveStreamOpen { get; set; } = true;
         public long Length => (long)Open().Length;
         private FileObject _fileObject;
         private MemoryStream _memoryStream = new MemoryStream();
@@ -115,9 +115,9 @@ namespace CollectSFData.DataFile
             Log.Debug($"enter: memoryStream length: {_memoryStream.Length}");
             char[] trimChars = new char[] { '[', ']', ',' };
 
-            using (StreamReader reader = new StreamReader(_memoryStream, Encoding.UTF8, false, StreamBufferSize, LeaveStreamOpen))
+            using (StreamReader reader = new StreamReader(_memoryStream, Encoding.UTF8, false, StreamBufferSize, _leaveStreamOpen))
             {
-                if (LeaveStreamOpen)
+                if (_leaveStreamOpen)
                 {
                     while (reader.Peek() >= 0)
                     {
@@ -140,6 +140,7 @@ namespace CollectSFData.DataFile
                     }
                     catch
                     {
+                        Log.Debug("exception deserializing T[] array, trying as T");
                         ResetPosition();
                         records = new T[] { JsonConvert.DeserializeObject<T>(reader.ReadToEnd()) };
                     }
@@ -179,7 +180,7 @@ namespace CollectSFData.DataFile
             Open(true);
             Log.Debug($"enter: memoryStream length: {_memoryStream.Length}");
 
-            using (StreamReader reader = new StreamReader(_memoryStream, Encoding.UTF8, false, StreamBufferSize, LeaveStreamOpen))
+            using (StreamReader reader = new StreamReader(_memoryStream, Encoding.UTF8, false, StreamBufferSize, _leaveStreamOpen))
             {
                 string line;
 
@@ -190,6 +191,12 @@ namespace CollectSFData.DataFile
             }
         }
 
+        public string ReadToEnd()
+        {
+            Open(true);
+            return new StreamReader(_memoryStream).ReadToEnd();
+        }
+        
         public void ResetPosition()
         {
             Open(true);
@@ -228,7 +235,7 @@ namespace CollectSFData.DataFile
         {
             Log.Debug($"enter: record length: {records.Count}");
 
-            if (LeaveStreamOpen && append)
+            if (_leaveStreamOpen && append)
             {
                 Open();
 
@@ -256,9 +263,9 @@ namespace CollectSFData.DataFile
 
             _fileObject.RecordCount += records.Count;
 
-            using (StreamWriter writer = new StreamWriter(_memoryStream, Encoding.UTF8, StreamBufferSize, LeaveStreamOpen))
+            using (StreamWriter writer = new StreamWriter(_memoryStream, Encoding.UTF8, StreamBufferSize, _leaveStreamOpen))
             {
-                if (LeaveStreamOpen)
+                if (_leaveStreamOpen)
                 {
                     if (_memoryStream.Position == 0 && _memoryStream.Length == 0)
                     {
