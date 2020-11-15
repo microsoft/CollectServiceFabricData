@@ -10,7 +10,7 @@ namespace CollectSFData.DataFile
     [Serializable]
     public class CsvCounterRecord : IRecord
     {
-        public string Counter { get; internal set; }
+        public string Counter { get; set; }
 
         public string CounterName { get; set; }
 
@@ -18,11 +18,11 @@ namespace CollectSFData.DataFile
 
         public string FileType { get; set; }
 
-        public string Instance { get; internal set; }
+        public string Instance { get; set; }
 
         public string NodeName { get; set; }
 
-        public string Object { get; internal set; }
+        public string Object { get; set; }
 
         public string RelativeUri { get; set; }
 
