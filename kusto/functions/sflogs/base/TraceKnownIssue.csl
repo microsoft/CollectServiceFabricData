@@ -5,12 +5,20 @@
             table(tableName) 
             | extend KnownIssue = iif((* contains query), true, false) 
             | extend Reason = iif(KnownIssue, strcat(issue,' ::any contains: ', query), "")
+            | extend link = CreateKustoWebQueryLink(strcat(
+                tableName,
+                '| where * contains "',query,'"'
+            ))
         };
         // search any column using regex sensitive match
         let AnyMatches = (tableName:string, issue:string, query:string) {
             table(tableName) 
             | extend KnownIssue = iif((* matches regex query), true, false) 
             | extend Reason = iif(KnownIssue, strcat(issue,' ::any matches: ', query), "")
+            | extend link = CreateKustoWebQueryLink(strcat(
+                tableName,
+                '| where * matches regex "',query,'"'
+            ))
         };
         // search any column using regex insensitive match
         let AnyIMatches = (tableName:string, issue:string, query:string) {
@@ -18,18 +26,32 @@
             table(tableName) 
             | extend KnownIssue = iif((* matches regex iQuery), true, false) 
             | extend Reason = iif(KnownIssue, strcat(issue,' ::any imatches: ', iQuery), "")
+            | extend link = CreateKustoWebQueryLink(strcat(
+                tableName,
+                '| where * matches regex "',iQuery,'"'
+            ))
         };
         // search Type And Text column using string contains
         let TypeAndTextContains = (tableName:string, issue:string, typeQuery:string, textQuery:string) {
             table(tableName) 
             | extend KnownIssue = iif((Type contains typeQuery and Text contains textQuery), true, false) 
             | extend Reason = iif(KnownIssue, strcat(issue,' ::type contains: ', typeQuery, ' ::text contains: ', textQuery ), "")
+            | extend link = CreateKustoWebQueryLink(strcat(
+                tableName,
+                '| where Type contains "',typeQuery,'"',
+                'and Text contains "',textQuery,'"'
+            ))
         };
         // search Type And Text column using regex sensitive match
         let TypeAndTextMatches = (tableName:string, issue:string, typeQuery:string, textQuery:string) {
             table(tableName) 
             | extend KnownIssue = iif((Type matches regex typeQuery and Text matches regex textQuery), true, false) 
             | extend Reason = iif(KnownIssue, strcat(issue,' ::type matches: ', typeQuery, ' ::text matches: ', textQuery ), "")
+            | extend link = CreateKustoWebQueryLink(strcat(
+                tableName,
+                '| where Type matches regex "',typeQuery,'"',
+                'and Text matches regex "',textQuery,'"'
+            ))
         };
         // search Type And Text column using regex insensitive match
         let TypeAndTextIMatches = (tableName:string, issue:string, typeQuery:string, textQuery:string) {
@@ -38,18 +60,31 @@
             table(tableName) 
             | extend KnownIssue = iif((Type matches regex itypeQuery and Text matches regex itextQuery), true, false) 
             | extend Reason = iif(KnownIssue, strcat(issue,' ::type matches: ', typeQuery, ' ::text matches: ', textQuery ), "")
+            | extend link = CreateKustoWebQueryLink(strcat(
+                tableName,
+                '| where Type matches regex "',itypeQuery,'"',
+                'and Text matches regex "',itextQuery,'"'
+            ))
         };
         // search Text column using string contains
         let TextContains = (tableName:string, issue:string, query:string) {
             table(tableName) 
             | extend KnownIssue = iif((Text contains query), true, false) 
             | extend Reason = iif(KnownIssue, strcat(issue,' ::text contains: ', query ), "")
+            | extend link = CreateKustoWebQueryLink(strcat(
+                tableName,
+                '| where Text contains "',query,'"'
+            ))
         };
         // search Text column using regex sensitive match
         let TextMatches = (tableName:string, issue:string, query:string) {
             table(tableName) 
             | extend KnownIssue = iif((Text matches regex query), true, false) 
             | extend Reason = iif(KnownIssue, strcat(issue,' ::text matches: ', query), "")
+            | extend link = CreateKustoWebQueryLink(strcat(
+                tableName,
+                '| where Text matches regex "',query,'"'
+            ))
         };
         // search Text column using regex insensitive match
         let TextIMatches = (tableName:string, issue:string, query:string) {
@@ -57,18 +92,30 @@
             table(tableName) 
             | extend KnownIssue = iif((Text matches regex iQuery), true, false) 
             | extend Reason = iif(KnownIssue, strcat(issue,' ::text imatches: ', iQuery), "")
+            | extend link = CreateKustoWebQueryLink(strcat(
+                tableName,
+                '| where Text matches regex "',iQuery,'"'
+            ))
         };
         // search Type column using string contains
         let TypeContains = (tableName:string, issue:string, query:string) {
             table(tableName) 
             | extend KnownIssue = iif((Type contains query), true, false) 
             | extend Reason = iif(KnownIssue, strcat(issue,' ::type contains: ', query), "")
+            | extend link = CreateKustoWebQueryLink(strcat(
+                tableName,
+                '| where Type contains "',query,'"'
+            ))
         };
         // search Type column using regex sensitive match
         let TypeMatches = (tableName:string, issue:string, query:string) {
             table(tableName) 
             | extend KnownIssue = iif((Type matches regex query), true, false) 
             | extend Reason = iif(KnownIssue, strcat(issue,' ::type matches: ', query), "")
+            | extend link = CreateKustoWebQueryLink(strcat(
+                tableName,
+                '| where Type matches regex "',query,'"'
+            ))
         };
         // search Type column using regex insensitive match
         let TypeIMatches = (tableName:string, issue:string, query:string) {
@@ -76,18 +123,32 @@
             table(tableName) 
             | extend KnownIssue = iif((Type matches regex iQuery), true, false) 
             | extend Reason = iif(KnownIssue, strcat(issue,' ::type imatches: ', iQuery), "")
+            | extend link = CreateKustoWebQueryLink(strcat(
+                tableName,
+                '| where Type matches regex "',iQuery,'"'
+            ))
         };
         // search Type or Text columns using string contains
         let TypeOrTextContains = (tableName:string, issue:string, query:string) {
             table(tableName) 
             | extend KnownIssue = iif((Type contains query or Text contains query), true, false) 
             | extend Reason = iif(KnownIssue, strcat(issue,' ::type or text contains: ', query ), "")
+            | extend link = CreateKustoWebQueryLink(strcat(
+                tableName,
+                '| where Type contains "',query,'"',
+                'or Text contains "',query,'"'
+            ))
         };
         // search Type or Text columns using regex sensitive match
         let TypeOrTextMatches = (tableName:string, issue:string, query:string) {
             table(tableName) 
             | extend KnownIssue = iif((Type matches regex query or Text matches regex query), true, false) 
             | extend Reason = iif(KnownIssue, strcat(issue,' ::type or text matches: ', query ), "")
+            | extend link = CreateKustoWebQueryLink(strcat(
+                tableName,
+                '| where Type matches regex "',query,'"',
+                'or Text matches regex "',query,'"'
+            ))
         };
         // search Type or Text columns using regex insensitive match
         let TypeOrTextIMatches = (tableName:string, issue:string, query:string) {
@@ -95,14 +156,24 @@
             table(tableName) 
             | extend KnownIssue = iif((Type matches regex iQuery or Text matches regex iQuery), true, false) 
             | extend Reason = iif(KnownIssue, strcat(issue,' ::type or text imatches: ', iQuery ), "")
+            | extend link = CreateKustoWebQueryLink(strcat(
+                tableName,
+                '| where Type matches regex "',iQuery,'"',
+                'or Text matches regex "',iQuery,'"'
+            ))
         };
         // search Text for fabric_e_
         let TextContainsFabric_E = (tableName:string, issue:string, query:string) {
             table(tableName)
-            | where Text contains query or Text contains "E_ABORT"
+            | where Text contains query or Text contains "E_ABORT" or Text contains "E_FAIL"
             | where Text !contains "FABRIC_E_CONNECTION_CLOSED_BY_REMOTE_END"
             | extend KnownIssue = iif((Text matches regex query), true, false) 
             | extend Reason = iif(KnownIssue, strcat(issue,' ::text matches: ', query), "")
+            | extend link = CreateKustoWebQueryLink(strcat(
+                tableName,
+                '| where Text contains "',query,'"',
+                'or Text contains "E_ABORT" or Text contains "E_FAIL"'
+            ))
         };
         union 
         // add known issue signatures here using one of the provided functions in format table, issue description, string pattern
