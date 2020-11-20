@@ -482,7 +482,7 @@ namespace CollectSFData.Common
                 }
 
                 Log.Info($"setting output location to: {workDirPath}");
-                CacheLocation = workDirPath;
+                CacheLocation = FileManager.NormalizePath(workDirPath);
             }
 
             if (!UseMemoryStream && !CacheLocation.StartsWith("\\\\"))
@@ -737,7 +737,7 @@ namespace CollectSFData.Common
                 try
                 {
                     propertyInstance.SetValue(this, instanceValue);
-                    Log.Info($"set:{propertyInstance.Name}:{thisValue} -> {instanceValue}");
+                    Log.Highlight($"set:{propertyInstance.Name}:{thisValue} -> {instanceValue}");
                 }
                 catch (Exception e)
                 {

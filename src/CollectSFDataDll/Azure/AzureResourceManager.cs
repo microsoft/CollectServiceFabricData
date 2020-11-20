@@ -299,11 +299,7 @@ namespace CollectSFData.Azure
 
         public void MsalLoggerCallback(LogLevel level, string message, bool containsPII)
         {
-            if (!containsPII | (containsPII & Config.LogDebug >= LoggingLevel.Verbose))
-            {
-                Log.Info($"{level} {message.Replace(" [", "\r\n [")}");
-            }
-
+            Log.Debug($"{level} {message.Replace(" [", "\r\n [")}");
             MsalHandler logMessage = MsalMessage;
             logMessage?.Invoke(level, message, containsPII);
         }

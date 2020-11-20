@@ -47,6 +47,7 @@ namespace CollectSFData.Common
         public const int ThreadSleepMsWarning = 5000;
         public const string TraceFileExtension = ".dtr";
         public const string TrueStringPattern = @"(true|1|on)";
+        public const int WarningJsonTransmitBytes = (int)(MaxJsonTransmitBytes * .95);
         public const int WarningTimeSpanHours = 4;
         public const double WarningTimeSpanMinHours = .5F;
         public const string ZipExtension = ".zip";
