@@ -9,14 +9,17 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Text.RegularExpressions;
+using Newtonsoft.Json;
 
 namespace CollectSFData.DataFile
 {
     public class StreamManager : Constants
     {
+        public int StreamBufferSize { get; set; } = 1024;
+        private bool _leaveStreamOpen { get; set; } = true;
+        public long Length => (long)Open().Length;
         private FileObject _fileObject;
         private MemoryStream _memoryStream = new MemoryStream();
 
@@ -44,12 +47,8 @@ namespace CollectSFData.DataFile
                 throw new ArgumentException();
             }
 
-            Open();
-            _memoryStream.Position = 0;
-
+            Open(true);
             Log.Debug($"compressing memoryStream start. start size: {fileObject.Length} dest size: {_memoryStream.Length} position: {_memoryStream.Position}");
-            fileObject.Length = _memoryStream.Length;
-
             MemoryStream compressedStream = new MemoryStream();
 
             using (ZipArchive archive = new ZipArchive(compressedStream, ZipArchiveMode.Create, true))
@@ -97,7 +96,6 @@ namespace CollectSFData.DataFile
                 }
 
                 uncompressedStream.Position = 0;
-                fileObject.Length = _memoryStream.Length;
                 fileObject.Stream.Set(uncompressedStream);
 
                 Log.Debug($"decompressing memoryStream complete. size: {uncompressedStream.Length} position: {uncompressedStream.Position}");
@@ -107,17 +105,55 @@ namespace CollectSFData.DataFile
 
         public MemoryStream Get()
         {
-            Open();
-            _memoryStream.Position = 0;
+            Open(true);
             return _memoryStream;
         }
 
-        public IList<T> Read<T>()
+        public IEnumerable<T> Read<T>()
         {
-            Open();
+            Open(true);
             Log.Debug($"enter: memoryStream length: {_memoryStream.Length}");
-            _memoryStream.Position = 0;
-            return new BinaryFormatter().Deserialize(_memoryStream) as IList<T>;
+            char[] trimChars = new char[] { '[', ']', ',' };
+
+            using (StreamReader reader = new StreamReader(_memoryStream, Encoding.UTF8, false, StreamBufferSize, _leaveStreamOpen))
+            {
+                if (_leaveStreamOpen)
+                {
+                    while (reader.Peek() >= 0)
+                    {
+                        string stringRecord = reader.ReadLine().Trim(trimChars);
+                        T record = JsonConvert.DeserializeObject<T>(stringRecord);
+
+                        if (record != null)
+                        {
+                            yield return record;
+                        }
+                    }
+                }
+                else
+                {
+                    T[] records;
+
+                    try
+                    {
+                        records = JsonConvert.DeserializeObject<T[]>(reader.ReadToEnd());
+                    }
+                    catch
+                    {
+                        Log.Debug("exception deserializing T[] array, trying as T");
+                        ResetPosition();
+                        records = new T[] { JsonConvert.DeserializeObject<T>(reader.ReadToEnd()) };
+                    }
+
+                    foreach (T record in records)
+                    {
+                        if (record != null)
+                        {
+                            yield return record;
+                        }
+                    }
+                }
+            }
         }
 
         public IList<string> Read()
@@ -128,8 +164,7 @@ namespace CollectSFData.DataFile
         public MemoryStream ReadFromFile(string fileUri = null)
         {
             fileUri = fileUri ?? _fileObject.FileUri;
-            _memoryStream = null;
-            Open();
+            Open(true, true);
             Log.Info($"reading memoryStream from file: {fileUri}", ConsoleColor.Green);
 
             using (FileStream fileStream = File.OpenRead(fileUri))
@@ -142,11 +177,10 @@ namespace CollectSFData.DataFile
 
         public IEnumerable<string> ReadLine()
         {
-            Open();
+            Open(true);
             Log.Debug($"enter: memoryStream length: {_memoryStream.Length}");
-            _memoryStream.Position = 0;
 
-            using (StreamReader reader = new StreamReader(_memoryStream, Encoding.UTF8))
+            using (StreamReader reader = new StreamReader(_memoryStream, Encoding.UTF8, false, StreamBufferSize, _leaveStreamOpen))
             {
                 string line;
 
@@ -157,11 +191,21 @@ namespace CollectSFData.DataFile
             }
         }
 
+        public string ReadToEnd()
+        {
+            Open(true);
+            return new StreamReader(_memoryStream).ReadToEnd();
+        }
+        
+        public void ResetPosition()
+        {
+            Open(true);
+        }
+
         public void SaveToFile(string fileUri = null)
         {
             fileUri = fileUri ?? _fileObject.FileUri;
-            Open();
-            _memoryStream.Position = 0;
+            Open(true);
 
             Directory.CreateDirectory(Path.GetDirectoryName(fileUri));
             Log.Info($"writing memoryStream ({_memoryStream.Length} bytes) to file: {fileUri}", ConsoleColor.Green);
@@ -171,43 +215,84 @@ namespace CollectSFData.DataFile
                 _memoryStream.CopyTo(fileStream);
             }
 
-            _memoryStream.Position = 0;
+            ResetPosition();
         }
 
-        public void Set(MemoryStream stream)
+        private void Set(MemoryStream stream)
         {
-            if (_memoryStream != stream)
-            {
-                _memoryStream = stream;
-            }
+            Open(true, true);
+            _memoryStream = stream;
         }
 
         public void Set(byte[] byteArray)
         {
-            if (_memoryStream.CanWrite && byteArray.Length <= _memoryStream.Length)
+            Open(true, true);
+            _memoryStream.SetLength(byteArray.Length);
+            _memoryStream.Write(byteArray, 0, byteArray.Length);
+        }
+
+        public MemoryStream Write<T>(IList<T> records, bool append = false)
+        {
+            Log.Debug($"enter: record length: {records.Count}");
+
+            if (_leaveStreamOpen && append)
             {
-                _memoryStream.SetLength(byteArray.Length);
-                _memoryStream.Position = 0;
-                _memoryStream.Write(byteArray, 0, byteArray.Length);
+                Open();
+
+                if (_memoryStream.Position > 0)
+                {
+                    byte[] lastByte = new byte[1];
+                    _memoryStream.Position--;
+                    _memoryStream.Read(lastByte, 0, 1);
+
+                    string lastChar = Encoding.UTF8.GetString(lastByte);
+
+                    Log.Debug($"last character:{lastChar}");
+
+                    if (lastChar.Equals("]"))
+                    {
+                        _memoryStream.Position--;
+                    }
+                }
             }
             else
             {
-                _memoryStream = new MemoryStream(byteArray);
+                Open(true, true);
+                _fileObject.RecordCount = 0;
             }
-        }
 
-        public MemoryStream Write<T>(IList<T> records)
-        {
-            Log.Debug($"enter: record length: {records.Count}");
-            _memoryStream = null;
-            Open();
-            new BinaryFormatter().Serialize(_memoryStream, records);
+            _fileObject.RecordCount += records.Count;
+
+            using (StreamWriter writer = new StreamWriter(_memoryStream, Encoding.UTF8, StreamBufferSize, _leaveStreamOpen))
+            {
+                if (_leaveStreamOpen)
+                {
+                    if (_memoryStream.Position == 0 && _memoryStream.Length == 0)
+                    {
+                        writer.Write("[");
+                    }
+
+                    foreach (T record in records)
+                    {
+                        writer.Write($"{JsonConvert.SerializeObject(record)},{Environment.NewLine}");
+                    }
+
+                    writer.Write("]");
+                }
+                else
+                {
+                    writer.Write($"{JsonConvert.SerializeObject(records)}{Environment.NewLine}");
+                }
+
+
+            }
+
             return _memoryStream;
         }
 
-        private MemoryStream Open()
+        private MemoryStream Open(bool resetPosition = false, bool reset = false)
         {
-            if (_memoryStream == null)
+            if (_memoryStream == null | reset)
             {
                 _memoryStream = new MemoryStream();
                 Log.Debug("creating new stream");
@@ -220,6 +305,11 @@ namespace CollectSFData.DataFile
             else
             {
                 Log.Debug($"stream already open. stream length: {_memoryStream.Length}");
+
+                if (resetPosition)
+                {
+                    _memoryStream.Position = 0;
+                }
             }
 
             return _memoryStream;
