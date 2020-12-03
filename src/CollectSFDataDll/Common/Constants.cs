@@ -23,7 +23,6 @@ namespace CollectSFData.Common
         public static long DiscoveredMinDateTicks = DateTime.MaxValue.Ticks;
         public const string DumpExtension = ".dmp";
         public const string FalseStringPattern = @"(false|0|off|null)";
-        public const string FileFilterPattern = @"(?:.+_){6}(\d{20})_";
         public const string JsonExtension = ".json";
         public const string KustoUrlPattern = "https://(?<ingest>ingest-){1}(?<clusterName>.+?)\\.(?<location>.+?){0,1}\\.(?<domainName>.+?)/(?<databaseName>.+?){1}(/|$)";
         public const string ManagementAzureCom = "https://management.azure.com";

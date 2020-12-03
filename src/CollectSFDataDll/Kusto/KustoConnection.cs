@@ -64,6 +64,20 @@ namespace CollectSFData.Kusto
         {
             try
             {
+                if (Config.Unique & Config.FileType == FileTypesEnum.table)
+                {
+                    // only way for records from table to be unique since there is not a file reference
+                    Log.Info("removing duplicate records", ConsoleColor.White);
+                    IEnumerable<KustoCsvSchema> schema = new KustoIngestionMappings(new FileObject()).TableSchema();
+                    string names = string.Join(",", schema.Select(x => x.Name).ToList());
+
+                    string command = $".set-or-replace {Config.KustoTable} <| {Config.KustoTable} | distinct {names}";
+                    Log.Info(command);
+                    
+                    Endpoint.Command(command);
+                    Log.Info("removed duplicate records", ConsoleColor.White);
+                }
+
                 Log.Info("finished. cancelling", ConsoleColor.White);
                 _tokenSource.Cancel();
                 _monitorTask.Wait();
@@ -306,7 +320,7 @@ namespace CollectSFData.Kusto
                 return true;
             }
 
-            string cleanUri = Regex.Replace(relativeUri, $"\\.?\\d*?({ZipExtension}|{TableExtension})", "");
+            string cleanUri = Regex.Replace(relativeUri, $"\\.?\\d*?({ZipExtension})", "");
             return !_ingestedUris.Any(x => x.Contains(cleanUri));
         }
 
