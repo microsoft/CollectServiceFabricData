@@ -23,6 +23,7 @@ namespace CollectSFData.Azure
         private readonly CustomTaskManager _blobTasks = new CustomTaskManager(true);
         private CloudStorageAccount _account;
         private CloudBlobClient _blobClient;
+        private string _fileFilterPattern = @"(?:.+_){6}(\d{20})_";
         private Instance _instance = Instance.Singleton();
         private ConfigurationOptions Config => _instance.Config;
 
@@ -328,9 +329,9 @@ namespace CollectSFData.Azure
 
                 Interlocked.Increment(ref _instance.TotalFilesEnumerated);
 
-                if (Regex.IsMatch(blob.Uri.ToString(), FileFilterPattern, RegexOptions.IgnoreCase))
+                if (Regex.IsMatch(blob.Uri.ToString(), _fileFilterPattern, RegexOptions.IgnoreCase))
                 {
-                    long ticks = Convert.ToInt64(Regex.Match(blob.Uri.ToString(), FileFilterPattern, RegexOptions.IgnoreCase).Groups[1].Value);
+                    long ticks = Convert.ToInt64(Regex.Match(blob.Uri.ToString(), _fileFilterPattern, RegexOptions.IgnoreCase).Groups[1].Value);
 
                     if (ticks < Config.StartTimeUtc.Ticks | ticks > Config.EndTimeUtc.Ticks)
                     {
@@ -343,7 +344,7 @@ namespace CollectSFData.Azure
                 }
                 else
                 {
-                    Log.Debug($"regex not matched: {blob.Uri.ToString()} pattern: {FileFilterPattern}");
+                    Log.Debug($"regex not matched: {blob.Uri.ToString()} pattern: {_fileFilterPattern}");
                 }
 
                 try
