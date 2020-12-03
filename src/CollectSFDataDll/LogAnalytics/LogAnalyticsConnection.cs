@@ -229,7 +229,7 @@ namespace CollectSFData.LogAnalytics
                 return true;
             }
 
-            string cleanUri = Regex.Replace(relativeUri, $"\\.?\\d*?({ZipExtension}|{TableExtension})", "");
+            string cleanUri = Regex.Replace(relativeUri, $"\\.?\\d*?({ZipExtension})", "");
             return !_ingestedUris.Any(x => x.Contains(cleanUri));
         }
 
