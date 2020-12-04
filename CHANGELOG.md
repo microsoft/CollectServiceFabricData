@@ -70,7 +70,6 @@
 - default kustoCompressed to true  
 - update config schema  
 
-
 ## 12/4/2019 https://github.com/microsoft/CollectServiceFabricData/releases/tag/v2.6.7277.26289
 
 - modify git actions for v1 and update tag
@@ -80,6 +79,6 @@
 - add gathertype exception
 - add / modify kusto functions
 
-## 11/21/2019 init 2.6 public release  
+## 11/21/2019 init 2.6 public release https://github.com/microsoft/CollectServiceFabricData/tree/CollectServiceFabricData-c75b19fef60739aebb3707fef556c768bc1432c5
 
 - .net462 console utility  
