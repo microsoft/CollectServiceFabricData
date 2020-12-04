@@ -220,7 +220,10 @@ namespace CollectSFData.Azure
                         continue;
                     }
 
-                    FileObject fileObject = new FileObject($"{cloudTable.Name}.{chunkCount++}{TableExtension}", Config.CacheLocation);
+                    string relativeUri = $"{Config.StartTimeUtc.Ticks}-{Config.EndTimeUtc.Ticks}-{cloudTable.Name}.{chunkCount++}{TableExtension}";
+                    FileObject fileObject = new FileObject(relativeUri, Config.CacheLocation);
+                    resultsChunk.ToList().ForEach(x => x.RelativeUri = relativeUri);
+                    
                     fileObject.Stream.Write(resultsChunk);
 
                     _instance.TotalFilesDownloaded++;

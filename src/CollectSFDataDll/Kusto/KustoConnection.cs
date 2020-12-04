@@ -64,11 +64,12 @@ namespace CollectSFData.Kusto
         {
             try
             {
-                if (Config.Unique & Config.FileType == FileTypesEnum.table)
+                if (_ingestedUris.Any() && Config.Unique && Config.FileType == FileTypesEnum.table)
                 {
                     // only way for records from table to be unique since there is not a file reference
                     Log.Info("removing duplicate records", ConsoleColor.White);
                     IEnumerable<KustoCsvSchema> schema = new KustoIngestionMappings(new FileObject()).TableSchema();
+                    schema = schema.Where( x => x.Name != "RelativeUri");
                     string names = string.Join(",", schema.Select(x => x.Name).ToList());
 
                     string command = $".set-or-replace {Config.KustoTable} <| {Config.KustoTable} | distinct {names}";
@@ -320,7 +321,7 @@ namespace CollectSFData.Kusto
                 return true;
             }
 
-            string cleanUri = Regex.Replace(relativeUri, $"\\.?\\d*?({ZipExtension})", "");
+            string cleanUri = Regex.Replace(relativeUri, $"\\.?\\d*?({ZipExtension}|{TableExtension})", "");
             return !_ingestedUris.Any(x => x.Contains(cleanUri));
         }
 
@@ -367,7 +368,7 @@ namespace CollectSFData.Kusto
             successUris.AddRange(Endpoint.Query($"['{Endpoint.TableName}']" +
                 $"| where cursor_after({_ingestCursor})" +
                 $"| where ingestion_time() > todatetime('{_instance.StartTime.ToUniversalTime().ToString("o")}')" +
-                $"| distinct RelativeUri").Select(x => x = Path.GetFileName(x)));
+                $"| distinct RelativeUri").Select(x => x = Path.GetFileNameWithoutExtension(x)));
 
             _ingestCursor = Endpoint.Cursor;
 
@@ -381,7 +382,7 @@ namespace CollectSFData.Kusto
             foreach (KustoRestRecord record in failedRecords)
             {
                 string uriFile = Path.GetFileName(record["IngestionSourcePath"].ToString());
-                Log.Debug($"checking failed ingested relativeuri: {uriFile}");
+                Log.Debug($"checking failed ingested for failed relativeuri: {uriFile}");
 
                 if (!_failIngestedUris.Contains(uriFile))
                 {
@@ -394,6 +395,7 @@ namespace CollectSFData.Kusto
 
             foreach (string uriFile in _failIngestedUris)
             {
+                Log.Debug($"checking message list for failed relativeUri: {uriFile}");
                 if (_messageList.Any(x => Regex.IsMatch(x, uriFile, RegexOptions.IgnoreCase)))
                 {
                     _messageList.RemoveAll(x => Regex.IsMatch(x, uriFile, RegexOptions.IgnoreCase));
@@ -405,7 +407,7 @@ namespace CollectSFData.Kusto
 
             foreach (string uriFile in successUris)
             {
-                Log.Debug($"checking ingested relativeuri: {uriFile}");
+                Log.Debug($"checking ingested uri for success relativeuri: {uriFile}");
 
                 if (!_ingestedUris.Contains(uriFile))
                 {
@@ -416,6 +418,8 @@ namespace CollectSFData.Kusto
 
             foreach (string uriFile in _ingestedUris)
             {
+                Log.Debug($"checking relativeUri in ingested Uris: {uriFile}");
+
                 if (_messageList.Any(x => Regex.IsMatch(x, uriFile, RegexOptions.IgnoreCase)))
                 {
                     _messageList.RemoveAll(x => Regex.IsMatch(x, uriFile, RegexOptions.IgnoreCase));
