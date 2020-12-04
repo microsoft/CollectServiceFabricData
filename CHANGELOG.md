@@ -3,32 +3,34 @@
 ## 12/4/2020  
 
 - modify repo layout structure and place source in /src  
+- add .devcontainer with net5 custom install for codespaces  
 - add kusto functions  
 - fix table ingest only ingesting last chunk enumerated from table  
 - fix unique table ingest when kustoingestmessage false using .set-or-replace  
 - fix table filter now using containerfilter  
 - migrate from binaryformatter deprecated in net5 to newtonsoft json serializer  
 - fix unique when kustoingestmessage false and file is over max ingest size  
-- updated loganalytics api  
+- update loganalytics api version  
 - add tests for msal and kusto  
 - update README  
 - update configuration json examples  
 - add building md  
+- add CHANGELOG  
 
 ## 11/10/2020 https://github.com/microsoft/CollectServiceFabricData/tree/v2.7.2011.10013644  
 
-- add labeler workflow back after github fix  
-- migrated from nuget to dotnet build for workflow  
+- add labeler workflow back after github cross fork pr fix  
+- migrate from nuget to dotnet build for workflow  
 - add vscode launch.json config  
-- add support for dll and exe. converted project to dll and made new exe project referencing dll project.  
+- add support for dll and exe. converted project to dll and created new exe project referencing dll project.  
 - clean app.config  
 - migrate to csproj nuget package from packages.config   
 - clean csproj
 - modify nuspec layout to support dll and exe  
 - migrate from .net462 to .net472 for security and stability  
 - add support for .netcoreapp3.1  
-- modify static inherited instance class to singleton reference  
-- migrate from ADAL to MSAL as ADAL is now deprecated  
+- modify static inherited 'instance' class to singleton  
+- migrate from deprecated ADAL to MSAL. tested client, user, and device on windows and ubuntu  
 - move token cache to userprofile  
 - add object, counter, instance fields for gather type counter  
 - fix temp directory saveconfig in json output  
