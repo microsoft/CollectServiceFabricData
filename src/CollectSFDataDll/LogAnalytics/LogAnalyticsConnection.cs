@@ -70,7 +70,8 @@ namespace CollectSFData.LogAnalytics
 
                 if (Config.Unique)
                 {
-                    _ingestedUris.AddRange(PostQueryList($"['{Config.LogAnalyticsName}_CL']|distinct RelativeUri_s", false));
+                    _ingestedUris.AddRange(PostQueryList($"['{Config.LogAnalyticsName}_CL']|distinct RelativeUri_s", false)
+                        .Select(x => x = Path.GetFileNameWithoutExtension(x)));
                     Log.Info($"listResults:", _ingestedUris);
                 }
             }
@@ -229,7 +230,7 @@ namespace CollectSFData.LogAnalytics
                 return true;
             }
 
-            string cleanUri = Regex.Replace(relativeUri, $"\\.?\\d*?({ZipExtension})", "");
+            string cleanUri = Regex.Replace(relativeUri, $"\\.?\\d*?({ZipExtension}|{TableExtension})", "");
             return !_ingestedUris.Any(x => x.Contains(cleanUri));
         }
 
