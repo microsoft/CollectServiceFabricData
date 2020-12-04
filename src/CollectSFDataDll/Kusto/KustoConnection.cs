@@ -64,6 +64,21 @@ namespace CollectSFData.Kusto
         {
             try
             {
+                if (_ingestedUris.Any() && Config.Unique && Config.FileType == FileTypesEnum.table)
+                {
+                    // only way for records from table to be unique since there is not a file reference
+                    Log.Info("removing duplicate records", ConsoleColor.White);
+                    IEnumerable<KustoCsvSchema> schema = new KustoIngestionMappings(new FileObject()).TableSchema();
+                    schema = schema.Where( x => x.Name != "RelativeUri");
+                    string names = string.Join(",", schema.Select(x => x.Name).ToList());
+
+                    string command = $".set-or-replace {Config.KustoTable} <| {Config.KustoTable} | distinct {names}";
+                    Log.Info(command);
+                    
+                    Endpoint.Command(command);
+                    Log.Info("removed duplicate records", ConsoleColor.White);
+                }
+
                 Log.Info("finished. cancelling", ConsoleColor.White);
                 _tokenSource.Cancel();
                 _monitorTask.Wait();
@@ -353,7 +368,7 @@ namespace CollectSFData.Kusto
             successUris.AddRange(Endpoint.Query($"['{Endpoint.TableName}']" +
                 $"| where cursor_after({_ingestCursor})" +
                 $"| where ingestion_time() > todatetime('{_instance.StartTime.ToUniversalTime().ToString("o")}')" +
-                $"| distinct RelativeUri"));
+                $"| distinct RelativeUri").Select(x => x = Path.GetFileNameWithoutExtension(x)));
 
             _ingestCursor = Endpoint.Cursor;
 
@@ -366,46 +381,49 @@ namespace CollectSFData.Kusto
 
             foreach (KustoRestRecord record in failedRecords)
             {
-                string uri = record["IngestionSourcePath"].ToString();
-                Log.Debug($"checking failed ingested relativeuri: {uri}");
+                string uriFile = Path.GetFileName(record["IngestionSourcePath"].ToString());
+                Log.Debug($"checking failed ingested for failed relativeuri: {uriFile}");
 
-                if (!_failIngestedUris.Contains(uri))
+                if (!_failIngestedUris.Contains(uriFile))
                 {
-                    Log.Error($"adding failedUri to _failIngestedUris[{_failIngestedUris.Count()}]: {uri}", record);
-                    _failIngestedUris.Add(uri);
+                    Log.Error($"adding failedUri to _failIngestedUris[{_failIngestedUris.Count()}]: {uriFile}", record);
+                    _failIngestedUris.Add(uriFile);
                     _failureCount++;
                     _failureQueryTime = DateTime.Now.ToUniversalTime().AddMinutes(-1);
                 }
             }
 
-            foreach (string uri in _failIngestedUris)
+            foreach (string uriFile in _failIngestedUris)
             {
-                if (_messageList.Any(x => Regex.IsMatch(x, Regex.Escape(new Uri(uri).AbsolutePath.TrimStart('/')), RegexOptions.IgnoreCase)))
+                Log.Debug($"checking message list for failed relativeUri: {uriFile}");
+                if (_messageList.Any(x => Regex.IsMatch(x, uriFile, RegexOptions.IgnoreCase)))
                 {
-                    _messageList.RemoveAll(x => Regex.IsMatch(x, Regex.Escape(new Uri(uri).AbsolutePath.TrimStart('/')), RegexOptions.IgnoreCase));
-                    Log.Error($"removing failed ingested relativeuri from _messageList[{_messageList.Count()}]: {uri}");
+                    _messageList.RemoveAll(x => Regex.IsMatch(x, uriFile, RegexOptions.IgnoreCase));
+                    Log.Error($"removing failed ingested relativeuri from _messageList[{_messageList.Count()}]: {uriFile}");
                 }
             }
 
             Log.Debug($"files ingested:{successUris.Count}");
 
-            foreach (string uri in successUris)
+            foreach (string uriFile in successUris)
             {
-                Log.Debug($"checking ingested relativeuri: {uri}");
+                Log.Debug($"checking ingested uri for success relativeuri: {uriFile}");
 
-                if (!_ingestedUris.Contains(uri))
+                if (!_ingestedUris.Contains(uriFile))
                 {
-                    Log.Info($"adding relativeuri to _ingestedUris[{_ingestedUris.Count()}]: {uri}", ConsoleColor.Green);
-                    _ingestedUris.Add(uri);
+                    Log.Info($"adding relativeuri to _ingestedUris[{_ingestedUris.Count()}]: {uriFile}", ConsoleColor.Green);
+                    _ingestedUris.Add(uriFile);
                 }
             }
 
-            foreach (string uri in _ingestedUris)
+            foreach (string uriFile in _ingestedUris)
             {
-                if (_messageList.Any(x => Regex.IsMatch(x, Regex.Escape(uri), RegexOptions.IgnoreCase)))
+                Log.Debug($"checking relativeUri in ingested Uris: {uriFile}");
+
+                if (_messageList.Any(x => Regex.IsMatch(x, uriFile, RegexOptions.IgnoreCase)))
                 {
-                    _messageList.RemoveAll(x => Regex.IsMatch(x, Regex.Escape(uri), RegexOptions.IgnoreCase));
-                    Log.Info($"removing ingested relativeuri from _messageList[{_messageList.Count()}]: {uri}", ConsoleColor.Green);
+                    _messageList.RemoveAll(x => Regex.IsMatch(x, uriFile, RegexOptions.IgnoreCase));
+                    Log.Info($"removing ingested relativeuri from _messageList[{_messageList.Count()}]: {uriFile}", ConsoleColor.Green);
                 }
             }
 

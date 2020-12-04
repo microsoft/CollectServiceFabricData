@@ -5,7 +5,7 @@
         DistinctEvents
             | join Table on $left.Timestamp==$right.Timestamp and $left.PartitionKey==$right.PartitionKey and $left.RowKey==$right.RowKey
             | extend propertyPack = pack(PropertyName, PropertyValue)
-            | summarize bag = make_bag(propertyPack) by Timestamp, PartitionKey, RowKey, RelativeUri
+            | summarize bag = make_bag(propertyPack) by Timestamp, PartitionKey, RowKey, RelativeUri=trim_end(@'\.?\d?\.table\.csv', RelativeUri)
             | evaluate bag_unpack(bag) 
         | order by Timestamp asc
     }
