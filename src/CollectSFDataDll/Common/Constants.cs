@@ -23,7 +23,6 @@ namespace CollectSFData.Common
         public static long DiscoveredMinDateTicks = DateTime.MaxValue.Ticks;
         public const string DumpExtension = ".dmp";
         public const string FalseStringPattern = @"(false|0|off|null)";
-        public const string FileFilterPattern = @"(?:.+_){6}(\d{20})_";
         public const string JsonExtension = ".json";
         public const string KustoUrlPattern = "https://(?<ingest>ingest-){1}(?<clusterName>.+?)\\.(?<location>.+?){0,1}\\.(?<domainName>.+?)/(?<databaseName>.+?){1}(/|$)";
         public const string ManagementAzureCom = "https://management.azure.com";
@@ -47,6 +46,7 @@ namespace CollectSFData.Common
         public const int ThreadSleepMsWarning = 5000;
         public const string TraceFileExtension = ".dtr";
         public const string TrueStringPattern = @"(true|1|on)";
+        public const int WarningJsonTransmitBytes = (int)(MaxJsonTransmitBytes * .95);
         public const int WarningTimeSpanHours = 4;
         public const double WarningTimeSpanMinHours = .5F;
         public const string ZipExtension = ".zip";

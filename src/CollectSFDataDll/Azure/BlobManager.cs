@@ -23,6 +23,7 @@ namespace CollectSFData.Azure
         private readonly CustomTaskManager _blobTasks = new CustomTaskManager(true);
         private CloudStorageAccount _account;
         private CloudBlobClient _blobClient;
+        private string _fileFilterPattern = @"(?:.+_){6}(\d{20})_";
         private Instance _instance = Instance.Singleton();
         private ConfigurationOptions Config => _instance.Config;
 
@@ -261,7 +262,7 @@ namespace CollectSFData.Azure
             Log.Info($"exit {cloudBlobDirectory.Uri}");
         }
 
-        private void InvokeCallback(IListBlobItem blob, FileObject fileObject)
+        private void InvokeCallback(IListBlobItem blob, FileObject fileObject, int sourceLength)
         {
             if (!fileObject.Exists)
             {
@@ -271,7 +272,7 @@ namespace CollectSFData.Azure
                     ParallelOperationThreadCount = Config.Threads
                 };
 
-                if (fileObject.Length > MaxStreamTransmitBytes)
+                if (sourceLength > MaxStreamTransmitBytes)
                 {
                     fileObject.DownloadAction = () =>
                     {
@@ -328,9 +329,9 @@ namespace CollectSFData.Azure
 
                 Interlocked.Increment(ref _instance.TotalFilesEnumerated);
 
-                if (Regex.IsMatch(blob.Uri.ToString(), FileFilterPattern, RegexOptions.IgnoreCase))
+                if (Regex.IsMatch(blob.Uri.ToString(), _fileFilterPattern, RegexOptions.IgnoreCase))
                 {
-                    long ticks = Convert.ToInt64(Regex.Match(blob.Uri.ToString(), FileFilterPattern, RegexOptions.IgnoreCase).Groups[1].Value);
+                    long ticks = Convert.ToInt64(Regex.Match(blob.Uri.ToString(), _fileFilterPattern, RegexOptions.IgnoreCase).Groups[1].Value);
 
                     if (ticks < Config.StartTimeUtc.Ticks | ticks > Config.EndTimeUtc.Ticks)
                     {
@@ -343,7 +344,7 @@ namespace CollectSFData.Azure
                 }
                 else
                 {
-                    Log.Debug($"regex not matched: {blob.Uri.ToString()} pattern: {FileFilterPattern}");
+                    Log.Debug($"regex not matched: {blob.Uri.ToString()} pattern: {_fileFilterPattern}");
                 }
 
                 try
@@ -392,7 +393,6 @@ namespace CollectSFData.Azure
                         {
                             IngestCallback?.Invoke(new FileObject(blob.Uri.AbsolutePath, Config.SasEndpointInfo.BlobEndpoint)
                             {
-                                Length = blobRef.Properties.Length,
                                 LastModified = lastModified
                             });
                             continue;
@@ -400,12 +400,11 @@ namespace CollectSFData.Azure
 
                         FileObject fileObject = new FileObject(blob.Uri.AbsolutePath, Config.CacheLocation)
                         {
-                            Length = blobRef.Properties.Length,
                             LastModified = lastModified
                         };
 
                         Log.Info($"queueing blob with timestamp: {lastModified}\r\n file: {blob.Uri.AbsolutePath}");
-                        InvokeCallback(blob, fileObject);
+                        InvokeCallback(blob, fileObject, (int)blobRef.Properties.Length);
                     }
                     else
                     {
