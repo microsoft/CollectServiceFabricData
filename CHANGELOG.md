@@ -24,7 +24,7 @@
 - add vscode launch.json config  
 - add support for dll and exe. converted project to dll and created new exe project referencing dll project.  
 - clean app.config  
-- migrate to csproj nuget package from packages.config   
+- migrate to csproj nuget package from packages.config  
 - clean csproj
 - modify nuspec layout to support dll and exe  
 - migrate from .net462 to .net472 for security and stability  
@@ -62,7 +62,7 @@
 - add online version check  
 - add maxstreamtransmitbytes  
 - add last message list  
-- add determineclusterid fallback 
+- add determineclusterid fallback  
 - add kustoUseIngestMessage  
 - add admin and query clients to kusto endpoint
 - add test classes  
