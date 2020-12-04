@@ -13,7 +13,8 @@ param(
     [switch]$publish,
     [string]$projectDir = (resolve-path "$psscriptroot\..\src"),
     [string]$nugetFallbackFolder = "$($env:userprofile)\.dotnet\NuGetFallbackFolder",
-    [switch]$clean
+    [switch]$clean,
+    [switch]$replace
 )
 
 $ErrorActionPreference = 'continue'
@@ -37,11 +38,11 @@ function main() {
     write-host "dotnet restore $csproj" -ForegroundColor Green
     dotnet restore $csproj
 
-    if($configuration -ieq 'all'){
+    if ($configuration -ieq 'all') {
         build-configuration 'debug'
         build-configuration 'release'
     }
-    else{
+    else {
         build-configuration $configuration
     }
 
@@ -55,7 +56,7 @@ function main() {
     return
 }
 
-function build-configuration($configuration){
+function build-configuration($configuration) {
     write-host "dotnet build $csproj -c $configuration" -ForegroundColor Magenta
     dotnet build $csproj -c $configuration
 
@@ -67,7 +68,7 @@ function build-configuration($configuration){
     $nugetFile = "$projectDir\bin\$configuration\*.nupkg"
     $nugetFile = (resolve-path $nugetFile)[-1]
     
-    if((test-path $nugetFile)){
+    if ((test-path $nugetFile)) {
         write-host "nuget add $nugetFile -source $nugetFallbackFolder" -ForegroundColor Green
         nuget add $nugetFile -source $nugetFallbackFolder
     }
@@ -79,9 +80,17 @@ function create-tempProject($projectFile) {
     if (!([regex]::IsMatch($projContent, ">$targetFrameworkString<", $ignoreCase))) {
         $currentFrameworks = [regex]::Match($projContent, $frameworksPattern, $ignoreCase).Groups[1].Value
         write-host "current frameworks: $currentFrameworks" -ForegroundColor Green
-        write-host "copying and adding target framework to csproj $targetFrameworkString" -ForegroundColor Green
-        # $projContent = [regex]::Replace($projContent, $currentFrameworks, "$currentFrameworks;$targetFramework", $ignoreCase)
-        $projContent = [regex]::Replace($projContent, $currentFrameworks, $targetFrameworkString, $ignoreCase)
+        
+        if ($replace) {
+            write-host "replacing target framework to csproj: $currentFrameworks;$targetFramework" -ForegroundColor Green
+            $projContent = [regex]::Replace($projContent, $currentFrameworks, $targetFrameworkString, $ignoreCase)
+        }
+        else {
+            write-host "adding target framework to csproj: $targetFrameworkString" -ForegroundColor Green
+            $projContent = [regex]::Replace($projContent, $currentFrameworks, "$currentFrameworks;$targetFramework", $ignoreCase)
+        }
+        
+        write-host "new frameworks: $projContent" -ForegroundColor Green
         $tempProject = $projectFile.Replace(".csproj", ".temp.csproj")
         write-host "saving to $tempProject" -ForegroundColor Green
         $projContent | out-file $tempProject
