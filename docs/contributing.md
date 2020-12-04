@@ -6,8 +6,115 @@ To report issue with collectsfdata, create a new issue in github repo [new issue
 
 ## Building
 
-Visual Studio 2019 with .net 4.7.2 for CollectSFData
-Visual Studio 2019 with .netcoreapp3.1 and powershell 7.0 for CollectSFDataTest
+### CollectSFData / CollectSFDataDll
+
+Visual Studio 2019 with .net 4.7.2 / .netcoreapp3.1 / net5  
+or  
+Visual Studio Code with .net 4.7.2 / .netcoreapp3.1 / net5  
+
+### **launch.json**
+
+```json
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "PowerShell Launch Current File",
+            "type": "PowerShell",
+            "request": "launch",
+            "script": "${file}",
+            "cwd": "${file}"
+        },
+        {
+            "name": ".NET Core Launch (console)",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/src/bin/Debug/netcoreapp3.1/CollectSFData.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/src/bin/Debug/netcoreapp3.1",
+            "console": "internalConsole",
+            "stopAtEntry": false
+        },
+        {
+            "name": ".NET Core Attach",
+            "type": "coreclr",
+            "request": "attach",
+            "processId": "${command:pickProcess}"
+        }
+    ]
+}
+```
+
+### commandline
+
+```powershell
+.\dotnet-build.ps1 [[-targetFramework] <string[]>] [[-configuration] <Object>] [[-runtimeIdentifier] <Object>] [[-projectDir] <string>] [[-nugetFallbackFolder] <string>] [-publish] [-clean]
+```
+
+#### **example**
+
+```powershell
+PS C:\github\jagilber\CollectServiceFabricData\scripts> .\dotnet-build.ps1
+current frameworks: netcoreapp3.1;net472
+copying and adding target framework to csproj net5
+saving to C:\github\jagilber\CollectServiceFabricData\src\CollectSFData\CollectSFData.temp.csproj
+current frameworks: netcoreapp3.1;net472
+copying and adding target framework to csproj net5
+saving to C:\github\jagilber\CollectServiceFabricData\src\CollectSFDataDll\CollectSFDataDll.temp.csproj
+dotnet restore C:\github\jagilber\CollectServiceFabricData\src\CollectSFData\CollectSFData.temp.csproj
+  Determining projects to restore...
+  Restored C:\github\jagilber\CollectServiceFabricData\src\CollectSFData\CollectSFData.temp.csproj (in 560 ms).
+  Restored C:\github\jagilber\CollectServiceFabricData\src\CollectSFDataDll\CollectSFDataDll.csproj (in 563 ms).
+dotnet build C:\github\jagilber\CollectServiceFabricData\src\CollectSFData\CollectSFData.temp.csproj -c debug
+Microsoft (R) Build Engine version 16.8.0-preview-20451-02+51a1071f8 for .NET
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+  Determining projects to restore...
+  Restored C:\github\jagilber\CollectServiceFabricData\src\CollectSFData\CollectSFData.temp.csproj (in 537 ms).
+  Restored C:\github\jagilber\CollectServiceFabricData\src\CollectSFDataDll\CollectSFDataDll.csproj (in 538 ms).
+  CollectSFDataDll -> C:\github\jagilber\CollectServiceFabricData\src\bin\debug\netcoreapp3.1\CollectSFDataDll.dll
+  CollectSFData.temp -> C:\github\jagilber\CollectServiceFabricData\src\bin\debug\net5\CollectSFData.dll
+  Output written to C:\github\jagilber\CollectServiceFabricData\src\bin\debug\net5\
+  Successfully created package 'C:\github\jagilber\CollectServiceFabricData\src\bin\debug\Microsoft.ServiceFabric.CollectSFData.2.7.2012.4151456.nupkg'.
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:02.81
+nuget add C:\github\jagilber\CollectServiceFabricData\src\bin\debug\Microsoft.ServiceFabric.CollectSFData.2.7.2012.4151456.nupkg -source C:\Users\jagilber\.dotnet\NuGetFallbackFolder
+Installing Microsoft.ServiceFabric.CollectSFData 2.7.2012.4151456.
+Successfully added package 'C:\github\jagilber\CollectServiceFabricData\src\bin\debug\Microsoft.ServiceFabric.CollectSFData.2.7.2012.4151456.nupkg' to feed 'C:\Users\jagilber\.dotnet\NuGetFallbackFolder'.
+dotnet build C:\github\jagilber\CollectServiceFabricData\src\CollectSFData\CollectSFData.temp.csproj -c release
+Microsoft (R) Build Engine version 16.8.0-preview-20451-02+51a1071f8 for .NET
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+  Determining projects to restore...
+  Restored C:\github\jagilber\CollectServiceFabricData\src\CollectSFData\CollectSFData.temp.csproj (in 546 ms).
+  Restored C:\github\jagilber\CollectServiceFabricData\src\CollectSFDataDll\CollectSFDataDll.csproj (in 547 ms).
+  CollectSFDataDll -> C:\github\jagilber\CollectServiceFabricData\src\bin\release\netcoreapp3.1\CollectSFDataDll.dll
+  CollectSFData.temp -> C:\github\jagilber\CollectServiceFabricData\src\bin\release\net5\CollectSFData.dll
+  Output written to C:\github\jagilber\CollectServiceFabricData\src\bin\release\net5\
+  Successfully created package 'C:\github\jagilber\CollectServiceFabricData\src\bin\release\Microsoft.ServiceFabric.CollectSFData.2.7.2012.4151459.nupkg'.
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:02.73
+nuget add C:\github\jagilber\CollectServiceFabricData\src\bin\release\Microsoft.ServiceFabric.CollectSFData.2.7.2012.4151459.nupkg -source C:\Users\jagilber\.dotnet\NuGetFallbackFolder
+Installing Microsoft.ServiceFabric.CollectSFData 2.7.2012.4151459.
+Successfully added package 'C:\github\jagilber\CollectServiceFabricData\src\bin\release\Microsoft.ServiceFabric.CollectSFData.2.7.2012.4151459.nupkg' to feed 'C:\Users\jagilber\.dotnet\NuGetFallbackFolder'.
+removing temp file C:\github\jagilber\CollectServiceFabricData\src\CollectSFData\CollectSFData.temp.csproj
+removing temp file C:\github\jagilber\CollectServiceFabricData\src\CollectSFDataDll\CollectSFDataDll.temp.csproj
+```
+
+### CollectSFDataTest
+
+Visual Studio Code with .netcoreapp3.1 / net5 and powershell 7.0+
+or
+Visual Studio 2019 with .netcoreapp3.1 / net5 and powershell 7.0+
 
 ## Setup
 
