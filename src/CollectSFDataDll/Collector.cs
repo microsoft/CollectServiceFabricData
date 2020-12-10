@@ -21,6 +21,7 @@ namespace CollectSFData
 
     public class Collector : Constants
     {
+        private bool _checkedVersion;
         private KustoConnection _kusto = null;
         private LogAnalyticsConnection _logAnalytics = null;
         private int _noProgressCounter = 0;
@@ -30,11 +31,11 @@ namespace CollectSFData
         private CustomTaskManager _taskManager = new CustomTaskManager(true);
         private ConfigurationOptions Config => Instance.Config;
         public Instance Instance { get; } = Instance.Singleton();
-
         public Collector(bool isConsole = false)
         {
             Log.IsConsole = isConsole;
         }
+
         public static int Main(string[] args)
         {
             return new Collector().Collect(args);
@@ -105,45 +106,7 @@ namespace CollectSFData
                 Config.SaveConfigFile();
                 Instance.TotalErrors += Log.LogErrors;
 
-                Log.Last($"{Instance.TotalFilesEnumerated} files enumerated.");
-                Log.Last($"{Instance.TotalFilesMatched} files matched.");
-                Log.Last($"{Instance.TotalFilesDownloaded} files downloaded.");
-                Log.Last($"{Instance.TotalFilesSkipped} files skipped.");
-                Log.Last($"{Instance.TotalFilesFormatted} files formatted.");
-                Log.Last($"{Instance.TotalErrors} errors.");
-                Log.Last($"{Instance.TotalRecords} records.");
-
-                if (Instance.TotalFilesEnumerated > 0)
-                {
-                    if (Config.FileType != FileTypesEnum.table)
-                    {
-                        DateTime discoveredMinDateTime = new DateTime(DiscoveredMinDateTicks);
-                        DateTime discoveredMaxDateTime = new DateTime(DiscoveredMaxDateTicks);
-
-                        Log.Last($"discovered time range: {discoveredMinDateTime.ToString("o")} - {discoveredMaxDateTime.ToString("o")}", ConsoleColor.Green);
-
-                        if (discoveredMinDateTime.Ticks > Config.EndTimeUtc.Ticks | discoveredMaxDateTime.Ticks < Config.StartTimeUtc.Ticks)
-                        {
-                            Log.Last($"error: configured time range not within discovered time range. configured time range: {Config.StartTimeUtc} - {Config.EndTimeUtc}", ConsoleColor.Red);
-                        }
-                    }
-
-                    if (Instance.TotalFilesMatched + Instance.TotalRecords == 0
-                        && (!string.IsNullOrEmpty(Config.UriFilter) | !string.IsNullOrEmpty(Config.ContainerFilter) | !string.IsNullOrEmpty(Config.NodeFilter)))
-                    {
-                        Log.Last("0 records found and filters are configured. verify filters and / or try time range are correct.", ConsoleColor.Yellow);
-                    }
-                    else if (Instance.TotalFilesMatched + Instance.TotalRecords == 0)
-                    {
-                        Log.Last("0 records found. verify time range is correct.", ConsoleColor.Yellow);
-                    }
-                }
-                else
-                {
-                    Log.Last("0 files enumerated.", ConsoleColor.Red);
-                }
-
-                Log.Last($"total execution time in minutes: { (DateTime.Now - Instance.StartTime).TotalMinutes.ToString("F2") }");
+                LogSummary();
                 return Instance.TotalErrors;
             }
             catch (Exception ex)
@@ -355,6 +318,49 @@ namespace CollectSFData
             }
         }
 
+        private void LogSummary()
+        {
+            Log.Last($"{Instance.TotalFilesEnumerated} files enumerated.");
+            Log.Last($"{Instance.TotalFilesMatched} files matched.");
+            Log.Last($"{Instance.TotalFilesDownloaded} files downloaded.");
+            Log.Last($"{Instance.TotalFilesSkipped} files skipped.");
+            Log.Last($"{Instance.TotalFilesFormatted} files formatted.");
+            Log.Last($"{Instance.TotalErrors} errors.");
+            Log.Last($"{Instance.TotalRecords} records.");
+
+            if (Instance.TotalFilesEnumerated > 0)
+            {
+                if (Config.FileType != FileTypesEnum.table)
+                {
+                    DateTime discoveredMinDateTime = new DateTime(DiscoveredMinDateTicks);
+                    DateTime discoveredMaxDateTime = new DateTime(DiscoveredMaxDateTicks);
+
+                    Log.Last($"discovered time range: {discoveredMinDateTime.ToString("o")} - {discoveredMaxDateTime.ToString("o")}", ConsoleColor.Green);
+
+                    if (discoveredMinDateTime.Ticks > Config.EndTimeUtc.Ticks | discoveredMaxDateTime.Ticks < Config.StartTimeUtc.Ticks)
+                    {
+                        Log.Last($"error: configured time range not within discovered time range. configured time range: {Config.StartTimeUtc} - {Config.EndTimeUtc}", ConsoleColor.Red);
+                    }
+                }
+
+                if (Instance.TotalFilesMatched + Instance.TotalRecords == 0
+                    && (!string.IsNullOrEmpty(Config.UriFilter) | !string.IsNullOrEmpty(Config.ContainerFilter) | !string.IsNullOrEmpty(Config.NodeFilter)))
+                {
+                    Log.Last("0 records found and filters are configured. verify filters and / or try time range are correct.", ConsoleColor.Yellow);
+                }
+                else if (Instance.TotalFilesMatched + Instance.TotalRecords == 0)
+                {
+                    Log.Last("0 records found. verify time range is correct.", ConsoleColor.Yellow);
+                }
+            }
+            else
+            {
+                Log.Last("0 files enumerated.", ConsoleColor.Red);
+            }
+
+            Log.Last($"total execution time in minutes: { (DateTime.Now - Instance.StartTime).TotalMinutes.ToString("F2") }");
+        }
+
         private void NoProgressCallback(object state)
         {
             Log.Highlight($"checking progress {_noProgressCounter} of {Config.NoProgressTimeoutMin}.");
@@ -372,12 +378,23 @@ namespace CollectSFData
             {
                 if (_noProgressCounter >= Config.NoProgressTimeoutMin)
                 {
+                    Log.Warning($"kusto ingesting:", _kusto.PendingIngestUris);
+                    Log.Warning($"kusto failed:", _kusto.FailIngestedUris);
+                    LogSummary();
                     Log.Info("progress tuple:", tuple);
                     string message = $"no progress timeout reached {Config.NoProgressTimeoutMin}. exiting application.";
                     Log.Error(message);
                     Log.Close();
                     throw new TimeoutException(message);
                 }
+
+                // do onetime version check if waiting
+                if (!_checkedVersion)
+                {
+                    _checkedVersion = true;
+                    Config.CheckReleaseVersion();
+                }
+
                 ++_noProgressCounter;
             }
             else
