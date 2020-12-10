@@ -34,6 +34,7 @@ namespace CollectSFData
         public Collector(bool isConsole = false)
         {
             Log.IsConsole = isConsole;
+            _noProgressTimer = new Timer(NoProgressCallback, null, 0, 60 * 1000);
         }
 
         public static int Main(string[] args)
@@ -64,11 +65,6 @@ namespace CollectSFData
 
                 ThreadPool.SetMinThreads(Config.Threads * MinThreadMultiplier, Config.Threads * MinThreadMultiplier);
                 ThreadPool.SetMaxThreads(Config.Threads * MaxThreadMultiplier, Config.Threads * MaxThreadMultiplier);
-
-                if (Config.NoProgressTimeoutMin > 0)
-                {
-                    _noProgressTimer = new Timer(NoProgressCallback, null, 0, 60 * 1000);
-                }
 
                 if (!InitializeKusto() | !InitializeLogAnalytics())
                 {
@@ -364,6 +360,11 @@ namespace CollectSFData
         private void NoProgressCallback(object state)
         {
             Log.Highlight($"checking progress {_noProgressCounter} of {Config.NoProgressTimeoutMin}.");
+
+            if (Config.NoProgressTimeoutMin < 1)
+            {
+                _noProgressTimer.Dispose();
+            }
 
             Tuple<int, int, int, int, int, int, int> tuple = new Tuple<int, int, int, int, int, int, int>(
                 Instance.TotalErrors,
