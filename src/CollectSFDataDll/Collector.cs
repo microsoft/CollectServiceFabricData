@@ -46,6 +46,8 @@ namespace CollectSFData
         {
             try
             {
+                Log.Open();
+                CustomTaskManager.Resume();
                 _noProgressTimer = new Timer(NoProgressCallback, null, 0, 60 * 1000);
 
                 if (!Config.PopulateConfig(args))
@@ -79,7 +81,7 @@ namespace CollectSFData
 
                 CustomTaskManager.WaitAll();
                 FinalizeKusto();
-                CustomTaskManager.Close();
+                CustomTaskManager.Cancel();
 
                 if (Config.DeleteCache & Config.IsCacheLocationPreConfigured())
                 {
@@ -109,6 +111,8 @@ namespace CollectSFData
             }
             finally
             {
+                CustomTaskManager.Cancel();
+                _noProgressTimer?.Dispose();
                 Log.Close();
             }
         }
