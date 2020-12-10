@@ -4,6 +4,8 @@
 // ------------------------------------------------------------
 
 using CollectSFData.DataFile;
+using CollectSFData.Kusto;
+using CollectSFData.LogAnalytics;
 using System;
 
 namespace CollectSFData.Common
@@ -20,6 +22,8 @@ namespace CollectSFData.Common
             {
                 _instance.Config = new ConfigurationOptions();
                 _instance.FileMgr = new FileManager();
+                _instance.Kusto = new KustoConnection();
+                _instance.LogAnalytics = new LogAnalyticsConnection();
             }
         }
 
@@ -35,6 +39,8 @@ namespace CollectSFData.Common
         public ConfigurationOptions Config;
         public FileManager FileMgr;
         public bool IsWindows = Environment.OSVersion.Platform.Equals(PlatformID.Win32NT);
+        public KustoConnection Kusto;
+        public LogAnalyticsConnection LogAnalytics;
         public DateTime StartTime = DateTime.Now;
         public int TotalErrors = 0;
         public int TotalFilesConverted = 0;
