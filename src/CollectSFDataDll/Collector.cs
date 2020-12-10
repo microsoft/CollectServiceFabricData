@@ -8,8 +8,6 @@ namespace CollectSFData
     using CollectSFData.Azure;
     using CollectSFData.Common;
     using CollectSFData.DataFile;
-    using CollectSFData.Kusto;
-    using CollectSFData.LogAnalytics;
     using System;
     using System.Collections.Generic;
     using System.IO;
@@ -22,8 +20,6 @@ namespace CollectSFData
     public class Collector : Constants
     {
         private bool _checkedVersion;
-        private KustoConnection _kusto = null;
-        private LogAnalyticsConnection _logAnalytics = null;
         private int _noProgressCounter = 0;
         private Timer _noProgressTimer;
         private ParallelOptions _parallelConfig;
@@ -201,13 +197,13 @@ namespace CollectSFData
 
         public void FinalizeKusto()
         {
-            if (Config.IsKustoConfigured() && !_kusto.Complete())
+            if (Config.IsKustoConfigured() && !Instance.Kusto.Complete())
             {
                 Log.Warning($"there may have been errors during kusto import. {Config.CacheLocation} has *not* been deleted.");
             }
             else if (Config.IsKustoConfigured())
             {
-                Log.Last($"{DataExplorer}/clusters/{_kusto.Endpoint.ClusterName}/databases/{_kusto.Endpoint.DatabaseName}", ConsoleColor.Cyan);
+                Log.Last($"{DataExplorer}/clusters/{Instance.Kusto.Endpoint.ClusterName}/databases/{Instance.Kusto.Endpoint.DatabaseName}", ConsoleColor.Cyan);
             }
         }
 
@@ -215,8 +211,7 @@ namespace CollectSFData
         {
             if (Config.IsKustoConfigured() | Config.IsKustoPurgeRequested())
             {
-                _kusto = new KustoConnection();
-                return _kusto.Connect();
+                return Instance.Kusto.Connect();
             }
 
             return true;
@@ -226,8 +221,7 @@ namespace CollectSFData
         {
             if (Config.IsLogAnalyticsConfigured() | Config.LogAnalyticsCreate | Config.IsLogAnalyticsPurgeRequested())
             {
-                _logAnalytics = new LogAnalyticsConnection();
-                return _logAnalytics.Connect();
+                return Instance.LogAnalytics.Connect();
             }
 
             return true;
@@ -241,12 +235,12 @@ namespace CollectSFData
             {
                 if (Config.IsKustoConfigured())
                 {
-                    _taskManager.QueueTaskAction(() => _kusto.AddFile(fileObject));
+                    _taskManager.QueueTaskAction(() => Instance.Kusto.AddFile(fileObject));
                 }
 
                 if (Config.IsLogAnalyticsConfigured())
                 {
-                    _taskManager.QueueTaskAction(() => _logAnalytics.AddFile(fileObject));
+                    _taskManager.QueueTaskAction(() => Instance.LogAnalytics.AddFile(fileObject));
                 }
             }
             else
@@ -379,8 +373,8 @@ namespace CollectSFData
             {
                 if (_noProgressCounter >= Config.NoProgressTimeoutMin)
                 {
-                    Log.Warning($"kusto ingesting:", _kusto.PendingIngestUris);
-                    Log.Warning($"kusto failed:", _kusto.FailIngestedUris);
+                    Log.Warning($"kusto ingesting:", Instance.Kusto.PendingIngestUris);
+                    Log.Warning($"kusto failed:", Instance.Kusto.FailIngestedUris);
                     LogSummary();
                     Log.Info("progress tuple:", tuple);
                     string message = $"no progress timeout reached {Config.NoProgressTimeoutMin}. exiting application.";
