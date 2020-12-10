@@ -1,4 +1,4 @@
-﻿// ------------------------------------------------------------
+// ------------------------------------------------------------
 // Copyright (c) Microsoft Corporation.  All rights reserved.
 // Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
@@ -382,7 +382,7 @@ namespace CollectSFData.Kusto
             foreach (KustoRestRecord record in failedRecords)
             {
                 string uriFile = Path.GetFileName(record["IngestionSourcePath"].ToString());
-                Log.Debug($"checking failed ingested for failed relativeuri: {uriFile}");
+                Log.Trivial($"checking failed ingested for failed relativeuri: {uriFile}");
 
                 if (!_failIngestedUris.Contains(uriFile))
                 {
@@ -395,8 +395,7 @@ namespace CollectSFData.Kusto
 
             foreach (string uriFile in _failIngestedUris)
             {
-                Log.Debug($"checking message list for failed relativeUri: {uriFile}");
-                if (_messageList.Any(x => Regex.IsMatch(x, uriFile, RegexOptions.IgnoreCase)))
+                Log.Trivial($"checking message list for failed relativeUri: {uriFile}");
                 {
                     _messageList.RemoveAll(x => Regex.IsMatch(x, uriFile, RegexOptions.IgnoreCase));
                     Log.Error($"removing failed ingested relativeuri from _messageList[{_messageList.Count()}]: {uriFile}");
@@ -407,7 +406,7 @@ namespace CollectSFData.Kusto
 
             foreach (string uriFile in successUris)
             {
-                Log.Debug($"checking ingested uri for success relativeuri: {uriFile}");
+                Log.Trivial($"checking ingested uri for success relativeuri: {uriFile}");
 
                 if (!_ingestedUris.Contains(uriFile))
                 {
@@ -418,7 +417,7 @@ namespace CollectSFData.Kusto
 
             foreach (string uriFile in _ingestedUris)
             {
-                Log.Debug($"checking relativeUri in ingested Uris: {uriFile}");
+                Log.Trivial($"checking relativeUri in ingested Uris: {uriFile}");
 
                 if (_messageList.Any(x => Regex.IsMatch(x, uriFile, RegexOptions.IgnoreCase)))
                 {
