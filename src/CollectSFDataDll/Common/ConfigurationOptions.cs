@@ -121,7 +121,7 @@ namespace CollectSFData.Common
 
         public string KustoTable { get; set; }
 
-        public bool KustoUseBlobAsSource { get; set; }
+        public bool KustoUseBlobAsSource { get; set; } = true;
 
         public bool KustoUseIngestMessage { get; set; }
 
