@@ -13,6 +13,6 @@ namespace CollectSFData.Common
         public static int Warning = 3;
         public static int Info = 4;
         public static int Verbose = 5;
-        public static int Trivial = 6;
+        public static int File = 6;
     }
 }
