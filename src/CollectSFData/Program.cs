@@ -18,14 +18,27 @@ namespace CollectSFData
             }
 
             Collector collector = new Collector(true);
-
-            // to subscribe to log messages
-            // Log.MessageLogged += Log_MessageLogged;
+            ConfigurationOptions config = collector.Instance.Config;
 
             // to modify / validate config
-            // collector.Instance.Config.Validate();
+            // config.Validate();
 
-            return collector.Collect(args);
+            int retval = collector.Collect(args);
+            // to subscribe to log messages
+            // Log.MessageLogged += Log_MessageLogged;
+            
+            // mitigation for dtr files not being csv compliant causing kusto ingest to fail
+            if(collector.Instance.Kusto.FailIngestedUris.Count() > 0 
+                && config.IsKustoConfigured()
+                && config.KustoUseBlobAsSource == true
+                && config.FileType == DataFile.FileTypesEnum.trace)
+            {
+                collector.Instance.Config.KustoUseBlobAsSource = false;
+                //collector.Instance.Kusto.FailIngestedUris.ForEach( x => collector.QueueForIngest(new DataFile.FileObject(x)));
+                retval = collector.Collect(args);
+            }
+            
+            return retval;
         }
 
         private static void Log_MessageLogged(object sender, LogMessage args)
