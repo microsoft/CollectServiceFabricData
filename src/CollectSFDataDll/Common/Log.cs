@@ -175,6 +175,14 @@ namespace CollectSFData.Common
             _taskWriter.Start();
         }
 
+        public static void Trivial(string message, object jsonSerializer = null, [CallerMemberName] string callerName = "")
+        {
+            if (LogDebug >= LoggingLevel.Trivial)
+            {
+                Process("trivial: " + message, ConsoleColor.Gray, ConsoleColor.Black, jsonSerializer, callerName: callerName);
+            }
+        }
+
         public static void Warning(string message, object jsonSerializer = null, [CallerMemberName] string callerName = "")
         {
             if (LogDebug >= LoggingLevel.Warning)
