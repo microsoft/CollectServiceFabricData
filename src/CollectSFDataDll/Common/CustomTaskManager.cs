@@ -14,10 +14,10 @@ namespace CollectSFData.Common
     public class CustomTaskManager : Constants
     {
         private static Instance _instance;
+        private static bool _isRunning;
         private static ConfigurationOptions Config;
-
         private static object _taskMonLock = new object();
-        private static readonly Task _taskMonitor = new Task(TaskMonitor);
+        private static Task _taskMonitor = new Task(TaskMonitor);
         private static SynchronizedList<CustomTaskManager> _allInstances = new SynchronizedList<CustomTaskManager>();
         private static CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
         private static CustomTaskScheduler _customScheduler; // init in constructor after starting _taskMonitor to avoid exception
@@ -39,7 +39,7 @@ namespace CollectSFData.Common
                     _instance = Instance.Singleton();
                     Config = _instance.Config;
                     _customScheduler = new CustomTaskScheduler(Config);
-
+                    _isRunning = true;
                     Log.Info($"starting taskmonitor. status: {_taskMonitor.Status}", ConsoleColor.White);
                 }
             }
@@ -58,12 +58,13 @@ namespace CollectSFData.Common
 
         public bool RemoveWhenComplete { get; set; }
 
-        public static void Close()
+        public static void Cancel()
         {
-            Log.Info("taskmanager closing", ConsoleColor.White);
+            Log.Info("taskmanager cancelling", ConsoleColor.White);
             _cancellationTokenSource.Cancel();
             _taskMonitor.Wait();
-            Log.Info("taskmanager closed", ConsoleColor.White);
+            _isRunning = false;
+            Log.Info("taskmanager cancelled", ConsoleColor.White);
         }
 
         public static void WaitAll()
@@ -97,6 +98,17 @@ namespace CollectSFData.Common
         public void QueueTaskAction(Action action)
         {
             AddToQueue(new TaskObject() { Action = action });
+        }
+
+        public static void Resume()
+        {
+            if (!_isRunning)
+            {
+                Log.Info("taskmanager resuming", ConsoleColor.White);
+                _taskMonitor = new Task(TaskMonitor);
+                Log.Info("taskmanager resumed", ConsoleColor.White);
+                _isRunning = true;
+            }
         }
 
         public Task TaskAction(Action action)
