@@ -19,6 +19,7 @@ namespace CollectSFData.Common
         public static int LogErrors = 0;
         private static ConsoleColor _highlightBackground = Console.ForegroundColor;
         private static ConsoleColor _highlightForeground = Console.BackgroundColor;
+        private static bool _isRunning;
         private static JsonSerializerSettings _jsonSerializerSettings;
         private static SynchronizedList<LogMessage> _lastMessageList = new SynchronizedList<LogMessage>();
         private static string _logFile;
@@ -39,7 +40,7 @@ namespace CollectSFData.Common
 
             LogDebug = LoggingLevel.Info;
             IsConsole = true;
-            Start();
+            Open();
         }
 
         public delegate void LogMessageHandler(object sender, LogMessage args);
@@ -64,6 +65,7 @@ namespace CollectSFData.Common
                 _taskWriterCancellationToken.Cancel();
                 _taskWriter.Wait();
                 _taskWriter.Dispose();
+                _isRunning = false;
             }
             catch (TaskCanceledException) { }
             catch (AggregateException e)
@@ -88,6 +90,19 @@ namespace CollectSFData.Common
             if (LogDebug >= LoggingLevel.Error)
             {
                 Process("error: " + message, ConsoleColor.Red, ConsoleColor.Black, jsonSerializer, isError: true, callerName: callerName);
+            }
+        }
+
+        public static void ToFile(string message, object jsonSerializer = null, [CallerMemberName] string callerName = "")
+        {
+            if (LogDebug >= LoggingLevel.File)
+            {
+                QueueMessage(false, new LogMessage()
+                {
+                    TimeStamp = DateTime.Now.ToString("o") + "::",
+                    Message = $"trivial: {message}",
+                    LogFileOnly = true
+                });
             }
         }
 
@@ -168,18 +183,14 @@ namespace CollectSFData.Common
             }
         }
 
-        public static void Start()
+        public static void Open()
         {
-            _taskWriterCancellationToken = new CancellationTokenSource();
-            _taskWriter = new Task(TaskWriter, _taskWriterCancellationToken.Token);
-            _taskWriter.Start();
-        }
-
-        public static void Trivial(string message, object jsonSerializer = null, [CallerMemberName] string callerName = "")
-        {
-            if (LogDebug >= LoggingLevel.Trivial)
+            if (!_isRunning)
             {
-                Process("trivial: " + message, ConsoleColor.Gray, ConsoleColor.Black, jsonSerializer, callerName: callerName);
+                _taskWriterCancellationToken = new CancellationTokenSource();
+                _taskWriter = new Task(TaskWriter, _taskWriterCancellationToken.Token);
+                _taskWriter.Start();
+                _isRunning = true;
             }
         }
 
@@ -238,7 +249,7 @@ namespace CollectSFData.Common
         }
 
         private static void Process(string message,
-                                                                                                ConsoleColor? foregroundColor = null,
+                                ConsoleColor? foregroundColor = null,
                                 ConsoleColor? backgroundColor = null,
                                 object jsonSerializer = null,
                                 bool minimal = false,
@@ -320,7 +331,10 @@ namespace CollectSFData.Common
                 {
                     foreach (LogMessage result in _messageList.DeListAll())
                     {
-                        WriteMessage(result);
+                        if (!result.LogFileOnly)
+                        {
+                            WriteMessage(result);
+                        }
 
                         if (LogFileEnabled)
                         {
