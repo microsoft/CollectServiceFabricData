@@ -12,6 +12,7 @@ namespace CollectSFData.Common
         public ConsoleColor? BackgroundColor { get; set; }
         public ConsoleColor? ForegroundColor { get; set; }
         public bool IsError { get; set; }
+        public bool LogFileOnly { get; set; }
         public string Message { get; set; }
         public string TimeStamp { get; set; }
     }
