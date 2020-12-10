@@ -30,7 +30,6 @@ namespace CollectSFData
         public Collector(bool isConsole = false)
         {
             Log.IsConsole = isConsole;
-            _noProgressTimer = new Timer(NoProgressCallback, null, 0, 60 * 1000);
         }
 
         public static int Main(string[] args)
@@ -47,6 +46,8 @@ namespace CollectSFData
         {
             try
             {
+                _noProgressTimer = new Timer(NoProgressCallback, null, 0, 60 * 1000);
+
                 if (!Config.PopulateConfig(args))
                 {
                     Config.SaveConfigFile();
