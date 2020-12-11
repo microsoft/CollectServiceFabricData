@@ -13,15 +13,15 @@ namespace CollectSFData.Common
 {
     public class CustomTaskManager : Constants
     {
-        private static Instance _instance;
-        private static bool _isRunning;
-        private static ConfigurationOptions Config;
-        private static object _taskMonLock = new object();
-        private static Task _taskMonitor = new Task(TaskMonitor);
         private static SynchronizedList<CustomTaskManager> _allInstances = new SynchronizedList<CustomTaskManager>();
         private static CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
         private static CustomTaskScheduler _customScheduler; // init in constructor after starting _taskMonitor to avoid exception
+        private static Instance _instance;
+        private static bool _isRunning;
+        private static Task _taskMonitor = new Task(TaskMonitor);
+        private static object _taskMonLock = new object();
         private string CallerName;
+        private static ConfigurationOptions Config;
         static CustomTaskManager()
         {
         }
@@ -31,21 +31,25 @@ namespace CollectSFData.Common
             RemoveWhenComplete = removeWhenComplete;
             CallerName = callerName;
 
+            Log.Debug($"{CallerName} waiting on lock. taskmonitor status: {_taskMonitor.Status}", ConsoleColor.White);
             lock (_taskMonLock)
             {
-                if (_taskMonitor.Status == TaskStatus.Created)
+                Log.Debug($"{CallerName} in lock. taskmonitor status: {_taskMonitor.Status}", ConsoleColor.White);
+
+                if (!_isRunning && _taskMonitor.Status == TaskStatus.Created)
                 {
-                    _taskMonitor.Start();
+                    _isRunning = true;
+                    Log.Highlight($"{CallerName} starting taskmonitor. status: {_taskMonitor.Status}", ConsoleColor.White);
                     _instance = Instance.Singleton();
                     Config = _instance.Config;
                     _customScheduler = new CustomTaskScheduler(Config);
-                    _isRunning = true;
-                    Log.Info($"starting taskmonitor. status: {_taskMonitor.Status}", ConsoleColor.White);
+                    _taskMonitor.Start();
+                    Log.Highlight($"{CallerName} started taskmonitor. status: {_taskMonitor.Status}", ConsoleColor.White);
                 }
-            }
 
-            Log.Info($"adding task instance for:{CallerName} taskmonitor status: {_taskMonitor.Status}", ConsoleColor.White);
-            _allInstances.Add(this);
+                Log.Info($"{CallerName} adding task instance. taskmonitor status: {_taskMonitor.Status}", ConsoleColor.White);
+                _allInstances.Add(this);
+            }
         }
 
         public SynchronizedList<Task> AllTasks { get; set; } = new SynchronizedList<Task>();
