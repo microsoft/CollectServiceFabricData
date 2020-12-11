@@ -267,7 +267,7 @@ namespace CollectSFDataTest.Utilities
         {
             LogMessageQueueEnabled = false;
             Log.Close();
-            Log.Start();
+            Log.Open();
 
             LogMessageQueueEnabled = true;
             Log.Info("enter");
@@ -304,7 +304,7 @@ namespace CollectSFDataTest.Utilities
             lock (_executing)
             {
                 Log.Close();
-                Log.Start();
+                Log.Open();
                 Log.Info("enter");
 
                 SaveTempOptions();
@@ -374,7 +374,7 @@ namespace CollectSFDataTest.Utilities
 
         public void StartConsoleRedirection()
         {
-            Log.Start();
+            Log.Open();
             Log.LogErrors = 0;
             Log.Info("starting redirection");
             FlushConsoleOutput();
