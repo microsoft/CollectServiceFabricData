@@ -19,7 +19,6 @@ namespace CollectSFData
 
     public class Collector : Constants
     {
-        private bool _checkedVersion;
         private int _noProgressCounter = 0;
         private Timer _noProgressTimer;
         private ParallelOptions _parallelConfig;
@@ -30,11 +29,6 @@ namespace CollectSFData
         public Collector(bool isConsole = false)
         {
             Log.IsConsole = isConsole;
-        }
-
-        public static int Main(string[] args)
-        {
-            return new Collector().Collect(args);
         }
 
         public int Collect()
@@ -378,21 +372,18 @@ namespace CollectSFData
             {
                 if (_noProgressCounter >= Config.NoProgressTimeoutMin)
                 {
-                    Log.Warning($"kusto ingesting:", Instance.Kusto.PendingIngestUris);
-                    Log.Warning($"kusto failed:", Instance.Kusto.FailIngestedUris);
+                    if (Config.IsKustoConfigured())
+                    {
+                        Log.Warning($"kusto ingesting:", Instance.Kusto.PendingIngestUris);
+                        Log.Warning($"kusto failed:", Instance.Kusto.FailIngestedUris);
+                    }
+
                     LogSummary();
-                    Log.Info("progress tuple:", tuple);
+
                     string message = $"no progress timeout reached {Config.NoProgressTimeoutMin}. exiting application.";
                     Log.Error(message);
                     Log.Close();
                     throw new TimeoutException(message);
-                }
-
-                // do onetime version check if waiting
-                if (!_checkedVersion)
-                {
-                    _checkedVersion = true;
-                    Config.CheckReleaseVersion();
                 }
 
                 ++_noProgressCounter;
