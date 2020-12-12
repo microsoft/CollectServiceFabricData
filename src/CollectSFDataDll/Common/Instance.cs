@@ -20,11 +20,24 @@ namespace CollectSFData.Common
             // set instances in static ctor
             if (_instance.Config == null)
             {
-                _instance.Config = new ConfigurationOptions();
-                _instance.FileMgr = new FileManager();
-                _instance.Kusto = new KustoConnection();
-                _instance.LogAnalytics = new LogAnalyticsConnection();
+                ReInitialize();
             }
+        }
+
+        public static void ReInitialize()
+        {
+            _instance.Config = new ConfigurationOptions();
+            _instance.FileMgr = new FileManager();
+            _instance.Kusto = new KustoConnection();
+            _instance.LogAnalytics = new LogAnalyticsConnection();
+            _instance.StartTime = DateTime.Now;
+            _instance.TotalErrors = 0;
+            _instance.TotalFilesConverted = 0;
+            _instance.TotalFilesDownloaded = 0;
+            _instance.TotalFilesEnumerated = 0;
+            _instance.TotalFilesFormatted = 0;
+            _instance.TotalFilesMatched = 0;
+            _instance.TotalFilesSkipped = 0;
         }
 
         public static Instance Singleton()
@@ -41,14 +54,14 @@ namespace CollectSFData.Common
         public bool IsWindows = Environment.OSVersion.Platform.Equals(PlatformID.Win32NT);
         public KustoConnection Kusto;
         public LogAnalyticsConnection LogAnalytics;
-        public DateTime StartTime = DateTime.Now;
-        public int TotalErrors = 0;
-        public int TotalFilesConverted = 0;
-        public int TotalFilesDownloaded = 0;
-        public int TotalFilesEnumerated = 0;
-        public int TotalFilesFormatted = 0;
-        public int TotalFilesMatched = 0;
-        public int TotalFilesSkipped = 0;
-        public int TotalRecords = 0;
+        public DateTime StartTime;
+        public int TotalErrors;
+        public int TotalFilesConverted;
+        public int TotalFilesDownloaded;
+        public int TotalFilesEnumerated;
+        public int TotalFilesFormatted;
+        public int TotalFilesMatched;
+        public int TotalFilesSkipped;
+        public int TotalRecords;
     }
 }
