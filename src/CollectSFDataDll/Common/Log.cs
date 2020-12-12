@@ -93,19 +93,6 @@ namespace CollectSFData.Common
             }
         }
 
-        public static void ToFile(string message, object jsonSerializer = null, [CallerMemberName] string callerName = "")
-        {
-            if (LogDebug >= LoggingLevel.File)
-            {
-                QueueMessage(false, new LogMessage()
-                {
-                    TimeStamp = DateTime.Now.ToString("o") + "::",
-                    Message = $"trivial: {message}",
-                    LogFileOnly = true
-                });
-            }
-        }
-
         public static void Exception(string message, object jsonSerializer = null, [CallerMemberName] string callerName = "")
         {
             if (LogDebug >= LoggingLevel.Exception)
@@ -194,6 +181,19 @@ namespace CollectSFData.Common
             }
         }
 
+        public static void ToFile(string message, object jsonSerializer = null, [CallerMemberName] string callerName = "")
+        {
+            if (LogDebug >= LoggingLevel.File)
+            {
+                QueueMessage(false, new LogMessage()
+                {
+                    TimeStamp = DateTime.Now.ToString("o") + "::",
+                    Message = $"{Thread.CurrentThread.ManagedThreadId}:{callerName}:trivial:{message}{serializeJson(jsonSerializer)}",
+                    LogFileOnly = true
+                });
+            }
+        }
+
         public static void Warning(string message, object jsonSerializer = null, [CallerMemberName] string callerName = "")
         {
             if (LogDebug >= LoggingLevel.Warning)
@@ -262,21 +262,9 @@ namespace CollectSFData.Common
                 return;
             }
 
-            if (jsonSerializer != null)
-            {
-                try
-                {
-                    jsonSerializer = Environment.NewLine + JsonConvert.SerializeObject(jsonSerializer, Formatting.Indented, _jsonSerializerSettings);
-                }
-                catch (Exception e)
-                {
-                    message += Environment.NewLine + $"LOG:jsondeserialize error: {e.Message}";
-                }
-            }
-
             if (!minimal)
             {
-                message = $"{Thread.CurrentThread.ManagedThreadId}:{callerName}:{message}{jsonSerializer}";
+                message = $"{Thread.CurrentThread.ManagedThreadId}:{callerName}:{message}{serializeJson(jsonSerializer)}";
             }
 
             QueueMessage(lastMessage, new LogMessage()
@@ -287,6 +275,23 @@ namespace CollectSFData.Common
                 ForegroundColor = foregroundColor,
                 IsError = isError
             });
+        }
+
+        private static string serializeJson(object jsonSerializer)
+        {
+            if (jsonSerializer != null)
+            {
+                try
+                {
+                    return Environment.NewLine + JsonConvert.SerializeObject(jsonSerializer, Formatting.Indented, _jsonSerializerSettings);
+                }
+                catch (Exception e)
+                {
+                    return Environment.NewLine + $"LOG:jsondeserialize error: {e.Message}";
+                }
+            }
+
+            return string.Empty;
         }
 
         private static void QueueMessage(bool lastMessage, LogMessage logMessage)
