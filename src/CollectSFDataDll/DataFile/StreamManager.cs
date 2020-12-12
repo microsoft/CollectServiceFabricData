@@ -28,11 +28,11 @@ namespace CollectSFData.DataFile
             _fileObject = fileObject;
         }
 
-        public void Close()
+        public void Dispose()
         {
             if (_memoryStream.CanRead || _memoryStream.CanWrite)
             {
-                _memoryStream.Close();
+                _memoryStream.Dispose();
             }
         }
 

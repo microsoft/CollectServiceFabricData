@@ -376,7 +376,7 @@ namespace CollectSFData.LogAnalytics
         {
             Log.Debug("enter");
             string jsonBody = Config.UseMemoryStream || connectivityCheck ? fileObject.Stream.ReadToEnd() : File.ReadAllText(fileObject.FileUri);
-            fileObject.Stream.Close();
+            fileObject.Stream.Dispose();
             byte[] jsonBytes = Encoding.UTF8.GetBytes(jsonBody);
 
             string date = DateTime.UtcNow.ToString("r");
