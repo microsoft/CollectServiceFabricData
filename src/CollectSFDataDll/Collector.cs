@@ -19,6 +19,7 @@ namespace CollectSFData
 
     public class Collector : Constants
     {
+        private bool _initialized;
         private int _noProgressCounter = 0;
         private Timer _noProgressTimer;
         private ParallelOptions _parallelConfig;
@@ -42,6 +43,13 @@ namespace CollectSFData
             {
                 Log.Open();
                 CustomTaskManager.Resume();
+
+                if (_initialized)
+                {
+                    Instance.ReInitialize();
+                }
+
+                _initialized = true;
                 _noProgressTimer = new Timer(NoProgressCallback, null, 0, 60 * 1000);
 
                 if (!Config.PopulateConfig(args))
@@ -374,8 +382,8 @@ namespace CollectSFData
                 {
                     if (Config.IsKustoConfigured())
                     {
-                        Log.Warning($"kusto ingesting:", Instance.Kusto.PendingIngestUris);
-                        Log.Warning($"kusto failed:", Instance.Kusto.FailIngestedUris);
+                        Log.Warning($"kusto ingesting:", Instance.Kusto.IngestFileObjectsPending);
+                        Log.Warning($"kusto failed:", Instance.Kusto.IngestFileObjectsFailed);
                     }
 
                     LogSummary();
