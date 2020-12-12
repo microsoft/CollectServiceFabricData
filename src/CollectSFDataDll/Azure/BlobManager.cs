@@ -312,7 +312,7 @@ namespace CollectSFData.Azure
             foreach (IListBlobItem blob in blobResultSegment.Results)
             {
                 ICloudBlob blobRef = null;
-                Log.Debug($"parent id:{parentId} current Id:{Thread.CurrentThread.ManagedThreadId}");
+                Log.ToFile($"parent id:{parentId} current Id:{Thread.CurrentThread.ManagedThreadId}");
 
                 if (blob is CloudBlobDirectory)
                 {
