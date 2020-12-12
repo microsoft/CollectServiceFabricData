@@ -14,7 +14,7 @@ namespace CollectSFDataTest
     [TestFixture]
     public class KustoTests : TestUtilities
     {
-        [Test(Description = "Kusto cluster valid url test", TestOf = typeof(KustoEndpointInfo))]
+        [Test(Description = "Kusto cluster valid url test", TestOf = typeof(KustoEndpoint))]
         public void KustoClusterValidUrlTest()
         {
             TestUtilities utils = DefaultUtilities();
@@ -27,7 +27,7 @@ namespace CollectSFDataTest
             Assert.IsFalse(results.HasErrors(), results.ToString());
         }
 
-        [Test(Description = "Kusto cluster valid url no location test", TestOf = typeof(KustoEndpointInfo))]
+        [Test(Description = "Kusto cluster valid url no location test", TestOf = typeof(KustoEndpoint))]
         public void KustoClusterValidUrlNoLocationTest()
         {
             TestUtilities utils = DefaultUtilities();
