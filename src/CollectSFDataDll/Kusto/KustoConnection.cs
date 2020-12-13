@@ -382,7 +382,7 @@ namespace CollectSFData.Kusto
                     if (IngestFileObjectsPending.Contains(uriFile))
                     {
                         message = IngestFileObjectsPending.Item(uriFile);
-                        message.Completed = DateTime.Now;
+                        message.Failed = DateTime.Now;
 
                         Log.Error($"adding failedUri to _failIngestedUris[{IngestFileObjectsFailed.Count()}]: {uriFile}", record);
                         IngestFileObjectsFailed.Add(message);
@@ -427,7 +427,7 @@ namespace CollectSFData.Kusto
                     if (IngestFileObjectsPending.Contains(uriFile))
                     {
                         message = IngestFileObjectsPending.Item(uriFile);
-                        message.Completed = DateTime.Now;
+                        message.Succeeded = DateTime.Now;
 
                         Log.Info($"adding relativeuri to _ingestedUris[{IngestFileObjectsSucceeded.Count()}]: {uriFile}", ConsoleColor.Green);
                         IngestFileObjectsSucceeded.Add(message);

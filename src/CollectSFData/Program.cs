@@ -33,6 +33,8 @@ namespace CollectSFData
                 && config.KustoUseBlobAsSource == true
                 && config.FileType == DataFile.FileTypesEnum.trace)
             {
+                Log.Open();
+                Log.Warning("failed ingests:", collector.Instance.Kusto.IngestFileObjectsFailed);
                 config.KustoUseBlobAsSource = false;
                 config.KustoRecreateTable = false;
                 //collector.Instance.Kusto.FailIngestedUris.ForEach( x => collector.QueueForIngest(new DataFile.FileObject(x)));
