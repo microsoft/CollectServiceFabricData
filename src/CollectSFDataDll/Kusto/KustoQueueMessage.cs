@@ -9,93 +9,27 @@ using System.Collections;
 
 namespace CollectSFData.Kusto
 {
-    public class KustoQueueMessages : SynchronizedList<KustoQueueMessage>
-    {
-        public KustoQueueMessages(KustoQueueMessages messages = null)
-        {
-            if (messages != null)
-            {
-                this.AddRange(messages);
-            }
-        }
-
-        public void Add(string fileUri = null, string relativeUri = null, string clientRequestId = null)
-        {
-            Add(new KustoQueueMessage(fileUri, relativeUri, clientRequestId));
-        }
-
-        public new bool Contains(KustoQueueMessage message)
-        {
-            return IndexOf(message) >= 0;
-        }
-
-        public bool Contains(string item)
-        {
-            return IndexOf(item) >= 0;
-        }
-
-        public int IndexOf(string item)
-        {
-            return IndexOf(new KustoQueueMessage(item, item, item));
-        }
-
-        public new int IndexOf(KustoQueueMessage message)
-        {
-            foreach (KustoQueueMessage queueMessage in new KustoQueueMessages(this))
-            {
-                if (queueMessage.Equals(message))
-                {
-                    return base.IndexOf(queueMessage);
-                }
-            }
-
-            return -1;
-        }
-
-        public KustoQueueMessage Item(string item)
-        {
-            int index = IndexOf(item);
-            if (index >= 0)
-            {
-                return this[index];
-            }
-
-            return null;
-        }
-
-        public new bool Remove(KustoQueueMessage message)
-        {
-            int index = IndexOf(message);
-            if (index >= 0)
-            {
-                return RemoveAt(index);
-            }
-
-            return false;
-        }
-
-        public bool Remove(string item)
-        {
-            int index = IndexOf(item);
-            if (index >= 0)
-            {
-                return RemoveAt(index);
-            }
-
-            return false;
-        }
-    }
 
     public class KustoQueueMessage : Constants, IEqualityComparer
     {
         public string ClientRequestId { get; set; } //= string.Empty;
         public DateTime Failed { get; set; } //= DateTime.MaxValue;
         public string FileUri { get; set; } //= string.Empty;
+        public KustoRestRecord KustoRestRecord {get; set;}
         public string RelativeUri { get; set; } //= string.Empty;
         public DateTime Started { get; set; } = DateTime.MinValue;
         public DateTime Succeeded { get; set; } //= DateTime.MaxValue;
 
-        public KustoQueueMessage(string fileUri = null, string relativeUri = null, string clientRequestId = null)
+        public KustoQueueMessage(string searchItem)
+        {
+            Initialize(searchItem, searchItem, searchItem);
+        }
+        public KustoQueueMessage(string fileUri, string relativeUri, string clientRequestId)
+        {
+            Initialize(fileUri, relativeUri, clientRequestId);
+        }
+
+        private void Initialize(string fileUri, string relativeUri, string clientRequestId)
         {
             Started = DateTime.Now;
             ClientRequestId = clientRequestId;
