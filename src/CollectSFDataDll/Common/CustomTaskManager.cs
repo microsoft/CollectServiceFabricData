@@ -109,7 +109,10 @@ namespace CollectSFData.Common
             if (!_isRunning)
             {
                 Log.Info("taskmanager resuming", ConsoleColor.White);
+                _allInstances.Clear();
+                _cancellationTokenSource = new CancellationTokenSource();
                 _taskMonitor = new Task(TaskMonitor);
+                _taskMonitor.Start();
                 Log.Info("taskmanager resumed", ConsoleColor.White);
                 _isRunning = true;
             }

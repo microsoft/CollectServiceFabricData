@@ -20,13 +20,14 @@ namespace CollectSFData.Common
             // set instances in static ctor
             if (_instance.Config == null)
             {
-                ReInitialize();
+                _instance.Config = new ConfigurationOptions();
+                Initialize();
             }
         }
 
-        public static void ReInitialize()
+        public static void Initialize()
         {
-            _instance.Config = new ConfigurationOptions();
+            //_instance.Config = new ConfigurationOptions();
             _instance.FileMgr = new FileManager();
             _instance.Kusto = new KustoConnection();
             _instance.LogAnalytics = new LogAnalyticsConnection();
@@ -38,6 +39,7 @@ namespace CollectSFData.Common
             _instance.TotalFilesFormatted = 0;
             _instance.TotalFilesMatched = 0;
             _instance.TotalFilesSkipped = 0;
+            _instance.TotalRecords = 0;
         }
 
         public static Instance Singleton()
