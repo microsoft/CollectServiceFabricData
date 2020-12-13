@@ -59,7 +59,7 @@ namespace CollectSFData.Kusto
             {
                 return this[index];
             }
-            
+
             return null;
         }
 
@@ -88,11 +88,13 @@ namespace CollectSFData.Kusto
 
     public class KustoQueueMessage : Constants, IEqualityComparer
     {
-        public DateTime Completed { get; set; } //= DateTime.MaxValue;
         public string ClientRequestId { get; set; } //= string.Empty;
+        public DateTime Failed { get; set; } //= DateTime.MaxValue;
         public string FileUri { get; set; } //= string.Empty;
         public string RelativeUri { get; set; } //= string.Empty;
-        public DateTime Started { get; set; } //= DateTime.MaxValue;
+        public DateTime Started { get; set; } = DateTime.MinValue;
+        public DateTime Succeeded { get; set; } //= DateTime.MaxValue;
+
         public KustoQueueMessage(string fileUri = null, string relativeUri = null, string clientRequestId = null)
         {
             Started = DateTime.Now;
@@ -101,7 +103,7 @@ namespace CollectSFData.Kusto
             RelativeUri = relativeUri;
         }
 
-        public bool CompareStrings(string self, string comparable)
+        private bool Compare(string self, string comparable)
         {
             if (!string.IsNullOrEmpty(self) & !string.IsNullOrEmpty(comparable))
             {
@@ -137,19 +139,19 @@ namespace CollectSFData.Kusto
             KustoQueueMessage qSelf = self as KustoQueueMessage;
             KustoQueueMessage qComparable = comparable as KustoQueueMessage;
 
-            if (CompareStrings(qSelf.ClientRequestId, qComparable.ClientRequestId))
+            if (Compare(qSelf.ClientRequestId, qComparable.ClientRequestId))
             {
                 Log.Debug("ClientRequestId match", comparable);
                 return true;
             }
 
-            if (CompareStrings(qSelf.FileUri, qComparable.FileUri))
+            if (Compare(qSelf.FileUri, qComparable.FileUri))
             {
                 Log.Debug("FileUri match", comparable);
                 return true;
             }
 
-            if (CompareStrings(qSelf.RelativeUri, qComparable.RelativeUri))
+            if (Compare(qSelf.RelativeUri, qComparable.RelativeUri))
             {
                 Log.Debug("RelativeUri match", comparable);
                 return true;
@@ -162,7 +164,7 @@ namespace CollectSFData.Kusto
 
         public int GetHashCode(object obj)
         {
-            int hashCode = ClientRequestId.GetHashCode() + FileUri.GetHashCode() + RelativeUri.GetHashCode();
+            int hashCode = (ClientRequestId.GetHashCode() + FileUri.GetHashCode() + RelativeUri.GetHashCode() + Started.GetHashCode()) / 4;
             Log.Debug($"hashCode {hashCode}");
             return hashCode;
         }
