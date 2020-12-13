@@ -41,23 +41,25 @@ namespace CollectSFData
         {
             try
             {
+                _noProgressTimer = new Timer(NoProgressCallback, null, 0, 60 * 1000);
                 Log.Open();
                 CustomTaskManager.Resume();
 
                 if (_initialized)
                 {
-                    Instance.ReInitialize();
+                    Instance.Initialize();
                 }
-
-                _initialized = true;
-                _noProgressTimer = new Timer(NoProgressCallback, null, 0, 60 * 1000);
-
-                if (!Config.PopulateConfig(args))
+                else
                 {
-                    Config.SaveConfigFile();
-                    return 1;
-                }
+                    _initialized = true;
 
+                    if (!Config.PopulateConfig(args))
+                    {
+                        Config.SaveConfigFile();
+                        return 1;
+                    }
+                }
+                
                 Log.Info($"version: {Version}");
                 _parallelConfig = new ParallelOptions { MaxDegreeOfParallelism = Config.Threads };
                 ServicePointManager.DefaultConnectionLimit = Config.Threads * MaxThreadMultiplier;

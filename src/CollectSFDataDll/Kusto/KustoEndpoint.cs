@@ -166,6 +166,10 @@ namespace CollectSFData.Kusto
             if (_kustoQueryClient == null)
             {
                 _kustoQueryClient = KustoClientFactory.CreateCslQueryProvider(ManagementConnection);
+            }
+
+            if (queryTimer == null)
+            {
                 queryTimer = new Timer(DisposeQueryClient, null, maxKustoClientTimeMs, maxKustoClientTimeMs);
             }
 
@@ -244,6 +248,10 @@ namespace CollectSFData.Kusto
             if (_kustoAdminClient == null)
             {
                 _kustoAdminClient = KustoClientFactory.CreateCslAdminProvider(ManagementConnection);
+            }
+
+            if (adminTimer == null)
+            {
                 adminTimer = new Timer(DisposeAdminClient, null, maxKustoClientTimeMs, maxKustoClientTimeMs);
             }
 
