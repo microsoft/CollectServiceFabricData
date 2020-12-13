@@ -383,6 +383,7 @@ namespace CollectSFData.Kusto
                     {
                         message = IngestFileObjectsPending.Item(uriFile);
                         message.Failed = DateTime.Now;
+                        message.KustoRestRecord = record;
 
                         Log.Error($"adding failedUri to _failIngestedUris[{IngestFileObjectsFailed.Count()}]: {uriFile}", record);
                         IngestFileObjectsFailed.Add(message);
@@ -438,7 +439,7 @@ namespace CollectSFData.Kusto
                     else
                     {
                         Log.Info($"adding relativeuri string to _ingestedUris[{IngestFileObjectsSucceeded.Count()}]: {uriFile}", ConsoleColor.Green);
-                        IngestFileObjectsSucceeded.Add(uriFile);
+                        IngestFileObjectsSucceeded.Add(relativeUri: uriFile);
                     }
                 }
             }
