@@ -41,7 +41,8 @@ namespace CollectSFData.Kusto
         {
             if (!string.IsNullOrEmpty(self) & !string.IsNullOrEmpty(comparable))
             {
-                if (self.Contains(comparable.TrimEnd(ZipExtension.ToCharArray())) | comparable.Contains(self.TrimEnd(ZipExtension.ToCharArray())))
+                if (self.ToLower().Contains(comparable.ToLower().TrimEnd(ZipExtension.ToCharArray())) 
+                    | comparable.ToLower().Contains(self.ToLower().TrimEnd(ZipExtension.ToCharArray())))
                 {
                     Log.Debug("match", comparable);
                     return true;
