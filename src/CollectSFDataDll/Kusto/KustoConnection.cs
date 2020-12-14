@@ -385,15 +385,15 @@ namespace CollectSFData.Kusto
                         message.Failed = DateTime.Now;
                         message.KustoRestRecord = record;
 
-                        Log.Error($"adding failedUri to _failIngestedUris[{IngestFileObjectsFailed.Count()}]: {uriFile}", record);
+                        Log.Error($"adding failedUri to IngestFileObjectsFailed[{IngestFileObjectsFailed.Count()}]: {uriFile}", record);
                         IngestFileObjectsFailed.Add(message);
 
-                        Log.Error($"removing failed ingested relativeuri from _messageList[{IngestFileObjectsPending.Count()}]: {message}");
+                        Log.Error($"removing failed ingested relativeuri from IngestFileObjectsPending[{IngestFileObjectsPending.Count()}]: {message}");
                         IngestFileObjectsPending.Remove(message);
                     }
                     else
                     {
-                        Log.Error($"adding failedUri string to _failIngestedUris[{IngestFileObjectsFailed.Count()}]: {uriFile}", record);
+                        Log.Error($"adding failedUri string to IngestFileObjectsFailed[{IngestFileObjectsFailed.Count()}]: {uriFile}", record);
                         IngestFileObjectsFailed.Add(relativeUri: uriFile);
                     }
 
@@ -430,15 +430,15 @@ namespace CollectSFData.Kusto
                         message = IngestFileObjectsPending.Item(uriFile);
                         message.Succeeded = DateTime.Now;
 
-                        Log.Info($"adding relativeuri to _ingestedUris[{IngestFileObjectsSucceeded.Count()}]: {uriFile}", ConsoleColor.Green);
+                        Log.Info($"adding relativeuri to IngestFileObjectsSucceeded[{IngestFileObjectsSucceeded.Count()}]: {uriFile}", ConsoleColor.Green);
                         IngestFileObjectsSucceeded.Add(message);
 
-                        Log.Info($"removing successful ingested relativeuri from _messageList[{IngestFileObjectsPending.Count()}]: {message}");
+                        Log.Info($"removing successful ingested relativeuri from IngestFileObjectsPending[{IngestFileObjectsPending.Count()}]: {message}");
                         IngestFileObjectsPending.Remove(message);
                     }
                     else
                     {
-                        Log.Info($"adding relativeuri string to _ingestedUris[{IngestFileObjectsSucceeded.Count()}]: {uriFile}", ConsoleColor.Green);
+                        Log.Info($"adding relativeuri string to IngestFileObjectsSucceeded[{IngestFileObjectsSucceeded.Count()}]: {uriFile}", ConsoleColor.Green);
                         IngestFileObjectsSucceeded.Add(relativeUri: uriFile);
                     }
                 }
