@@ -47,6 +47,7 @@ namespace CollectSFData
 
                 if (_initialized)
                 {
+                    _taskManager = new CustomTaskManager();
                     Instance.Initialize();
                 }
                 else
