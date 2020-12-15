@@ -13,13 +13,17 @@ namespace CollectSFData.Azure
 {
     public static class TokenCacheHelper
     {
-        public static readonly string CacheFilePath = $"{_appDataFolder}\\{_friendlyName}.msalcache.bin3";
+        public static readonly string CacheFilePath;
         private static readonly object _fileLock = new object();
-        private static string _appDataFolder = $"{Environment.GetEnvironmentVariable("LOCALAPPDATA")}\\{_friendlyName}";
-        private static string _friendlyName = Path.GetFileNameWithoutExtension(AppDomain.CurrentDomain.FriendlyName);
+        private static string _appDataFolder;
+        private static string _friendlyName;
 
         static TokenCacheHelper()
         {
+            _friendlyName = Path.GetFileNameWithoutExtension(AppDomain.CurrentDomain.FriendlyName);
+            _appDataFolder = $"{Environment.GetEnvironmentVariable("LOCALAPPDATA")}\\{_friendlyName}";
+            CacheFilePath = $"{_appDataFolder}\\{_friendlyName}.msalcache.bin3";
+
             try
             {
                 if (!Directory.Exists(_appDataFolder))
