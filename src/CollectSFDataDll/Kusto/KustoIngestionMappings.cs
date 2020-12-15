@@ -20,14 +20,14 @@ namespace CollectSFData.Kusto
     {
         private FileObject _fileObject;
 
+        public string ResourceUri { get; set; }
+
+        public bool SetConstants { get; set; }
+
         public KustoIngestionMappings(FileObject fileObject)
         {
             _fileObject = fileObject;
         }
-
-        public string ResourceUri { get; set; }
-
-        public bool SetConstants { get; set; }
 
         public IEnumerable<KustoCsvSchema> CounterSchema()
         {

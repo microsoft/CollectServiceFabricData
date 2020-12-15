@@ -23,19 +23,18 @@ namespace CollectSFData.LogAnalytics
     public class LogAnalyticsConnection : Constants
     {
         private readonly AzureResourceManager _arm = new AzureResourceManager();
-        private string _armAuthResource = "https://management.core.windows.net";
-        private Instance _instance = Instance.Singleton();
-        private ConfigurationOptions Config => _instance.Config;
         private readonly AzureResourceManager _laArm = new AzureResourceManager();
+        private string _armAuthResource = "https://management.core.windows.net";
         private LogAnalyticsWorkspaceModel _currentWorkspaceModelModel = new LogAnalyticsWorkspaceModel();
         private Http _httpClient = Http.ClientFactory();
         private SynchronizedList<string> _ingestedUris = new SynchronizedList<string>();
+        private Instance _instance = Instance.Singleton();
         private string _logAnalyticsApiVer = "api-version=2020-08-01";
         private string _logAnalyticsAuthResource = "https://api.loganalytics.io";
         private string _logAnalyticsCustomLogSuffix = ".ods.opinsights.azure.com/api/logs?api-version=2016-04-01";
         private string _logAnalyticsQueryEndpoint = "https://api.loganalytics.io/v1/workspaces/";
         private string _timeStampField = "";
-
+        private ConfigurationOptions Config => _instance.Config;
         private LogAnalyticsWorkspaceRecordResult CurrentWorkspace { get; set; }
 
         public void AddFile(FileObject fileObject)
@@ -96,107 +95,31 @@ namespace CollectSFData.LogAnalytics
             return true;
         }
 
-        private void ImportJson(FileObjectCollection fileObjectCollection)
+        private void Authenticate()
         {
-            fileObjectCollection.ForEach(x => ImportJson(x));
-        }
-
-        private void ImportJson(FileObject fileObject)
-        {
-            int retry = 0;
-
-            if (fileObject.Stream.Length < 1 && (!fileObject.FileUri.ToLower().EndsWith(JsonExtension) | !fileObject.Exists))
+            if (!_arm.IsAuthenticated)
             {
-                Log.Warning($"no json data to send: {fileObject.FileUri}");
-                return;
-            }
+                _arm.Scopes = new List<string>() { $"{_armAuthResource}//user_impersonation" };
 
-            while (!PostData(fileObject) & retry++ < RetryCount)
-            {
-                Log.Error($"error importing: {fileObject.FileUri} retry:{retry}");
-
-                if (retry == 1 && Config.LogDebug >= LoggingLevel.Verbose)
+                if (Config.IsClientIdConfigured())
                 {
-                    File.WriteAllBytes(fileObject.FileUri, fileObject.Stream.Get().ToArray());
-                    Log.Error($"json saved to {fileObject.FileUri}");
+                    _arm.Scopes = new List<string>() { $"{_armAuthResource}//.default" };
                 }
 
-                _instance.TotalErrors++;
+                _arm.Authenticate(false, _armAuthResource);
             }
-        }
 
-        private bool Purge()
-        {
-            /*
-                to clean workspaceModel, have to use rest and purge
-                has a 30 day sla!
-                informal testing was around 7 days
-                faster / easier to delete / recreate workspaceModel
-                https://docs.microsoft.com/en-us/azure/azure-monitor/platform/personal-data-mgmt#delete
-                https://docs.microsoft.com/en-us/rest/api/loganalytics/workspaces%202015-03-20/purge
-
-                While we expect the vast majority of purge operations to complete much quicker than our SLA,
-                 due to their heavy impact on the data platform used by Log Analytics, the formal SLA for the completion of purge operations is set at 30 days.
-            */
-
-            Http http = default(Http);
-
-            if (Config.LogAnalyticsPurge.ToLower() == "true")
+            if (!_laArm.IsAuthenticated)
             {
-                string purgeUrl = $"{ManagementAzureCom}{CurrentWorkspace.id}/purge?{_logAnalyticsApiVer}"; //api-version=2015-03-20";
+                _laArm.Scopes = new List<string>() { $"{_logAnalyticsAuthResource}//user_impersonation" };
 
-                Log.Warning($"deleting data for 'LogAnalyticsName':{Config.LogAnalyticsName}");
-                Log.Warning("Ctrl-C now if this is incorrect!");
-                Thread.Sleep(ThreadSleepMsWarning);
-
-                LogAnalyticsPurge logAnalyticsPurge = new LogAnalyticsPurge()
+                if (Config.IsClientIdConfigured())
                 {
-                    table = $"{Config.LogAnalyticsName}_CL", //"Usage",
-                    filters = new[]
-                    {
-                        new LogAnalyticsPurge.Filters()
-                        {
-                            column = "TimeGenerated",
-                            @operator = "<",
-                            value = DateTime.Now.ToString("o")
-                        }
-                    }
-                };
-
-                http = _arm.SendRequest(purgeUrl, HttpMethod.Post, JsonConvert.SerializeObject(logAnalyticsPurge));
-                string purgeStatusUrl = http.Response.Headers.GetValues("x-ms-status-location").First();
-                int count = 0;
-
-                if (!string.IsNullOrEmpty(purgeStatusUrl))
-                {
-                    while (count < RetryCount)
-                    {
-                        http = _arm.SendRequest(purgeStatusUrl);
-                        if (http.ResponseStreamJson.GetValue("status").ToString() == "completed")
-                        {
-                            Log.Info("complete", ConsoleColor.Green);
-                            break;
-                        }
-
-                        count++;
-                        Log.Info($"iteration: {count}");
-                        Thread.Sleep(ThreadSleepMs10000);
-                    }
+                    _laArm.Scopes = new List<string>() { $"{_logAnalyticsAuthResource}//.default" };
                 }
 
-                Log.Info("this may take a while as documented online for Log Analytics Purge", ConsoleColor.Green, ConsoleColor.DarkGray);
-                Log.Info($"use this url from ('x-ms-status-location') response header to check status of purge:\r\n{purgeStatusUrl}", ConsoleColor.Green, ConsoleColor.DarkGray);
+                _laArm.Authenticate(true, _logAnalyticsAuthResource);
             }
-            else
-            {
-                // check status of purge
-                Log.Info("checking status of purge request", ConsoleColor.Green);
-                http = _arm.SendRequest(Config.LogAnalyticsPurge);
-            }
-
-            Log.Info("response:", http.Success);
-
-            return true;
         }
 
         private string BuildSignature(string datestring, byte[] jsonBytes)
@@ -352,6 +275,35 @@ namespace CollectSFData.LogAnalytics
             return null;
         }
 
+        private void ImportJson(FileObjectCollection fileObjectCollection)
+        {
+            fileObjectCollection.ForEach(x => ImportJson(x));
+        }
+
+        private void ImportJson(FileObject fileObject)
+        {
+            int retry = 0;
+
+            if (fileObject.Stream.Length < 1 && (!fileObject.FileUri.ToLower().EndsWith(JsonExtension) | !fileObject.Exists))
+            {
+                Log.Warning($"no json data to send: {fileObject.FileUri}");
+                return;
+            }
+
+            while (!PostData(fileObject) & retry++ < RetryCount)
+            {
+                Log.Error($"error importing: {fileObject.FileUri} retry:{retry}");
+
+                if (retry == 1 && Config.LogDebug >= LoggingLevel.Verbose)
+                {
+                    File.WriteAllBytes(fileObject.FileUri, fileObject.Stream.Get().ToArray());
+                    Log.Error($"json saved to {fileObject.FileUri}");
+                }
+
+                _instance.TotalErrors++;
+            }
+        }
+
         private bool ParseWorkspaceResourceId(string workspaceResourceId)
         {
             Log.Info("enter");
@@ -441,7 +393,7 @@ namespace CollectSFData.LogAnalytics
 
                 if (!_httpClient.Success)
                 {
-                    if(displayError)
+                    if (displayError)
                     {
                         Log.Error("unsuccessful response:", _httpClient.Response);
                     }
@@ -464,33 +416,6 @@ namespace CollectSFData.LogAnalytics
             }
         }
 
-        private void Authenticate()
-        {
-            if (!_arm.IsAuthenticated)
-            {
-                _arm.Scopes = new List<string>() { $"{_armAuthResource}//user_impersonation" };
-
-                if (Config.IsClientIdConfigured())
-                {
-                    _arm.Scopes = new List<string>() { $"{_armAuthResource}//.default" };
-                }
-
-                _arm.Authenticate(false, _armAuthResource);
-            }
-
-            if (!_laArm.IsAuthenticated)
-            {
-                _laArm.Scopes = new List<string>() { $"{_logAnalyticsAuthResource}//user_impersonation" };
-
-                if (Config.IsClientIdConfigured())
-                {
-                    _laArm.Scopes = new List<string>() { $"{_logAnalyticsAuthResource}//.default" };
-                }
-
-                _laArm.Authenticate(true, _logAnalyticsAuthResource);
-            }
-        }
-
         private List<string> PostQueryList(string query, bool displayError = true)
         {
             LogAnalyticsQueryResults results = PostQuery(query, displayError);
@@ -506,6 +431,80 @@ namespace CollectSFData.LogAnalytics
 
             Log.Info($"list results:", ConsoleColor.DarkBlue, null, listResults);
             return listResults;
+        }
+
+        private bool Purge()
+        {
+            /*
+                to clean workspaceModel, have to use rest and purge
+                has a 30 day sla!
+                informal testing was around 7 days
+                faster / easier to delete / recreate workspaceModel
+                https://docs.microsoft.com/en-us/azure/azure-monitor/platform/personal-data-mgmt#delete
+                https://docs.microsoft.com/en-us/rest/api/loganalytics/workspaces%202015-03-20/purge
+
+                While we expect the vast majority of purge operations to complete much quicker than our SLA,
+                 due to their heavy impact on the data platform used by Log Analytics, the formal SLA for the completion of purge operations is set at 30 days.
+            */
+
+            Http http = default(Http);
+
+            if (Config.LogAnalyticsPurge.ToLower() == "true")
+            {
+                string purgeUrl = $"{ManagementAzureCom}{CurrentWorkspace.id}/purge?{_logAnalyticsApiVer}"; //api-version=2015-03-20";
+
+                Log.Warning($"deleting data for 'LogAnalyticsName':{Config.LogAnalyticsName}");
+                Log.Warning("Ctrl-C now if this is incorrect!");
+                Thread.Sleep(ThreadSleepMsWarning);
+
+                LogAnalyticsPurge logAnalyticsPurge = new LogAnalyticsPurge()
+                {
+                    table = $"{Config.LogAnalyticsName}_CL", //"Usage",
+                    filters = new[]
+                    {
+                        new LogAnalyticsPurge.Filters()
+                        {
+                            column = "TimeGenerated",
+                            @operator = "<",
+                            value = DateTime.Now.ToString("o")
+                        }
+                    }
+                };
+
+                http = _arm.SendRequest(purgeUrl, HttpMethod.Post, JsonConvert.SerializeObject(logAnalyticsPurge));
+                string purgeStatusUrl = http.Response.Headers.GetValues("x-ms-status-location").First();
+                int count = 0;
+
+                if (!string.IsNullOrEmpty(purgeStatusUrl))
+                {
+                    while (count < RetryCount)
+                    {
+                        http = _arm.SendRequest(purgeStatusUrl);
+                        if (http.ResponseStreamJson.GetValue("status").ToString() == "completed")
+                        {
+                            Log.Info("complete", ConsoleColor.Green);
+                            break;
+                        }
+
+                        count++;
+                        Log.Info($"iteration: {count}");
+                        Thread.Sleep(ThreadSleepMs10000);
+                    }
+                }
+
+                Log.Info("this may take a while as documented online for Log Analytics Purge", ConsoleColor.Green, ConsoleColor.DarkGray);
+                Log.Info($"use this url from ('x-ms-status-location') response header to check status of purge:\r\n{purgeStatusUrl}", ConsoleColor.Green, ConsoleColor.DarkGray);
+            }
+            else
+            {
+                // check status of purge
+                Log.Info("checking status of purge request", ConsoleColor.Green);
+                http = _arm.SendRequest(Config.LogAnalyticsPurge);
+            }
+
+            Log.Info("response:", http.Success);
+
+            return true;
         }
 
         private bool RecreateWorkspace()

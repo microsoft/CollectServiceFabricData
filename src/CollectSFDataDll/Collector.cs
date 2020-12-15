@@ -8,7 +8,6 @@ namespace CollectSFData
     using CollectSFData.Azure;
     using CollectSFData.Common;
     using CollectSFData.DataFile;
-    using CollectSFData.Kusto;
     using System;
     using System.Collections.Generic;
     using System.IO;
@@ -27,9 +26,12 @@ namespace CollectSFData
         private ParallelOptions _parallelConfig;
         private Tuple<int, int, int, int, int, int, int> _progressTuple = new Tuple<int, int, int, int, int, int, int>(0, 0, 0, 0, 0, 0, 0);
         private CustomTaskManager _taskManager = new CustomTaskManager(true);
+
         private ConfigurationOptions Config => Instance.Config;
+
         public Instance Instance { get; } = Instance.Singleton();
-        public Collector(string[] args,bool isConsole = false)
+
+        public Collector(string[] args, bool isConsole = false)
         {
             _args = args;
             Log.IsConsole = isConsole;
@@ -50,9 +52,9 @@ namespace CollectSFData
                     return 1;
                 }
 
-                if(uris?.Count > 0)
+                if (uris?.Count > 0)
                 {
-                    foreach(string uri in uris)
+                    foreach (string uri in uris)
                     {
                         QueueForIngest(new FileObject(fileUri: uri));
                     }
@@ -104,7 +106,6 @@ namespace CollectSFData
             }
         }
 
-
         public string DetermineClusterId()
         {
             string clusterId = string.Empty;
@@ -140,6 +141,45 @@ namespace CollectSFData
             }
 
             return clusterId;
+        }
+
+        public bool Initialize()
+        {
+            _noProgressTimer = new Timer(NoProgressCallback, null, 0, 60 * 1000);
+            Log.Open();
+            CustomTaskManager.Resume();
+
+            if (_initialized)
+            {
+                _taskManager = new CustomTaskManager();
+                Instance.Initialize();
+            }
+            else
+            {
+                _initialized = true;
+
+                if (!Config.PopulateConfig(_args))
+                {
+                    Config.SaveConfigFile();
+                    return false;
+                }
+            }
+
+            Log.Info($"version: {Version}");
+            _parallelConfig = new ParallelOptions { MaxDegreeOfParallelism = Config.Threads };
+            ServicePointManager.DefaultConnectionLimit = Config.Threads * MaxThreadMultiplier;
+            ServicePointManager.Expect100Continue = true;
+            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
+
+            ThreadPool.SetMinThreads(Config.Threads * MinThreadMultiplier, Config.Threads * MinThreadMultiplier);
+            ThreadPool.SetMaxThreads(Config.Threads * MaxThreadMultiplier, Config.Threads * MaxThreadMultiplier);
+
+            if (!InitializeKusto() | !InitializeLogAnalytics())
+            {
+                return false;
+            }
+
+            return true;
         }
 
         private void DownloadAzureData()
@@ -210,44 +250,6 @@ namespace CollectSFData
             return true;
         }
 
-        public bool Initialize()
-        {
-            _noProgressTimer = new Timer(NoProgressCallback, null, 0, 60 * 1000);
-            Log.Open();
-            CustomTaskManager.Resume();
-
-            if (_initialized)
-            {
-                _taskManager = new CustomTaskManager();
-                Instance.Initialize();
-            }
-            else
-            {
-                _initialized = true;
-
-                if (!Config.PopulateConfig(_args))
-                {
-                    Config.SaveConfigFile();
-                    return false;
-                }
-            }
-
-            Log.Info($"version: {Version}");
-            _parallelConfig = new ParallelOptions { MaxDegreeOfParallelism = Config.Threads };
-            ServicePointManager.DefaultConnectionLimit = Config.Threads * MaxThreadMultiplier;
-            ServicePointManager.Expect100Continue = true;
-            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
-
-            ThreadPool.SetMinThreads(Config.Threads * MinThreadMultiplier, Config.Threads * MinThreadMultiplier);
-            ThreadPool.SetMaxThreads(Config.Threads * MaxThreadMultiplier, Config.Threads * MaxThreadMultiplier);
-
-            if (!InitializeKusto() | !InitializeLogAnalytics())
-            {
-                return false;
-            }
-
-            return true;
-        }
         private bool InitializeLogAnalytics()
         {
             if (Config.IsLogAnalyticsConfigured() | Config.LogAnalyticsCreate | Config.IsLogAnalyticsPurgeRequested())
@@ -256,87 +258,6 @@ namespace CollectSFData
             }
 
             return true;
-        }
-
-        private void QueueForIngest(FileObject fileObject)
-        {
-            Log.Debug("enter");
-
-            if (Config.IsKustoConfigured() | Config.IsLogAnalyticsConfigured())
-            {
-                if (Config.IsKustoConfigured())
-                {
-                    _taskManager.QueueTaskAction(() => Instance.Kusto.AddFile(fileObject));
-                }
-
-                if (Config.IsLogAnalyticsConfigured())
-                {
-                    _taskManager.QueueTaskAction(() => Instance.LogAnalytics.AddFile(fileObject));
-                }
-            }
-            else
-            {
-                _taskManager.QueueTaskAction(() => Instance.FileMgr.ProcessFile(fileObject));
-            }
-        }
-
-        private void UploadCacheData()
-        {
-            Log.Info("enter");
-            List<string> files = new List<string>();
-
-            switch (Config.FileType)
-            {
-                case FileTypesEnum.counter:
-                    files = Directory.GetFiles(Config.CacheLocation, $"*{PerfCtrExtension}", SearchOption.AllDirectories).ToList();
-
-                    if (files.Count < 1)
-                    {
-                        files = Directory.GetFiles(Config.CacheLocation, $"*{PerfCsvExtension}", SearchOption.AllDirectories).ToList();
-                    }
-
-                    break;
-
-                case FileTypesEnum.setup:
-                    files = Directory.GetFiles(Config.CacheLocation, $"*{SetupExtension}", SearchOption.AllDirectories).ToList();
-
-                    break;
-
-                case FileTypesEnum.table:
-                    files = Directory.GetFiles(Config.CacheLocation, $"*{TableExtension}", SearchOption.AllDirectories).ToList();
-
-                    break;
-
-                case FileTypesEnum.trace:
-                    files = Directory.GetFiles(Config.CacheLocation, $"*{TraceFileExtension}{ZipExtension}", SearchOption.AllDirectories).ToList();
-
-                    if (files.Count < 1)
-                    {
-                        files = Directory.GetFiles(Config.CacheLocation, $"*{TraceFileExtension}", SearchOption.AllDirectories).ToList();
-                    }
-
-                    break;
-
-                default:
-                    Log.Warning($"invalid filetype for cache upload. returning {Config.FileType}");
-                    return;
-            }
-
-            if (files.Count < 1)
-            {
-                Log.Error($"configuration set to upload cache files from 'cachelocation' {Config.CacheLocation} but no files found");
-            }
-
-            foreach (string file in files)
-            {
-                FileObject fileObject = new FileObject(file, Config.CacheLocation);
-                Log.Info($"adding file: {fileObject.FileUri}", ConsoleColor.Green);
-
-                if (!Config.List)
-                {
-                    QueueForIngest(fileObject);
-                }
-            }
         }
 
         private void LogSummary()
@@ -424,6 +345,87 @@ namespace CollectSFData
             {
                 _noProgressCounter = 0;
                 _progressTuple = tuple;
+            }
+        }
+
+        private void QueueForIngest(FileObject fileObject)
+        {
+            Log.Debug("enter");
+
+            if (Config.IsKustoConfigured() | Config.IsLogAnalyticsConfigured())
+            {
+                if (Config.IsKustoConfigured())
+                {
+                    _taskManager.QueueTaskAction(() => Instance.Kusto.AddFile(fileObject));
+                }
+
+                if (Config.IsLogAnalyticsConfigured())
+                {
+                    _taskManager.QueueTaskAction(() => Instance.LogAnalytics.AddFile(fileObject));
+                }
+            }
+            else
+            {
+                _taskManager.QueueTaskAction(() => Instance.FileMgr.ProcessFile(fileObject));
+            }
+        }
+
+        private void UploadCacheData()
+        {
+            Log.Info("enter");
+            List<string> files = new List<string>();
+
+            switch (Config.FileType)
+            {
+                case FileTypesEnum.counter:
+                    files = Directory.GetFiles(Config.CacheLocation, $"*{PerfCtrExtension}", SearchOption.AllDirectories).ToList();
+
+                    if (files.Count < 1)
+                    {
+                        files = Directory.GetFiles(Config.CacheLocation, $"*{PerfCsvExtension}", SearchOption.AllDirectories).ToList();
+                    }
+
+                    break;
+
+                case FileTypesEnum.setup:
+                    files = Directory.GetFiles(Config.CacheLocation, $"*{SetupExtension}", SearchOption.AllDirectories).ToList();
+
+                    break;
+
+                case FileTypesEnum.table:
+                    files = Directory.GetFiles(Config.CacheLocation, $"*{TableExtension}", SearchOption.AllDirectories).ToList();
+
+                    break;
+
+                case FileTypesEnum.trace:
+                    files = Directory.GetFiles(Config.CacheLocation, $"*{TraceFileExtension}{ZipExtension}", SearchOption.AllDirectories).ToList();
+
+                    if (files.Count < 1)
+                    {
+                        files = Directory.GetFiles(Config.CacheLocation, $"*{TraceFileExtension}", SearchOption.AllDirectories).ToList();
+                    }
+
+                    break;
+
+                default:
+                    Log.Warning($"invalid filetype for cache upload. returning {Config.FileType}");
+                    return;
+            }
+
+            if (files.Count < 1)
+            {
+                Log.Error($"configuration set to upload cache files from 'cachelocation' {Config.CacheLocation} but no files found");
+            }
+
+            foreach (string file in files)
+            {
+                FileObject fileObject = new FileObject(file, Config.CacheLocation);
+                Log.Info($"adding file: {fileObject.FileUri}", ConsoleColor.Green);
+
+                if (!Config.List)
+                {
+                    QueueForIngest(fileObject);
+                }
             }
         }
     }
