@@ -37,36 +37,59 @@ namespace CollectSFData.Kusto
 
     public class KustoEndpoint : Constants
     {
-        private Instance _instance = Instance.Singleton();
-        private ConfigurationOptions Config => _instance.Config;
         private static ICslAdminProvider _kustoAdminClient;
         private static ICslQueryProvider _kustoQueryClient;
         private static int maxKustoClientTimeMs = 300 * 1000;
         private AzureResourceManager _arm = new AzureResourceManager();
         private Http _httpClient = Http.ClientFactory();
+        private Instance _instance = Instance.Singleton();
 
         public string ClusterIngestUrl { get; set; }
+
         public string ClusterName { get; private set; }
+
+        private ConfigurationOptions Config => _instance.Config;
+
         public string Cursor { get; set; } = "''";
+
         public KustoConnectionStringBuilder DatabaseConnection { get; set; }
+
         public string DatabaseName { get; set; }
+
         public bool DeleteSourceOnSuccess { get; set; }
+
         public KustoRestTable ExtendedPropertiesTable { get; private set; } = new KustoRestTable();
+
         public List<string> ExtendedResults { get; private set; }
+
         public string HostName { get; private set; }
+
         public string IdentityToken { get; private set; }
+
         public IngestionResourcesSnapshot IngestionResources { get; private set; }
+
         public bool LogLargeResults { get; set; } = true;
+
         public string ManagementUrl { get; private set; }
+
         public KustoRestTable PrimaryResultTable { get; private set; } = new KustoRestTable();
+
         public KustoRestResponseV1 ResponseDataSet { get; private set; } = new KustoRestResponseV1();
+
         public string RestMgmtUri { get; private set; }
+
         public string RestQueryUri { get; private set; }
+
         public string TableName { get; private set; }
+
         public KustoRestTableOfContentsV1 TableOfContents { get; private set; } = new KustoRestTableOfContentsV1();
-        private Timer adminTimer { get; set; } // = new Timer(DisposeClient, kustoAdminClient, maxKustoClientTimeMs, maxKustoClientTimeMs);
+
+        private Timer adminTimer { get; set; }
+
+        // = new Timer(DisposeClient, kustoAdminClient, maxKustoClientTimeMs, maxKustoClientTimeMs);
         private KustoConnectionStringBuilder ManagementConnection { get; set; }
-        private Timer queryTimer { get; set; } // = new Timer(DisposeClient, kustoQueryClient, maxKustoClientTimeMs, maxKustoClientTimeMs);
+
+        private Timer queryTimer { get; set; }
 
         public KustoEndpoint()
         {
@@ -102,6 +125,8 @@ namespace CollectSFData.Kusto
             }
         }
 
+        // = new Timer(DisposeClient, kustoQueryClient, maxKustoClientTimeMs, maxKustoClientTimeMs);
+
         public void Authenticate(bool throwOnError = false)
         {
             _arm.Scopes = new List<string>() { $"{ClusterIngestUrl}/kusto.read", $"{ClusterIngestUrl}/kusto.write" };
@@ -124,6 +149,23 @@ namespace CollectSFData.Kusto
 
             IdentityToken = RetrieveKustoIdentityToken();
             IngestionResources = RetrieveIngestionResources();
+        }
+
+        public List<string> Command(string command)
+        {
+            Log.Info($"command:{command}", ConsoleColor.Blue);
+            if (_kustoAdminClient == null)
+            {
+                _kustoAdminClient = KustoClientFactory.CreateCslAdminProvider(ManagementConnection);
+            }
+
+            if (adminTimer == null)
+            {
+                adminTimer = new Timer(DisposeAdminClient, null, maxKustoClientTimeMs, maxKustoClientTimeMs);
+            }
+
+            adminTimer.Change(maxKustoClientTimeMs, maxKustoClientTimeMs);
+            return EnumerateResults(_kustoAdminClient.ExecuteControlCommand(command));
         }
 
         public bool CreateTable(string tableName, string tableSchema)
@@ -240,23 +282,6 @@ namespace CollectSFData.Kusto
                 _kustoQueryClient.Dispose();
                 _kustoQueryClient = null;
             }
-        }
-
-        public List<string> Command(string command)
-        {
-            Log.Info($"command:{command}", ConsoleColor.Blue);
-            if (_kustoAdminClient == null)
-            {
-                _kustoAdminClient = KustoClientFactory.CreateCslAdminProvider(ManagementConnection);
-            }
-
-            if (adminTimer == null)
-            {
-                adminTimer = new Timer(DisposeAdminClient, null, maxKustoClientTimeMs, maxKustoClientTimeMs);
-            }
-
-            adminTimer.Change(maxKustoClientTimeMs, maxKustoClientTimeMs);
-            return EnumerateResults(_kustoAdminClient.ExecuteControlCommand(command));
         }
 
         private List<string> EnumerateResults(ProgressiveDataSet reader)

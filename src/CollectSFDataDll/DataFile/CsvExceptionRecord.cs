@@ -13,15 +13,6 @@ namespace CollectSFData.DataFile
     {
         private const int _fieldCount = 3;
 
-        public CsvExceptionRecord()
-        {
-        }
-
-        public CsvExceptionRecord(string traceRecord, FileObject fileObject, string resourceUri = null)
-        {
-            Populate(fileObject, traceRecord, resourceUri);
-        }
-
         public string FileType { get; set; }
 
         public string Level { get; set; }
@@ -41,6 +32,15 @@ namespace CollectSFData.DataFile
         public DateTime Timestamp { get; set; }
 
         public string Type { get; set; }
+
+        public CsvExceptionRecord()
+        {
+        }
+
+        public CsvExceptionRecord(string traceRecord, FileObject fileObject, string resourceUri = null)
+        {
+            Populate(fileObject, traceRecord, resourceUri);
+        }
 
         public IRecord Populate(FileObject fileObject, string traceRecord, string resourceUri = null)
         {

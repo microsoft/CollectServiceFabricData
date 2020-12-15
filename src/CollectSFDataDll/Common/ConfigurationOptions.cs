@@ -31,19 +31,6 @@ namespace CollectSFData.Common
         private string _tempPath;
         private int _threads;
 
-        public ConfigurationOptions()
-        {
-            _cmdLineArgs.CmdLineApp.OnExecute(() => MergeCmdLine());
-            _cmdLineArgs.InitFromCmdLine();
-
-            DateTimeOffset defaultOffset = DateTimeOffset.Now;
-            StartTimeUtc = defaultOffset.UtcDateTime.AddHours(DefaultStartTimeHours);
-            _startTime = defaultOffset.AddHours(DefaultStartTimeHours).ToString(DefaultDatePattern);
-            EndTimeUtc = defaultOffset.UtcDateTime;
-            _endTime = defaultOffset.ToString(DefaultDatePattern);
-            DefaultConfig();
-        }
-
         public string AzureClientId { get; set; }
 
         public string AzureClientSecret { get; set; }
@@ -204,14 +191,17 @@ namespace CollectSFData.Common
 
         public bool VersionOption { get; set; }
 
-        private static FileTypesEnum ConvertFileType(string fileTypeString)
+        public ConfigurationOptions()
         {
-            if (string.IsNullOrEmpty(fileTypeString) || !Enum.TryParse(fileTypeString.ToLower(), out FileTypesEnum fileType))
-            {
-                return FileTypesEnum.unknown;
-            }
+            _cmdLineArgs.CmdLineApp.OnExecute(() => MergeCmdLine());
+            _cmdLineArgs.InitFromCmdLine();
 
-            return fileType;
+            DateTimeOffset defaultOffset = DateTimeOffset.Now;
+            StartTimeUtc = defaultOffset.UtcDateTime.AddHours(DefaultStartTimeHours);
+            _startTime = defaultOffset.AddHours(DefaultStartTimeHours).ToString(DefaultDatePattern);
+            EndTimeUtc = defaultOffset.UtcDateTime;
+            _endTime = defaultOffset.ToString(DefaultDatePattern);
+            DefaultConfig();
         }
 
         public void CheckReleaseVersion()
@@ -243,19 +233,6 @@ namespace CollectSFData.Common
             {
                 Log.Last(response);
             }
-        }
-
-
-        private bool DefaultConfig()
-        {
-            if (File.Exists(DefaultOptionsFile))
-            {
-                MergeConfig(DefaultOptionsFile);
-                _defaultConfigLoaded = true;
-                return true;
-            }
-
-            return false;
         }
 
         public void DisplayStatus()
@@ -328,6 +305,100 @@ namespace CollectSFData.Common
         public bool IsLogAnalyticsPurgeRequested()
         {
             return !string.IsNullOrEmpty(LogAnalyticsPurge);
+        }
+
+        public void MergeConfig(string optionsFile)
+        {
+            JObject fileOptions = ReadConfigFile(optionsFile);
+            MergeConfig(fileOptions);
+        }
+
+        public void MergeConfig(ConfigurationOptions configurationOptions)
+        {
+            JObject options = JObject.FromObject(configurationOptions);
+            MergeConfig(options);
+        }
+
+        public void MergeConfig(JObject fileOptions)
+        {
+            object instanceValue = null;
+
+            if (fileOptions == null || !fileOptions.HasValues)
+            {
+                Log.Error($"empty options:", fileOptions);
+                throw new ArgumentException();
+            }
+
+            PropertyInfo[] instanceProperties = InstanceProperties();
+
+            foreach (KeyValuePair<string, JToken> fileOption in fileOptions)
+            {
+                Log.Debug($"JObject config option:{fileOption.Key}");
+
+                if (!instanceProperties.Any(x => Regex.IsMatch(x.Name, fileOption.Key.Replace("$", ""), RegexOptions.IgnoreCase)))
+                {
+                    Log.Error($"unknown config file option:{fileOption.Key}");
+                }
+            }
+
+            foreach (PropertyInfo instanceProperty in instanceProperties)
+            {
+                if (!fileOptions.ToObject<Dictionary<string, JToken>>().Any(x => Regex.IsMatch(x.Key, instanceProperty.Name, RegexOptions.IgnoreCase)))
+                {
+                    Log.Debug($"instance option not found in file:{instanceProperty.Name}");
+                    continue;
+                }
+
+                JToken token = fileOptions.ToObject<Dictionary<string, JToken>>()
+                    .First(x => Regex.IsMatch(x.Key, instanceProperty.Name, RegexOptions.IgnoreCase)).Value;
+                Log.Debug($"token:{token.Type}");
+
+                switch (token.Type)
+                {
+                    case JTokenType.Null:
+                        instanceValue = null;
+                        break;
+
+                    case JTokenType.Boolean:
+                        instanceValue = token.Value<bool>();
+                        break;
+
+                    case JTokenType.Integer:
+                        instanceValue = token.Value<int>();
+                        break;
+
+                    case JTokenType.String:
+                        instanceValue = token.Value<string>();
+                        break;
+
+                    case JTokenType.Uri:
+                        instanceValue = token.Value<string>();
+                        break;
+
+                    case JTokenType.Date:
+                        // issue with date and datetimeoffset
+                        if (instanceProperty.PropertyType.Equals(typeof(string)))
+                        {
+                            instanceValue = token.Value<string>();
+                        }
+                        else
+                        {
+                            instanceValue = token.ToObject<DateTimeOffset>();
+                        }
+
+                        break;
+
+                    case JTokenType.Guid:
+                        instanceValue = token.Value<string>();
+                        break;
+
+                    default:
+                        Log.Debug($"jtoken type unknown:{token}");
+                        continue;
+                }
+
+                SetPropertyValue(instanceProperty, instanceValue);
+            }
         }
 
         public bool PopulateConfig(string[] args)
@@ -452,307 +523,6 @@ namespace CollectSFData.Common
 
             File.WriteAllText(SaveConfiguration, options.ToString());
             Log.Info($"configuration file saved to: {SaveConfiguration}", ConsoleColor.Green);
-        }
-
-        private void CheckCache()
-        {
-            if (!IsCacheLocationPreConfigured())
-            {
-                CacheLocation = _tempPath;
-            }
-
-            CacheLocation = FileManager.NormalizePath(CacheLocation);
-
-            if (!Directory.Exists(CacheLocation))
-            {
-                Directory.CreateDirectory(CacheLocation);
-            }
-            else if (Directory.Exists(CacheLocation)
-                & Directory.GetFileSystemEntries(CacheLocation).Length > 0
-                & DeleteCache
-                & SasEndpointInfo.IsPopulated())
-            {
-                // add working dir to outputlocation so it can be deleted
-                string workDirPath = $"{CacheLocation}{Path.DirectorySeparatorChar}{Path.GetFileName(Path.GetTempFileName())}";
-                Log.Warning($"outputlocation not empty and DeleteCache is enabled, creating work subdir {workDirPath}");
-
-                if (!Directory.Exists(workDirPath))
-                {
-                    Directory.CreateDirectory(workDirPath);
-                }
-
-                Log.Info($"setting output location to: {workDirPath}");
-                CacheLocation = FileManager.NormalizePath(workDirPath);
-            }
-
-            if (!UseMemoryStream && !CacheLocation.StartsWith("\\\\"))
-            {
-                DriveInfo drive = DriveInfo.GetDrives().FirstOrDefault(x => String.Equals(x.Name, Path.GetPathRoot(CacheLocation), StringComparison.OrdinalIgnoreCase));
-                if (drive != null && drive.AvailableFreeSpace < ((long)1024 * 1024 * 1024 * 100))
-                {
-                    Log.Warning($"available free space in {CacheLocation} is less than 100 GB");
-                }
-            }
-
-            if (DeleteCache & !SasEndpointInfo.IsPopulated())
-            {
-                Log.Warning($"setting 'DeleteCache' is set to true but no sas information provided.\r\nfiles will be deleted at exit!\r\nctrl-c now if this incorrect.");
-                Thread.Sleep(ThreadSleepMsWarning);
-            }
-        }
-
-        private void CheckLogFile()
-        {
-            if (!string.IsNullOrEmpty(LogFile))
-            {
-                Log.LogFile = FileManager.NormalizePath(LogFile);
-                Log.Info($"setting output log file to: {LogFile}");
-            }
-        }
-
-        private PropertyInfo[] InstanceProperties()
-        {
-            return GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public);
-        }
-
-        private int MergeCmdLine()
-        {
-            try
-            {
-                PropertyInfo[] instanceProperties = InstanceProperties();
-                PropertyInfo[] argumentProperties = _cmdLineArgs.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public)
-                    .Where(x => x.PropertyType == typeof(CommandOption)).ToArray();
-
-                foreach (PropertyInfo argumentProperty in argumentProperties)
-                {
-                    if (!instanceProperties.Any(x => x.Name.Equals(argumentProperty.Name)))
-                    {
-                        Log.Debug($"options / arguments properties mismatch: {argumentProperty.Name}");
-                        throw new Exception($"options / arguments properties mismatch:{argumentProperty.Name}");
-                    }
-
-                    if (!((CommandOption)argumentProperty.GetValue(_cmdLineArgs)).HasValue())
-                    {
-                        Log.Debug($"empty / null argument value. skipping: {argumentProperty.Name}");
-                        continue;
-                    }
-
-                    PropertyInfo instanceProperty = instanceProperties.First(x => x.Name.Equals(argumentProperty.Name));
-                    object instanceValue = ((CommandOption)argumentProperty.GetValue(_cmdLineArgs)).Value();
-                    Log.Debug($"argumentProperty: {argumentProperty.Name}");
-                    Log.Debug($"instanceProperty: {instanceProperty.Name}");
-
-                    if (instanceProperty.PropertyType == typeof(string))
-                    {
-                        SetPropertyValue(instanceProperty, instanceValue.ToString());
-                    }
-                    else if (instanceProperty.PropertyType == typeof(int))
-                    {
-                        SetPropertyValue(instanceProperty, Convert.ToInt32(instanceValue));
-                    }
-                    else if (instanceProperty.PropertyType == typeof(bool))
-                    {
-                        bool value = false;
-
-                        if (Regex.IsMatch(instanceValue.ToString(), TrueStringPattern, RegexOptions.IgnoreCase))
-                        {
-                            value = true;
-                        }
-                        else if (!Regex.IsMatch(instanceValue.ToString(), FalseStringPattern, RegexOptions.IgnoreCase))
-                        {
-                            string error = $"{instanceProperty.Name} bool argument values on command line should either be {TrueStringPattern} or {FalseStringPattern}";
-                            throw new ArgumentException(error);
-                        }
-
-                        SetPropertyValue(instanceProperty, value);
-                    }
-                    else
-                    {
-                        Log.Error($"undefined property type:", argumentProperty);
-                        throw new Exception($"undefined property type:{argumentProperty.Name}");
-                    }
-                }
-
-                if (Examples)
-                {
-                    _cmdLineArgs.DisplayExamples();
-                    return 0;
-                }
-
-                return 1;
-            }
-            catch (Exception e)
-            {
-                Log.Exception($"{e}");
-                return 0;
-            }
-        }
-
-        public void MergeConfig(string optionsFile)
-        {
-            JObject fileOptions = ReadConfigFile(optionsFile);
-            MergeConfig(fileOptions);
-        }
-
-        public void MergeConfig(ConfigurationOptions configurationOptions)
-        {
-            JObject options = JObject.FromObject(configurationOptions);
-            MergeConfig(options);
-        }
-
-        public void MergeConfig(JObject fileOptions)
-        {
-            object instanceValue = null;
-
-            if (fileOptions == null || !fileOptions.HasValues)
-            {
-                Log.Error($"empty options:", fileOptions);
-                throw new ArgumentException();
-            }
-
-            PropertyInfo[] instanceProperties = InstanceProperties();
-
-            foreach (KeyValuePair<string, JToken> fileOption in fileOptions)
-            {
-                Log.Debug($"JObject config option:{fileOption.Key}");
-
-                if (!instanceProperties.Any(x => Regex.IsMatch(x.Name, fileOption.Key.Replace("$", ""), RegexOptions.IgnoreCase)))
-                {
-                    Log.Error($"unknown config file option:{fileOption.Key}");
-                }
-            }
-
-            foreach (PropertyInfo instanceProperty in instanceProperties)
-            {
-                if (!fileOptions.ToObject<Dictionary<string, JToken>>().Any(x => Regex.IsMatch(x.Key, instanceProperty.Name, RegexOptions.IgnoreCase)))
-                {
-                    Log.Debug($"instance option not found in file:{instanceProperty.Name}");
-                    continue;
-                }
-
-                JToken token = fileOptions.ToObject<Dictionary<string, JToken>>()
-                    .First(x => Regex.IsMatch(x.Key, instanceProperty.Name, RegexOptions.IgnoreCase)).Value;
-                Log.Debug($"token:{token.Type}");
-
-                switch (token.Type)
-                {
-                    case JTokenType.Null:
-                        instanceValue = null;
-                        break;
-
-                    case JTokenType.Boolean:
-                        instanceValue = token.Value<bool>();
-                        break;
-
-                    case JTokenType.Integer:
-                        instanceValue = token.Value<int>();
-                        break;
-
-                    case JTokenType.String:
-                        instanceValue = token.Value<string>();
-                        break;
-
-                    case JTokenType.Uri:
-                        instanceValue = token.Value<string>();
-                        break;
-
-                    case JTokenType.Date:
-                        // issue with date and datetimeoffset
-                        if (instanceProperty.PropertyType.Equals(typeof(string)))
-                        {
-                            instanceValue = token.Value<string>();
-                        }
-                        else
-                        {
-                            instanceValue = token.ToObject<DateTimeOffset>();
-                        }
-
-                        break;
-
-                    case JTokenType.Guid:
-                        instanceValue = token.Value<string>();
-                        break;
-
-                    default:
-                        Log.Debug($"jtoken type unknown:{token}");
-                        continue;
-                }
-
-                SetPropertyValue(instanceProperty, instanceValue);
-            }
-        }
-
-        private bool ParseCmdLine(string[] args)
-        {
-            try
-            {
-                // can only be called once
-                if (_cmdLineArgs.CmdLineApp.Execute(args) == 0)
-                {
-                    return false;
-                }
-
-                return true;
-            }
-            catch (Exception e)
-            {
-                Log.Exception($"{e}");
-                Log.Last(_cmdLineArgs.CmdLineApp.GetHelpText());
-                return false;
-            }
-        }
-
-        private JObject ReadConfigFile(string configFile)
-        {
-            JObject options = new JObject();
-
-            try
-            {
-                Log.Info($"reading {configFile}", ConsoleColor.Yellow);
-                options = (JObject)JsonConvert.DeserializeObject(File.ReadAllText(configFile));
-                Log.Info($"options results:", options);
-                return options;
-            }
-            catch (Exception e)
-            {
-                Log.Exception($"returning default options: exception:{e}");
-                return options;
-            }
-        }
-
-        private void SetPropertyValue(PropertyInfo propertyInstance, object instanceValue)
-        {
-            object thisValue = propertyInstance.GetValue(this);
-            Log.Debug($"checking:{propertyInstance.Name}:{thisValue} -> {instanceValue}");
-
-            if ((thisValue != null && thisValue.Equals(instanceValue))
-                | (thisValue == null & instanceValue == null))
-            {
-                Log.Debug("value same. skipping.");
-                return;
-            }
-
-            if (propertyInstance.CanWrite)
-            {
-                try
-                {
-                    propertyInstance.SetValue(this, instanceValue);
-                    Log.Highlight($"set:{propertyInstance.Name}:{thisValue} -> {instanceValue}");
-                }
-                catch (Exception e)
-                {
-                    Log.Exception($"exception modifying:{propertyInstance.Name} {thisValue} -> {instanceValue}", e);
-                }
-            }
-            else
-            {
-                Log.Debug($"property not writable:{propertyInstance.Name}");
-            }
-        }
-
-        private ConfigurationOptions ShallowCopy()
-        {
-            return (ConfigurationOptions)MemberwiseClone();
         }
 
         public bool Validate()
@@ -975,6 +745,235 @@ namespace CollectSFData.Common
             }
 
             return retval;
+        }
+
+        private static FileTypesEnum ConvertFileType(string fileTypeString)
+        {
+            if (string.IsNullOrEmpty(fileTypeString) || !Enum.TryParse(fileTypeString.ToLower(), out FileTypesEnum fileType))
+            {
+                return FileTypesEnum.unknown;
+            }
+
+            return fileType;
+        }
+
+        private void CheckCache()
+        {
+            if (!IsCacheLocationPreConfigured())
+            {
+                CacheLocation = _tempPath;
+            }
+
+            CacheLocation = FileManager.NormalizePath(CacheLocation);
+
+            if (!Directory.Exists(CacheLocation))
+            {
+                Directory.CreateDirectory(CacheLocation);
+            }
+            else if (Directory.Exists(CacheLocation)
+                & Directory.GetFileSystemEntries(CacheLocation).Length > 0
+                & DeleteCache
+                & SasEndpointInfo.IsPopulated())
+            {
+                // add working dir to outputlocation so it can be deleted
+                string workDirPath = $"{CacheLocation}{Path.DirectorySeparatorChar}{Path.GetFileName(Path.GetTempFileName())}";
+                Log.Warning($"outputlocation not empty and DeleteCache is enabled, creating work subdir {workDirPath}");
+
+                if (!Directory.Exists(workDirPath))
+                {
+                    Directory.CreateDirectory(workDirPath);
+                }
+
+                Log.Info($"setting output location to: {workDirPath}");
+                CacheLocation = FileManager.NormalizePath(workDirPath);
+            }
+
+            if (!UseMemoryStream && !CacheLocation.StartsWith("\\\\"))
+            {
+                DriveInfo drive = DriveInfo.GetDrives().FirstOrDefault(x => String.Equals(x.Name, Path.GetPathRoot(CacheLocation), StringComparison.OrdinalIgnoreCase));
+                if (drive != null && drive.AvailableFreeSpace < ((long)1024 * 1024 * 1024 * 100))
+                {
+                    Log.Warning($"available free space in {CacheLocation} is less than 100 GB");
+                }
+            }
+
+            if (DeleteCache & !SasEndpointInfo.IsPopulated())
+            {
+                Log.Warning($"setting 'DeleteCache' is set to true but no sas information provided.\r\nfiles will be deleted at exit!\r\nctrl-c now if this incorrect.");
+                Thread.Sleep(ThreadSleepMsWarning);
+            }
+        }
+
+        private void CheckLogFile()
+        {
+            if (!string.IsNullOrEmpty(LogFile))
+            {
+                Log.LogFile = FileManager.NormalizePath(LogFile);
+                Log.Info($"setting output log file to: {LogFile}");
+            }
+        }
+
+        private bool DefaultConfig()
+        {
+            if (File.Exists(DefaultOptionsFile))
+            {
+                MergeConfig(DefaultOptionsFile);
+                _defaultConfigLoaded = true;
+                return true;
+            }
+
+            return false;
+        }
+
+        private PropertyInfo[] InstanceProperties()
+        {
+            return GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public);
+        }
+
+        private int MergeCmdLine()
+        {
+            try
+            {
+                PropertyInfo[] instanceProperties = InstanceProperties();
+                PropertyInfo[] argumentProperties = _cmdLineArgs.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public)
+                    .Where(x => x.PropertyType == typeof(CommandOption)).ToArray();
+
+                foreach (PropertyInfo argumentProperty in argumentProperties)
+                {
+                    if (!instanceProperties.Any(x => x.Name.Equals(argumentProperty.Name)))
+                    {
+                        Log.Debug($"options / arguments properties mismatch: {argumentProperty.Name}");
+                        throw new Exception($"options / arguments properties mismatch:{argumentProperty.Name}");
+                    }
+
+                    if (!((CommandOption)argumentProperty.GetValue(_cmdLineArgs)).HasValue())
+                    {
+                        Log.Debug($"empty / null argument value. skipping: {argumentProperty.Name}");
+                        continue;
+                    }
+
+                    PropertyInfo instanceProperty = instanceProperties.First(x => x.Name.Equals(argumentProperty.Name));
+                    object instanceValue = ((CommandOption)argumentProperty.GetValue(_cmdLineArgs)).Value();
+                    Log.Debug($"argumentProperty: {argumentProperty.Name}");
+                    Log.Debug($"instanceProperty: {instanceProperty.Name}");
+
+                    if (instanceProperty.PropertyType == typeof(string))
+                    {
+                        SetPropertyValue(instanceProperty, instanceValue.ToString());
+                    }
+                    else if (instanceProperty.PropertyType == typeof(int))
+                    {
+                        SetPropertyValue(instanceProperty, Convert.ToInt32(instanceValue));
+                    }
+                    else if (instanceProperty.PropertyType == typeof(bool))
+                    {
+                        bool value = false;
+
+                        if (Regex.IsMatch(instanceValue.ToString(), TrueStringPattern, RegexOptions.IgnoreCase))
+                        {
+                            value = true;
+                        }
+                        else if (!Regex.IsMatch(instanceValue.ToString(), FalseStringPattern, RegexOptions.IgnoreCase))
+                        {
+                            string error = $"{instanceProperty.Name} bool argument values on command line should either be {TrueStringPattern} or {FalseStringPattern}";
+                            throw new ArgumentException(error);
+                        }
+
+                        SetPropertyValue(instanceProperty, value);
+                    }
+                    else
+                    {
+                        Log.Error($"undefined property type:", argumentProperty);
+                        throw new Exception($"undefined property type:{argumentProperty.Name}");
+                    }
+                }
+
+                if (Examples)
+                {
+                    _cmdLineArgs.DisplayExamples();
+                    return 0;
+                }
+
+                return 1;
+            }
+            catch (Exception e)
+            {
+                Log.Exception($"{e}");
+                return 0;
+            }
+        }
+
+        private bool ParseCmdLine(string[] args)
+        {
+            try
+            {
+                // can only be called once
+                if (_cmdLineArgs.CmdLineApp.Execute(args) == 0)
+                {
+                    return false;
+                }
+
+                return true;
+            }
+            catch (Exception e)
+            {
+                Log.Exception($"{e}");
+                Log.Last(_cmdLineArgs.CmdLineApp.GetHelpText());
+                return false;
+            }
+        }
+
+        private JObject ReadConfigFile(string configFile)
+        {
+            JObject options = new JObject();
+
+            try
+            {
+                Log.Info($"reading {configFile}", ConsoleColor.Yellow);
+                options = (JObject)JsonConvert.DeserializeObject(File.ReadAllText(configFile));
+                Log.Info($"options results:", options);
+                return options;
+            }
+            catch (Exception e)
+            {
+                Log.Exception($"returning default options: exception:{e}");
+                return options;
+            }
+        }
+
+        private void SetPropertyValue(PropertyInfo propertyInstance, object instanceValue)
+        {
+            object thisValue = propertyInstance.GetValue(this);
+            Log.Debug($"checking:{propertyInstance.Name}:{thisValue} -> {instanceValue}");
+
+            if ((thisValue != null && thisValue.Equals(instanceValue))
+                | (thisValue == null & instanceValue == null))
+            {
+                Log.Debug("value same. skipping.");
+                return;
+            }
+
+            if (propertyInstance.CanWrite)
+            {
+                try
+                {
+                    propertyInstance.SetValue(this, instanceValue);
+                    Log.Highlight($"set:{propertyInstance.Name}:{thisValue} -> {instanceValue}");
+                }
+                catch (Exception e)
+                {
+                    Log.Exception($"exception modifying:{propertyInstance.Name} {thisValue} -> {instanceValue}", e);
+                }
+            }
+            else
+            {
+                Log.Debug($"property not writable:{propertyInstance.Name}");
+            }
+        }
+
+        private ConfigurationOptions ShallowCopy()
+        {
+            return (ConfigurationOptions)MemberwiseClone();
         }
     }
 }
