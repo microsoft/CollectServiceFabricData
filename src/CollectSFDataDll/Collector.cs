@@ -35,7 +35,7 @@ namespace CollectSFData
         {
             _args = args;
             Log.IsConsole = isConsole;
-            Initialize();
+            //Initialize();
         }
 
         public int Collect()
@@ -47,7 +47,7 @@ namespace CollectSFData
         {
             try
             {
-                if (!Initialize())
+                if (!Initialize() || !InitializeKusto() || !InitializeLogAnalytics())
                 {
                     return 1;
                 }
@@ -100,9 +100,9 @@ namespace CollectSFData
             }
             finally
             {
-                CustomTaskManager.Cancel();
+                CustomTaskManager.Reset();
                 _noProgressTimer?.Dispose();
-                Log.Close();
+                Log.Reset();
             }
         }
 
@@ -151,32 +151,29 @@ namespace CollectSFData
 
             if (_initialized)
             {
+                _taskManager?.Wait();
                 _taskManager = new CustomTaskManager();
                 Instance.Initialize();
             }
             else
             {
-                _initialized = true;
-
                 if (!Config.PopulateConfig(_args))
                 {
                     Config.SaveConfigFile();
                     return false;
                 }
-            }
 
-            Log.Info($"version: {Version}");
-            _parallelConfig = new ParallelOptions { MaxDegreeOfParallelism = Config.Threads };
-            ServicePointManager.DefaultConnectionLimit = Config.Threads * MaxThreadMultiplier;
-            ServicePointManager.Expect100Continue = true;
-            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
+                _initialized = true;
 
-            ThreadPool.SetMinThreads(Config.Threads * MinThreadMultiplier, Config.Threads * MinThreadMultiplier);
-            ThreadPool.SetMaxThreads(Config.Threads * MaxThreadMultiplier, Config.Threads * MaxThreadMultiplier);
+                Log.Info($"version: {Version}");
+                _parallelConfig = new ParallelOptions { MaxDegreeOfParallelism = Config.Threads };
+                ServicePointManager.DefaultConnectionLimit = Config.Threads * MaxThreadMultiplier;
+                ServicePointManager.Expect100Continue = true;
+                ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
 
-            if (!InitializeKusto() | !InitializeLogAnalytics())
-            {
-                return false;
+                ThreadPool.SetMinThreads(Config.Threads * MinThreadMultiplier, Config.Threads * MinThreadMultiplier);
+                ThreadPool.SetMaxThreads(Config.Threads * MaxThreadMultiplier, Config.Threads * MaxThreadMultiplier);
+
             }
 
             return true;
@@ -335,7 +332,7 @@ namespace CollectSFData
 
                     string message = $"no progress timeout reached {Config.NoProgressTimeoutMin}. exiting application.";
                     Log.Error(message);
-                    Log.Close();
+                    Log.Reset();
                     throw new TimeoutException(message);
                 }
 
