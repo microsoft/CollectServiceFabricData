@@ -204,7 +204,7 @@ namespace CollectSFData.Common
 
         public bool VersionOption { get; set; }
 
-        public static FileTypesEnum ConvertFileType(string fileTypeString)
+        private static FileTypesEnum ConvertFileType(string fileTypeString)
         {
             if (string.IsNullOrEmpty(fileTypeString) || !Enum.TryParse(fileTypeString.ToLower(), out FileTypesEnum fileType))
             {
@@ -246,7 +246,7 @@ namespace CollectSFData.Common
         }
 
 
-        public bool DefaultConfig()
+        private bool DefaultConfig()
         {
             if (File.Exists(DefaultOptionsFile))
             {
