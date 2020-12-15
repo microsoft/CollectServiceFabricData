@@ -24,17 +24,6 @@ using System.Threading;
 
 namespace CollectSFData.Kusto
 {
-    public class IngestionResourcesSnapshot
-    {
-        public string FailureNotificationsQueue { get; set; } = string.Empty;
-
-        public IList<string> IngestionQueues { get; set; } = new List<string>();
-
-        public string SuccessNotificationsQueue { get; set; } = string.Empty;
-
-        public IList<string> TempStorageContainers { get; set; } = new List<string>();
-    }
-
     public class KustoEndpoint : Constants
     {
         private static ICslAdminProvider _kustoAdminClient;
