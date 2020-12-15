@@ -20,8 +20,19 @@ namespace CollectSFData.Common
         private static bool _isRunning;
         private static Task _taskMonitor = new Task(TaskMonitor);
         private static object _taskMonLock = new object();
-        private string CallerName;
         private static ConfigurationOptions Config;
+        private string CallerName;
+
+        public SynchronizedList<Task> AllTasks { get; set; } = new SynchronizedList<Task>();
+
+        public TaskContinuationOptions ContinuationOptions { get; set; } = TaskContinuationOptions.OnlyOnRanToCompletion;
+
+        public TaskCreationOptions CreationOptions { get; set; } = TaskCreationOptions.PreferFairness;
+
+        public SynchronizedList<TaskObject> QueuedTaskObjects { get; set; } = new SynchronizedList<TaskObject>();
+
+        public bool RemoveWhenComplete { get; set; }
+
         static CustomTaskManager()
         {
         }
@@ -52,16 +63,6 @@ namespace CollectSFData.Common
             }
         }
 
-        public SynchronizedList<Task> AllTasks { get; set; } = new SynchronizedList<Task>();
-
-        public TaskContinuationOptions ContinuationOptions { get; set; } = TaskContinuationOptions.OnlyOnRanToCompletion;
-
-        public TaskCreationOptions CreationOptions { get; set; } = TaskCreationOptions.PreferFairness;
-
-        public SynchronizedList<TaskObject> QueuedTaskObjects { get; set; } = new SynchronizedList<TaskObject>();
-
-        public bool RemoveWhenComplete { get; set; }
-
         public static void Cancel()
         {
             Log.Info("taskmanager cancelling", ConsoleColor.White);
@@ -69,39 +70,6 @@ namespace CollectSFData.Common
             _taskMonitor.Wait();
             _isRunning = false;
             Log.Info("taskmanager cancelled", ConsoleColor.White);
-        }
-
-        public static void WaitAll()
-        {
-            // dont block all instances
-            _allInstances.ToList().ForEach(x => x.Wait());
-        }
-
-        private bool IsAboveQuota()
-        {
-            int thisIncompleteTaskCount = 0;
-            int allIncompleteTaskCount = 0;
-            int activeTaskMgrInstances = Math.Max(1, _allInstances.Count(x => x.AllTasks.Any(y => !y.IsCompleted)));
-
-            _allInstances.ForEach(x => allIncompleteTaskCount += x.AllTasks.Count(y => !y.IsCompleted));
-            thisIncompleteTaskCount = AllTasks.Count(x => !x.IsCompleted);
-            bool retval = (AllTasks.Count(x => !x.IsCompleted) >= (Config.Threads / activeTaskMgrInstances)) & allIncompleteTaskCount >= Config.Threads;
-
-            if (retval)
-            {
-                Log.Debug($"all instances:{_allInstances.Count()}" +
-                    $" active instances:{activeTaskMgrInstances}" +
-                    $" instance tasks:{thisIncompleteTaskCount}" +
-                    $" all tasks:{allIncompleteTaskCount}" +
-                    $" above quota:{retval}");
-            }
-
-            return retval;
-        }
-
-        public void QueueTaskAction(Action action)
-        {
-            AddToQueue(new TaskObject() { Action = action });
         }
 
         public static void Resume()
@@ -116,6 +84,17 @@ namespace CollectSFData.Common
                 Log.Info("taskmanager resumed", ConsoleColor.White);
                 _isRunning = true;
             }
+        }
+
+        public static void WaitAll()
+        {
+            // dont block all instances
+            _allInstances.ToList().ForEach(x => x.Wait());
+        }
+
+        public void QueueTaskAction(Action action)
+        {
+            AddToQueue(new TaskObject() { Action = action });
         }
 
         public Task TaskAction(Action action)
@@ -230,6 +209,28 @@ namespace CollectSFData.Common
 
             Log.Debug($"added new taskobject to queue:{CallerName} delay:{delay.TotalMilliseconds}ms");
             return taskObject.Task;
+        }
+
+        private bool IsAboveQuota()
+        {
+            int thisIncompleteTaskCount = 0;
+            int allIncompleteTaskCount = 0;
+            int activeTaskMgrInstances = Math.Max(1, _allInstances.Count(x => x.AllTasks.Any(y => !y.IsCompleted)));
+
+            _allInstances.ForEach(x => allIncompleteTaskCount += x.AllTasks.Count(y => !y.IsCompleted));
+            thisIncompleteTaskCount = AllTasks.Count(x => !x.IsCompleted);
+            bool retval = (AllTasks.Count(x => !x.IsCompleted) >= (Config.Threads / activeTaskMgrInstances)) & allIncompleteTaskCount >= Config.Threads;
+
+            if (retval)
+            {
+                Log.Debug($"all instances:{_allInstances.Count()}" +
+                    $" active instances:{activeTaskMgrInstances}" +
+                    $" instance tasks:{thisIncompleteTaskCount}" +
+                    $" all tasks:{allIncompleteTaskCount}" +
+                    $" above quota:{retval}");
+            }
+
+            return retval;
         }
 
         private void ScheduleTask(TaskObject taskObject)

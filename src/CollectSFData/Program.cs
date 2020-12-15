@@ -6,12 +6,16 @@
 using CollectSFData.Common;
 using CollectSFData.Kusto;
 using System;
-using System.Linq;
 
 namespace CollectSFData
 {
     internal class Program
     {
+        private static void Log_MessageLogged(object sender, LogMessage args)
+        {
+            throw new NotImplementedException();
+        }
+
         private static int Main(string[] args)
         {
             if (!Environment.Is64BitOperatingSystem | Environment.OSVersion.Platform != PlatformID.Win32NT)
@@ -29,9 +33,9 @@ namespace CollectSFData
             int retval = collector.Collect();
             // to subscribe to log messages
             // Log.MessageLogged += Log_MessageLogged;
-            
+
             // mitigation for dtr files not being csv compliant causing kusto ingest to fail
-            if(collector.Instance.Kusto.IngestFileObjectsFailed.Count() > 0 
+            if (collector.Instance.Kusto.IngestFileObjectsFailed.Count() > 0
                 && config.IsKustoConfigured()
                 && config.KustoUseBlobAsSource == true
                 && config.FileType == DataFile.FileTypesEnum.trace)
@@ -44,13 +48,8 @@ namespace CollectSFData
                 //retval = collector.Collect(kusto.IngestFileObjectsFailed.Select(x => x.FileUri).ToList());
                 retval = collector.Collect();
             }
-            
-            return retval;
-        }
 
-        private static void Log_MessageLogged(object sender, LogMessage args)
-        {
-            throw new NotImplementedException();
+            return retval;
         }
     }
 }

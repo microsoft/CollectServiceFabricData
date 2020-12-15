@@ -9,48 +9,32 @@ using System.Collections;
 
 namespace CollectSFData.Kusto
 {
-
     public class KustoQueueMessage : Constants, IEqualityComparer
     {
-        public string ClientRequestId { get; set; } //= string.Empty;
-        public DateTime Failed { get; set; } //= DateTime.MaxValue;
-        public string FileUri { get; set; } //= string.Empty;
-        public KustoRestRecord KustoRestRecord {get; set;}
-        public string RelativeUri { get; set; } //= string.Empty;
+        public string ClientRequestId { get; set; }
+
+        public DateTime Failed { get; set; }
+
+        public string FileUri { get; set; }
+
+        public KustoRestRecord KustoRestRecord { get; set; }
+
+        public string RelativeUri { get; set; }
+
         public DateTime Started { get; set; } = DateTime.MinValue;
-        public DateTime Succeeded { get; set; } //= DateTime.MaxValue;
+
+        public DateTime Succeeded { get; set; }
 
         public KustoQueueMessage(string searchItem)
         {
             Initialize(searchItem, searchItem, searchItem);
         }
+
         public KustoQueueMessage(string fileUri, string relativeUri, string clientRequestId)
         {
             Initialize(fileUri, relativeUri, clientRequestId);
         }
 
-        private void Initialize(string fileUri, string relativeUri, string clientRequestId)
-        {
-            Started = DateTime.Now;
-            ClientRequestId = clientRequestId;
-            FileUri = fileUri;
-            RelativeUri = relativeUri;
-        }
-
-        private bool Compare(string self, string comparable)
-        {
-            if (!string.IsNullOrEmpty(self) & !string.IsNullOrEmpty(comparable))
-            {
-                if (self.ToLower().Contains(comparable.ToLower().TrimEnd(ZipExtension.ToCharArray())) 
-                    | comparable.ToLower().Contains(self.ToLower().TrimEnd(ZipExtension.ToCharArray())))
-                {
-                    Log.Debug("match", comparable);
-                    return true;
-                }
-            }
-
-            return false;
-        }
 
         public bool Equals(KustoQueueMessage message)
         {
@@ -102,6 +86,29 @@ namespace CollectSFData.Kusto
             int hashCode = (ClientRequestId.GetHashCode() + FileUri.GetHashCode() + RelativeUri.GetHashCode() + Started.GetHashCode()) / 4;
             Log.Debug($"hashCode {hashCode}");
             return hashCode;
+        }
+
+        private bool Compare(string self, string comparable)
+        {
+            if (!string.IsNullOrEmpty(self) & !string.IsNullOrEmpty(comparable))
+            {
+                if (self.ToLower().Contains(comparable.ToLower().TrimEnd(ZipExtension.ToCharArray()))
+                    | comparable.ToLower().Contains(self.ToLower().TrimEnd(ZipExtension.ToCharArray())))
+                {
+                    Log.Debug("match", comparable);
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private void Initialize(string fileUri, string relativeUri, string clientRequestId)
+        {
+            Started = DateTime.Now;
+            ClientRequestId = clientRequestId;
+            FileUri = fileUri;
+            RelativeUri = relativeUri;
         }
     }
 }

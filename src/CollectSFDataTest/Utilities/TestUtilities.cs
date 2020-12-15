@@ -10,7 +10,6 @@
 using CollectSFData;
 using CollectSFData.Azure;
 using CollectSFData.Common;
-using CollectSFData.DataFile;
 using Moq;
 using Newtonsoft.Json;
 using NUnit.Framework;
@@ -30,7 +29,7 @@ namespace CollectSFDataTest.Utilities
     [TestFixture]
     public class TestUtilities
     {
-        public Collector Collector = new Collector();
+        public Collector Collector;
         public StringBuilder consoleErrBuilder = new StringBuilder();
         public StringBuilder consoleOutBuilder = new StringBuilder();
         public List<string> LogMessageQueue = new List<string>();
@@ -39,39 +38,28 @@ namespace CollectSFDataTest.Utilities
         private bool _logMessageQueueEnabled;
         private bool hasExited = false;
 
-        static TestUtilities()
-        {
-            OneTimeSetup();
-        }
-
-        public TestUtilities()
-        {
-            Log.Info("enter");
-            Directory.SetCurrentDirectory(TempDir);
-
-            File.Copy(TestOptionsFile, TempOptionsFile, true);
-
-            ConfigurationOptions = new ConfigurationOptions();
-
-            //TempArgs = new string[2] { "-config", TestOptionsFile };
-            ConfigurationOptions.PopulateConfig(TestArgs);
-            //ConfigurationOptions.CacheLocation = "";// null;
-            SaveTempOptions();
-
-            TempArgs = new string[2] { "-config", TempOptionsFile };
-        }
-
         public static TestContext Context { get; set; }
+
         public static string DefaultOptionsFile => $"{WorkingDir}\\..\\..\\..\\..\\..\\..\\configurationFiles\\collectsfdata.options.json";
+
         public static string ScriptsDir => $"{WorkingDir}\\..\\..\\..\\..\\..\\..\\scripts";
+
         public static string TempDir => $"{WorkingDir}\\..\\..\\Temp";
+
         public static string[] TestArgs => new string[2] { "-config", TestOptionsFile };
+
         public static string TestConfigurationsDir => $"{WorkingDir}\\..\\..\\..\\..\\TestConfigurations";
+
         public static TestProperties TestProperties { get; set; }
+
         public static string TestPropertiesFile => $"{Environment.GetEnvironmentVariable("LOCALAPPDATA")}\\collectsfdata\\collectSfDataTestProperties.json";
+
         public static string TestPropertiesSetupScript => $"{ScriptsDir}\\setup-test-env.ps1";
+
         public static string TestUtilitiesDir => $"{WorkingDir}\\..\\..\\..\\..\\TestUtilities";
+
         public static string WorkingDir { get; set; } = string.Empty;
+
         public ConfigurationOptions ConfigurationOptions { get; set; }
 
         public bool LogMessageQueueEnabled
@@ -106,6 +94,29 @@ namespace CollectSFDataTest.Utilities
         private StringWriter ConsoleErr { get; set; } = new StringWriter();
 
         private StringWriter ConsoleOut { get; set; } = new StringWriter();
+
+        static TestUtilities()
+        {
+            OneTimeSetup();
+        }
+
+        public TestUtilities()
+        {
+            Log.Info("enter");
+            Collector = new Collector(TempArgs);
+            Directory.SetCurrentDirectory(TempDir);
+
+            File.Copy(TestOptionsFile, TempOptionsFile, true);
+
+            ConfigurationOptions = new ConfigurationOptions();
+
+            //TempArgs = new string[2] { "-config", TestOptionsFile };
+            ConfigurationOptions.PopulateConfig(TestArgs);
+            //ConfigurationOptions.CacheLocation = "";// null;
+            SaveTempOptions();
+
+            TempArgs = new string[2] { "-config", TempOptionsFile };
+        }
 
         public static Collection<PSObject> ExecutePowerShellCommand(string command)
         {
@@ -179,9 +190,9 @@ namespace CollectSFDataTest.Utilities
                 SaveTempOptions();
                 //Program.Config = new ConfigurationOptions();
                 //Program program = new Program();
-                var program = new Mock<Collector>();
+                var program = new Mock<Collector>(TempArgs);
                 //Moq.Language.Flow.ISetup<Program, int> result = program.Setup(p => p.Execute(TempArgs));
-                program.Setup(p => p.Collect(TempArgs));
+                program.Setup(p => p.Collect());
 
                 Assert.IsNotNull(program);
 
@@ -309,7 +320,7 @@ namespace CollectSFDataTest.Utilities
 
                 SaveTempOptions();
                 //Instance.Config = new ConfigurationOptions();
-                Collector collector = new Collector();
+                Collector collector = new Collector(TempArgs);
                 Assert.IsNotNull(collector);
 
                 StartConsoleRedirection();
@@ -317,7 +328,7 @@ namespace CollectSFDataTest.Utilities
                 // cant call with args
                 //
                 // populate default collectsfdata.options.json
-                int result = collector.Collect(TempArgs);
+                int result = collector.Collect();
                 //int result = program.Collect(new string[] { });
 
                 Log.Info(">>>>test result<<<<", result);

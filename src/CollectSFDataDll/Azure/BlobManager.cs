@@ -23,12 +23,11 @@ namespace CollectSFData.Azure
         private readonly CustomTaskManager _blobTasks = new CustomTaskManager(true);
         private CloudStorageAccount _account;
         private CloudBlobClient _blobClient;
+        private object _dateTimeMaxLock = new object();
+        private object _dateTimeMinLock = new object();
         private string _fileFilterPattern = @"(?:.+_){6}(\d{20})_";
         private Instance _instance = Instance.Singleton();
         private ConfigurationOptions Config => _instance.Config;
-
-        private object _dateTimeMaxLock = new object();
-        private object _dateTimeMinLock = new object();
         public List<CloudBlobContainer> ContainerList { get; set; } = new List<CloudBlobContainer>();
 
         public Action<FileObject> IngestCallback { get; set; }
