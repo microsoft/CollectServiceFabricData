@@ -17,8 +17,9 @@ namespace CollectSFDataTest.Utilities
         public string AzureTenantId;
         public string KustoCluster;
         public string SasKey;
-        public string testAzStorageAccount;
         public string testAzClientId;
-        public string testAzClientSecret; // thumbprint for .net core test project
+        public string testAzClientSecret;
+        public string testAzStorageAccount;
+        // thumbprint for .net core test project
     }
 }
