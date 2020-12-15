@@ -57,6 +57,12 @@ namespace CollectSFData.Common
             Open();
         }
 
+        public static void Reset()
+        {
+            Close();
+            Open();
+        }
+
         public static void Close()
         {
             try
