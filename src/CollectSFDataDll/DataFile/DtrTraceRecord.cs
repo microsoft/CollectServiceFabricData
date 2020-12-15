@@ -12,15 +12,6 @@ namespace CollectSFData.DataFile
     {
         private const int _fieldCount = 6;
 
-        public DtrTraceRecord()
-        {
-        }
-
-        public DtrTraceRecord(string traceRecord, FileObject fileObject, string resourceUri = null)
-        {
-            Populate(fileObject, traceRecord, resourceUri);
-        }
-
         public string FileType { get; set; }
 
         public string Level { get; set; }
@@ -40,6 +31,15 @@ namespace CollectSFData.DataFile
         public DateTime Timestamp { get; set; }
 
         public string Type { get; set; }
+
+        public DtrTraceRecord()
+        {
+        }
+
+        public DtrTraceRecord(string traceRecord, FileObject fileObject, string resourceUri = null)
+        {
+            Populate(fileObject, traceRecord, resourceUri);
+        }
 
         public IRecord Populate(FileObject fileObject, string dtrRecord, string resourceUri = null)
         {

@@ -12,6 +12,20 @@ namespace CollectSFData.Common
 {
     public class Instance : Constants
     {
+        public ConfigurationOptions Config;
+        public FileManager FileMgr;
+        public bool IsWindows = Environment.OSVersion.Platform.Equals(PlatformID.Win32NT);
+        public KustoConnection Kusto;
+        public LogAnalyticsConnection LogAnalytics;
+        public DateTime StartTime;
+        public int TotalErrors;
+        public int TotalFilesConverted;
+        public int TotalFilesDownloaded;
+        public int TotalFilesEnumerated;
+        public int TotalFilesFormatted;
+        public int TotalFilesMatched;
+        public int TotalFilesSkipped;
+        public int TotalRecords;
         private static readonly Instance _instance = new Instance();
         private static object _instanceLock = new object();
 
@@ -25,9 +39,12 @@ namespace CollectSFData.Common
             }
         }
 
+        private Instance()
+        {
+        }
+
         public static void Initialize()
         {
-            //_instance.Config = new ConfigurationOptions();
             _instance.FileMgr = new FileManager();
             _instance.Kusto = new KustoConnection();
             _instance.LogAnalytics = new LogAnalyticsConnection();
@@ -46,24 +63,5 @@ namespace CollectSFData.Common
         {
             return _instance;
         }
-
-        private Instance()
-        {
-        }
-
-        public ConfigurationOptions Config;
-        public FileManager FileMgr;
-        public bool IsWindows = Environment.OSVersion.Platform.Equals(PlatformID.Win32NT);
-        public KustoConnection Kusto;
-        public LogAnalyticsConnection LogAnalytics;
-        public DateTime StartTime;
-        public int TotalErrors;
-        public int TotalFilesConverted;
-        public int TotalFilesDownloaded;
-        public int TotalFilesEnumerated;
-        public int TotalFilesFormatted;
-        public int TotalFilesMatched;
-        public int TotalFilesSkipped;
-        public int TotalRecords;
     }
 }

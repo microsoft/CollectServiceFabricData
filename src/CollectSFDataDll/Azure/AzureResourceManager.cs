@@ -31,11 +31,6 @@ namespace CollectSFData.Azure
         private DateTimeOffset _tokenExpirationHalfLife;
         private string _wellKnownClientId = "1950a258-227b-4e31-a9cf-717495945fc2";
 
-        public AzureResourceManager()
-        {
-            Log.Info($"enter: token cache path: {TokenCacheHelper.CacheFilePath}");
-        }
-
         public delegate void MsalDeviceCodeHandler(DeviceCodeResult arg);
 
         public delegate void MsalHandler(LogLevel level, string message, bool containsPII);
@@ -45,11 +40,21 @@ namespace CollectSFData.Azure
         public static event MsalHandler MsalMessage;
 
         public AuthenticationResult AuthenticationResult { get; private set; }
+
         public string BearerToken { get; private set; }
+
         private ConfigurationOptions Config => _instance.Config;
+
         public bool IsAuthenticated { get; private set; }
+
         public List<string> Scopes { get; set; } = new List<string>();
+
         public SubscriptionRecordResult[] Subscriptions { get; private set; } = new SubscriptionRecordResult[] { };
+
+        public AzureResourceManager()
+        {
+            Log.Info($"enter: token cache path: {TokenCacheHelper.CacheFilePath}");
+        }
 
         public bool Authenticate(bool throwOnError = false, string resource = ManagementAzureCom)
         {
