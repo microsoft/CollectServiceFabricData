@@ -4,7 +4,6 @@
 // ------------------------------------------------------------
 
 using CollectSFData.Common;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -156,7 +155,7 @@ namespace CollectSFData.DataFile
             return new FileObjectCollection();
         }
 
-        public string RelogBlg(FileObject fileObject)
+        private string RelogBlg(FileObject fileObject)
         {
             string outputFile = fileObject.FileUri + PerfCsvExtension;
 
