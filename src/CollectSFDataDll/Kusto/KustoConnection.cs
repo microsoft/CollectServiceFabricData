@@ -394,7 +394,7 @@ namespace CollectSFData.Kusto
                     else
                     {
                         Log.Error($"adding failedUri string to IngestFileObjectsFailed[{IngestFileObjectsFailed.Count()}]: {uriFile}", record);
-                        IngestFileObjectsFailed.Add(relativeUri: uriFile);
+                        IngestFileObjectsFailed.Add(fileUri: uriFile);
                     }
 
                     _failureCount++;
@@ -439,7 +439,7 @@ namespace CollectSFData.Kusto
                     else
                     {
                         Log.Info($"adding relativeuri string to IngestFileObjectsSucceeded[{IngestFileObjectsSucceeded.Count()}]: {uriFile}", ConsoleColor.Green);
-                        IngestFileObjectsSucceeded.Add(relativeUri: uriFile);
+                        IngestFileObjectsSucceeded.Add(fileUri: uriFile);
                     }
                 }
             }
