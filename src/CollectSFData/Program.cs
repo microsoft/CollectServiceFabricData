@@ -4,7 +4,9 @@
 // ------------------------------------------------------------
 
 using CollectSFData.Common;
+using CollectSFData.Kusto;
 using System;
+using System.Linq;
 
 namespace CollectSFData
 {
@@ -17,13 +19,14 @@ namespace CollectSFData
                 Console.WriteLine("only supported on win32 x64");
             }
 
-            Collector collector = new Collector(true);
+            Collector collector = new Collector(args, true);
             ConfigurationOptions config = collector.Instance.Config;
+            KustoConnection kusto = collector.Instance.Kusto;
 
             // to modify / validate config
             // config.Validate();
 
-            int retval = collector.Collect(args);
+            int retval = collector.Collect();
             // to subscribe to log messages
             // Log.MessageLogged += Log_MessageLogged;
             
@@ -34,11 +37,12 @@ namespace CollectSFData
                 && config.FileType == DataFile.FileTypesEnum.trace)
             {
                 Log.Open();
-                Log.Warning("failed ingests:", collector.Instance.Kusto.IngestFileObjectsFailed);
+                Log.Warning("failed ingests due to csv compliance. restarting.");
+                //Log.Warning("failed ingests:", collector.Instance.Kusto.IngestFileObjectsFailed);
                 config.KustoUseBlobAsSource = false;
                 config.KustoRecreateTable = false;
-                //collector.Instance.Kusto.FailIngestedUris.ForEach( x => collector.QueueForIngest(new DataFile.FileObject(x)));
-                retval = collector.Collect(args);
+                //retval = collector.Collect(kusto.IngestFileObjectsFailed.Select(x => x.FileUri).ToList());
+                retval = collector.Collect();
             }
             
             return retval;
