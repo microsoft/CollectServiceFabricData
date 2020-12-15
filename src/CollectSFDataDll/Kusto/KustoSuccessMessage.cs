@@ -6,7 +6,8 @@
 using System;
 
 namespace CollectSFData.Kusto
-{    public class KustoSuccessMessage
+{
+    public class KustoSuccessMessage
     {
         public string Database;
         public string FailureStatus;

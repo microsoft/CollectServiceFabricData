@@ -4,6 +4,7 @@
 // ------------------------------------------------------------
 
 using CollectSFData.Common;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -11,29 +12,23 @@ using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using Newtonsoft.Json;
 
 namespace CollectSFData.DataFile
 {
     public class StreamManager : Constants
     {
-        public int StreamBufferSize { get; set; } = 1024;
-        private bool _leaveStreamOpen { get; set; } = true;
-        public long Length => (long)Open().Length;
         private FileObject _fileObject;
         private MemoryStream _memoryStream = new MemoryStream();
+
+        public long Length => (long)Open().Length;
+
+        public int StreamBufferSize { get; set; } = 1024;
+
+        private bool _leaveStreamOpen { get; set; } = true;
 
         public StreamManager(FileObject fileObject = null)
         {
             _fileObject = fileObject;
-        }
-
-        public void Dispose()
-        {
-            if (_memoryStream.CanRead || _memoryStream.CanWrite)
-            {
-                _memoryStream.Dispose();
-            }
         }
 
         public MemoryStream Compress(FileObject fileObject = null)
@@ -100,6 +95,14 @@ namespace CollectSFData.DataFile
 
                 Log.Debug($"decompressing memoryStream complete. size: {uncompressedStream.Length} position: {uncompressedStream.Position}");
                 return uncompressedStream;
+            }
+        }
+
+        public void Dispose()
+        {
+            if (_memoryStream.CanRead || _memoryStream.CanWrite)
+            {
+                _memoryStream.Dispose();
             }
         }
 
@@ -196,7 +199,7 @@ namespace CollectSFData.DataFile
             Open(true);
             return new StreamReader(_memoryStream).ReadToEnd();
         }
-        
+
         public void ResetPosition()
         {
             Open(true);
@@ -216,12 +219,6 @@ namespace CollectSFData.DataFile
             }
 
             ResetPosition();
-        }
-
-        private void Set(MemoryStream stream)
-        {
-            Open(true, true);
-            _memoryStream = stream;
         }
 
         public void Set(byte[] byteArray)
@@ -283,8 +280,6 @@ namespace CollectSFData.DataFile
                 {
                     writer.Write($"{JsonConvert.SerializeObject(records)}{Environment.NewLine}");
                 }
-
-
             }
 
             return _memoryStream;
@@ -313,6 +308,12 @@ namespace CollectSFData.DataFile
             }
 
             return _memoryStream;
+        }
+
+        private void Set(MemoryStream stream)
+        {
+            Open(true, true);
+            _memoryStream = stream;
         }
     }
 }

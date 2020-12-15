@@ -29,20 +29,6 @@ namespace CollectSFData.Common
         private static CancellationTokenSource _taskWriterCancellationToken;
         private static int _threadSleepMs = Constants.ThreadSleepMs100;
 
-        static Log()
-        {
-            JsonErrorHandler += Log_JsonErrorHandler;
-
-            _jsonSerializerSettings = new JsonSerializerSettings()
-            {
-                Error = JsonErrorHandler
-            };
-
-            LogDebug = LoggingLevel.Info;
-            IsConsole = true;
-            Open();
-        }
-
         public delegate void LogMessageHandler(object sender, LogMessage args);
 
         public static event LogMessageHandler MessageLogged;
@@ -56,6 +42,20 @@ namespace CollectSFData.Common
         public static string LogFile { get => _logFile; set => _logFile = CheckLogFile(value) ? value : string.Empty; }
 
         public static bool LogFileEnabled => !string.IsNullOrEmpty(LogFile);
+
+        static Log()
+        {
+            JsonErrorHandler += Log_JsonErrorHandler;
+
+            _jsonSerializerSettings = new JsonSerializerSettings()
+            {
+                Error = JsonErrorHandler
+            };
+
+            LogDebug = LoggingLevel.Info;
+            IsConsole = true;
+            Open();
+        }
 
         public static void Close()
         {
@@ -278,23 +278,6 @@ namespace CollectSFData.Common
             });
         }
 
-        private static string serializeJson(object jsonSerializer)
-        {
-            if (jsonSerializer != null)
-            {
-                try
-                {
-                    return Environment.NewLine + JsonConvert.SerializeObject(jsonSerializer, Formatting.Indented, _jsonSerializerSettings);
-                }
-                catch (Exception e)
-                {
-                    return Environment.NewLine + $"LOG:jsondeserialize error: {e.Message}";
-                }
-            }
-
-            return string.Empty;
-        }
-
         private static void QueueMessage(bool lastMessage, LogMessage logMessage)
         {
             if (lastMessage)
@@ -313,6 +296,23 @@ namespace CollectSFData.Common
             {
                 Console.ResetColor();
             }
+        }
+
+        private static string serializeJson(object jsonSerializer)
+        {
+            if (jsonSerializer != null)
+            {
+                try
+                {
+                    return Environment.NewLine + JsonConvert.SerializeObject(jsonSerializer, Formatting.Indented, _jsonSerializerSettings);
+                }
+                catch (Exception e)
+                {
+                    return Environment.NewLine + $"LOG:jsondeserialize error: {e.Message}";
+                }
+            }
+
+            return string.Empty;
         }
 
         private static void SetColor(ConsoleColor? foregroundColor = null, ConsoleColor? backgroundColor = null)

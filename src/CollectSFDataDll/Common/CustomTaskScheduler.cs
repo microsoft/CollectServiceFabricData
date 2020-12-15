@@ -15,14 +15,14 @@ namespace CollectSFData.Common
         private readonly ConfigurationOptions _cfg;
         private readonly int _minThreadPoolCount = 2;
 
+        public int DelegatesQueuedOrRunning { get; set; }
+
+        public SynchronizedList<Task> Tasks { get; set; } = new SynchronizedList<Task>();
+
         public CustomTaskScheduler(ConfigurationOptions configurationOptions)
         {
             _cfg = configurationOptions;
         }
-
-        public int DelegatesQueuedOrRunning { get; set; }
-
-        public SynchronizedList<Task> Tasks { get; set; } = new SynchronizedList<Task>();
 
         protected override IEnumerable<Task> GetScheduledTasks()
         {
