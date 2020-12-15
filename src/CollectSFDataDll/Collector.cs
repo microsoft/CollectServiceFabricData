@@ -8,6 +8,7 @@ namespace CollectSFData
     using CollectSFData.Azure;
     using CollectSFData.Common;
     using CollectSFData.DataFile;
+    using CollectSFData.Kusto;
     using System;
     using System.Collections.Generic;
     using System.IO;
@@ -19,6 +20,7 @@ namespace CollectSFData
 
     public class Collector : Constants
     {
+        private string[] _args;
         private bool _initialized;
         private int _noProgressCounter = 0;
         private Timer _noProgressTimer;
@@ -27,55 +29,35 @@ namespace CollectSFData
         private CustomTaskManager _taskManager = new CustomTaskManager(true);
         private ConfigurationOptions Config => Instance.Config;
         public Instance Instance { get; } = Instance.Singleton();
-        public Collector(bool isConsole = false)
+        public Collector(string[] args,bool isConsole = false)
         {
+            _args = args;
             Log.IsConsole = isConsole;
+            Initialize();
         }
 
         public int Collect()
         {
-            return Collect(new string[] { });
+            return Collect(new List<string>());
         }
 
-        public int Collect(string[] args)
+        public int Collect(List<string> uris = null)
         {
             try
             {
-                _noProgressTimer = new Timer(NoProgressCallback, null, 0, 60 * 1000);
-                Log.Open();
-                CustomTaskManager.Resume();
-
-                if (_initialized)
-                {
-                    _taskManager = new CustomTaskManager();
-                    Instance.Initialize();
-                }
-                else
-                {
-                    _initialized = true;
-
-                    if (!Config.PopulateConfig(args))
-                    {
-                        Config.SaveConfigFile();
-                        return 1;
-                    }
-                }
-                
-                Log.Info($"version: {Version}");
-                _parallelConfig = new ParallelOptions { MaxDegreeOfParallelism = Config.Threads };
-                ServicePointManager.DefaultConnectionLimit = Config.Threads * MaxThreadMultiplier;
-                ServicePointManager.Expect100Continue = true;
-                ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
-
-                ThreadPool.SetMinThreads(Config.Threads * MinThreadMultiplier, Config.Threads * MinThreadMultiplier);
-                ThreadPool.SetMaxThreads(Config.Threads * MaxThreadMultiplier, Config.Threads * MaxThreadMultiplier);
-
-                if (!InitializeKusto() | !InitializeLogAnalytics())
+                if (!Initialize())
                 {
                     return 1;
                 }
 
-                if (Config.SasEndpointInfo.IsPopulated())
+                if(uris?.Count > 0)
+                {
+                    foreach(string uri in uris)
+                    {
+                        QueueForIngest(new FileObject(fileUri: uri));
+                    }
+                }
+                else if (Config.SasEndpointInfo.IsPopulated())
                 {
                     DownloadAzureData();
                 }
@@ -122,6 +104,7 @@ namespace CollectSFData
             }
         }
 
+
         public string DetermineClusterId()
         {
             string clusterId = string.Empty;
@@ -159,7 +142,7 @@ namespace CollectSFData
             return clusterId;
         }
 
-        public void DownloadAzureData()
+        private void DownloadAzureData()
         {
             string containerPrefix = null;
             string tablePrefix = null;
@@ -205,7 +188,7 @@ namespace CollectSFData
             }
         }
 
-        public void FinalizeKusto()
+        private void FinalizeKusto()
         {
             if (Config.IsKustoConfigured() && !Instance.Kusto.Complete())
             {
@@ -217,7 +200,7 @@ namespace CollectSFData
             }
         }
 
-        public bool InitializeKusto()
+        private bool InitializeKusto()
         {
             if (Config.IsKustoConfigured() | Config.IsKustoPurgeRequested())
             {
@@ -227,7 +210,45 @@ namespace CollectSFData
             return true;
         }
 
-        public bool InitializeLogAnalytics()
+        public bool Initialize()
+        {
+            _noProgressTimer = new Timer(NoProgressCallback, null, 0, 60 * 1000);
+            Log.Open();
+            CustomTaskManager.Resume();
+
+            if (_initialized)
+            {
+                _taskManager = new CustomTaskManager();
+                Instance.Initialize();
+            }
+            else
+            {
+                _initialized = true;
+
+                if (!Config.PopulateConfig(_args))
+                {
+                    Config.SaveConfigFile();
+                    return false;
+                }
+            }
+
+            Log.Info($"version: {Version}");
+            _parallelConfig = new ParallelOptions { MaxDegreeOfParallelism = Config.Threads };
+            ServicePointManager.DefaultConnectionLimit = Config.Threads * MaxThreadMultiplier;
+            ServicePointManager.Expect100Continue = true;
+            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
+
+            ThreadPool.SetMinThreads(Config.Threads * MinThreadMultiplier, Config.Threads * MinThreadMultiplier);
+            ThreadPool.SetMaxThreads(Config.Threads * MaxThreadMultiplier, Config.Threads * MaxThreadMultiplier);
+
+            if (!InitializeKusto() | !InitializeLogAnalytics())
+            {
+                return false;
+            }
+
+            return true;
+        }
+        private bool InitializeLogAnalytics()
         {
             if (Config.IsLogAnalyticsConfigured() | Config.LogAnalyticsCreate | Config.IsLogAnalyticsPurgeRequested())
             {
@@ -237,7 +258,7 @@ namespace CollectSFData
             return true;
         }
 
-        public void QueueForIngest(FileObject fileObject)
+        private void QueueForIngest(FileObject fileObject)
         {
             Log.Debug("enter");
 
@@ -259,7 +280,7 @@ namespace CollectSFData
             }
         }
 
-        public void UploadCacheData()
+        private void UploadCacheData()
         {
             Log.Info("enter");
             List<string> files = new List<string>();
