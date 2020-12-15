@@ -6,11 +6,14 @@
 using CollectSFData.Common;
 using CollectSFData.Kusto;
 using System;
+using System.Linq;
 
 namespace CollectSFData
 {
     internal class Program
     {
+        // to subscribe to log messages
+        // Log.MessageLogged += Log_MessageLogged;
         private static void Log_MessageLogged(object sender, LogMessage args)
         {
             throw new NotImplementedException();
@@ -23,16 +26,15 @@ namespace CollectSFData
                 Console.WriteLine("only supported on win32 x64");
             }
 
+            // default constructor
             Collector collector = new Collector(args, true);
-            ConfigurationOptions config = collector.Instance.Config;
-            KustoConnection kusto = collector.Instance.Kusto;
 
-            // to modify / validate config
+            // use config to modify / validate config
             // config.Validate();
+            ConfigurationOptions config = collector.Instance.Config;
 
+            // collect data
             int retval = collector.Collect();
-            // to subscribe to log messages
-            // Log.MessageLogged += Log_MessageLogged;
 
             // mitigation for dtr files not being csv compliant causing kusto ingest to fail
             if (collector.Instance.Kusto.IngestFileObjectsFailed.Count() > 0
@@ -40,12 +42,12 @@ namespace CollectSFData
                 && config.KustoUseBlobAsSource == true
                 && config.FileType == DataFile.FileTypesEnum.trace)
             {
-                Log.Open();
+                KustoConnection kusto = collector.Instance.Kusto;
                 Log.Warning("failed ingests due to csv compliance. restarting.");
                 //Log.Warning("failed ingests:", collector.Instance.Kusto.IngestFileObjectsFailed);
                 config.KustoUseBlobAsSource = false;
                 config.KustoRecreateTable = false;
-                //retval = collector.Collect(kusto.IngestFileObjectsFailed.Select(x => x.FileUri).ToList());
+                //todo: retval = collector.Collect(kusto.IngestFileObjectsFailed.Select(x => x.FileUri).ToList());
                 retval = collector.Collect();
             }
 
