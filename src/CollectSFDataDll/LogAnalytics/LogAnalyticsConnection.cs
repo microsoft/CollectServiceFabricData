@@ -96,12 +96,12 @@ namespace CollectSFData.LogAnalytics
             return true;
         }
 
-        public void ImportJson(FileObjectCollection fileObjectCollection)
+        private void ImportJson(FileObjectCollection fileObjectCollection)
         {
             fileObjectCollection.ForEach(x => ImportJson(x));
         }
 
-        public void ImportJson(FileObject fileObject)
+        private void ImportJson(FileObject fileObject)
         {
             int retry = 0;
 
@@ -125,7 +125,7 @@ namespace CollectSFData.LogAnalytics
             }
         }
 
-        public bool Purge()
+        private bool Purge()
         {
             /*
                 to clean workspaceModel, have to use rest and purge

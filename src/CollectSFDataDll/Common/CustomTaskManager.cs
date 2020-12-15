@@ -77,7 +77,7 @@ namespace CollectSFData.Common
             _allInstances.ToList().ForEach(x => x.Wait());
         }
 
-        public bool IsAboveQuota()
+        private bool IsAboveQuota()
         {
             int thisIncompleteTaskCount = 0;
             int allIncompleteTaskCount = 0;
@@ -298,15 +298,5 @@ namespace CollectSFData.Common
             AllTasks.Add(task);
             return task;
         }
-    }
-
-    public class TaskObject
-    {
-        public Action Action { get; set; }
-        public Action<object> ActionObject { get; set; }
-        public Action<Task> ContinueWith { get; set; }
-        public Func<object, object> Func { get; set; }
-        public Task Task { get; set; }
-        public ManualResetEvent TaskScheduled { get; set; } = new ManualResetEvent(false);
     }
 }

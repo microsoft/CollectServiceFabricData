@@ -138,12 +138,12 @@ namespace CollectSFData.Kusto
             return true;
         }
 
-        public void IngestMultipleFiles(FileObjectCollection fileObjectCollection)
+        private void IngestMultipleFiles(FileObjectCollection fileObjectCollection)
         {
             fileObjectCollection.ForEach(x => IngestSingleFile(x));
         }
 
-        public void IngestSingleFile(FileObject fileObject)
+        private void IngestSingleFile(FileObject fileObject)
         {
             string blobUriWithSas = null;
             string ingestionMapping = SetIngestionMapping(fileObject);
@@ -173,7 +173,7 @@ namespace CollectSFData.Kusto
             PostMessageToQueue(_ingestionQueueEnumerator.Current, PrepareIngestionMessage(blobUriWithSas, fileObject.Length, ingestionMapping), fileObject);
         }
 
-        public IEnumerable<CloudQueueMessage> PopTopMessagesFromQueue(string queueUriWithSas, int count = _maxMessageCount)
+        private IEnumerable<CloudQueueMessage> PopTopMessagesFromQueue(string queueUriWithSas, int count = _maxMessageCount)
         {
             List<string> messages = Enumerable.Empty<string>().ToList();
             CloudQueue queue = new CloudQueue(new Uri(queueUriWithSas));
@@ -187,7 +187,7 @@ namespace CollectSFData.Kusto
             return messagesFromQueue;
         }
 
-        public void PostMessageToQueue(string queueUriWithSas, KustoIngestionMessage message, FileObject fileObject)
+        private void PostMessageToQueue(string queueUriWithSas, KustoIngestionMessage message, FileObject fileObject)
         {
             Log.Info($"post: {queueUriWithSas}", ConsoleColor.Magenta);
             _totalBlobIngestQueued++;
@@ -205,7 +205,7 @@ namespace CollectSFData.Kusto
             Log.Info($"queue message id: {message.Id}");
         }
 
-        public KustoIngestionMessage PrepareIngestionMessage(string blobUriWithSas, long blobSizeBytes, string ingestionMapping)
+        private KustoIngestionMessage PrepareIngestionMessage(string blobUriWithSas, long blobSizeBytes, string ingestionMapping)
         {
             string id = Guid.NewGuid().ToString();
 
@@ -232,7 +232,7 @@ namespace CollectSFData.Kusto
             return message;
         }
 
-        public void Purge()
+        private void Purge()
         {
             if (Config.KustoPurge.ToLower() == "true" & Endpoint.HasTable(Config.KustoTable))
             {
@@ -265,7 +265,7 @@ namespace CollectSFData.Kusto
             }
         }
 
-        public void RemoveMessageFromQueue(string queueUriWithSas, CloudQueueMessage message)
+        private void RemoveMessageFromQueue(string queueUriWithSas, CloudQueueMessage message)
         {
             try
             {
@@ -279,7 +279,7 @@ namespace CollectSFData.Kusto
             }
         }
 
-        public string UploadFileToBlobContainer(FileObject fileObject, string blobContainerUri, string containerName, string blobName)
+        private string UploadFileToBlobContainer(FileObject fileObject, string blobContainerUri, string containerName, string blobName)
         {
             Log.Info($"uploading: {fileObject.Stream.Get().Length} bytes to {fileObject.FileUri} to {blobContainerUri}", ConsoleColor.Magenta);
             Uri blobUri = new Uri(blobContainerUri);
