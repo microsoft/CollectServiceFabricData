@@ -76,7 +76,6 @@ namespace CollectSFData.Kusto
 
         private Timer adminTimer { get; set; }
 
-        // = new Timer(DisposeClient, kustoAdminClient, maxKustoClientTimeMs, maxKustoClientTimeMs);
         private KustoConnectionStringBuilder ManagementConnection { get; set; }
 
         private Timer queryTimer { get; set; }
@@ -114,8 +113,6 @@ namespace CollectSFData.Kusto
                 throw new ArgumentException(errMessage);
             }
         }
-
-        // = new Timer(DisposeClient, kustoQueryClient, maxKustoClientTimeMs, maxKustoClientTimeMs);
 
         public void Authenticate(bool throwOnError = false)
         {
@@ -292,102 +289,6 @@ namespace CollectSFData.Kusto
                 Log.Info("Disposing kusto query client");
                 _kustoQueryClient.Dispose();
                 _kustoQueryClient = null;
-            }
-        }
-
-        private List<string> EnumerateResults(ProgressiveDataSet reader)
-        {
-            List<string> csvRecords = new List<string>();
-            bool finalResults = false;
-            bool isProgressive = false;
-
-            try
-            {
-                IEnumerator<ProgressiveDataSetFrame> resultFrames = reader.GetFrames();
-
-                while (!finalResults && resultFrames.MoveNext())
-                {
-                    ProgressiveDataSetFrame resultFrame = resultFrames.Current;
-                    Log.Debug($"resultFrame:", resultFrame);
-
-                    switch (resultFrame.FrameType)
-                    {
-                        case FrameType.DataSetCompletion:
-                            {
-                                ProgressiveDataSetCompletionFrame result = resultFrame as ProgressiveDataSetCompletionFrame;
-                                Log.Info($"{result.GetType()}", result);
-                                break;
-                            }
-                        case FrameType.DataSetHeader:
-                            {
-                                ProgressiveDataSetHeaderFrame result = resultFrame as ProgressiveDataSetHeaderFrame;
-                                Log.Info($"{result.GetType()}", result);
-                                isProgressive = result.IsProgressive;
-                                break;
-                            }
-                        case FrameType.DataTable:
-                            {
-                                ProgressiveDataSetDataTableFrame result = resultFrame as ProgressiveDataSetDataTableFrame;
-                                Log.Info($"{result.GetType()}", result);
-
-                                if (result.TableName.Equals("@ExtendedProperties"))
-                                {
-                                    ExtendedResults = EnumerateResults(result.TableData);
-                                }
-
-                                if (result.TableKind.Equals(WellKnownDataSet.PrimaryResult))
-                                {
-                                    csvRecords = EnumerateResults(result.TableData);
-                                }
-
-                                // if non progressive, this may be last frame
-                                if (!isProgressive)
-                                {
-                                    finalResults = true;
-                                }
-
-                                break;
-                            }
-                        case FrameType.TableCompletion:
-                            {
-                                ProgressiveDataSetTableCompletionFrame result = resultFrame as ProgressiveDataSetTableCompletionFrame;
-                                Log.Info($"{result.GetType()}", result);
-                                break;
-                            }
-                        case FrameType.TableFragment:
-                            {
-                                ProgressiveDataSetDataTableFragmentFrame result = resultFrame as ProgressiveDataSetDataTableFragmentFrame;
-                                Log.Error($"not implemented: {result.GetType()}", result);
-                                result.ToDataTable();
-                                break;
-                            }
-                        case FrameType.TableHeader:
-                            {
-                                ProgressiveDataSetHeaderFrame result = resultFrame as ProgressiveDataSetHeaderFrame;
-                                Log.Info($"{result.GetType()}", result);
-                                break;
-                            }
-                        case FrameType.TableProgress:
-                            {
-                                ProgressiveDataSetTableProgressFrame result = resultFrame as ProgressiveDataSetTableProgressFrame;
-                                Log.Info($"{result.GetType()}", result);
-                                break;
-                            }
-                        case FrameType.LastInvalid:
-                        default:
-                            {
-                                Log.Warning($"unknown frame type:{resultFrame.FrameType}");
-                                return csvRecords;
-                            }
-                    }
-                }
-
-                return csvRecords;
-            }
-            catch (Exception e)
-            {
-                Log.Exception($"{e}");
-                return csvRecords;
             }
         }
 
