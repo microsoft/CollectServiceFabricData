@@ -100,9 +100,9 @@ namespace CollectSFData
             }
             finally
             {
+                Log.Reset();
                 CustomTaskManager.Reset();
                 _noProgressTimer?.Dispose();
-                Log.Reset();
             }
         }
 
