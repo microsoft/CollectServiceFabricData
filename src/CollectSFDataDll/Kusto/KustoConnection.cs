@@ -272,16 +272,12 @@ namespace CollectSFData.Kusto
         private void IngestStatusSuccessQuery()
         {
             List<string> successUris = new List<string>();
-            _ingestCursor = IngestFileObjectsSucceeded.Count() < 1 ? "''" : _ingestCursor;
             successUris.AddRange(Endpoint.Query($"['{Endpoint.TableName}']" +
                 $"| where cursor_after({_ingestCursor})" +
                 $"| where ingestion_time() > todatetime('{_instance.StartTime.ToUniversalTime().ToString("o")}')" +
                 $"| distinct RelativeUri"));
 
-            //_ingestCursor = IngestedUris.Count() < 1 ? "''" : "cursor_current()";
-            _ingestCursor = Endpoint.Cursor;
-            //_ingestCursor = "cursor_current()";
-
+            _ingestCursor = IngestFileObjectsSucceeded.Count() < 1 ? "''" : Endpoint.Cursor;
             Log.Debug($"files ingested:{successUris.Count}");
 
             foreach (string uriFile in successUris)

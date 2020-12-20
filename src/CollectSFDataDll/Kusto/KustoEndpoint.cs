@@ -39,10 +39,9 @@ namespace CollectSFData.Kusto
 
         private ConfigurationOptions Config => _instance.Config;
 
-        public string Cursor { get; set; } = "''";
-
         public KustoConnectionStringBuilder DatabaseConnection { get; set; }
 
+        public string Cursor;
         public string DatabaseName { get; set; }
 
         public bool DeleteSourceOnSuccess { get; set; }
@@ -62,6 +61,8 @@ namespace CollectSFData.Kusto
         public string ManagementUrl { get; private set; }
 
         public KustoRestTable PrimaryResultTable { get; private set; } = new KustoRestTable();
+
+        public List<KustoRestTable> QueryResultTables { get; private set; } = new List<KustoRestTable>();
 
         public KustoRestResponseV1 ResponseDataSet { get; private set; } = new KustoRestResponseV1();
 
@@ -206,9 +207,13 @@ namespace CollectSFData.Kusto
 
             try
             {
+                PrimaryResultTable = null;
+                QueryResultTables.Clear();
+                Cursor = null;
+
                 queryTimer.Change(maxKustoClientTimeMs, maxKustoClientTimeMs);
                 // unable to parse multiple tables v1 or v2 using kusto so using httpclient and rest
-                string requestBody = "{ \"db\": \"" + DatabaseName + "\", \"csl\": \"" + query + "\" }";
+                string requestBody = "{ \"db\": \"" + DatabaseName + "\", \"csl\": \"" + query + ";print Cursor=current_cursor()\" }";
                 string requestId = new Guid().ToString();
 
                 Dictionary<string, string> headers = new Dictionary<string, string>();
@@ -232,17 +237,34 @@ namespace CollectSFData.Kusto
                 if (toc.HasData)
                 {
                     SetExtendedProperties();
+                    List<long> indexes = toc.Rows.Where(x => x.Kind.Equals("QueryResult")).Select(x => x.Ordinal).ToList();
 
-                    long index = toc.Rows.FirstOrDefault(x => x.Kind.Equals("QueryResult")).Ordinal;
-                    PrimaryResultTable = new KustoRestTable(ResponseDataSet.Tables[index]);
+                    foreach (long index in indexes)
+                    {
+                        KustoRestTable  table = new KustoRestTable(ResponseDataSet.Tables[index]);
+                        QueryResultTables.Add(table);
+
+                        if (PrimaryResultTable == null)
+                        {
+                            PrimaryResultTable = table;
+                            continue;
+                        }
+
+                        if (Cursor == null && table.Columns.FirstOrDefault(x => x.ColumnName.Contains("Cursor")) != null)
+                        {
+                            Cursor = table.Records().FirstOrDefault()["Cursor"].ToString();
+                        }
+                    }
+
                     return PrimaryResultTable.RecordsCsv();
                 }
                 else
                 {
                     TableOfContents = new KustoRestTableOfContentsV1();
-                    Cursor = "''";
                     ExtendedPropertiesTable = new KustoRestTable();
                     PrimaryResultTable = new KustoRestTable(ResponseDataSet.Tables[0]);
+                    ResponseDataSet.Tables.ForEach(x => QueryResultTables.Add(new KustoRestTable(x)));
+
                     return PrimaryResultTable.RecordsCsv();
                 }
             }
@@ -311,12 +333,6 @@ namespace CollectSFData.Kusto
                                 if (result.TableName.Equals("@ExtendedProperties"))
                                 {
                                     ExtendedResults = EnumerateResults(result.TableData);
-                                    if (ExtendedResults.Any(x => x.Contains("Cursor")))
-                                    {
-                                        string cursorRecord = ExtendedResults.FirstOrDefault(x => x.Contains("Cursor"));
-                                        Cursor = $"'{Regex.Match(cursorRecord, @"Cursor,(?<cursor>\d+?)(?:,|$)").Groups["cursor"].Value}'";
-                                        Log.Info($"setting db cursor to {Cursor}");
-                                    }
                                 }
 
                                 if (result.TableKind.Equals(WellKnownDataSet.PrimaryResult))
@@ -461,21 +477,12 @@ namespace CollectSFData.Kusto
         private void SetExtendedProperties()
         {
             // extended properties stored in single 'Value' column as key value pair in json string
-            string columnName = "Value";
-            string extendedProperty = "Cursor";
             string tableName = "@ExtendedProperties";
 
             if (TableOfContents.Rows.Any(x => x.Name.Equals(tableName)))
             {
                 long index = TableOfContents.Rows.FirstOrDefault(x => x.Name.Equals(tableName)).Ordinal;
                 ExtendedPropertiesTable = new KustoRestTable(ResponseDataSet.Tables[index]);
-                Dictionary<string, object> jsonString = ExtendedPropertiesTable.Records().FirstOrDefault(record => record[columnName].ToString().Contains(extendedProperty));
-
-                if (jsonString != null)
-                {
-                    JObject jObject = (JObject)JsonConvert.DeserializeObject(jsonString[columnName].ToString());
-                    Cursor = $"'{jObject.GetValue(extendedProperty)}'";
-                }
             }
         }
 
