@@ -44,11 +44,12 @@ namespace CollectSFData
             {
                 KustoConnection kusto = collector.Instance.Kusto;
                 Log.Warning("failed ingests due to csv compliance. restarting.");
-                //Log.Warning("failed ingests:", collector.Instance.Kusto.IngestFileObjectsFailed);
+
+                // change config to download files to parse and fix csv fields
                 config.KustoUseBlobAsSource = false;
                 config.KustoRecreateTable = false;
-                //todo: retval = collector.Collect(kusto.IngestFileObjectsFailed.Select(x => x.FileUri).ToList());
-                retval = collector.Collect();
+                retval = collector.Collect(kusto.IngestFileObjectsFailed.Select(x => x.FileUri).ToList());
+                //retval = collector.Collect();
             }
 
             return retval;

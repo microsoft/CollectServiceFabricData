@@ -6,6 +6,7 @@
 using CollectSFData.Common;
 using CollectSFData.DataFile;
 using Microsoft.Azure.Storage;
+using Microsoft.Azure.Storage.Auth;
 using Microsoft.Azure.Storage.Blob;
 using System;
 using System.Collections.Generic;
@@ -58,6 +59,14 @@ namespace CollectSFData.Azure
                 return false;
             }
         }
+        private void AddContainerToList(CloudBlobContainer container)
+        {
+            if (!ContainerList.Any(x => x.Name.Equals(container.Name)))
+            {
+                Log.Info($"adding container to list:{container.Name}", ConsoleColor.Green);
+                ContainerList.Add(container);
+            }
+        }
 
         public void DownloadContainers(string containerPrefix = "")
         {
@@ -74,22 +83,13 @@ namespace CollectSFData.Azure
             _blobChildTasks.Wait();
         }
 
-        private void AddContainerToList(CloudBlobContainer container)
-        {
-            if (!ContainerList.Any(x => x.Name.Equals(container.Name)))
-            {
-                Log.Info($"adding container to list:{container.Name}", ConsoleColor.Green);
-                ContainerList.Add(container);
-            }
-        }
-
         private void DownloadBlobsFromContainer(CloudBlobContainer container)
         {
             Log.Info($"enumerating:{container.Name}", ConsoleColor.Black, ConsoleColor.Cyan);
 
             foreach (BlobResultSegment segment in EnumerateContainerBlobs(container))
             {
-                _blobTasks.TaskAction(() => QueueBlobSegmentDownload(segment));
+                _blobTasks.TaskAction(() => QueueBlobSegmentDownload(segment.Results));
             }
         }
 
@@ -99,7 +99,7 @@ namespace CollectSFData.Azure
 
             foreach (BlobResultSegment segment in EnumerateDirectoryBlobs(directory))
             {
-                _blobChildTasks.TaskAction(() => QueueBlobSegmentDownload(segment));
+                _blobChildTasks.TaskAction(() => QueueBlobSegmentDownload(segment.Results));
             }
         }
 
@@ -107,6 +107,25 @@ namespace CollectSFData.Azure
         {
             Log.Info($"enter:{container.Name}");
             DownloadBlobsFromContainer(container);
+        }
+
+        public void DownloadFiles(List<string> uris)
+        {
+            List<IListBlobItem> blobItems = new List<IListBlobItem>();
+
+            foreach (string uri in uris)
+            {
+                try
+                {
+                    blobItems.Add(_blobClient.GetBlobReferenceFromServer(new Uri(uri)));
+                }
+                catch (Exception e)
+                {
+                    Log.Exception($"{e}");
+                }
+            }
+
+            QueueBlobSegmentDownload(blobItems);
         }
 
         private IEnumerable<BlobResultSegment> EnumerateContainerBlobs(CloudBlobContainer cloudBlobContainer)
@@ -301,14 +320,14 @@ namespace CollectSFData.Azure
             }
         }
 
-        private void QueueBlobSegmentDownload(BlobResultSegment blobResultSegment)
+        private void QueueBlobSegmentDownload(IEnumerable<IListBlobItem> blobResults)
         {
             int parentId = Thread.CurrentThread.ManagedThreadId;
-            Log.Debug($"enter. current id:{parentId}. results count: {blobResultSegment.Results.Count()}");
+            Log.Debug($"enter. current id:{parentId}. results count: {blobResults.Count()}");
             long segmentMinDateTicks = Interlocked.Read(ref DiscoveredMinDateTicks);
             long segmentMaxDateTicks = Interlocked.Read(ref DiscoveredMaxDateTicks);
 
-            foreach (IListBlobItem blob in blobResultSegment.Results)
+            foreach (IListBlobItem blob in blobResults)
             {
                 ICloudBlob blobRef = null;
                 Log.ToFile($"parent id:{parentId} current Id:{Thread.CurrentThread.ManagedThreadId}");
