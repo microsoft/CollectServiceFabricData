@@ -91,10 +91,8 @@ namespace CollectSFData.Common
                 {
                     Log.Warning($"GatherType unknown: {value}");
                 }
-                else
-                {
-                    FileType = fileType;
-                }
+
+                FileType = fileType;
             }
         }
 
