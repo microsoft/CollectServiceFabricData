@@ -16,13 +16,6 @@ namespace CollectSFData.DataFile
         private string _fileUri;
         private string _nodePattern = string.Empty;
 
-        public FileObject(string fileUri = null, string baseUri = null)
-        {
-            Stream = new StreamManager(this);
-            BaseUri = baseUri;
-            FileUri = fileUri;
-        }
-
         public string BaseUri { get; set; } = string.Empty;
 
         public Action DownloadAction { get; set; }
@@ -48,6 +41,13 @@ namespace CollectSFData.DataFile
         public string RelativeUri => Regex.Replace(_fileUri ?? "", BaseUri ?? "", "", RegexOptions.IgnoreCase).TrimStart('/');
 
         public StreamManager Stream { get; set; }
+
+        public FileObject(string fileUri = null, string baseUri = null)
+        {
+            Stream = new StreamManager(this);
+            BaseUri = baseUri;
+            FileUri = fileUri;
+        }
 
         private void ExtractNodeName(string fileUri)
         {

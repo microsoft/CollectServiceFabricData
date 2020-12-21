@@ -9,7 +9,6 @@ using Kusto.Cloud.Platform.Utils;
 using Kusto.Data;
 using Kusto.Data.Common;
 using Kusto.Data.Net.Client;
-using Kusto.Data.Results;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
@@ -24,28 +23,63 @@ using System.Threading;
 
 namespace CollectSFData.Kusto
 {
-    public class IngestionResourcesSnapshot
+    public class KustoEndpoint : Constants
     {
-        public string FailureNotificationsQueue { get; set; } = string.Empty;
-
-        public IList<string> IngestionQueues { get; set; } = new List<string>();
-
-        public string SuccessNotificationsQueue { get; set; } = string.Empty;
-
-        public IList<string> TempStorageContainers { get; set; } = new List<string>();
-    }
-
-    public class KustoEndpointInfo : Constants
-    {
-        private Instance _instance = Instance.Singleton();
-        private ConfigurationOptions Config => _instance.Config;
         private static ICslAdminProvider _kustoAdminClient;
         private static ICslQueryProvider _kustoQueryClient;
         private static int maxKustoClientTimeMs = 300 * 1000;
         private AzureResourceManager _arm = new AzureResourceManager();
         private Http _httpClient = Http.ClientFactory();
+        private Instance _instance = Instance.Singleton();
 
-        public KustoEndpointInfo()
+        public string ClusterIngestUrl { get; set; }
+
+        public string ClusterName { get; private set; }
+
+        private ConfigurationOptions Config => _instance.Config;
+
+        public KustoConnectionStringBuilder DatabaseConnection { get; set; }
+
+        public string Cursor;
+        public string DatabaseName { get; set; }
+
+        public bool DeleteSourceOnSuccess { get; set; }
+
+        public KustoRestTable ExtendedPropertiesTable { get; private set; } = new KustoRestTable();
+
+        public List<string> ExtendedResults { get; private set; }
+
+        public string HostName { get; private set; }
+
+        public string IdentityToken { get; private set; }
+
+        public IngestionResourcesSnapshot IngestionResources { get; private set; }
+
+        public bool LogLargeResults { get; set; } = true;
+
+        public string ManagementUrl { get; private set; }
+
+        public KustoRestTable PrimaryResultTable { get; private set; } = new KustoRestTable();
+
+        public List<KustoRestTable> QueryResultTables { get; private set; } = new List<KustoRestTable>();
+
+        public KustoRestResponseV1 ResponseDataSet { get; private set; } = new KustoRestResponseV1();
+
+        public string RestMgmtUri { get; private set; }
+
+        public string RestQueryUri { get; private set; }
+
+        public string TableName { get; private set; }
+
+        public KustoRestTableOfContentsV1 TableOfContents { get; private set; } = new KustoRestTableOfContentsV1();
+
+        private Timer adminTimer { get; set; }
+
+        private KustoConnectionStringBuilder ManagementConnection { get; set; }
+
+        private Timer queryTimer { get; set; }
+
+        public KustoEndpoint()
         {
             if (!Config.IsKustoConfigured())
             {
@@ -79,29 +113,6 @@ namespace CollectSFData.Kusto
             }
         }
 
-        public string ClusterIngestUrl { get; set; }
-        public string ClusterName { get; private set; }
-        public string Cursor { get; set; } = "''";
-        public KustoConnectionStringBuilder DatabaseConnection { get; set; }
-        public string DatabaseName { get; set; }
-        public bool DeleteSourceOnSuccess { get; set; }
-        public KustoRestTable ExtendedPropertiesTable { get; private set; } = new KustoRestTable();
-        public List<string> ExtendedResults { get; private set; }
-        public string HostName { get; private set; }
-        public string IdentityToken { get; private set; }
-        public IngestionResourcesSnapshot IngestionResources { get; private set; }
-        public bool LogLargeResults { get; set; } = true;
-        public string ManagementUrl { get; private set; }
-        public KustoRestTable PrimaryResultTable { get; private set; } = new KustoRestTable();
-        public KustoRestResponseV1 ResponseDataSet { get; private set; } = new KustoRestResponseV1();
-        public string RestMgmtUri { get; private set; }
-        public string RestQueryUri { get; private set; }
-        public string TableName { get; private set; }
-        public KustoRestTableOfContentsV1 TableOfContents { get; private set; } = new KustoRestTableOfContentsV1();
-        private Timer adminTimer { get; set; } // = new Timer(DisposeClient, kustoAdminClient, maxKustoClientTimeMs, maxKustoClientTimeMs);
-        private KustoConnectionStringBuilder ManagementConnection { get; set; }
-        private Timer queryTimer { get; set; } // = new Timer(DisposeClient, kustoQueryClient, maxKustoClientTimeMs, maxKustoClientTimeMs);
-
         public void Authenticate(bool throwOnError = false)
         {
             _arm.Scopes = new List<string>() { $"{ClusterIngestUrl}/kusto.read", $"{ClusterIngestUrl}/kusto.write" };
@@ -124,6 +135,23 @@ namespace CollectSFData.Kusto
 
             IdentityToken = RetrieveKustoIdentityToken();
             IngestionResources = RetrieveIngestionResources();
+        }
+
+        public List<string> Command(string command)
+        {
+            Log.Info($"command:{command}", ConsoleColor.Blue);
+            if (_kustoAdminClient == null)
+            {
+                _kustoAdminClient = KustoClientFactory.CreateCslAdminProvider(ManagementConnection);
+            }
+
+            if (adminTimer == null)
+            {
+                adminTimer = new Timer(DisposeAdminClient, null, maxKustoClientTimeMs, maxKustoClientTimeMs);
+            }
+
+            adminTimer.Change(maxKustoClientTimeMs, maxKustoClientTimeMs);
+            return EnumerateResults(_kustoAdminClient.ExecuteControlCommand(command));
         }
 
         public bool CreateTable(string tableName, string tableSchema)
@@ -166,14 +194,22 @@ namespace CollectSFData.Kusto
             if (_kustoQueryClient == null)
             {
                 _kustoQueryClient = KustoClientFactory.CreateCslQueryProvider(ManagementConnection);
+            }
+
+            if (queryTimer == null)
+            {
                 queryTimer = new Timer(DisposeQueryClient, null, maxKustoClientTimeMs, maxKustoClientTimeMs);
             }
 
             try
             {
+                PrimaryResultTable = null;
+                QueryResultTables.Clear();
+                Cursor = null;
+
                 queryTimer.Change(maxKustoClientTimeMs, maxKustoClientTimeMs);
                 // unable to parse multiple tables v1 or v2 using kusto so using httpclient and rest
-                string requestBody = "{ \"db\": \"" + DatabaseName + "\", \"csl\": \"" + query + "\" }";
+                string requestBody = "{ \"db\": \"" + DatabaseName + "\", \"csl\": \"" + query + ";print Cursor=current_cursor()\" }";
                 string requestId = new Guid().ToString();
 
                 Dictionary<string, string> headers = new Dictionary<string, string>();
@@ -197,17 +233,34 @@ namespace CollectSFData.Kusto
                 if (toc.HasData)
                 {
                     SetExtendedProperties();
+                    List<long> indexes = toc.Rows.Where(x => x.Kind.Equals("QueryResult")).Select(x => x.Ordinal).ToList();
 
-                    long index = toc.Rows.FirstOrDefault(x => x.Kind.Equals("QueryResult")).Ordinal;
-                    PrimaryResultTable = new KustoRestTable(ResponseDataSet.Tables[index]);
+                    foreach (long index in indexes)
+                    {
+                        KustoRestTable table = new KustoRestTable(ResponseDataSet.Tables[index]);
+                        QueryResultTables.Add(table);
+
+                        if (PrimaryResultTable == null)
+                        {
+                            PrimaryResultTable = table;
+                            continue;
+                        }
+
+                        if (Cursor == null && table.Columns.FirstOrDefault(x => x.ColumnName.Contains("Cursor")) != null)
+                        {
+                            Cursor = table.Records().FirstOrDefault()["Cursor"].ToString();
+                        }
+                    }
+
                     return PrimaryResultTable.RecordsCsv();
                 }
                 else
                 {
                     TableOfContents = new KustoRestTableOfContentsV1();
-                    Cursor = "''";
                     ExtendedPropertiesTable = new KustoRestTable();
                     PrimaryResultTable = new KustoRestTable(ResponseDataSet.Tables[0]);
+                    ResponseDataSet.Tables.ForEach(x => QueryResultTables.Add(new KustoRestTable(x)));
+
                     return PrimaryResultTable.RecordsCsv();
                 }
             }
@@ -215,6 +268,10 @@ namespace CollectSFData.Kusto
             {
                 Log.Exception($"exception executing query: {query}\r\n{e}");
                 return new List<string>();
+            }
+            finally
+            {
+                Cursor = string.IsNullOrEmpty(Cursor) ? "''" : Cursor;
             }
         }
 
@@ -235,121 +292,6 @@ namespace CollectSFData.Kusto
                 Log.Info("Disposing kusto query client");
                 _kustoQueryClient.Dispose();
                 _kustoQueryClient = null;
-            }
-        }
-
-        public List<string> Command(string command)
-        {
-            Log.Info($"command:{command}", ConsoleColor.Blue);
-            if (_kustoAdminClient == null)
-            {
-                _kustoAdminClient = KustoClientFactory.CreateCslAdminProvider(ManagementConnection);
-                adminTimer = new Timer(DisposeAdminClient, null, maxKustoClientTimeMs, maxKustoClientTimeMs);
-            }
-
-            adminTimer.Change(maxKustoClientTimeMs, maxKustoClientTimeMs);
-            return EnumerateResults(_kustoAdminClient.ExecuteControlCommand(command));
-        }
-
-        private List<string> EnumerateResults(ProgressiveDataSet reader)
-        {
-            List<string> csvRecords = new List<string>();
-            bool finalResults = false;
-            bool isProgressive = false;
-
-            try
-            {
-                IEnumerator<ProgressiveDataSetFrame> resultFrames = reader.GetFrames();
-
-                while (!finalResults && resultFrames.MoveNext())
-                {
-                    ProgressiveDataSetFrame resultFrame = resultFrames.Current;
-                    Log.Debug($"resultFrame:", resultFrame);
-
-                    switch (resultFrame.FrameType)
-                    {
-                        case FrameType.DataSetCompletion:
-                            {
-                                ProgressiveDataSetCompletionFrame result = resultFrame as ProgressiveDataSetCompletionFrame;
-                                Log.Info($"{result.GetType()}", result);
-                                break;
-                            }
-                        case FrameType.DataSetHeader:
-                            {
-                                ProgressiveDataSetHeaderFrame result = resultFrame as ProgressiveDataSetHeaderFrame;
-                                Log.Info($"{result.GetType()}", result);
-                                isProgressive = result.IsProgressive;
-                                break;
-                            }
-                        case FrameType.DataTable:
-                            {
-                                ProgressiveDataSetDataTableFrame result = resultFrame as ProgressiveDataSetDataTableFrame;
-                                Log.Info($"{result.GetType()}", result);
-
-                                if (result.TableName.Equals("@ExtendedProperties"))
-                                {
-                                    ExtendedResults = EnumerateResults(result.TableData);
-                                    if (ExtendedResults.Any(x => x.Contains("Cursor")))
-                                    {
-                                        string cursorRecord = ExtendedResults.FirstOrDefault(x => x.Contains("Cursor"));
-                                        Cursor = $"'{Regex.Match(cursorRecord, @"Cursor,(?<cursor>\d+?)(?:,|$)").Groups["cursor"].Value}'";
-                                        Log.Info($"setting db cursor to {Cursor}");
-                                    }
-                                }
-
-                                if (result.TableKind.Equals(WellKnownDataSet.PrimaryResult))
-                                {
-                                    csvRecords = EnumerateResults(result.TableData);
-                                }
-
-                                // if non progressive, this may be last frame
-                                if (!isProgressive)
-                                {
-                                    finalResults = true;
-                                }
-
-                                break;
-                            }
-                        case FrameType.TableCompletion:
-                            {
-                                ProgressiveDataSetTableCompletionFrame result = resultFrame as ProgressiveDataSetTableCompletionFrame;
-                                Log.Info($"{result.GetType()}", result);
-                                break;
-                            }
-                        case FrameType.TableFragment:
-                            {
-                                ProgressiveDataSetDataTableFragmentFrame result = resultFrame as ProgressiveDataSetDataTableFragmentFrame;
-                                Log.Error($"not implemented: {result.GetType()}", result);
-                                result.ToDataTable();
-                                break;
-                            }
-                        case FrameType.TableHeader:
-                            {
-                                ProgressiveDataSetHeaderFrame result = resultFrame as ProgressiveDataSetHeaderFrame;
-                                Log.Info($"{result.GetType()}", result);
-                                break;
-                            }
-                        case FrameType.TableProgress:
-                            {
-                                ProgressiveDataSetTableProgressFrame result = resultFrame as ProgressiveDataSetTableProgressFrame;
-                                Log.Info($"{result.GetType()}", result);
-                                break;
-                            }
-                        case FrameType.LastInvalid:
-                        default:
-                            {
-                                Log.Warning($"unknown frame type:{resultFrame.FrameType}");
-                                return csvRecords;
-                            }
-                    }
-                }
-
-                return csvRecords;
-            }
-            catch (Exception e)
-            {
-                Log.Exception($"{e}");
-                return csvRecords;
             }
         }
 
@@ -396,14 +338,13 @@ namespace CollectSFData.Kusto
             _httpClient.SendRequest(RestMgmtUri, _arm.BearerToken, requestBody, HttpMethod.Post);
             JObject responseJson = _httpClient.ResponseStreamJson;
 
-            // input queues
             IEnumerable<JToken> tokens = responseJson.SelectTokens("Tables[0].Rows[?(@.[0] == 'SecuredReadyForAggregationQueue')]");
+
             foreach (JToken token in tokens)
             {
                 ingestionResources.IngestionQueues.Add((string)token.Last);
             }
 
-            // temp storage containers
             tokens = responseJson.SelectTokens("Tables[0].Rows[?(@.[0] == 'TempStorage')]");
 
             foreach (JToken token in tokens)
@@ -411,11 +352,9 @@ namespace CollectSFData.Kusto
                 ingestionResources.TempStorageContainers.Add((string)token.Last);
             }
 
-            // failure notifications queue
             JToken singleToken = responseJson.SelectTokens("Tables[0].Rows[?(@.[0] == 'FailedIngestionsQueue')].[1]").FirstOrDefault();
             ingestionResources.FailureNotificationsQueue = (string)singleToken;
 
-            // success notifications queue
             singleToken = responseJson.SelectTokens("Tables[0].Rows[?(@.[0] == 'SuccessfulIngestionsQueue')].[1]").FirstOrDefault();
             ingestionResources.SuccessNotificationsQueue = (string)singleToken;
 
@@ -439,21 +378,12 @@ namespace CollectSFData.Kusto
         private void SetExtendedProperties()
         {
             // extended properties stored in single 'Value' column as key value pair in json string
-            string columnName = "Value";
-            string extendedProperty = "Cursor";
             string tableName = "@ExtendedProperties";
 
             if (TableOfContents.Rows.Any(x => x.Name.Equals(tableName)))
             {
                 long index = TableOfContents.Rows.FirstOrDefault(x => x.Name.Equals(tableName)).Ordinal;
                 ExtendedPropertiesTable = new KustoRestTable(ResponseDataSet.Tables[index]);
-                Dictionary<string, object> jsonString = ExtendedPropertiesTable.Records().FirstOrDefault(record => record[columnName].ToString().Contains(extendedProperty));
-
-                if (jsonString != null)
-                {
-                    JObject jObject = (JObject)JsonConvert.DeserializeObject(jsonString[columnName].ToString());
-                    Cursor = $"'{jObject.GetValue(extendedProperty)}'";
-                }
             }
         }
 

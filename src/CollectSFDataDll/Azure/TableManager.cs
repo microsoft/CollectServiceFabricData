@@ -17,10 +17,10 @@ namespace CollectSFData.Azure
 {
     public class TableManager : Constants
     {
-        private Instance _instance = Instance.Singleton();
-        private ConfigurationOptions Config => _instance.Config;
         private readonly CustomTaskManager _tableTasks = new CustomTaskManager(true);
+        private Instance _instance = Instance.Singleton();
         private CloudTableClient _tableClient;
+        private ConfigurationOptions Config => _instance.Config;
         public Action<FileObject> IngestCallback { get; set; }
         public List<CloudTable> TableList { get; set; } = new List<CloudTable>();
 
@@ -223,7 +223,7 @@ namespace CollectSFData.Azure
                     string relativeUri = $"{Config.StartTimeUtc.Ticks}-{Config.EndTimeUtc.Ticks}-{cloudTable.Name}.{chunkCount++}{TableExtension}";
                     FileObject fileObject = new FileObject(relativeUri, Config.CacheLocation);
                     resultsChunk.ToList().ForEach(x => x.RelativeUri = relativeUri);
-                    
+
                     fileObject.Stream.Write(resultsChunk);
 
                     _instance.TotalFilesDownloaded++;
