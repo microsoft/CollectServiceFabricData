@@ -11,16 +11,6 @@ namespace CollectSFData.Common
 {
     public class CommandLineArguments : Constants
     {
-        public CommandLineArguments()
-        {
-            CmdLineApp = new CommandLineApplication(throwOnUnexpectedArg: true)
-            {
-                Name = AppDomain.CurrentDomain.FriendlyName,
-                Description = "collect service fabric logs for analysis",
-                ShowInHelpText = true
-            };
-        }
-
         public CommandOption AzureClientId { get; set; }
 
         public CommandOption AzureClientSecret { get; set; }
@@ -106,6 +96,16 @@ namespace CollectSFData.Common
         public CommandOption UseMemoryStream { get; set; }
 
         public CommandOption VersionOption { get; set; }
+
+        public CommandLineArguments()
+        {
+            CmdLineApp = new CommandLineApplication(throwOnUnexpectedArg: true)
+            {
+                Name = AppDomain.CurrentDomain.FriendlyName,
+                Description = "collect service fabric logs for analysis",
+                ShowInHelpText = true
+            };
+        }
 
         public void DisplayExamples()
         {
@@ -476,7 +476,7 @@ namespace CollectSFData.Common
                     CommandOptionType.SingleValue);
 
             LogDebug = CmdLineApp.Option("-debug|--logDebug",
-                    $"[int] 0-disabled, 1-exception, 2-error, 3-warning, 4-info, 5-debug." + 
+                    $"[int] 0-disabled, 1-exception, 2-error, 3-warning, 4-info, 5-debug." +
                     $"{newLine} use logdebug levels for troubleshooting utility",
                     CommandOptionType.SingleValue);
 

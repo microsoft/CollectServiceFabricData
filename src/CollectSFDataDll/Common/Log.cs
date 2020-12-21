@@ -19,6 +19,7 @@ namespace CollectSFData.Common
         public static int LogErrors = 0;
         private static ConsoleColor _highlightBackground = Console.ForegroundColor;
         private static ConsoleColor _highlightForeground = Console.BackgroundColor;
+        private static bool _isRunning;
         private static JsonSerializerSettings _jsonSerializerSettings;
         private static SynchronizedList<LogMessage> _lastMessageList = new SynchronizedList<LogMessage>();
         private static string _logFile;
@@ -27,20 +28,6 @@ namespace CollectSFData.Common
         private static Task _taskWriter;
         private static CancellationTokenSource _taskWriterCancellationToken;
         private static int _threadSleepMs = Constants.ThreadSleepMs100;
-
-        static Log()
-        {
-            JsonErrorHandler += Log_JsonErrorHandler;
-
-            _jsonSerializerSettings = new JsonSerializerSettings()
-            {
-                Error = JsonErrorHandler
-            };
-
-            LogDebug = LoggingLevel.Info;
-            IsConsole = true;
-            Start();
-        }
 
         public delegate void LogMessageHandler(object sender, LogMessage args);
 
@@ -56,14 +43,36 @@ namespace CollectSFData.Common
 
         public static bool LogFileEnabled => !string.IsNullOrEmpty(LogFile);
 
+        static Log()
+        {
+            JsonErrorHandler += Log_JsonErrorHandler;
+
+            _jsonSerializerSettings = new JsonSerializerSettings()
+            {
+                Error = JsonErrorHandler
+            };
+
+            LogDebug = LoggingLevel.Info;
+            IsConsole = true;
+            Open();
+        }
+
+        public static void Reset()
+        {
+            Close();
+            Open();
+        }
+
         public static void Close()
         {
             try
             {
                 _messageList.AddRange(_lastMessageList);
+                _lastMessageList.Clear();
                 _taskWriterCancellationToken.Cancel();
                 _taskWriter.Wait();
                 _taskWriter.Dispose();
+                _isRunning = false;
             }
             catch (TaskCanceledException) { }
             catch (AggregateException e)
@@ -168,11 +177,28 @@ namespace CollectSFData.Common
             }
         }
 
-        public static void Start()
+        public static void Open()
         {
-            _taskWriterCancellationToken = new CancellationTokenSource();
-            _taskWriter = new Task(TaskWriter, _taskWriterCancellationToken.Token);
-            _taskWriter.Start();
+            if (!_isRunning)
+            {
+                _taskWriterCancellationToken = new CancellationTokenSource();
+                _taskWriter = new Task(TaskWriter, _taskWriterCancellationToken.Token);
+                _taskWriter.Start();
+                _isRunning = true;
+            }
+        }
+
+        public static void ToFile(string message, object jsonSerializer = null, [CallerMemberName] string callerName = "")
+        {
+            if (LogDebug >= LoggingLevel.File)
+            {
+                QueueMessage(false, new LogMessage()
+                {
+                    TimeStamp = DateTime.Now.ToString("o") + "::",
+                    Message = $"{Thread.CurrentThread.ManagedThreadId}:{callerName}:trivial:{message}{serializeJson(jsonSerializer)}",
+                    LogFileOnly = true
+                });
+            }
         }
 
         public static void Warning(string message, object jsonSerializer = null, [CallerMemberName] string callerName = "")
@@ -230,7 +256,7 @@ namespace CollectSFData.Common
         }
 
         private static void Process(string message,
-                                                                                                ConsoleColor? foregroundColor = null,
+                                ConsoleColor? foregroundColor = null,
                                 ConsoleColor? backgroundColor = null,
                                 object jsonSerializer = null,
                                 bool minimal = false,
@@ -243,21 +269,9 @@ namespace CollectSFData.Common
                 return;
             }
 
-            if (jsonSerializer != null)
-            {
-                try
-                {
-                    jsonSerializer = Environment.NewLine + JsonConvert.SerializeObject(jsonSerializer, Formatting.Indented, _jsonSerializerSettings);
-                }
-                catch (Exception e)
-                {
-                    message += Environment.NewLine + $"LOG:jsondeserialize error: {e.Message}";
-                }
-            }
-
             if (!minimal)
             {
-                message = $"{Thread.CurrentThread.ManagedThreadId}:{callerName}:{message}{jsonSerializer}";
+                message = $"{Thread.CurrentThread.ManagedThreadId}:{callerName}:{message}{serializeJson(jsonSerializer)}";
             }
 
             QueueMessage(lastMessage, new LogMessage()
@@ -290,6 +304,23 @@ namespace CollectSFData.Common
             }
         }
 
+        private static string serializeJson(object jsonSerializer)
+        {
+            if (jsonSerializer != null)
+            {
+                try
+                {
+                    return Environment.NewLine + JsonConvert.SerializeObject(jsonSerializer, Formatting.Indented, _jsonSerializerSettings);
+                }
+                catch (Exception e)
+                {
+                    return Environment.NewLine + $"LOG:jsondeserialize error: {e.Message}";
+                }
+            }
+
+            return string.Empty;
+        }
+
         private static void SetColor(ConsoleColor? foregroundColor = null, ConsoleColor? backgroundColor = null)
         {
             if (foregroundColor != null)
@@ -312,7 +343,10 @@ namespace CollectSFData.Common
                 {
                     foreach (LogMessage result in _messageList.DeListAll())
                     {
-                        WriteMessage(result);
+                        if (!result.LogFileOnly)
+                        {
+                            WriteMessage(result);
+                        }
 
                         if (LogFileEnabled)
                         {
