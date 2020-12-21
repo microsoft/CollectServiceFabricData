@@ -52,16 +52,9 @@ namespace CollectSFData
                     return 1;
                 }
 
-                if (uris?.Count > 0)
+                if (Config.SasEndpointInfo.IsPopulated())
                 {
-                    foreach (string uri in uris)
-                    {
-                        QueueForIngest(new FileObject(fileUri: uri));
-                    }
-                }
-                else if (Config.SasEndpointInfo.IsPopulated())
-                {
-                    DownloadAzureData();
+                    DownloadAzureData(uris);
                 }
                 else if (Config.IsCacheLocationPreConfigured())
                 {
@@ -179,7 +172,7 @@ namespace CollectSFData
             return true;
         }
 
-        private void DownloadAzureData()
+        private void DownloadAzureData(List<string> uris = null)
         {
             string containerPrefix = null;
             string tablePrefix = null;
@@ -220,7 +213,14 @@ namespace CollectSFData
 
                 if (blobMgr.Connect())
                 {
-                    blobMgr.DownloadContainers(containerPrefix);
+                    if (uris?.Count > 0)
+                    {
+                        blobMgr.DownloadFiles(uris);
+                    }
+                    else
+                    {
+                        blobMgr.DownloadContainers(containerPrefix);
+                    }
                 }
             }
         }
