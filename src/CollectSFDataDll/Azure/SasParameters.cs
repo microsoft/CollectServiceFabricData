@@ -10,6 +10,38 @@ namespace CollectSFData.Azure
 {
     public class SasParameters
     {
+        public string ApiVersion { get; set; }
+
+        public bool IsServiceSas { get; set; }
+
+        public string Signature { get; set; }
+
+        public string SignedExpiry { get; set; }
+
+        public DateTime SignedExpiryLocal { get; set; } = DateTime.MinValue;
+
+        public DateTime SignedExpiryUtc { get; set; } = DateTime.MinValue;
+
+        public string SignedIp { get; set; }
+
+        public string SignedPermission { get; set; }
+
+        public string SignedProtocol { get; set; }
+
+        public string SignedResourceTypes { get; set; }
+
+        public string SignedServices { get; set; }
+
+        public string SignedStart { get; set; }
+
+        public DateTime SignedStartLocal { get; set; } = DateTime.MinValue;
+
+        public DateTime SignedStartUtc { get; set; } = DateTime.MinValue;
+
+        public string SignedVersion { get; set; }
+
+        private string _sasToken { get; set; }
+
         public SasParameters(string sasToken)
         {
             _sasToken = sasToken.TrimStart('?');
@@ -50,38 +82,6 @@ namespace CollectSFData.Azure
                 }
             }
         }
-
-        public string ApiVersion { get; set; }
-
-        public bool IsServiceSas { get; set; }
-
-        public string Signature { get; set; }
-
-        public string SignedExpiry { get; set; }
-
-        public DateTime SignedExpiryLocal { get; set; } = DateTime.MinValue;
-
-        public DateTime SignedExpiryUtc { get; set; } = DateTime.MinValue;
-
-        public string SignedIp { get; set; }
-
-        public string SignedPermission { get; set; }
-
-        public string SignedProtocol { get; set; }
-
-        public string SignedResourceTypes { get; set; }
-
-        public string SignedServices { get; set; }
-
-        public string SignedStart { get; set; }
-
-        public DateTime SignedStartLocal { get; set; } = DateTime.MinValue;
-
-        public DateTime SignedStartUtc { get; set; } = DateTime.MinValue;
-
-        public string SignedVersion { get; set; }
-
-        private string _sasToken { get; set; }
 
         private DateTime ParseDate(string dateString)
         {
