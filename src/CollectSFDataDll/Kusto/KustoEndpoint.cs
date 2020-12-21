@@ -237,7 +237,7 @@ namespace CollectSFData.Kusto
 
                     foreach (long index in indexes)
                     {
-                        KustoRestTable  table = new KustoRestTable(ResponseDataSet.Tables[index]);
+                        KustoRestTable table = new KustoRestTable(ResponseDataSet.Tables[index]);
                         QueryResultTables.Add(table);
 
                         if (PrimaryResultTable == null)
@@ -268,6 +268,10 @@ namespace CollectSFData.Kusto
             {
                 Log.Exception($"exception executing query: {query}\r\n{e}");
                 return new List<string>();
+            }
+            finally
+            {
+                Cursor = string.IsNullOrEmpty(Cursor) ? "''" : Cursor;
             }
         }
 
@@ -335,7 +339,7 @@ namespace CollectSFData.Kusto
             JObject responseJson = _httpClient.ResponseStreamJson;
 
             IEnumerable<JToken> tokens = responseJson.SelectTokens("Tables[0].Rows[?(@.[0] == 'SecuredReadyForAggregationQueue')]");
- 
+
             foreach (JToken token in tokens)
             {
                 ingestionResources.IngestionQueues.Add((string)token.Last);
