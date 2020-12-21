@@ -1,6 +1,6 @@
 # Change log
 
-## 12/21/2020
+## 12/21/2020 https://github.com/microsoft/CollectServiceFabricData/releases/tag/v2.7.2012.21142504
 
 - modify collectsfdata.schema.json split title into title, description  
 - add TraceKnownIssues.csl additional known issues  
@@ -19,7 +19,7 @@
 -- default KustoUseBlobAsSource to true  
 - add additional vscode launch configurations  
 
-## 12/4/2020  
+## 12/4/2020  https://github.com/microsoft/CollectServiceFabricData/releases/tag/v2.7.2012.04200700
 
 - modify repo layout structure and place source in /src  
 - add .devcontainer with net5 custom install for codespaces  
