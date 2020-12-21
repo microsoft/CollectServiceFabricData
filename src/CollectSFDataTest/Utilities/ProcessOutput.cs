@@ -15,7 +15,7 @@ namespace CollectSFDataTest.Utilities
         public int ExitCode { get; set; } = 0;
 
         public List<string> LogMessages { get; internal set; }
-        
+
         public string StandardError { get; set; } = "";
 
         public string StandardOutput { get; set; } = "";

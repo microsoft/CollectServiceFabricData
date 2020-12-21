@@ -5,14 +5,44 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "PowerShell Launch Current File",
-            "type": "PowerShell",
+            "name": ".NET Core 31 Launch with Args (console)",
+            "type": "coreclr",
             "request": "launch",
-            "script": "${file}",
-            "cwd": "${file}"
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/src/bin/Debug/netcoreapp3.1/CollectSFData.dll",
+            "args": [
+                "${input:args}"
+            ],
+            "cwd": "${workspaceFolder}/src/bin/Debug/netcoreapp3.1",
+            "stopAtEntry": false,
+            "console": "internalConsole",
         },
         {
-            "name": ".NET Core Launch (console)",
+            "name": "NET 5 Launch (console)",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/src/bin/Debug/net5/CollectSFData.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/src/bin/Debug/net5",
+            "console": "internalConsole",
+            "stopAtEntry": false
+        },
+        {
+            "name": "NET 5 Launch with Args (console)",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/src/bin/Debug/net5/CollectSFData.dll",
+            "args": [
+                "${input:args}"
+            ],
+            "cwd": "${workspaceFolder}/src/bin/Debug/net5",
+            "stopAtEntry": false,
+            "console": "internalConsole",
+        },
+        {
+            "name": ".NET Core 31 Launch (console)",
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
@@ -27,6 +57,20 @@
             "type": "coreclr",
             "request": "attach",
             "processId": "${command:pickProcess}"
+        },
+        {
+            "name": "PowerShell Launch Current File",
+            "type": "PowerShell",
+            "request": "launch",
+            "script": "${file}",
+            "cwd": "${file}"
+        }
+    ],
+    "inputs": [
+        {
+            "id": "args",
+            "type": "promptString",
+            "description": "enter arguments"
         }
     ]
 }
