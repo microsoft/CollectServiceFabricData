@@ -9,7 +9,6 @@ using Kusto.Cloud.Platform.Utils;
 using Kusto.Data;
 using Kusto.Data.Common;
 using Kusto.Data.Net.Client;
-using Kusto.Data.Results;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
@@ -335,14 +334,13 @@ namespace CollectSFData.Kusto
             _httpClient.SendRequest(RestMgmtUri, _arm.BearerToken, requestBody, HttpMethod.Post);
             JObject responseJson = _httpClient.ResponseStreamJson;
 
-            // input queues
             IEnumerable<JToken> tokens = responseJson.SelectTokens("Tables[0].Rows[?(@.[0] == 'SecuredReadyForAggregationQueue')]");
+ 
             foreach (JToken token in tokens)
             {
                 ingestionResources.IngestionQueues.Add((string)token.Last);
             }
 
-            // temp storage containers
             tokens = responseJson.SelectTokens("Tables[0].Rows[?(@.[0] == 'TempStorage')]");
 
             foreach (JToken token in tokens)
@@ -350,11 +348,9 @@ namespace CollectSFData.Kusto
                 ingestionResources.TempStorageContainers.Add((string)token.Last);
             }
 
-            // failure notifications queue
             JToken singleToken = responseJson.SelectTokens("Tables[0].Rows[?(@.[0] == 'FailedIngestionsQueue')].[1]").FirstOrDefault();
             ingestionResources.FailureNotificationsQueue = (string)singleToken;
 
-            // success notifications queue
             singleToken = responseJson.SelectTokens("Tables[0].Rows[?(@.[0] == 'SuccessfulIngestionsQueue')].[1]").FirstOrDefault();
             ingestionResources.SuccessNotificationsQueue = (string)singleToken;
 
