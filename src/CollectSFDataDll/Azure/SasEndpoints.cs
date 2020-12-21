@@ -12,6 +12,37 @@ namespace CollectSFData.Azure
 {
     public class SasEndpoints
     {
+        public enum SasTypes
+        {
+            unknown,
+            blob,
+            file,
+            table,
+            queue,
+        }
+
+        public string AbsolutePath { get; private set; }
+
+        public string BlobEndpoint { get; private set; }
+
+        public string ConnectionString { get; private set; }
+
+        public string FileEndpoint { get; private set; }
+
+        public bool IsConnectionString { get; private set; }
+
+        public SasParameters Parameters { get; private set; }
+
+        public string QueueEndpoint { get; private set; }
+
+        public string SasToken { get; private set; } = string.Empty;
+
+        public string StorageAccountName { get; private set; }
+
+        public string StorageAccountSuffix { get; private set; }
+
+        public string TableEndpoint { get; private set; }
+
         public SasEndpoints(string sasKey = "")
         {
             if (sasKey.ToLower().Contains("endpoint="))
@@ -50,36 +81,6 @@ namespace CollectSFData.Azure
 
             SetStorageUriInfo(sasKey);
         }
-
-        public enum SasTypes
-        {
-            unknown,
-            blob,
-            file,
-            table,
-            queue,
-        }
-
-        public string AbsolutePath { get; private set; }
-
-        public string BlobEndpoint { get; private set; }
-
-        public string ConnectionString { get; private set; }
-
-        public string FileEndpoint { get; private set; }
-
-        public bool IsConnectionString { get; private set; }
-
-        public SasParameters Parameters { get; private set; }
-        public string QueueEndpoint { get; private set; }
-
-        public string SasToken { get; private set; } = string.Empty;
-
-        public string StorageAccountName { get; private set; }
-
-        public string StorageAccountSuffix { get; private set; }
-
-        public string TableEndpoint { get; private set; }
 
         public bool IsPopulated()
         {

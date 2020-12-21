@@ -4,7 +4,6 @@
 // ------------------------------------------------------------
 
 using CollectSFData.Common;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -18,9 +17,9 @@ namespace CollectSFData.DataFile
 {
     public class FileManager : Constants
     {
+        private readonly CustomTaskManager _fileTasks = new CustomTaskManager(true);
         private Instance _instance = Instance.Singleton();
         private ConfigurationOptions Config => _instance.Config;
-        private readonly CustomTaskManager _fileTasks = new CustomTaskManager(true);
 
         public static string NormalizePath(string path, string directorySeparator = "/")
         {
@@ -154,58 +153,6 @@ namespace CollectSFData.DataFile
 
             Log.Warning($"returning: empty fileObjectCollection for file: {fileObject.FileUri}");
             return new FileObjectCollection();
-        }
-
-        public string RelogBlg(FileObject fileObject)
-        {
-            string outputFile = fileObject.FileUri + PerfCsvExtension;
-
-            if (!(Config.FileType.Equals(FileTypesEnum.counter)))
-            {
-                return outputFile;
-            }
-
-            fileObject.Stream.SaveToFile();
-            string csvParams = fileObject.FileUri + " -f csv -o " + outputFile;
-            DeleteFile(outputFile);
-
-            Log.Info($"Writing {outputFile}");
-            Log.Info($"relog.exe {csvParams}");
-            ProcessStartInfo startInfo = new ProcessStartInfo("relog.exe", csvParams)
-            {
-                CreateNoWindow = true,
-                UseShellExecute = false,
-                RedirectStandardError = true,
-                RedirectStandardOutput = true,
-                LoadUserProfile = false,
-            };
-
-            Process convertFileProc = Process.Start(startInfo);
-
-            if (!convertFileProc.HasExited)
-            {
-                if (convertFileProc.StandardOutput.Peek() > -1)
-                {
-                    Log.Info($"{convertFileProc.StandardOutput.ReadToEnd()}");
-                }
-
-                if (convertFileProc.StandardError.Peek() > -1)
-                {
-                    Log.Error($"{convertFileProc.StandardError.ReadToEnd()}");
-                }
-            }
-
-            convertFileProc.WaitForExit();
-            _instance.TotalFilesConverted++;
-            fileObject.Stream.ReadFromFile(outputFile);
-            DeleteFile(outputFile);
-
-            if (Config.UseMemoryStream | !Config.IsCacheLocationPreConfigured())
-            {
-                DeleteFile(fileObject.FileUri);
-            }
-
-            return outputFile;
         }
 
         private void DeleteFile(string fileUri)
@@ -358,7 +305,7 @@ namespace CollectSFData.DataFile
             }
         }
 
-        private FileObjectCollection PopulateCollection<T>(FileObject fileObject) where T: IRecord
+        private FileObjectCollection PopulateCollection<T>(FileObject fileObject) where T : IRecord
         {
             FileObjectCollection collection = new FileObjectCollection() { fileObject };
             _instance.TotalFilesFormatted++;
@@ -384,6 +331,58 @@ namespace CollectSFData.DataFile
 
             collection.ForEach(x => SaveToCache(x));
             return collection;
+        }
+
+        private string RelogBlg(FileObject fileObject)
+        {
+            string outputFile = fileObject.FileUri + PerfCsvExtension;
+
+            if (!(Config.FileType.Equals(FileTypesEnum.counter)))
+            {
+                return outputFile;
+            }
+
+            fileObject.Stream.SaveToFile();
+            string csvParams = fileObject.FileUri + " -f csv -o " + outputFile;
+            DeleteFile(outputFile);
+
+            Log.Info($"Writing {outputFile}");
+            Log.Info($"relog.exe {csvParams}");
+            ProcessStartInfo startInfo = new ProcessStartInfo("relog.exe", csvParams)
+            {
+                CreateNoWindow = true,
+                UseShellExecute = false,
+                RedirectStandardError = true,
+                RedirectStandardOutput = true,
+                LoadUserProfile = false,
+            };
+
+            Process convertFileProc = Process.Start(startInfo);
+
+            if (!convertFileProc.HasExited)
+            {
+                if (convertFileProc.StandardOutput.Peek() > -1)
+                {
+                    Log.Info($"{convertFileProc.StandardOutput.ReadToEnd()}");
+                }
+
+                if (convertFileProc.StandardError.Peek() > -1)
+                {
+                    Log.Error($"{convertFileProc.StandardError.ReadToEnd()}");
+                }
+            }
+
+            convertFileProc.WaitForExit();
+            _instance.TotalFilesConverted++;
+            fileObject.Stream.ReadFromFile(outputFile);
+            DeleteFile(outputFile);
+
+            if (Config.UseMemoryStream | !Config.IsCacheLocationPreConfigured())
+            {
+                DeleteFile(fileObject.FileUri);
+            }
+
+            return outputFile;
         }
 
         private void SaveToCache(FileObject fileObject, bool force = false)

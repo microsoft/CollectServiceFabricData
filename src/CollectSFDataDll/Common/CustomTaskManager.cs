@@ -13,40 +13,15 @@ namespace CollectSFData.Common
 {
     public class CustomTaskManager : Constants
     {
-        private static Instance _instance;
-        private static ConfigurationOptions Config;
-
-        private static object _taskMonLock = new object();
-        private static readonly Task _taskMonitor = new Task(TaskMonitor);
         private static SynchronizedList<CustomTaskManager> _allInstances = new SynchronizedList<CustomTaskManager>();
         private static CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
         private static CustomTaskScheduler _customScheduler; // init in constructor after starting _taskMonitor to avoid exception
+        private static Instance _instance;
+        private static bool _isRunning;
+        private static Task _taskMonitor = new Task(TaskMonitor);
+        private static object _taskMonLock = new object();
+        private static ConfigurationOptions Config;
         private string CallerName;
-        static CustomTaskManager()
-        {
-        }
-
-        public CustomTaskManager(bool removeWhenComplete = false, [CallerMemberName] string callerName = "")
-        {
-            RemoveWhenComplete = removeWhenComplete;
-            CallerName = callerName;
-
-            lock (_taskMonLock)
-            {
-                if (_taskMonitor.Status == TaskStatus.Created)
-                {
-                    _taskMonitor.Start();
-                    _instance = Instance.Singleton();
-                    Config = _instance.Config;
-                    _customScheduler = new CustomTaskScheduler(Config);
-
-                    Log.Info($"starting taskmonitor. status: {_taskMonitor.Status}", ConsoleColor.White);
-                }
-            }
-
-            Log.Info($"adding task instance for:{CallerName} taskmonitor status: {_taskMonitor.Status}", ConsoleColor.White);
-            _allInstances.Add(this);
-        }
 
         public SynchronizedList<Task> AllTasks { get; set; } = new SynchronizedList<Task>();
 
@@ -58,40 +33,69 @@ namespace CollectSFData.Common
 
         public bool RemoveWhenComplete { get; set; }
 
-        public static void Close()
+        static CustomTaskManager()
         {
-            Log.Info("taskmanager closing", ConsoleColor.White);
+        }
+
+        public CustomTaskManager(bool removeWhenComplete = false, [CallerMemberName] string callerName = "")
+        {
+            RemoveWhenComplete = removeWhenComplete;
+            CallerName = callerName;
+
+            Log.Debug($"{CallerName} waiting on lock. taskmonitor status: {_taskMonitor.Status}", ConsoleColor.White);
+            lock (_taskMonLock)
+            {
+                Log.Debug($"{CallerName} in lock. taskmonitor status: {_taskMonitor.Status}", ConsoleColor.White);
+
+                if (!_isRunning && _taskMonitor.Status == TaskStatus.Created)
+                {
+                    _isRunning = true;
+                    Log.Highlight($"{CallerName} starting taskmonitor. status: {_taskMonitor.Status}", ConsoleColor.White);
+                    _instance = Instance.Singleton();
+                    Config = _instance.Config;
+                    _customScheduler = new CustomTaskScheduler(Config);
+                    _taskMonitor.Start();
+                    Log.Highlight($"{CallerName} started taskmonitor. status: {_taskMonitor.Status}", ConsoleColor.White);
+                }
+
+                Log.Info($"{CallerName} adding task instance. taskmonitor status: {_taskMonitor.Status}", ConsoleColor.White);
+                _allInstances.Add(this);
+            }
+        }
+
+        public static void Cancel()
+        {
+            Log.Info("taskmanager cancelling", ConsoleColor.White);
             _cancellationTokenSource.Cancel();
             _taskMonitor.Wait();
-            Log.Info("taskmanager closed", ConsoleColor.White);
+            _isRunning = false;
+            Log.Info("taskmanager cancelled", ConsoleColor.White);
+        }
+
+        internal static void Reset()
+        {
+            Cancel();
+            Resume();
+        }
+
+        public static void Resume()
+        {
+            if (!_isRunning)
+            {
+                Log.Info("taskmanager resuming", ConsoleColor.White);
+                _allInstances.Clear();
+                _cancellationTokenSource = new CancellationTokenSource();
+                _taskMonitor = new Task(TaskMonitor);
+                _taskMonitor.Start();
+                Log.Info("taskmanager resumed", ConsoleColor.White);
+                _isRunning = true;
+            }
         }
 
         public static void WaitAll()
         {
             // dont block all instances
             _allInstances.ToList().ForEach(x => x.Wait());
-        }
-
-        public bool IsAboveQuota()
-        {
-            int thisIncompleteTaskCount = 0;
-            int allIncompleteTaskCount = 0;
-            int activeTaskMgrInstances = Math.Max(1, _allInstances.Count(x => x.AllTasks.Any(y => !y.IsCompleted)));
-
-            _allInstances.ForEach(x => allIncompleteTaskCount += x.AllTasks.Count(y => !y.IsCompleted));
-            thisIncompleteTaskCount = AllTasks.Count(x => !x.IsCompleted);
-            bool retval = (AllTasks.Count(x => !x.IsCompleted) >= (Config.Threads / activeTaskMgrInstances)) & allIncompleteTaskCount >= Config.Threads;
-
-            if (retval)
-            {
-                Log.Debug($"all instances:{_allInstances.Count()}" +
-                    $" active instances:{activeTaskMgrInstances}" +
-                    $" instance tasks:{thisIncompleteTaskCount}" +
-                    $" all tasks:{allIncompleteTaskCount}" +
-                    $" above quota:{retval}");
-            }
-
-            return retval;
         }
 
         public void QueueTaskAction(Action action)
@@ -213,6 +217,28 @@ namespace CollectSFData.Common
             return taskObject.Task;
         }
 
+        private bool IsAboveQuota()
+        {
+            int thisIncompleteTaskCount = 0;
+            int allIncompleteTaskCount = 0;
+            int activeTaskMgrInstances = Math.Max(1, _allInstances.Count(x => x.AllTasks.Any(y => !y.IsCompleted)));
+
+            _allInstances.ForEach(x => allIncompleteTaskCount += x.AllTasks.Count(y => !y.IsCompleted));
+            thisIncompleteTaskCount = AllTasks.Count(x => !x.IsCompleted);
+            bool retval = (AllTasks.Count(x => !x.IsCompleted) >= (Config.Threads / activeTaskMgrInstances)) & allIncompleteTaskCount >= Config.Threads;
+
+            if (retval)
+            {
+                Log.Debug($"all instances:{_allInstances.Count()}" +
+                    $" active instances:{activeTaskMgrInstances}" +
+                    $" instance tasks:{thisIncompleteTaskCount}" +
+                    $" all tasks:{allIncompleteTaskCount}" +
+                    $" above quota:{retval}");
+            }
+
+            return retval;
+        }
+
         private void ScheduleTask(TaskObject taskObject)
         {
             if (taskObject.Action != null)
@@ -279,15 +305,5 @@ namespace CollectSFData.Common
             AllTasks.Add(task);
             return task;
         }
-    }
-
-    public class TaskObject
-    {
-        public Action Action { get; set; }
-        public Action<object> ActionObject { get; set; }
-        public Action<Task> ContinueWith { get; set; }
-        public Func<object, object> Func { get; set; }
-        public Task Task { get; set; }
-        public ManualResetEvent TaskScheduled { get; set; } = new ManualResetEvent(false);
     }
 }
