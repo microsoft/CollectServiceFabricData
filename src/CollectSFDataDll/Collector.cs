@@ -8,8 +8,6 @@ namespace CollectSFData
     using CollectSFData.Azure;
     using CollectSFData.Common;
     using CollectSFData.DataFile;
-    using CollectSFData.Kusto;
-    using CollectSFData.LogAnalytics;
     using System;
     using System.Collections.Generic;
     using System.IO;
@@ -21,62 +19,42 @@ namespace CollectSFData
 
     public class Collector : Constants
     {
-        private KustoConnection _kusto = null;
-        private LogAnalyticsConnection _logAnalytics = null;
+        private string[] _args;
+        private bool _initialized;
         private int _noProgressCounter = 0;
         private Timer _noProgressTimer;
         private ParallelOptions _parallelConfig;
         private Tuple<int, int, int, int, int, int, int> _progressTuple = new Tuple<int, int, int, int, int, int, int>(0, 0, 0, 0, 0, 0, 0);
         private CustomTaskManager _taskManager = new CustomTaskManager(true);
+
         private ConfigurationOptions Config => Instance.Config;
+
         public Instance Instance { get; } = Instance.Singleton();
 
-        public Collector(bool isConsole = false)
+        public Collector(string[] args, bool isConsole = false)
         {
+            _args = args;
             Log.IsConsole = isConsole;
-        }
-        public static int Main(string[] args)
-        {
-            return new Collector().Collect(args);
+            //Initialize();
         }
 
         public int Collect()
         {
-            return Collect(new string[] { });
+            return Collect(new List<string>());
         }
 
-        public int Collect(string[] args)
+        public int Collect(List<string> uris = null)
         {
             try
             {
-                if (!Config.PopulateConfig(args))
-                {
-                    Config.SaveConfigFile();
-                    return 1;
-                }
-
-                Log.Info($"version: {Version}");
-                _parallelConfig = new ParallelOptions { MaxDegreeOfParallelism = Config.Threads };
-                ServicePointManager.DefaultConnectionLimit = Config.Threads * MaxThreadMultiplier;
-                ServicePointManager.Expect100Continue = true;
-                ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
-
-                ThreadPool.SetMinThreads(Config.Threads * MinThreadMultiplier, Config.Threads * MinThreadMultiplier);
-                ThreadPool.SetMaxThreads(Config.Threads * MaxThreadMultiplier, Config.Threads * MaxThreadMultiplier);
-
-                if (Config.NoProgressTimeoutMin > 0)
-                {
-                    _noProgressTimer = new Timer(NoProgressCallback, null, 0, 60 * 1000);
-                }
-
-                if (!InitializeKusto() | !InitializeLogAnalytics())
+                if (!Initialize() || !InitializeKusto() || !InitializeLogAnalytics())
                 {
                     return 1;
                 }
 
                 if (Config.SasEndpointInfo.IsPopulated())
                 {
-                    DownloadAzureData();
+                    DownloadAzureData(uris);
                 }
                 else if (Config.IsCacheLocationPreConfigured())
                 {
@@ -85,7 +63,7 @@ namespace CollectSFData
 
                 CustomTaskManager.WaitAll();
                 FinalizeKusto();
-                CustomTaskManager.Close();
+                CustomTaskManager.Cancel();
 
                 if (Config.DeleteCache & Config.IsCacheLocationPreConfigured())
                 {
@@ -105,45 +83,7 @@ namespace CollectSFData
                 Config.SaveConfigFile();
                 Instance.TotalErrors += Log.LogErrors;
 
-                Log.Last($"{Instance.TotalFilesEnumerated} files enumerated.");
-                Log.Last($"{Instance.TotalFilesMatched} files matched.");
-                Log.Last($"{Instance.TotalFilesDownloaded} files downloaded.");
-                Log.Last($"{Instance.TotalFilesSkipped} files skipped.");
-                Log.Last($"{Instance.TotalFilesFormatted} files formatted.");
-                Log.Last($"{Instance.TotalErrors} errors.");
-                Log.Last($"{Instance.TotalRecords} records.");
-
-                if (Instance.TotalFilesEnumerated > 0)
-                {
-                    if (Config.FileType != FileTypesEnum.table)
-                    {
-                        DateTime discoveredMinDateTime = new DateTime(DiscoveredMinDateTicks);
-                        DateTime discoveredMaxDateTime = new DateTime(DiscoveredMaxDateTicks);
-
-                        Log.Last($"discovered time range: {discoveredMinDateTime.ToString("o")} - {discoveredMaxDateTime.ToString("o")}", ConsoleColor.Green);
-
-                        if (discoveredMinDateTime.Ticks > Config.EndTimeUtc.Ticks | discoveredMaxDateTime.Ticks < Config.StartTimeUtc.Ticks)
-                        {
-                            Log.Last($"error: configured time range not within discovered time range. configured time range: {Config.StartTimeUtc} - {Config.EndTimeUtc}", ConsoleColor.Red);
-                        }
-                    }
-
-                    if (Instance.TotalFilesMatched + Instance.TotalRecords == 0
-                        && (!string.IsNullOrEmpty(Config.UriFilter) | !string.IsNullOrEmpty(Config.ContainerFilter) | !string.IsNullOrEmpty(Config.NodeFilter)))
-                    {
-                        Log.Last("0 records found and filters are configured. verify filters and / or try time range are correct.", ConsoleColor.Yellow);
-                    }
-                    else if (Instance.TotalFilesMatched + Instance.TotalRecords == 0)
-                    {
-                        Log.Last("0 records found. verify time range is correct.", ConsoleColor.Yellow);
-                    }
-                }
-                else
-                {
-                    Log.Last("0 files enumerated.", ConsoleColor.Red);
-                }
-
-                Log.Last($"total execution time in minutes: { (DateTime.Now - Instance.StartTime).TotalMinutes.ToString("F2") }");
+                LogSummary();
                 return Instance.TotalErrors;
             }
             catch (Exception ex)
@@ -153,7 +93,9 @@ namespace CollectSFData
             }
             finally
             {
-                Log.Close();
+                Log.Reset();
+                CustomTaskManager.Reset();
+                _noProgressTimer?.Dispose();
             }
         }
 
@@ -194,7 +136,43 @@ namespace CollectSFData
             return clusterId;
         }
 
-        public void DownloadAzureData()
+        public bool Initialize()
+        {
+            _noProgressTimer = new Timer(NoProgressCallback, null, 0, 60 * 1000);
+            Log.Open();
+            CustomTaskManager.Resume();
+
+            if (_initialized)
+            {
+                _taskManager?.Wait();
+                _taskManager = new CustomTaskManager();
+                Instance.Initialize();
+            }
+            else
+            {
+                if (!Config.PopulateConfig(_args))
+                {
+                    Config.SaveConfigFile();
+                    return false;
+                }
+
+                _initialized = true;
+
+                Log.Info($"version: {Version}");
+                _parallelConfig = new ParallelOptions { MaxDegreeOfParallelism = Config.Threads };
+                ServicePointManager.DefaultConnectionLimit = Config.Threads * MaxThreadMultiplier;
+                ServicePointManager.Expect100Continue = true;
+                ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
+
+                ThreadPool.SetMinThreads(Config.Threads * MinThreadMultiplier, Config.Threads * MinThreadMultiplier);
+                ThreadPool.SetMaxThreads(Config.Threads * MaxThreadMultiplier, Config.Threads * MaxThreadMultiplier);
+
+            }
+
+            return true;
+        }
+
+        private void DownloadAzureData(List<string> uris = null)
         {
             string containerPrefix = null;
             string tablePrefix = null;
@@ -235,46 +213,139 @@ namespace CollectSFData
 
                 if (blobMgr.Connect())
                 {
-                    blobMgr.DownloadContainers(containerPrefix);
+                    if (uris?.Count > 0)
+                    {
+                        blobMgr.DownloadFiles(uris);
+                    }
+                    else
+                    {
+                        blobMgr.DownloadContainers(containerPrefix);
+                    }
                 }
             }
         }
 
-        public void FinalizeKusto()
+        private void FinalizeKusto()
         {
-            if (Config.IsKustoConfigured() && !_kusto.Complete())
+            if (Config.IsKustoConfigured() && !Instance.Kusto.Complete())
             {
                 Log.Warning($"there may have been errors during kusto import. {Config.CacheLocation} has *not* been deleted.");
             }
             else if (Config.IsKustoConfigured())
             {
-                Log.Last($"{DataExplorer}/clusters/{_kusto.Endpoint.ClusterName}/databases/{_kusto.Endpoint.DatabaseName}", ConsoleColor.Cyan);
+                Log.Last($"{DataExplorer}/clusters/{Instance.Kusto.Endpoint.ClusterName}/databases/{Instance.Kusto.Endpoint.DatabaseName}", ConsoleColor.Cyan);
             }
         }
 
-        public bool InitializeKusto()
+        private bool InitializeKusto()
         {
             if (Config.IsKustoConfigured() | Config.IsKustoPurgeRequested())
             {
-                _kusto = new KustoConnection();
-                return _kusto.Connect();
+                return Instance.Kusto.Connect();
             }
 
             return true;
         }
 
-        public bool InitializeLogAnalytics()
+        private bool InitializeLogAnalytics()
         {
             if (Config.IsLogAnalyticsConfigured() | Config.LogAnalyticsCreate | Config.IsLogAnalyticsPurgeRequested())
             {
-                _logAnalytics = new LogAnalyticsConnection();
-                return _logAnalytics.Connect();
+                return Instance.LogAnalytics.Connect();
             }
 
             return true;
         }
 
-        public void QueueForIngest(FileObject fileObject)
+        private void LogSummary()
+        {
+            Log.Last($"{Instance.TotalFilesEnumerated} files enumerated.");
+            Log.Last($"{Instance.TotalFilesMatched} files matched.");
+            Log.Last($"{Instance.TotalFilesDownloaded} files downloaded.");
+            Log.Last($"{Instance.TotalFilesSkipped} files skipped.");
+            Log.Last($"{Instance.TotalFilesFormatted} files formatted.");
+            Log.Last($"{Instance.TotalErrors} errors.");
+            Log.Last($"{Instance.TotalRecords} records.");
+
+            if (Instance.TotalFilesEnumerated > 0)
+            {
+                if (Config.FileType != FileTypesEnum.table)
+                {
+                    DateTime discoveredMinDateTime = new DateTime(DiscoveredMinDateTicks);
+                    DateTime discoveredMaxDateTime = new DateTime(DiscoveredMaxDateTicks);
+
+                    Log.Last($"discovered time range: {discoveredMinDateTime.ToString("o")} - {discoveredMaxDateTime.ToString("o")}", ConsoleColor.Green);
+
+                    if (discoveredMinDateTime.Ticks > Config.EndTimeUtc.Ticks | discoveredMaxDateTime.Ticks < Config.StartTimeUtc.Ticks)
+                    {
+                        Log.Last($"error: configured time range not within discovered time range. configured time range: {Config.StartTimeUtc} - {Config.EndTimeUtc}", ConsoleColor.Red);
+                    }
+                }
+
+                if (Instance.TotalFilesMatched + Instance.TotalRecords == 0
+                    && (!string.IsNullOrEmpty(Config.UriFilter) | !string.IsNullOrEmpty(Config.ContainerFilter) | !string.IsNullOrEmpty(Config.NodeFilter)))
+                {
+                    Log.Last("0 records found and filters are configured. verify filters and / or try time range are correct.", ConsoleColor.Yellow);
+                }
+                else if (Instance.TotalFilesMatched + Instance.TotalRecords == 0)
+                {
+                    Log.Last("0 records found. verify time range is correct.", ConsoleColor.Yellow);
+                }
+            }
+            else
+            {
+                Log.Last("0 files enumerated.", ConsoleColor.Red);
+            }
+
+            Log.Last($"total execution time in minutes: { (DateTime.Now - Instance.StartTime).TotalMinutes.ToString("F2") }");
+        }
+
+        private void NoProgressCallback(object state)
+        {
+            Log.Highlight($"checking progress {_noProgressCounter} of {Config.NoProgressTimeoutMin}.");
+
+            if (Config.NoProgressTimeoutMin < 1)
+            {
+                _noProgressTimer.Dispose();
+            }
+
+            Tuple<int, int, int, int, int, int, int> tuple = new Tuple<int, int, int, int, int, int, int>(
+                Instance.TotalErrors,
+                Instance.TotalFilesDownloaded,
+                Instance.TotalFilesEnumerated,
+                Instance.TotalFilesFormatted,
+                Instance.TotalFilesMatched,
+                Instance.TotalFilesSkipped,
+                Instance.TotalRecords);
+
+            if (tuple.Equals(_progressTuple))
+            {
+                if (_noProgressCounter >= Config.NoProgressTimeoutMin)
+                {
+                    if (Config.IsKustoConfigured())
+                    {
+                        Log.Warning($"kusto ingesting:", Instance.Kusto.IngestFileObjectsPending);
+                        Log.Warning($"kusto failed:", Instance.Kusto.IngestFileObjectsFailed);
+                    }
+
+                    LogSummary();
+
+                    string message = $"no progress timeout reached {Config.NoProgressTimeoutMin}. exiting application.";
+                    Log.Error(message);
+                    Log.Reset();
+                    throw new TimeoutException(message);
+                }
+
+                ++_noProgressCounter;
+            }
+            else
+            {
+                _noProgressCounter = 0;
+                _progressTuple = tuple;
+            }
+        }
+
+        private void QueueForIngest(FileObject fileObject)
         {
             Log.Debug("enter");
 
@@ -282,12 +353,12 @@ namespace CollectSFData
             {
                 if (Config.IsKustoConfigured())
                 {
-                    _taskManager.QueueTaskAction(() => _kusto.AddFile(fileObject));
+                    _taskManager.QueueTaskAction(() => Instance.Kusto.AddFile(fileObject));
                 }
 
                 if (Config.IsLogAnalyticsConfigured())
                 {
-                    _taskManager.QueueTaskAction(() => _logAnalytics.AddFile(fileObject));
+                    _taskManager.QueueTaskAction(() => Instance.LogAnalytics.AddFile(fileObject));
                 }
             }
             else
@@ -296,7 +367,7 @@ namespace CollectSFData
             }
         }
 
-        public void UploadCacheData()
+        private void UploadCacheData()
         {
             Log.Info("enter");
             List<string> files = new List<string>();
@@ -352,38 +423,6 @@ namespace CollectSFData
                 {
                     QueueForIngest(fileObject);
                 }
-            }
-        }
-
-        private void NoProgressCallback(object state)
-        {
-            Log.Highlight($"checking progress {_noProgressCounter} of {Config.NoProgressTimeoutMin}.");
-
-            Tuple<int, int, int, int, int, int, int> tuple = new Tuple<int, int, int, int, int, int, int>(
-                Instance.TotalErrors,
-                Instance.TotalFilesDownloaded,
-                Instance.TotalFilesEnumerated,
-                Instance.TotalFilesFormatted,
-                Instance.TotalFilesMatched,
-                Instance.TotalFilesSkipped,
-                Instance.TotalRecords);
-
-            if (tuple.Equals(_progressTuple))
-            {
-                if (_noProgressCounter >= Config.NoProgressTimeoutMin)
-                {
-                    Log.Info("progress tuple:", tuple);
-                    string message = $"no progress timeout reached {Config.NoProgressTimeoutMin}. exiting application.";
-                    Log.Error(message);
-                    Log.Close();
-                    throw new TimeoutException(message);
-                }
-                ++_noProgressCounter;
-            }
-            else
-            {
-                _noProgressCounter = 0;
-                _progressTuple = tuple;
             }
         }
     }

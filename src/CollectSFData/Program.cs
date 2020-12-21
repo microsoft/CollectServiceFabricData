@@ -4,12 +4,21 @@
 // ------------------------------------------------------------
 
 using CollectSFData.Common;
+using CollectSFData.Kusto;
 using System;
+using System.Linq;
 
 namespace CollectSFData
 {
     internal class Program
     {
+        // to subscribe to log messages
+        // Log.MessageLogged += Log_MessageLogged;
+        private static void Log_MessageLogged(object sender, LogMessage args)
+        {
+            throw new NotImplementedException();
+        }
+
         private static int Main(string[] args)
         {
             if (!Environment.Is64BitOperatingSystem | Environment.OSVersion.Platform != PlatformID.Win32NT)
@@ -17,20 +26,33 @@ namespace CollectSFData
                 Console.WriteLine("only supported on win32 x64");
             }
 
-            Collector collector = new Collector(true);
+            // default constructor
+            Collector collector = new Collector(args, true);
 
-            // to subscribe to log messages
-            // Log.MessageLogged += Log_MessageLogged;
+            // use config to modify / validate config
+            // config.Validate();
+            ConfigurationOptions config = collector.Instance.Config;
 
-            // to modify / validate config
-            // collector.Instance.Config.Validate();
+            // collect data
+            int retval = collector.Collect();
 
-            return collector.Collect(args);
-        }
+            // mitigation for dtr files not being csv compliant causing kusto ingest to fail
+            if (collector.Instance.Kusto.IngestFileObjectsFailed.Count() > 0
+                && config.IsKustoConfigured()
+                && config.KustoUseBlobAsSource == true
+                && config.FileType == DataFile.FileTypesEnum.trace)
+            {
+                KustoConnection kusto = collector.Instance.Kusto;
+                Log.Warning("failed ingests due to csv compliance. restarting.");
 
-        private static void Log_MessageLogged(object sender, LogMessage args)
-        {
-            throw new NotImplementedException();
+                // change config to download files to parse and fix csv fields
+                config.KustoUseBlobAsSource = false;
+                config.KustoRecreateTable = false;
+                retval = collector.Collect(kusto.IngestFileObjectsFailed.Select(x => x.FileUri).ToList());
+                //retval = collector.Collect();
+            }
+
+            return retval;
         }
     }
 }

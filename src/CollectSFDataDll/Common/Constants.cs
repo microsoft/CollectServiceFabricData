@@ -19,8 +19,6 @@ namespace CollectSFData.Common
         public const string DefaultDatePattern = "MM/dd/yyyy HH:mm zzz";
         public const string DefaultOptionsFile = "collectsfdata.options.json";
         public const int DefaultStartTimeHours = -2;
-        public static long DiscoveredMaxDateTicks = DateTime.MinValue.Ticks;
-        public static long DiscoveredMinDateTicks = DateTime.MaxValue.Ticks;
         public const string DumpExtension = ".dmp";
         public const string FalseStringPattern = @"(false|0|off|null)";
         public const string JsonExtension = ".json";
@@ -51,5 +49,7 @@ namespace CollectSFData.Common
         public const double WarningTimeSpanMinHours = .5F;
         public const string ZipExtension = ".zip";
         public static readonly string Version = $"{Process.GetCurrentProcess().MainModule?.FileVersionInfo.FileVersion}";
+        public static long DiscoveredMaxDateTicks = DateTime.MinValue.Ticks;
+        public static long DiscoveredMinDateTicks = DateTime.MaxValue.Ticks;
     }
 }

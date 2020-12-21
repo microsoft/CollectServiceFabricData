@@ -1,5 +1,24 @@
 # Change log
 
+## 12/21/2020
+
+- modify collectsfdata.schema.json split title into title, description  
+- add TraceKnownIssues.csl additional known issues  
+- add trivial logging that logs only to logfile if logdebug > 5  
+- fix ingest messages not being processed correctly resulting in noprogresstimeout  
+- fix issue with database cursor not always being set correctly
+- fix gathertype value validation failure
+- add codemaid config
+- format with codemaid
+- adding collect() reuse logic for dll use
+-- move no progress timer to start / stop in collect()  
+-- move Kusto and Log Analytics to 'instance' class  
+-- change methods to private that are not needed publicly  
+- adding collect() retry mitigation for csv compliance issue  
+-- modify kusto ingest lists for public access for retry  
+-- default KustoUseBlobAsSource to true  
+- add additional vscode launch configurations  
+
 ## 12/4/2020  
 
 - modify repo layout structure and place source in /src  
