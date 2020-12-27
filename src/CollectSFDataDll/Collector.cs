@@ -53,13 +53,6 @@ namespace CollectSFData
                     return 1;
                 }
 
-                // do random (10%) version check if waiting
-                if (Log.IsConsole && !_checkedVersion && new Random().Next(1,11) == 10)
-                {
-                    _checkedVersion = true;
-                    Config.CheckReleaseVersion();
-                }
-
                 if (Config.SasEndpointInfo.IsPopulated())
                 {
                     DownloadAzureData(uris);
@@ -303,6 +296,13 @@ namespace CollectSFData
             else
             {
                 Log.Last("0 files enumerated.", ConsoleColor.Red);
+            }
+
+            // do random (10%) version check
+            if (Log.IsConsole && !_checkedVersion && new Random().Next(1, 11) == 10)
+            {
+                _checkedVersion = true;
+                Config.CheckReleaseVersion();
             }
 
             Log.Last($"total execution time in minutes: { (DateTime.Now - Instance.StartTime).TotalMinutes.ToString("F2") }");
