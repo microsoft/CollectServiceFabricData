@@ -39,7 +39,7 @@ namespace CollectSFData.Kusto
 
         public new int IndexOf(KustoQueueMessage message)
         {
-            foreach (KustoQueueMessage queueMessage in new KustoQueueMessages(this))
+            foreach (KustoQueueMessage queueMessage in this.Take())
             {
                 if (queueMessage.Equals(message))
                 {
