@@ -2,13 +2,16 @@ Configuration File:
   - configurationFiles/**
 
 Executable:
-  - src/*
+  - src/**
 
 Kusto Query Language:
-  - kusto/*
+  - kusto/**
 
 WorkFlow:
   - .github/**
 
 documentation:
   - docs/*.*
+
+scripts:
+  - scripts/*.*
