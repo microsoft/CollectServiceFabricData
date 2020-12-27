@@ -20,6 +20,7 @@ namespace CollectSFData
     public class Collector : Constants
     {
         private string[] _args;
+        private bool _checkedVersion;
         private bool _initialized;
         private int _noProgressCounter = 0;
         private Timer _noProgressTimer;
@@ -295,6 +296,13 @@ namespace CollectSFData
             else
             {
                 Log.Last("0 files enumerated.", ConsoleColor.Red);
+            }
+
+            // do random (10%) version check
+            if (Log.IsConsole && !_checkedVersion && new Random().Next(1, 11) == 10)
+            {
+                _checkedVersion = true;
+                Config.CheckReleaseVersion();
             }
 
             Log.Last($"total execution time in minutes: { (DateTime.Now - Instance.StartTime).TotalMinutes.ToString("F2") }");
