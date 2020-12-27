@@ -220,9 +220,17 @@ namespace CollectSFData.Common
                     JToken downloadUrl = http.ResponseStreamJson.SelectToken("assets[0].browser_download_url");
                     JToken downloadVersion = http.ResponseStreamJson.SelectToken("tag_name");
                     JToken body = http.ResponseStreamJson.SelectToken("body");
-                    response += $"\r\n\tlatest download release version: {downloadVersion.ToString()}";
-                    response += $"\r\n\trelease notes: \r\n\t\t{body.ToString().Replace("\r\n", "\r\n\t\t")}";
-                    response += $"\r\n\tlatest download release url: {downloadUrl.ToString()}";
+
+                    if (new Version(Version) <= new Version(downloadVersion.ToString().TrimStart('v')))
+                    {
+                        response += $"\r\n\tlatest download release version: {downloadVersion.ToString()}";
+                        response += $"\r\n\trelease notes: \r\n\t\t{body.ToString().Replace("\r\n", "\r\n\t\t")}";
+                        response += $"\r\n\tlatest download release url: {downloadUrl.ToString()}";
+                    }
+                    else
+                    {
+                        response += $"\r\n\tlocal running version is latest.";
+                    }
                 }
 
                 Log.Last(response);
