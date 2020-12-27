@@ -20,6 +20,7 @@ namespace CollectSFData
     public class Collector : Constants
     {
         private string[] _args;
+        private bool _checkedVersion;
         private bool _initialized;
         private int _noProgressCounter = 0;
         private Timer _noProgressTimer;
@@ -50,6 +51,13 @@ namespace CollectSFData
                 if (!Initialize() || !InitializeKusto() || !InitializeLogAnalytics())
                 {
                     return 1;
+                }
+
+                // do random (10%) version check if waiting
+                if (Log.IsConsole && !_checkedVersion && new Random().Next(1,11) == 10)
+                {
+                    _checkedVersion = true;
+                    Config.CheckReleaseVersion();
                 }
 
                 if (Config.SasEndpointInfo.IsPopulated())
