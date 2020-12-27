@@ -20,6 +20,7 @@ namespace CollectSFData
     public class Collector : Constants
     {
         private string[] _args;
+        private bool _checkedVersion;
         private bool _initialized;
         private int _noProgressCounter = 0;
         private Timer _noProgressTimer;
@@ -334,6 +335,13 @@ namespace CollectSFData
                     Log.Error(message);
                     Log.Reset();
                     throw new TimeoutException(message);
+                }
+
+                // do onetime version check if waiting
+                if (!_checkedVersion && _noProgressCounter > 0 && Log.IsConsole)
+                {
+                    _checkedVersion = true;
+                    Config.CheckReleaseVersion();
                 }
 
                 ++_noProgressCounter;
