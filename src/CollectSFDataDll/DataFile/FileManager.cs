@@ -10,8 +10,11 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reactive.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using Tx.Core;
+using Tx.Windows;
 
 namespace CollectSFData.DataFile
 {
@@ -224,7 +227,7 @@ namespace CollectSFData.DataFile
         private FileObjectCollection FormatCounterFile(FileObject fileObject)
         {
             Log.Debug($"enter:{fileObject.FileUri}");
-            fileObject.FileUri = RelogBlg(fileObject);
+            fileObject.FileUri = FormatBlg(fileObject);
             fileObject.Stream.Write<CsvCounterRecord>(ExtractPerfCsvData(fileObject));
 
             return PopulateCollection<CsvCounterRecord>(fileObject);
@@ -333,9 +336,45 @@ namespace CollectSFData.DataFile
             return collection;
         }
 
-        private string RelogBlg(FileObject fileObject)
+        private bool TxBlg(FileObject fileObject, string outputFile)
+        {
+            DateTime startTime = DateTime.Now;
+            IObservable<PerformanceSample> observable = default(IObservable<PerformanceSample>);
+            PerfCounterObserver<PerformanceSample> counterSession = default(PerfCounterObserver<PerformanceSample>);
+
+            //lock(lockObj) {
+            observable = new PerfCounterObservable().FromFile(outputFile);
+            //}
+            Log.Info($"observable created: {outputFile}");
+            //PerfCounterObservable.FromFile(blgFileName).ToCsvFile(resultFile); // <-- works fast
+            counterSession = ReadCounterRecords(observable);
+            //}
+            Log.Info($"finished reading: {outputFile}");
+            List<PerformanceSample> records = counterSession.Records;
+
+            double totalReadMs = DateTime.Now.Subtract(startTime).TotalMilliseconds;
+            List<string> csv = new List<string>();
+            csv.Add($"Timestamp,CounterName,Instance,Value");
+
+            foreach (var record in records)
+            {
+                string value = record.Value.ToString() == "NaN" ? "0" : record.Value.ToString();
+                //Log.Info($"{record.Timestamp.ToUniversalTime().ToString("o")},{record.CounterName},{record.Instance},{value}");
+                //string csvRecord = $"{record.Timestamp.ToUniversalTime().ToString("o")},{record.CounterName},{record.Instance},{value}";
+                csv.Add($"{record.Timestamp.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.ffffffZ")},{record.CounterName},{record.Instance},{value}");
+            }
+
+            File.WriteAllLines(outputFile, csv.ToArray());
+            Log.Info($"records: {records.Count()} {csv.Count}");
+            Log.Info($"read finished: total read ms: {totalReadMs}");
+            return true;
+
+        }
+
+        private string FormatBlg(FileObject fileObject)
         {
             string outputFile = fileObject.FileUri + PerfCsvExtension;
+            bool result;
 
             if (!(Config.FileType.Equals(FileTypesEnum.counter)))
             {
@@ -343,10 +382,42 @@ namespace CollectSFData.DataFile
             }
 
             fileObject.Stream.SaveToFile();
-            string csvParams = fileObject.FileUri + " -f csv -o " + outputFile;
+            DeleteFile(outputFile);
+            Log.Info($"Writing {outputFile}");
+
+            if (Config.UseTx)
+            {
+                result = TxBlg(fileObject, outputFile);
+            }
+            else
+            {
+                result = RelogBlg(fileObject, outputFile);
+            }
+
+            if (result)
+            {
+                _instance.TotalFilesConverted++;
+                fileObject.Stream.ReadFromFile(outputFile);
+            }
+            else
+            {
+                _instance.TotalErrors++;
+            }
+
             DeleteFile(outputFile);
 
-            Log.Info($"Writing {outputFile}");
+            if (Config.UseMemoryStream | !Config.IsCacheLocationPreConfigured())
+            {
+                DeleteFile(fileObject.FileUri);
+            }
+
+            return outputFile;
+        }
+
+        private bool RelogBlg(FileObject fileObject, string outputFile)
+        {
+            bool result = true;
+            string csvParams = fileObject.FileUri + " -f csv -o " + outputFile;
             Log.Info($"relog.exe {csvParams}");
             ProcessStartInfo startInfo = new ProcessStartInfo("relog.exe", csvParams)
             {
@@ -369,20 +440,12 @@ namespace CollectSFData.DataFile
                 if (convertFileProc.StandardError.Peek() > -1)
                 {
                     Log.Error($"{convertFileProc.StandardError.ReadToEnd()}");
+                    result = false;
                 }
             }
 
             convertFileProc.WaitForExit();
-            _instance.TotalFilesConverted++;
-            fileObject.Stream.ReadFromFile(outputFile);
-            DeleteFile(outputFile);
-
-            if (Config.UseMemoryStream | !Config.IsCacheLocationPreConfigured())
-            {
-                DeleteFile(fileObject.FileUri);
-            }
-
-            return outputFile;
+            return result;
         }
 
         private void SaveToCache(FileObject fileObject, bool force = false)
