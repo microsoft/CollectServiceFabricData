@@ -224,6 +224,49 @@ namespace CollectSFData.DataFile
             }
         }
 
+        private string FormatBlg(FileObject fileObject)
+        {
+            string outputFile = fileObject.FileUri + PerfCsvExtension;
+            bool result;
+
+            if (!(Config.FileType.Equals(FileTypesEnum.counter)))
+            {
+                return outputFile;
+            }
+
+            fileObject.Stream.SaveToFile();
+            DeleteFile(outputFile);
+            Log.Info($"Writing {outputFile}");
+
+            if (Config.UseTx)
+            {
+                result = TxBlg(fileObject, outputFile);
+            }
+            else
+            {
+                result = RelogBlg(fileObject, outputFile);
+            }
+
+            if (result)
+            {
+                _instance.TotalFilesConverted++;
+                fileObject.Stream.ReadFromFile(outputFile);
+            }
+            else
+            {
+                _instance.TotalErrors++;
+            }
+
+            DeleteFile(outputFile);
+
+            if (Config.UseMemoryStream | !Config.IsCacheLocationPreConfigured())
+            {
+                DeleteFile(fileObject.FileUri);
+            }
+
+            return outputFile;
+        }
+
         private FileObjectCollection FormatCounterFile(FileObject fileObject)
         {
             Log.Debug($"enter:{fileObject.FileUri}");
@@ -336,82 +379,12 @@ namespace CollectSFData.DataFile
             return collection;
         }
 
-        private bool TxBlg(FileObject fileObject, string outputFile)
+        private PerfCounterObserver<T> ReadCounterRecords<T>(IObservable<T> source)
         {
-            DateTime startTime = DateTime.Now;
-            IObservable<PerformanceSample> observable = default(IObservable<PerformanceSample>);
-            PerfCounterObserver<PerformanceSample> counterSession = default(PerfCounterObserver<PerformanceSample>);
-
-            //lock(lockObj) {
-            observable = new PerfCounterObservable().FromFile(outputFile);
-            //}
-            Log.Info($"observable created: {outputFile}");
-            //PerfCounterObservable.FromFile(blgFileName).ToCsvFile(resultFile); // <-- works fast
-            counterSession = ReadCounterRecords(observable);
-            //}
-            Log.Info($"finished reading: {outputFile}");
-            List<PerformanceSample> records = counterSession.Records;
-
-            double totalReadMs = DateTime.Now.Subtract(startTime).TotalMilliseconds;
-            List<string> csv = new List<string>();
-            csv.Add($"Timestamp,CounterName,Instance,Value");
-
-            foreach (var record in records)
-            {
-                string value = record.Value.ToString() == "NaN" ? "0" : record.Value.ToString();
-                //Log.Info($"{record.Timestamp.ToUniversalTime().ToString("o")},{record.CounterName},{record.Instance},{value}");
-                //string csvRecord = $"{record.Timestamp.ToUniversalTime().ToString("o")},{record.CounterName},{record.Instance},{value}";
-                csv.Add($"{record.Timestamp.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.ffffffZ")},{record.CounterName},{record.Instance},{value}");
-            }
-
-            File.WriteAllLines(outputFile, csv.ToArray());
-            Log.Info($"records: {records.Count()} {csv.Count}");
-            Log.Info($"read finished: total read ms: {totalReadMs}");
-            return true;
-
-        }
-
-        private string FormatBlg(FileObject fileObject)
-        {
-            string outputFile = fileObject.FileUri + PerfCsvExtension;
-            bool result;
-
-            if (!(Config.FileType.Equals(FileTypesEnum.counter)))
-            {
-                return outputFile;
-            }
-
-            fileObject.Stream.SaveToFile();
-            DeleteFile(outputFile);
-            Log.Info($"Writing {outputFile}");
-
-            if (Config.UseTx)
-            {
-                result = TxBlg(fileObject, outputFile);
-            }
-            else
-            {
-                result = RelogBlg(fileObject, outputFile);
-            }
-
-            if (result)
-            {
-                _instance.TotalFilesConverted++;
-                fileObject.Stream.ReadFromFile(outputFile);
-            }
-            else
-            {
-                _instance.TotalErrors++;
-            }
-
-            DeleteFile(outputFile);
-
-            if (Config.UseMemoryStream | !Config.IsCacheLocationPreConfigured())
-            {
-                DeleteFile(fileObject.FileUri);
-            }
-
-            return outputFile;
+            var observer = new PerfCounterObserver<T>();
+            source.Subscribe(observer);
+            Log.Info($"complete: {observer.Complete}");
+            return observer;
         }
 
         private bool RelogBlg(FileObject fileObject, string outputFile)
@@ -543,6 +516,40 @@ namespace CollectSFData.DataFile
 
             Log.Debug($"json serialized size: {fileObject.Length} file: {fileObject.FileUri}");
             return collection;
+        }
+
+        private bool TxBlg(FileObject fileObject, string outputFile)
+        {
+            DateTime startTime = DateTime.Now;
+            IObservable<PerformanceSample> observable = default(IObservable<PerformanceSample>);
+            PerfCounterObserver<PerformanceSample> counterSession = default(PerfCounterObserver<PerformanceSample>);
+
+            //lock(lockObj) {
+            observable = PerfCounterObservable.FromFile(outputFile);
+            //}
+            Log.Info($"observable created: {outputFile}");
+            //PerfCounterObservable.FromFile(blgFileName).ToCsvFile(resultFile); // <-- works fast
+            counterSession = ReadCounterRecords(observable);
+            //}
+            Log.Info($"finished reading: {outputFile}");
+            List<PerformanceSample> records = counterSession.Records;
+
+            double totalReadMs = DateTime.Now.Subtract(startTime).TotalMilliseconds;
+            List<string> csv = new List<string>();
+            csv.Add($"Timestamp,CounterName,Instance,Value");
+
+            foreach (var record in records)
+            {
+                string value = record.Value.ToString() == "NaN" ? "0" : record.Value.ToString();
+                //Log.Info($"{record.Timestamp.ToUniversalTime().ToString("o")},{record.CounterName},{record.Instance},{value}");
+                //string csvRecord = $"{record.Timestamp.ToUniversalTime().ToString("o")},{record.CounterName},{record.Instance},{value}";
+                csv.Add($"{record.Timestamp.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.ffffffZ")},{record.CounterName},{record.Instance},{value}");
+            }
+
+            File.WriteAllLines(outputFile, csv.ToArray());
+            Log.Info($"records: {records.Count()} {csv.Count}");
+            Log.Info($"read finished: total read ms: {totalReadMs}");
+            return true;
         }
     }
 }
