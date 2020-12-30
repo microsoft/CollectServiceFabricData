@@ -58,8 +58,15 @@ namespace CollectSFData.Common
                     Log.Highlight($"{CallerName} started taskmonitor. status: {_taskMonitor.Status}", ConsoleColor.White);
                 }
 
-                Log.Info($"{CallerName} adding task instance. taskmonitor status: {_taskMonitor.Status}", ConsoleColor.White);
-                _allInstances.Add(this);
+                if(_taskMonitor.Status != TaskStatus.RanToCompletion)
+                {
+                    Log.Info($"{CallerName} adding task instance. taskmonitor status: {_taskMonitor.Status}", ConsoleColor.White);
+                    _allInstances.Add(this);
+                }
+                else
+                {
+                    Log.Error("taskmonitor already completed. not adding task");
+                }
             }
         }
 
