@@ -337,7 +337,7 @@ namespace CollectSFData.Kusto
 
             queue.AddMessage(queueMessage, _messageTimeToLive, null, null, context);
             IngestFileObjectsPending.Add(fileObject.FileUri, fileObject.RelativeUri, message.Id);
-            Log.Info($"queue message id: {message.Id}");
+            Log.Info($"IngestFileObjectsPending.Add fileobject to pending queue FileUri: {fileObject.FileUri} RelativeUri: {fileObject.RelativeUri} message id: {message.Id}");
         }
 
         private KustoIngestionMessage PrepareIngestionMessage(string blobUriWithSas, long blobSizeBytes, string ingestionMapping)
