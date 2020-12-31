@@ -5,6 +5,7 @@
 
 using CollectSFData.Common;
 using System;
+using System.IO;
 using System.Collections;
 
 namespace CollectSFData.Kusto
@@ -90,14 +91,24 @@ namespace CollectSFData.Kusto
 
         private bool Compare(string self, string comparable)
         {
-            if (!string.IsNullOrEmpty(self) & !string.IsNullOrEmpty(comparable))
+            if (string.IsNullOrEmpty(self) | string.IsNullOrEmpty(comparable))
             {
-                if (self.ToLower().Contains(comparable.ToLower().TrimEnd(ZipExtension.ToCharArray()))
-                    | comparable.ToLower().Contains(self.ToLower().TrimEnd(ZipExtension.ToCharArray())))
-                {
-                    Log.Debug("match", comparable);
-                    return true;
-                }
+                return false;
+            }
+
+            self = self.ToLower();
+            comparable = comparable.ToLower();
+
+            if (self.Contains(comparable) | comparable.Contains(self))
+            {
+                Log.Debug("full match", comparable);
+                return true;
+            }
+
+            if (self.Contains(Path.GetFileName(comparable)) | comparable.Contains(Path.GetFileName(self)))
+            {
+                Log.Debug("partial (file name) match", comparable);
+                return true;
             }
 
             return false;
