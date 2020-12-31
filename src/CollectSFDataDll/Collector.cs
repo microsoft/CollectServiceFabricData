@@ -64,7 +64,6 @@ namespace CollectSFData
 
                 CustomTaskManager.WaitAll();
                 FinalizeKusto();
-                CustomTaskManager.Cancel();
 
                 if (Config.DeleteCache & Config.IsCacheLocationPreConfigured())
                 {
