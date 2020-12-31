@@ -240,7 +240,7 @@ namespace CollectSFData.DataFile
 
             if (Config.UseTx)
             {
-                result = TxBlg(fileObject, outputFile);
+                result = TxBlg(fileObject,outputFile);
             }
             else
             {
@@ -257,7 +257,7 @@ namespace CollectSFData.DataFile
                 _instance.TotalErrors++;
             }
 
-            DeleteFile(outputFile);
+////todo uncomment            DeleteFile(outputFile);
 
             if (Config.UseMemoryStream | !Config.IsCacheLocationPreConfigured())
             {
@@ -525,13 +525,13 @@ namespace CollectSFData.DataFile
             PerfCounterObserver<PerformanceSample> counterSession = default(PerfCounterObserver<PerformanceSample>);
 
             //lock(lockObj) {
-            observable = PerfCounterObservable.FromFile(outputFile);
+            observable = PerfCounterObservable.FromFile(fileObject.FileUri);
             //}
-            Log.Info($"observable created: {outputFile}");
+            Log.Info($"observable created: {fileObject.FileUri}");
             //PerfCounterObservable.FromFile(blgFileName).ToCsvFile(resultFile); // <-- works fast
             counterSession = ReadCounterRecords(observable);
             //}
-            Log.Info($"finished reading: {outputFile}");
+            Log.Info($"finished reading: {fileObject.FileUri}");
             List<PerformanceSample> records = counterSession.Records;
 
             double totalReadMs = DateTime.Now.Subtract(startTime).TotalMilliseconds;
