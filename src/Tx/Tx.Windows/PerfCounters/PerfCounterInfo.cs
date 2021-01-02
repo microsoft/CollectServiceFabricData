@@ -9,6 +9,7 @@ namespace Tx.Windows
         private readonly PdhCounterHandle _counterHandle;
         private readonly string _machine;
         private readonly string _counterName;
+        private readonly string _counterPath;
         private readonly string _counterSet;
         private readonly string _instance;
         private readonly int _index;  // this is the sequence # in which the counter was added
@@ -16,6 +17,7 @@ namespace Tx.Windows
         public PerfCounterInfo(string counterPath, PdhCounterHandle handle, int index)
         {
             _index = index;
+            _counterPath = counterPath;
 
             string[] tokens = counterPath.Split(new[] {'\\'}, StringSplitOptions.RemoveEmptyEntries);
             if (tokens.Length < 3)
@@ -50,6 +52,11 @@ namespace Tx.Windows
         public string CounterName
         {
             get { return _counterName; }
+        }
+
+        public string CounterPath
+        {
+            get { return _counterPath; }
         }
 
         public string Instance
