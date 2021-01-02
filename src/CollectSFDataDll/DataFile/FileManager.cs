@@ -536,14 +536,17 @@ namespace CollectSFData.DataFile
 
             double totalReadMs = DateTime.Now.Subtract(startTime).TotalMilliseconds;
             List<string> csv = new List<string>();
-            csv.Add($"Timestamp,CounterName,Instance,Value");
+            //csv.Add($"Timestamp,CounterName,Instance,Value");
+            csv.Add($"Timestamp,CounterName,CounterValue,Object,Counter,Instance");
 
             foreach (var record in records)
             {
-                string value = record.Value.ToString() == "NaN" ? "0" : record.Value.ToString();
+                string counterValue = record.Value.ToString() == "NaN" ? "0" : record.Value.ToString();
                 //Log.Info($"{record.Timestamp.ToUniversalTime().ToString("o")},{record.CounterName},{record.Instance},{value}");
                 //string csvRecord = $"{record.Timestamp.ToUniversalTime().ToString("o")},{record.CounterName},{record.Instance},{value}";
-                csv.Add($"{record.Timestamp.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.ffffffZ")},{record.CounterName},{record.Instance},{value}");
+                // old: Timestamp,CounterName,CounterValue,NodeName,FileType,RelativeUri
+                // new: Timestamp,CounterName,CounterValue,Object,Counter,Instance,NodeName,FileType,RelativeUri
+                csv.Add($"{record.Timestamp.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.ffffffZ")},{record.CounterPath},{counterValue},{record.CounterSet},{record.Instance}");
             }
 
             File.WriteAllLines(outputFile, csv.ToArray());
