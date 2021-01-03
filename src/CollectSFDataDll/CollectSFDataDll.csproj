@@ -13,7 +13,7 @@
     <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
     <GenerateAssemblyTitleAttribute>false</GenerateAssemblyTitleAttribute>
     <NoWarn>7035</NoWarn>
-    <VersionSuffix>2.8.1$([System.DateTime]::UtcNow.ToString(MMdd)).1$([System.DateTime]::UtcNow.ToString(HHmm))</VersionSuffix>
+    <VersionSuffix>2.8.$([System.DateTime]::UtcNow.ToString("yyMM")).1$([System.DateTime]::UtcNow.ToString("ddHHmm"))</VersionSuffix>
     <AssemblyVersion Condition=" '$(VersionSuffix)' != '' ">$(VersionSuffix)</AssemblyVersion>
     <Version Condition=" '$(VersionSuffix)' != '' ">$(VersionSuffix)</Version>
     <FileVersion>$(Version)</FileVersion>
