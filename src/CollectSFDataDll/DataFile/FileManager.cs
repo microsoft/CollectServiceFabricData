@@ -198,7 +198,7 @@ namespace CollectSFData.DataFile
                                     csvRecords.Add(new CsvCounterRecord()
                                     {
                                         Timestamp = Convert.ToDateTime(counterValues[0].Trim('"').Trim(' ')),
-                                        CounterName = headers[headerIndex],
+                                        CounterName = headers[headerIndex].Replace("\"", "").Trim(),
                                         CounterValue = Decimal.Parse(stringValue, NumberStyles.AllowExponent | NumberStyles.AllowDecimalPoint),
                                         Object = counterInfo.Groups["object"].Value.Replace("\"", "").Trim(),
                                         Counter = counterInfo.Groups["counter"].Value.Replace("\"", "").Trim(),
@@ -534,35 +534,22 @@ namespace CollectSFData.DataFile
                 records = counterSession.Records;
             }
 
-            //List<string> csv = new List<string>();
-            //csv.Add($"Timestamp,CounterName,Instance,Value");
-            //csv.Add($"Timestamp,CounterName,CounterValue,Object,Counter,Instance,NodeName,FileType,RelativeUri");
-            //csv.Add($"Timestamp,CounterName,CounterValue");
-
             foreach (var record in records)
             {
                 if (!string.IsNullOrEmpty(record.Value.ToString()))
                 {
-                string counterValue = record.Value.ToString() == "NaN" ? "0" : record.Value.ToString();
-                //Log.Info($"{record.Timestamp.ToUniversalTime().ToString("o")},{record.CounterName},{record.Instance},{value}");
-                //string csvRecord = $"{record.Timestamp.ToUniversalTime().ToString("o")},{record.CounterName},{record.Instance},{value}";
-                // old: Timestamp,CounterName,CounterValue,NodeName,FileType,RelativeUri
-                // new: Timestamp,CounterName,CounterValue,Object,Counter,Instance,NodeName,FileType,RelativeUri
-
-                //csv.Add($"{record.Timestamp.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.ffffffZ")},{record.CounterPath},{counterValue},{record.CounterSet},{record.Instance}");
-                //csv.Add($"{record.Timestamp.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.ffffffZ")},{record.CounterPath},{counterValue}");
-
+                    string counterValue = record.Value.ToString() == "NaN" ? "0" : record.Value.ToString();
 
                     try
                     {
                         csvRecords.Add(new CsvCounterRecord()
                         {
-                            Timestamp = record.Timestamp.ToUniversalTime(), //$"{record.Timestamp.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.ffffffZ")}",
-                            CounterName = record.CounterPath,
+                            Timestamp = record.Timestamp.ToUniversalTime(),
+                            CounterName = record.CounterPath.Replace("\"", "").Trim(),
                             CounterValue = Decimal.Parse(counterValue, NumberStyles.AllowExponent | NumberStyles.AllowDecimalPoint),
-                            Object = record.CounterSet.Replace("\"", "").Trim(),
+                            Object = record.CounterSet?.Replace("\"", "").Trim(),
                             Counter = record.CounterName.Replace("\"", "").Trim(),
-                            Instance = record.Instance.Replace("\"", "").Trim().Trim('(').Trim(')'),
+                            Instance = record.Instance?.Replace("\"", "").Trim().Trim('(').Trim(')'),
                             NodeName = fileObject.NodeName,
                             FileType = fileObject.FileDataType.ToString(),
                             RelativeUri = fileObject.RelativeUri
@@ -570,7 +557,7 @@ namespace CollectSFData.DataFile
                     }
                     catch (Exception ex)
                     {
-                        Log.Exception($"stringValue:{counterValue} exception:{ex}");
+                        Log.Exception($"stringValue:{counterValue} exception:{ex}", record);
                     }
                 }
                 else
@@ -579,9 +566,7 @@ namespace CollectSFData.DataFile
                 }
             }
 
-            fileObject.RecordCount = csvRecords.Count;
             fileObject.Stream.Write(csvRecords);
-            //File.WriteAllLines(outputFile, csvRecords.Select(x => x.ToString()));
             Log.Info($"records: {records.Count()} {csvRecords.Count}");
             return true;
         }
