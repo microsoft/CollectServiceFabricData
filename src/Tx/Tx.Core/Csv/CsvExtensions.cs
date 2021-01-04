@@ -68,6 +68,7 @@ namespace System.Reactive
                         _writer.Write(_separator);
 
                     var propValue = p.GetValue(value, new object[] {});
+                    
                     if(propValue == null)
                         continue;
 
