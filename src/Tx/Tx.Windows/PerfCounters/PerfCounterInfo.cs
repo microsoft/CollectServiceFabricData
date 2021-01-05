@@ -17,8 +17,8 @@ namespace Tx.Windows
 
         public PerfCounterInfo(string counterPath, PdhCounterHandle handle, int index)
         {
-            _index = index;
             _counterPath = counterPath;
+            _index = index;
             string counterPattern = @"(\\\\){0,1}(?<machine>.+?){0,1}\\(?<object>.+?)(?<instance>\(.*?\)){0,1}\\(?<counter>.+)";
 
             Match counterInfo = Regex.Match(counterPath, counterPattern);
@@ -32,7 +32,7 @@ namespace Tx.Windows
             _counterHandle = handle;
             _counterName = counterInfo.Groups["counter"].Value;
             _counterSet = counterInfo.Groups["object"].Value;
-            _instance = counterInfo.Groups["instance"].Value;
+            _instance = Regex.Replace(counterInfo.Groups["instance"].Value, @"^\(|\)$", "");
         }
 
         public string CounterSet
