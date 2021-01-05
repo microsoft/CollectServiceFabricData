@@ -202,7 +202,7 @@ namespace CollectSFData.DataFile
                                         CounterValue = Decimal.Parse(stringValue, NumberStyles.AllowExponent | NumberStyles.AllowDecimalPoint),
                                         Object = counterInfo.Groups["object"].Value.Replace("\"", "").Trim(),
                                         Counter = counterInfo.Groups["counter"].Value.Replace("\"", "").Trim(),
-                                        Instance = counterInfo.Groups["instance"].Value.Replace("\"", "").Trim().Trim('(').Trim(')'),
+                                        Instance = Regex.Replace(counterInfo.Groups["instance"].Value, @"^\(|\)$", "").Trim(),
                                         NodeName = fileObject.NodeName,
                                         FileType = fileObject.FileDataType.ToString(),
                                         RelativeUri = fileObject.RelativeUri
@@ -549,7 +549,7 @@ namespace CollectSFData.DataFile
                             CounterValue = Decimal.Parse(counterValue, NumberStyles.AllowExponent | NumberStyles.AllowDecimalPoint),
                             Object = record.CounterSet?.Replace("\"", "").Trim(),
                             Counter = record.CounterName.Replace("\"", "").Trim(),
-                            Instance = record.Instance?.Replace("\"", "").Trim().Trim('(').Trim(')'),
+                            Instance = record.Instance?.Replace("\"", "").Trim(),
                             NodeName = fileObject.NodeName,
                             FileType = fileObject.FileDataType.ToString(),
                             RelativeUri = fileObject.RelativeUri
