@@ -96,16 +96,16 @@ namespace CollectSFData.Kusto
                 return false;
             }
 
-            self = self.ToLower();
-            comparable = comparable.ToLower();
+            self = self.ToLower().TrimEnd(ZipExtension.ToCharArray());
+            comparable = comparable.ToLower().TrimEnd(ZipExtension.ToCharArray());
 
-            if (self.Contains(comparable) | comparable.Contains(self))
+            if (self.EndsWith(comparable) | comparable.EndsWith(self))
             {
                 Log.Debug("full match", comparable);
                 return true;
             }
 
-            if (self.Contains(Path.GetFileName(comparable)) | comparable.Contains(Path.GetFileName(self)))
+            if (self.EndsWith(Path.GetFileName(comparable)) | comparable.EndsWith(Path.GetFileName(self)))
             {
                 Log.Debug("partial (file name) match", comparable);
                 return true;
