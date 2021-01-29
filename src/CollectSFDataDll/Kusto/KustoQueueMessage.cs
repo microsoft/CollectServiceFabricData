@@ -96,8 +96,8 @@ namespace CollectSFData.Kusto
                 return false;
             }
 
-            self = self.ToLower().TrimEnd(ZipExtension.ToCharArray());
-            comparable = comparable.ToLower().TrimEnd(ZipExtension.ToCharArray());
+            self = self.ToLower().TrimEnd(ZipExtension.ToCharArray()).TrimEnd(CsvExtension.ToCharArray());
+            comparable = comparable.ToLower().TrimEnd(ZipExtension.ToCharArray()).TrimEnd(CsvExtension.ToCharArray());
 
             if (self.EndsWith(comparable) | comparable.EndsWith(self))
             {
