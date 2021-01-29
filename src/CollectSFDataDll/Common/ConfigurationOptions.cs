@@ -187,6 +187,8 @@ namespace CollectSFData.Common
 
         public bool UseMemoryStream { get; set; } = true;
 
+        public bool UseTx { get; set; }
+        
         public bool VersionOption { get; set; }
 
         public ConfigurationOptions()
