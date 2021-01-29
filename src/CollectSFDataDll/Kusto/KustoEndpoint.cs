@@ -246,12 +246,13 @@ namespace CollectSFData.Kusto
                             continue;
                         }
 
-                        if (Cursor == null && table.Columns.FirstOrDefault(x => x.ColumnName.Contains("Cursor")) != null)
+                        if (table.Columns.FirstOrDefault(x => x.ColumnName.Contains("Cursor")) != null)
                         {
                             Cursor = table.Records().FirstOrDefault()["Cursor"].ToString();
                         }
                     }
 
+                    Log.Debug($"table cursor: {Cursor}");
                     return PrimaryResultTable.RecordsCsv();
                 }
                 else
@@ -268,10 +269,6 @@ namespace CollectSFData.Kusto
             {
                 Log.Exception($"exception executing query: {query}\r\n{e}");
                 return new List<string>();
-            }
-            finally
-            {
-                Cursor = string.IsNullOrEmpty(Cursor) ? "''" : Cursor;
             }
         }
 
