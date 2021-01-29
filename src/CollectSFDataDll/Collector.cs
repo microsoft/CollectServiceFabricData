@@ -65,7 +65,7 @@ namespace CollectSFData
                 CustomTaskManager.WaitAll();
                 FinalizeKusto();
 
-                if (Config.DeleteCache & Config.IsCacheLocationPreConfigured())
+                if (Config.DeleteCache && Config.IsCacheLocationPreConfigured() && Directory.Exists(Config.CacheLocation))
                 {
                     Log.Info($"Deleting outputlocation: {Config.CacheLocation}");
 
