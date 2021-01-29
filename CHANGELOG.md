@@ -1,6 +1,9 @@
 # Change log
 
-## 12/27/2020 
+## 01/28/2020
+
+- 
+## 12/27/2020 https://github.com/microsoft/CollectServiceFabricData/releases/tag/v2.7.2012.31150827
 
 - add version check in LogSummary random 10% of time if logging to console  
 - fix aggregate collection modified exception in pending ingest list  
