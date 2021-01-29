@@ -1,12 +1,13 @@
 # Change log
 
-## 01/28/2020
+## 01/29/2020
 
 - 2.8
 - testing microsoft Tx module to replace relog.exe (UseTx=true) non-default
 - fix message compare for ingest causing no progress timeouts
 - fix db table cursor kql syntax
-- fix CSV compliance issue with Linux cluster tables
+- fix CSV compliance issue with Linux cluster tables  
+
 ## 12/27/2020 https://github.com/microsoft/CollectServiceFabricData/releases/tag/v2.7.2012.31150827
 
 - add version check in LogSummary random 10% of time if logging to console  
