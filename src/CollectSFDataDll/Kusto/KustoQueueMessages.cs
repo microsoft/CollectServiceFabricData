@@ -19,6 +19,7 @@ namespace CollectSFData.Kusto
 
         public void Add(string fileUri = null, string relativeUri = null, string clientRequestId = null)
         {
+            Log.Debug($"adding message: file:{fileUri} relative:{relativeUri}");
             Add(new KustoQueueMessage(fileUri, relativeUri, clientRequestId));
         }
 
@@ -59,7 +60,15 @@ namespace CollectSFData.Kusto
         public new bool Remove(KustoQueueMessage message)
         {
             int index = IndexOf(message);
-            return index >= 0 ? RemoveAt(index) : false;
+            bool retval = false;
+
+            if (index >= 0)
+            {
+                retval = RemoveAt(index);
+            }
+
+            Log.Debug($"removing message: index:{index} retval:{retval}", message);
+            return retval;
         }
 
         public bool Remove(string searchItem)
