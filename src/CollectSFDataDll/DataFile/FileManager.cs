@@ -10,8 +10,11 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reactive.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using Tx.Core;
+using Tx.Windows;
 
 namespace CollectSFData.DataFile
 {
@@ -19,6 +22,8 @@ namespace CollectSFData.DataFile
     {
         private readonly CustomTaskManager _fileTasks = new CustomTaskManager(true);
         private Instance _instance = Instance.Singleton();
+        private object _lockObj = new object();
+
         private ConfigurationOptions Config => _instance.Config;
 
         public static string NormalizePath(string path, string directorySeparator = "/")
@@ -164,7 +169,7 @@ namespace CollectSFData.DataFile
             }
         }
 
-        private IList<CsvCounterRecord> ExtractPerfCsvData(FileObject fileObject)
+        private IList<CsvCounterRecord> ExtractPerfRelogCsvData(FileObject fileObject)
         {
             List<CsvCounterRecord> csvRecords = new List<CsvCounterRecord>();
             string counterPattern = @"\\\\.+?\\(?<object>.+?)(?<instance>\(.*?\)){0,1}\\(?<counter>.+)";
@@ -193,11 +198,11 @@ namespace CollectSFData.DataFile
                                     csvRecords.Add(new CsvCounterRecord()
                                     {
                                         Timestamp = Convert.ToDateTime(counterValues[0].Trim('"').Trim(' ')),
-                                        CounterName = headers[headerIndex],
+                                        CounterName = headers[headerIndex].Replace("\"", "").Trim(),
                                         CounterValue = Decimal.Parse(stringValue, NumberStyles.AllowExponent | NumberStyles.AllowDecimalPoint),
                                         Object = counterInfo.Groups["object"].Value.Replace("\"", "").Trim(),
                                         Counter = counterInfo.Groups["counter"].Value.Replace("\"", "").Trim(),
-                                        Instance = counterInfo.Groups["instance"].Value.Replace("\"", "").Trim().Trim('(').Trim(')'),
+                                        Instance = Regex.Replace(counterInfo.Groups["instance"].Value, @"^\(|\)$", "").Trim(),
                                         NodeName = fileObject.NodeName,
                                         FileType = fileObject.FileDataType.ToString(),
                                         RelativeUri = fileObject.RelativeUri
@@ -224,8 +229,44 @@ namespace CollectSFData.DataFile
         private FileObjectCollection FormatCounterFile(FileObject fileObject)
         {
             Log.Debug($"enter:{fileObject.FileUri}");
-            fileObject.FileUri = RelogBlg(fileObject);
-            fileObject.Stream.Write<CsvCounterRecord>(ExtractPerfCsvData(fileObject));
+            string outputFile = fileObject.FileUri + PerfCsvExtension;
+            bool result;
+
+            fileObject.Stream.SaveToFile();
+            DeleteFile(outputFile);
+            Log.Info($"Writing {outputFile}");
+
+            if (Config.UseTx)
+            {
+                result = TxBlg(fileObject, outputFile);
+            }
+            else
+            {
+                result = RelogBlg(fileObject, outputFile);
+            }
+
+            if (result)
+            {
+                _instance.TotalFilesConverted++;
+
+                if (!Config.UseTx)
+                {
+                    fileObject.Stream.ReadFromFile(outputFile);
+                    fileObject.Stream.Write<CsvCounterRecord>(ExtractPerfRelogCsvData(fileObject));
+                }
+            }
+            else
+            {
+                _instance.TotalErrors++;
+            }
+
+            DeleteFile(outputFile);
+
+            if (Config.UseMemoryStream | !Config.IsCacheLocationPreConfigured())
+            {
+                DeleteFile(fileObject.FileUri);
+            }
+
 
             return PopulateCollection<CsvCounterRecord>(fileObject);
         }
@@ -333,20 +374,18 @@ namespace CollectSFData.DataFile
             return collection;
         }
 
-        private string RelogBlg(FileObject fileObject)
+        private PerfCounterObserver<T> ReadCounterRecords<T>(IObservable<T> source)
         {
-            string outputFile = fileObject.FileUri + PerfCsvExtension;
+            var observer = new PerfCounterObserver<T>();
+            source.Subscribe(observer);
+            Log.Info($"complete: {observer.Complete}");
+            return observer;
+        }
 
-            if (!(Config.FileType.Equals(FileTypesEnum.counter)))
-            {
-                return outputFile;
-            }
-
-            fileObject.Stream.SaveToFile();
+        private bool RelogBlg(FileObject fileObject, string outputFile)
+        {
+            bool result = true;
             string csvParams = fileObject.FileUri + " -f csv -o " + outputFile;
-            DeleteFile(outputFile);
-
-            Log.Info($"Writing {outputFile}");
             Log.Info($"relog.exe {csvParams}");
             ProcessStartInfo startInfo = new ProcessStartInfo("relog.exe", csvParams)
             {
@@ -369,20 +408,12 @@ namespace CollectSFData.DataFile
                 if (convertFileProc.StandardError.Peek() > -1)
                 {
                     Log.Error($"{convertFileProc.StandardError.ReadToEnd()}");
+                    result = false;
                 }
             }
 
             convertFileProc.WaitForExit();
-            _instance.TotalFilesConverted++;
-            fileObject.Stream.ReadFromFile(outputFile);
-            DeleteFile(outputFile);
-
-            if (Config.UseMemoryStream | !Config.IsCacheLocationPreConfigured())
-            {
-                DeleteFile(fileObject.FileUri);
-            }
-
-            return outputFile;
+            return result;
         }
 
         private void SaveToCache(FileObject fileObject, bool force = false)
@@ -406,19 +437,19 @@ namespace CollectSFData.DataFile
             FileObjectCollection collection = new FileObjectCollection() { fileObject };
             int counter = 0;
 
-            string sourceFile = fileObject.FileUri.ToLower().Replace(CsvExtension, "");
+            string sourceFile = fileObject.FileUri.ToLower().TrimEnd(CsvExtension.ToCharArray());
             fileObject.FileUri = $"{sourceFile}{CsvExtension}";
             List<byte> csvSerializedBytes = new List<byte>();
-            string relativeUri = null;
+            string relativeUri = fileObject.RelativeUri.TrimEnd(CsvExtension.ToCharArray()) + CsvExtension;
 
             foreach (T record in fileObject.Stream.Read<T>())
             {
-                record.RelativeUri = relativeUri ?? record.RelativeUri;
+                record.RelativeUri = relativeUri;
                 byte[] recordBytes = Encoding.UTF8.GetBytes(record.ToString());
 
                 if (csvSerializedBytes.Count + recordBytes.Length > MaxCsvTransmitBytes)
                 {
-                    relativeUri = $"{sourceFile}.{counter}{CsvExtension}";
+                    relativeUri = fileObject.RelativeUri.TrimEnd(CsvExtension.ToCharArray()) + $".{counter}{CsvExtension}";
                     record.RelativeUri = relativeUri;
 
                     recordBytes = Encoding.UTF8.GetBytes(record.ToString());
@@ -443,10 +474,11 @@ namespace CollectSFData.DataFile
         private FileObjectCollection SerializeJson<T>(FileObject fileObject) where T : IRecord
         {
             Log.Debug("enter");
-            string sourceFile = fileObject.FileUri.ToLower().Replace(JsonExtension, "");
+            string sourceFile = fileObject.FileUri.ToLower().TrimEnd(JsonExtension.ToCharArray());
             fileObject.FileUri = $"{sourceFile}{JsonExtension}";
             FileObjectCollection collection = new FileObjectCollection();
-            string relativeUri = null;
+            string relativeUri = fileObject.RelativeUri.TrimEnd(JsonExtension.ToCharArray()) + JsonExtension;
+
 
             if (fileObject.Length > MaxJsonTransmitBytes)
             {
@@ -455,7 +487,7 @@ namespace CollectSFData.DataFile
 
                 foreach (T record in fileObject.Stream.Read<T>())
                 {
-                    record.RelativeUri = relativeUri ?? record.RelativeUri;
+                    record.RelativeUri = relativeUri;
                     counter++;
 
                     if (newFileObject.Length < WarningJsonTransmitBytes)
@@ -465,7 +497,9 @@ namespace CollectSFData.DataFile
                     else
                     {
                         collection.Add(newFileObject);
-                        relativeUri = $"{sourceFile}.{counter}{JsonExtension}";
+
+                        relativeUri = fileObject.RelativeUri.TrimEnd(JsonExtension.ToCharArray()) + $".{counter}{JsonExtension}";
+                        record.RelativeUri = relativeUri;
                         newFileObject = new FileObject(relativeUri, fileObject.BaseUri);
                     }
                 }
@@ -480,6 +514,64 @@ namespace CollectSFData.DataFile
 
             Log.Debug($"json serialized size: {fileObject.Length} file: {fileObject.FileUri}");
             return collection;
+        }
+
+        private bool TxBlg(FileObject fileObject, string outputFile)
+        {
+            DateTime startTime = DateTime.Now;
+            IObservable<PerformanceSample> observable = default(IObservable<PerformanceSample>);
+            PerfCounterObserver<PerformanceSample> counterSession = default(PerfCounterObserver<PerformanceSample>);
+            List<PerformanceSample> records = new List<PerformanceSample>();
+            List<CsvCounterRecord> csvRecords = new List<CsvCounterRecord>();
+
+            // testing pdh found invalid data when using concurrently
+            lock (_lockObj)
+            {
+                Log.Debug($"observable creating: {fileObject.FileUri}");
+                observable = PerfCounterObservable.FromFile(fileObject.FileUri);
+
+                Log.Debug($"observable created: {fileObject.FileUri}");
+                counterSession = ReadCounterRecords(observable);
+
+                Log.Debug($"finished total ms: {DateTime.Now.Subtract(startTime).TotalMilliseconds} reading: {fileObject.FileUri}");
+                records = counterSession.Records;
+            }
+
+            foreach (var record in records)
+            {
+                if (!string.IsNullOrEmpty(record.Value.ToString()))
+                {
+                    string counterValue = record.Value.ToString() == "NaN" ? "0" : record.Value.ToString();
+
+                    try
+                    {
+                        csvRecords.Add(new CsvCounterRecord()
+                        {
+                            Timestamp = record.Timestamp,
+                            CounterName = record.CounterPath.Replace("\"", "").Trim(),
+                            CounterValue = Decimal.Parse(counterValue, NumberStyles.AllowExponent | NumberStyles.AllowDecimalPoint),
+                            Object = record.CounterSet?.Replace("\"", "").Trim(),
+                            Counter = record.CounterName.Replace("\"", "").Trim(),
+                            Instance = record.Instance?.Replace("\"", "").Trim(),
+                            NodeName = fileObject.NodeName,
+                            FileType = fileObject.FileDataType.ToString(),
+                            RelativeUri = fileObject.RelativeUri
+                        });
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Exception($"stringValue:{counterValue} exception:{ex}", record);
+                    }
+                }
+                else
+                {
+                    Log.Warning($"empty counter value:", record);
+                }
+            }
+
+            fileObject.Stream.Write(csvRecords);
+            Log.Info($"records: {records.Count()} {csvRecords.Count}");
+            return true;
         }
     }
 }
