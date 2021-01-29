@@ -255,7 +255,7 @@ namespace CollectSFData.DataFile
             else
             {
                 Open(true, true);
-                //_fileObject.RecordCount = 0;
+                _fileObject.RecordCount = 0;
             }
 
             _fileObject.RecordCount += records.Count;
