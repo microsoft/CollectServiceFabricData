@@ -241,7 +241,7 @@ namespace CollectSFData.Kusto
                         Log.Error($"adding failedUri to IngestFileObjectsFailed[{IngestFileObjectsFailed.Count()}]: {uriFile}", record);
                         IngestFileObjectsFailed.Add(message);
 
-                        Log.Error($"removing failed ingested relativeuri from IngestFileObjectsPending[{IngestFileObjectsPending.Count()}]: {message}");
+                        Log.Info($"removing failed ingested relativeuri from IngestFileObjectsPending[{IngestFileObjectsPending.Count()}]: {message}");
                         IngestFileObjectsPending.Remove(message);
                     }
                     else
@@ -273,11 +273,11 @@ namespace CollectSFData.Kusto
         {
             List<string> successUris = new List<string>();
             successUris.AddRange(Endpoint.Query($"['{Endpoint.TableName}']" +
-                $"| where cursor_after({_ingestCursor})" +
+                $"| where cursor_after('{_ingestCursor}')" +
                 $"| where ingestion_time() > todatetime('{_instance.StartTime.ToUniversalTime().ToString("o")}')" +
                 $"| distinct RelativeUri"));
 
-            _ingestCursor = IngestFileObjectsSucceeded.Count() < 1 ? "''" : Endpoint.Cursor;
+            _ingestCursor = IngestFileObjectsSucceeded.Count() < 1 ? "" : Endpoint.Cursor;
             Log.Debug($"files ingested:{successUris.Count}");
 
             foreach (string uriFile in successUris)
