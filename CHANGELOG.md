@@ -2,7 +2,7 @@
 
 ## 01/30/2020
 
-- 2.8
+- 2.8 
 - add System.Reactive dependency for Tx
 - add uris argument to UpdloadData()
 - modify PopulateConfig() to use GatherType to determine if configuration populated
