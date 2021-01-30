@@ -41,7 +41,7 @@ namespace CollectSFData.Common
 
         public static string LogFile { get => _logFile; set => _logFile = CheckLogFile(value) ? value : string.Empty; }
 
-        public static bool LogFileEnabled => !string.IsNullOrEmpty(LogFile);
+        public static bool LogFileEnabled;
 
         static Log()
         {
@@ -215,21 +215,27 @@ namespace CollectSFData.Common
             {
                 if (string.IsNullOrEmpty(logFile))
                 {
+                    LogFileEnabled = false;
                     Close();
                     return true;
                 }
 
-                if (!Directory.Exists(Path.GetDirectoryName(logFile)))
+                if (!LogFileEnabled)
                 {
-                    Directory.CreateDirectory(Path.GetDirectoryName(logFile));
-                }
+                    if (!Directory.Exists(Path.GetDirectoryName(logFile)))
+                    {
+                        Directory.CreateDirectory(Path.GetDirectoryName(logFile));
+                    }
 
-                File.Create(logFile).Close();
+                    File.Create(logFile).Close();
+                    LogFileEnabled = true;
+                }
+                
                 return true;
             }
             catch (Exception e)
             {
-                _taskWriterCancellationToken.Cancel();
+                LogFileEnabled = false;
                 Exception(e.ToString());
                 return false;
             }
