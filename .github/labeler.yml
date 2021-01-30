@@ -12,8 +12,8 @@ WorkFlow:
 
 documentation:
   - docs/*.*
-  - readme.md
-  - changelog.md
+  - README.md
+  - CHANGELOG.md
 
 scripts:
   - scripts/*.*
