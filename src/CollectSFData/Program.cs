@@ -49,7 +49,6 @@ namespace CollectSFData
                 config.KustoUseBlobAsSource = false;
                 config.KustoRecreateTable = false;
                 retval = collector.Collect(kusto.IngestFileObjectsFailed.Select(x => x.FileUri).ToList());
-                //retval = collector.Collect();
             }
 
             return retval;
