@@ -2,7 +2,7 @@
 
 ## 01/29/2020
 
-- 2.8
+- 2.8 
 - testing microsoft Tx module to replace relog.exe (UseTx=true) non-default
 - fix message compare for ingest causing no progress timeouts
 - fix db table cursor kql syntax
