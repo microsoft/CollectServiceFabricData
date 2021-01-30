@@ -59,7 +59,7 @@ namespace CollectSFData
                 }
                 else if (Config.IsCacheLocationPreConfigured())
                 {
-                    UploadCacheData();
+                    UploadCacheData(uris);
                 }
 
                 CustomTaskManager.WaitAll();
@@ -374,46 +374,64 @@ namespace CollectSFData
             }
         }
 
-        private void UploadCacheData()
+        private void UploadCacheData(List<string> uris)
         {
             Log.Info("enter");
             List<string> files = new List<string>();
 
-            switch (Config.FileType)
+            if (uris.Count > 0)
             {
-                case FileTypesEnum.counter:
-                    files = Directory.GetFiles(Config.CacheLocation, $"*{PerfCtrExtension}", SearchOption.AllDirectories).ToList();
-
-                    if (files.Count < 1)
+                foreach(string file in uris)
+                {
+                    if(File.Exists(file))
                     {
-                        files = Directory.GetFiles(Config.CacheLocation, $"*{PerfCsvExtension}", SearchOption.AllDirectories).ToList();
+                        Log.Info($"adding file to list: {file}");
+                        files.Add(file);
                     }
-
-                    break;
-
-                case FileTypesEnum.setup:
-                    files = Directory.GetFiles(Config.CacheLocation, $"*{SetupExtension}", SearchOption.AllDirectories).ToList();
-
-                    break;
-
-                case FileTypesEnum.table:
-                    files = Directory.GetFiles(Config.CacheLocation, $"*{TableExtension}", SearchOption.AllDirectories).ToList();
-
-                    break;
-
-                case FileTypesEnum.trace:
-                    files = Directory.GetFiles(Config.CacheLocation, $"*{TraceFileExtension}{ZipExtension}", SearchOption.AllDirectories).ToList();
-
-                    if (files.Count < 1)
+                    else
                     {
-                        files = Directory.GetFiles(Config.CacheLocation, $"*{TraceFileExtension}", SearchOption.AllDirectories).ToList();
+                        Log.Warning($"file does not exist: {file}");
                     }
+                }
+            }
+            else
+            {
+                switch (Config.FileType)
+                {
+                    case FileTypesEnum.counter:
+                        files = Directory.GetFiles(Config.CacheLocation, $"*{PerfCtrExtension}", SearchOption.AllDirectories).ToList();
 
-                    break;
+                        if (files.Count < 1)
+                        {
+                            files = Directory.GetFiles(Config.CacheLocation, $"*{PerfCsvExtension}", SearchOption.AllDirectories).ToList();
+                        }
 
-                default:
-                    Log.Warning($"invalid filetype for cache upload. returning {Config.FileType}");
-                    return;
+                        break;
+
+                    case FileTypesEnum.setup:
+                        files = Directory.GetFiles(Config.CacheLocation, $"*{SetupExtension}", SearchOption.AllDirectories).ToList();
+
+                        break;
+
+                    case FileTypesEnum.table:
+                        files = Directory.GetFiles(Config.CacheLocation, $"*{TableExtension}", SearchOption.AllDirectories).ToList();
+
+                        break;
+
+                    case FileTypesEnum.trace:
+                        files = Directory.GetFiles(Config.CacheLocation, $"*{TraceFileExtension}{ZipExtension}", SearchOption.AllDirectories).ToList();
+
+                        if (files.Count < 1)
+                        {
+                            files = Directory.GetFiles(Config.CacheLocation, $"*{TraceFileExtension}", SearchOption.AllDirectories).ToList();
+                        }
+
+                        break;
+
+                    default:
+                        Log.Warning($"invalid filetype for cache upload. returning {Config.FileType}");
+                        return;
+                }
             }
 
             if (files.Count < 1)
