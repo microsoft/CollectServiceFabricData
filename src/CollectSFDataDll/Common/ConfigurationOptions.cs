@@ -415,9 +415,10 @@ namespace CollectSFData.Common
             {
                 _tempPath = FileManager.NormalizePath(Path.GetTempPath() + _workDir);
 
-                if (args.Length == 0 & !_defaultConfigLoaded)
+                if (args.Length == 0 && !_defaultConfigLoaded && GatherType == FileTypesEnum.unknown.ToString())
                 {
                     Log.Last(_cmdLineArgs.CmdLineApp.GetHelpText());
+                    Log.Last("error: no configuration provided");
                     return false;
                 }
 
