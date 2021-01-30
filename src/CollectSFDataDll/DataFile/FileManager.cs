@@ -449,14 +449,13 @@ namespace CollectSFData.DataFile
 
                 if (csvSerializedBytes.Count + recordBytes.Length > MaxCsvTransmitBytes)
                 {
-                    relativeUri = fileObject.RelativeUri.TrimEnd(CsvExtension.ToCharArray()) + $".{counter}{CsvExtension}";
-                    record.RelativeUri = relativeUri;
-
+                    record.RelativeUri = relativeUri.TrimEnd(CsvExtension.ToCharArray()) + $".{counter}{CsvExtension}";
                     recordBytes = Encoding.UTF8.GetBytes(record.ToString());
+
                     fileObject.Stream.Set(csvSerializedBytes.ToArray());
                     csvSerializedBytes.Clear();
 
-                    fileObject = new FileObject(relativeUri, fileObject.BaseUri);
+                    fileObject = new FileObject(record.RelativeUri, fileObject.BaseUri);
 
                     Log.Debug($"csv serialized size: {csvSerializedBytes.Count} file: {fileObject.FileUri}");
                     collection.Add(fileObject);
@@ -497,10 +496,8 @@ namespace CollectSFData.DataFile
                     else
                     {
                         collection.Add(newFileObject);
-
-                        relativeUri = fileObject.RelativeUri.TrimEnd(JsonExtension.ToCharArray()) + $".{counter}{JsonExtension}";
-                        record.RelativeUri = relativeUri;
-                        newFileObject = new FileObject(relativeUri, fileObject.BaseUri);
+                        record.RelativeUri = relativeUri.TrimEnd(JsonExtension.ToCharArray()) + $".{counter}{JsonExtension}";
+                        newFileObject = new FileObject(record.RelativeUri, fileObject.BaseUri);
                     }
                 }
 
