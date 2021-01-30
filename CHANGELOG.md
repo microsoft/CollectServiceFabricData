@@ -1,8 +1,14 @@
 # Change log
 
-## 01/29/2020
+## 01/30/2020
 
-- 2.8 
+- 2.8
+- add System.Reactive dependency for Tx
+- add uris argument to UpdloadData()
+- modify PopulateConfig() to use GatherType to determine if configuration populated
+- fix CheckLogFile to not check file if open
+- fix table name prepend to prevent duplicate
+- fix file name with multiple splits from concatenating counters in name
 - testing microsoft Tx module to replace relog.exe (UseTx=true) non-default
 - fix message compare for ingest causing no progress timeouts
 - fix db table cursor kql syntax
