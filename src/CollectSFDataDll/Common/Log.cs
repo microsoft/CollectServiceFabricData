@@ -215,17 +215,22 @@ namespace CollectSFData.Common
             {
                 if (string.IsNullOrEmpty(logFile))
                 {
+                    LogFileEnabled = false;
                     Close();
                     return true;
                 }
 
-                if (!Directory.Exists(Path.GetDirectoryName(logFile)))
+                if (!LogFileEnabled)
                 {
-                    Directory.CreateDirectory(Path.GetDirectoryName(logFile));
-                }
+                    if (!Directory.Exists(Path.GetDirectoryName(logFile)))
+                    {
+                        Directory.CreateDirectory(Path.GetDirectoryName(logFile));
+                    }
 
-                File.Create(logFile).Close();
-                LogFileEnabled = true;
+                    File.Create(logFile).Close();
+                    LogFileEnabled = true;
+                }
+                
                 return true;
             }
             catch (Exception e)
