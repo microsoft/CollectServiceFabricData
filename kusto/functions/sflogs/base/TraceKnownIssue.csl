@@ -229,6 +229,7 @@
         TypeAndTextMatches(T, "patch orchestration has active repair tasks", "POA-CoordinatorService.VerboseMessage", "Total [1-9][0-9]* repair tasks were found for POS"),
         TypeAndTextContains(T, "lease join issue", "Join.Establish", "Restarting as lease establish with"),
         TypeAndTextContains(T, "sfrp cert issue / common cert link", "InfrastructureService.WrpStreamChannel", "The underlying connection was closed: Could not establish trust relationship"),
+        TypeAndTextContains(T, "sfrp communication /cert auth issue", "InfrastructureService.WrpStreamChannel", "ReturnWrpStreamChannelResponse thrown System.UnauthorizedAccessException"),
         TypeAndTextContains(T, "sfrp communication /cert issue", "InfrastructureService.WrpStreamChannel", "ReturnWrpStreamChannelResponse thrown System.AggregateException: Failed to send request while retrying with all available certificates"),
         TypeAndTextContains(T, "cert issue", "InfrastructureService.ClusterCommandProcessor", "CreateOperationStatusAsync: Exception encountered: System.Fabric.FabricServerAuthenticationFailedException"),
         TypeAndTextContains(T, "tcp port exhaustion. see https://docs.microsoft.com/en-us/troubleshoot/windows-client/networking/connect-tcp-greater-than-5000-error-wsaenobufs-10055", "Transport.Tcp@", "WSAENOBUFS"),
