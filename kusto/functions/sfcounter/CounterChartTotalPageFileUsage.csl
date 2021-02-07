@@ -2,5 +2,6 @@
     CounterChartTotalPageFileUsage(T:string) {
         table(T)
         | where CounterName contains "Paging File(_Total)\\% Usage"
-        | summarize avg(CounterValue) by xtime=bin(Timestamp,1m), NodeName         | render timechart;
+        | summarize avg(CounterValue) by xtime=bin(Timestamp,1m), NodeName
+        | render timechart;
     }
