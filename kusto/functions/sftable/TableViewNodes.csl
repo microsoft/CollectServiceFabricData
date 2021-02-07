@@ -1,4 +1,4 @@
-.create-or-alter function with (docstring = "function to create Nodes TableView view for sftable",folder = "sftable") 
+.create-or-alter function with (docstring = "function to create Nodes TableView view for sftable", folder = "sftable")
     TableViewNodes(T:string) {
         TableView(T)
         | where RelativeUri endswith "Nodes"
@@ -26,3 +26,4 @@
         | project-away Column*
         | order by Timestamp asc
     }
+

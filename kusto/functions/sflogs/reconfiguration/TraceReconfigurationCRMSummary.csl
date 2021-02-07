@@ -1,5 +1,5 @@
-.create-or-alter function with (docstring = '[T:string] where T=table name. function to enumerate CRM reconfiguration operations summary.', folder = 'sflogs/reconfiguration')
-    TraceReconfigurationCRMSummary (T:string) {
+.create-or-alter function with (docstring = "[T:string] where T=table name. function to enumerate CRM reconfiguration operations summary.", folder = "sflogs/reconfiguration")
+    TraceReconfigurationCRMSummary(T:string) {
         TraceReconfigurationCRM(T)
         | order by phase asc 
         | summarize count() by trim("\\s+", tostring(phase))

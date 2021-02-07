@@ -1,4 +1,4 @@
-.create-or-alter function with (docstring = "function to graph FM.InProgress_AppUpgrade at default 5 second intervals",folder = "sflogs/failover-manager") 
+.create-or-alter function with (docstring = "function to graph FM.InProgress_AppUpgrade at default 5 second intervals", folder = "sflogs/failover-manager")
     TraceFMInProgress_AppUpgradeGraph(T:string, appName:string=".") {
         table(T)
         | where Type contains "FM.InProgress_AppUpgrade"
