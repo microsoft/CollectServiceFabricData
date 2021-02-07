@@ -2,5 +2,6 @@
     CounterChartDrive_D_DiskQueue(T:string) {
         table(T)
         | where CounterName contains "Avg. Disk Queue Length" and CounterName contains "d:"
-                | summarize avg(CounterValue) by xtime=bin(Timestamp,1m), NodeName         | render timechart;
+        | summarize avg(CounterValue) by xtime=bin(Timestamp,1m), NodeName
+        | render timechart;
     }

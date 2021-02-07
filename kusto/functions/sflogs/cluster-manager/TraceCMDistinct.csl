@@ -4,6 +4,6 @@
     let componentName = 'CM.';
     table(T)
         | where Type startswith componentName
-                    | summarize count(Type) by Type, Level
-    | order by Level, count_Type desc
+        | summarize count(Type) by Type, Level
+        | order by Level, count_Type desc
     }
