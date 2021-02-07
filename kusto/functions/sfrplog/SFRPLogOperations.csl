@@ -1,0 +1,68 @@
+.create-or-alter function with (docstring = "function sfrplog to extract operation from EventMessage", folder = "sfrplog")
+    SFRPLogOperations() {
+        database('SFRP').table('SFRPLog')
+        | extend activity = extract(@"ACT\=\|(.+)\.", 1, id)
+        | extend operation = case(
+            EventMessage startswith "Start", "Start",
+            EventMessage startswith "Complete", "Complete",
+            EventMessage startswith "Done", "Done",
+            EventMessage startswith "Found", "Found",
+            EventMessage startswith "Finish", "Finish",
+            EventMessage startswith "Request", "Request",
+            EventMessage startswith "Response", "Response",
+            EventMessage startswith "Processing Completed", "Processing Completed",
+            EventMessage startswith "Processing", "Processing",
+            EventMessage startswith "Pinned", "Pinned",
+            EventMessage startswith "Tokens", "Tokens",
+            EventMessage startswith "Send request Stream", "Request Stream",
+            EventMessage startswith "Set response:Stream", "Response Stream",
+            EventMessage startswith "Updating Resources", "Updating Resources",
+            EventMessage startswith "Updated Resources", "Updated Resources",
+            EventMessage startswith "Released writable lock", "Released Write Lock",
+            EventMessage startswith "Acquired writable lock", "Acquired Write Lock",
+            EventMessage startswith "Acquiring writable lock", "Acquiring Write Lock",
+            EventMessage startswith "The operation", "Request Response",
+            EventMessage contains_cs "Method: ", "Method",
+            EventMessage contains_cs ".SendAsync: Retry: ", "SendAsync Retry",
+            EventMessage contains_cs ".SendAsync: ", "SendAsync",
+            EventMessage startswith "RemoveCacheEntry", "RemoveCacheEntry",
+            EventMessage startswith "SetCacheEntry", "SetCacheEntry",
+            EventMessage startswith "State Transition", "State Transition",
+            EventMessage startswith "[ChainElements]", "Cert Chain",
+            EventMessage startswith "vmExtensionPollRequest", "vmExtensionPollRequest",
+            EventMessage startswith "vmExtnGoalstate", "vmExtnGoalState",
+            EventMessage startswith "NotifyCustomers begin", "NotifyCustomers begin",
+            EventMessage startswith "NotifyCustomers Notification disabled", "NotifyCustomers disabled",
+            EventMessage startswith "CleanupClusters", "CleanupClusters",
+            EventMessage startswith "UpdateSingleCluster", "UpdateSingleCluster",
+            EventMessage contains "created", "Created",
+            EventMessage startswith "Creating", "Creating",
+            EventMessage startswith "OperationSucceeded", "OperationSucceeded",
+            EventMessage startswith "StreamRequest", "StreamRequest",
+            EventMessage startswith "RouteRequest", "RouteRequest",
+            EventMessage startswith "Dumping Snapshot", "Dumping Snapshot",
+            EventMessage startswith "Updated", "Updated",
+            EventMessage startswith "Successfully committed", "Successfully Committed",
+            EventMessage startswith "Result", "Result",
+            EventMessage startswith "Committed Changes", "Committed Changes",
+            EventMessage startswith "Operation" and EventMessage  contains "start", "Operation Start",
+            EventMessage startswith "Operation" and EventMessage  contains "terminate", "Operation Terminate",
+            EventMessage startswith "GetVersion", "GetVersion",
+            EventMessage startswith "Getting value", "Get Value",
+            ""
+        )
+        | extend operation = iif(
+            EventMessage contains 'not found' 
+                or EventMessage contains 'notfound' 
+                or EventMessage contains 'not find' 
+                or EventMessage contains 'cant find' 
+                or EventMessage contains 'unable to find',
+            strcat(operation, " not found"), operation)
+        | extend operation = iif(
+            EventMessage contains 'unauthorized' 
+                or EventMessage contains 'error' 
+                or EventMessage contains 'fail',
+            strcat(operation, " error"), operation)
+        | project TIMESTAMP, Level, id, type, EventId, activity, operation, EventMessage
+        | sort by TIMESTAMP desc nulls last
+    }

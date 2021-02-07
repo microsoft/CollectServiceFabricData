@@ -1,4 +1,4 @@
-.create-or-alter function with (docstring = "[T:string] where T=table name. function to enumerate Type error / warning information graph.",folder = "sflogs/errors") 
+.create-or-alter function with (docstring = "[T:string] where T=table name. function to enumerate Type error / warning information graph.", folder = "sflogs/errors")
     TraceTypeErrorsGraph(T:string) {
     TraceTypeErrors(T)
     | extend level = iff((Type contains 'exception' or Text contains 'exception'), 'exception', Level)

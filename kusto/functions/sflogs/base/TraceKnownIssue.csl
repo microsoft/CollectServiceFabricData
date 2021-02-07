@@ -1,4 +1,4 @@
-.create-or-alter function with (docstring = "[T:string] where T=table name. function to search service fabric sflogs for known issues",folder = "sflogs/base") 
+.create-or-alter function with (docstring = "[T:string] where T=table name. function to search service fabric sflogs for known issues", folder = "sflogs/base")
     TraceKnownIssue(T:string) {
         // search any column using string contains
         let AnyContains = (tableName:string, issue:string, query:string) {

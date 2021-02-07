@@ -1,0 +1,11 @@
+.create-or-alter function with (docstring = "[T:string] where T=table name. function to extract reverse proxy request return codes, graph over time.", folder = "sflogs/reverse-proxy")
+    TraceReverseProxyRequestsReturnCodesGraph(T:string) {
+        let extractPattern_StatusCode = @'(status code\s=\s)(\d+)';
+        table(T)
+        | where Type contains "ReverseProxy"
+        | where Text contains "status code"
+        | extend statusCode = extract(extractPattern_StatusCode, 2, Text, typeof(string))
+        | project Timestamp , TID , PID , Level , Type , Text , NodeName , FileType, statusCode
+        | summarize count() by xtime=bin(Timestamp,60s), statusCode
+        | render timechart;
+    }

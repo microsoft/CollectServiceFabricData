@@ -1,4 +1,4 @@
-.create-or-alter function with (docstring = "function to create ReplicaOps TableView view for sftable",folder = "sftable") 
+.create-or-alter function with (docstring = "function to create ReplicaOps TableView view for sftable", folder = "sftable")
     TableViewReplicaOps(T:string) {
         TableView(T)
         | where RelativeUri endswith "ReplicaOps"
@@ -25,4 +25,5 @@
         | project-away Column*
         | order by Timestamp asc    
     }
+
 
