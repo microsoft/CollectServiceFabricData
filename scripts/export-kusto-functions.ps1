@@ -44,7 +44,7 @@ function main() {
 function export-function($function)
 {
     write-host "exporting $($function.Name)"
-    $functionScript = ".create-or-alter function with (docstring = `"$($function.DocString)`", folder = `"$($function.Folder)`")`r`n    $($function.Name) $($function.Parameters) $($function.Body)"
+    $functionScript = ".create-or-alter function with (docstring = `"$($function.DocString)`", folder = `"$($function.Folder)`")`r`n    $($function.Name)$($function.Parameters) $($function.Body)"
     Write-Host $functionScript
     $fileName = "$kustoDir\$($function.Folder)\$($function.Name).csl"
     $fileDirectory = [io.path]::GetDirectoryName($fileName)

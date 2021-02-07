@@ -1,13 +1,9 @@
-.create-or-alter function with (docstring = "[T:string] where T=table name. function to enumerate Type 'CM.' distinct Type traces",folder = "sflogs/cluster-manager") 
+.create-or-alter function with (docstring = "function to enumerate Type 'CM.' distinct Type traces", folder = "sflogs/cluster-manager")
     TraceCMDistinct(T:string) {
     let serviceGuid = '00000000-0000-0000-0000-000000002000';
     let componentName = 'CM.';
     table(T)
-    //| where Level !contains 'info'
-    | where Type startswith componentName
-        //or Type contains serviceGuid
-        //or Text contains serviceGuid
-    | summarize count(Type) by Type, Level
+        | where Type startswith componentName
+                    | summarize count(Type) by Type, Level
     | order by Level, count_Type desc
-    //| order by Timestamp asc
-}
+    }

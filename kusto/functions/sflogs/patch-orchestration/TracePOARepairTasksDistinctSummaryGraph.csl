@@ -1,4 +1,4 @@
-.create-or-alter function with (docstring = "[T:string] where T=table name. function to count 'POA-' patch orchestration repair tasks summary in timechart'",folder = "sflogs/patch-orchestration") 
+.create-or-alter function with (docstring = "[T:string] where T=table name. function to count 'POA-' patch orchestration repair tasks summary in timechart'", folder = "sflogs/patch-orchestration")
     TracePOARepairTasksDistinctSummaryGraph(T:string) {
         TracePOARepairTasks(T)
         | summarize count() by bin(Timestamp, 1m), strcat(subState, ":" ,taskState)

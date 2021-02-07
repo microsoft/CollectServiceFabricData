@@ -1,8 +1,6 @@
-.create-or-alter function with (docstring = "service fabric counter log timechart for drive c: disk queue. large spikes or sustained values over 3 could be indicator of performance issues.",folder = "sfcounter") 
+.create-or-alter function with (docstring = "service fabric counter log timechart for drive c: disk queue. large spikes or sustained values over 3 could be indicator of performance issues.", folder = "sfcounter")
     CounterChartDrive_C_DiskQueue(T:string) {
         table(T)
         | where CounterName contains "Avg. Disk Queue Length" and CounterName contains "c:"
-        //| where CounterName contains "% Idle Time" and CounterName contains "c:"
-        | summarize avg(CounterValue) by xtime=bin(Timestamp,1m), NodeName //CounterName, NodeName, disk
-        | render timechart;
+                | summarize avg(CounterValue) by xtime=bin(Timestamp,1m), NodeName         | render timechart;
     }
