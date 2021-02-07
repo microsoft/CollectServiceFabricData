@@ -1,5 +1,5 @@
 <#
-    script to import kusto functions in .csl format using kusto-rest.ps1 
+    script to export kusto functions in .csl format using kusto-rest.ps1 
 #>
 param(
     [Parameter(Mandatory = $true)]
@@ -8,11 +8,10 @@ param(
     [string]$kustoDatabase = '',
     [switch]$test,
     [switch]$force,
-    [string]$kustoDir = "$psscriptroot\..\kusto"
+    [string]$kustoDir = "$psscriptroot\..\kusto\functions"
 )
 
 $ErrorActionPreference = 'continue'
-$kustoScripts = [io.directory]::getFiles($kustoDir, '*.csl', [io.searchoption]::AllDirectories)
 $scriptErrors = [collections.arraylist]::new()
 $scriptSuccess = [collections.arraylist]::new()
 
@@ -22,23 +21,13 @@ function main() {
     if (!$kusto -or $force) {
         . .\kusto-rest.ps1 -cluster $kustoCluster -database $kustoDatabase
     }
+    
+    $kusto.Exec('.show functions')
 
-    foreach ($script in $kustoScripts) {
-        exec-script $script
+    foreach ($function in $kusto.ResultTable) {
+        export-function $function
     }
     
-    if ($scriptErrors) {
-        $kustoScripts.Clear()
-        $kustoScripts = $scriptErrors.ToArray()
-        $scriptErrors.Clear()
-        write-warning "rerunning failed scripts for dependencies"
-        
-        foreach ($script in $kustoScripts) {
-            exec-script $script
-        }
-    }
-
-
     if ($scriptSuccess) {
         $scriptSuccess | out-string
         Write-host "the above scripts executed successfully:" -ForegroundColor Green
@@ -52,16 +41,24 @@ function main() {
     write-host 'finished'
 }
 
-function exec-script($script) {
-    write-host "`$kusto.ExecScript(`"$script`")" -foregroundcolor cyan
+function export-function($function)
+{
+    write-host "exporting $($function.Name)"
+    $functionScript = ".create-or-alter function with (docstring = `"$($function.DocString)`", folder = `"$($function.Folder)`")`r`n    $($function.Name) $($function.Parameters) $($function.Body)"
+    Write-Host $functionScript
+    $fileName = "$kustoDir\$($function.Folder)\$($function.Name).csl"
+    $fileDirectory = [io.path]::GetDirectoryName($fileName)
+    if(!(test-path $fileDirectory)){
+        mkdir $fileDirectory
+    }
 
     if (!$test) {
         try {
-            $kusto.ExecScript("$script")
-            [void]$scriptSuccess.Add($script)
+            out-file -InputObject $functionScript -FilePath $fileName
+            [void]$scriptSuccess.Add($function.Name)
         }
         catch {
-            [void]$scriptErrors.Add($script)
+            [void]$scriptErrors.Add($function.Name)
         }
     }
 
@@ -71,8 +68,8 @@ function exec-script($script) {
     else {
         $error.Clear()
     }
-}
 
+}
 
 main
 
