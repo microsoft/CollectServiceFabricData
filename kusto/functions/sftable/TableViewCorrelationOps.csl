@@ -1,4 +1,4 @@
-.create-or-alter function with (docstring = "function to create CorrelationOps TableView view for sftable",folder = "sftable") 
+.create-or-alter function with (docstring = "function to create CorrelationOps TableView view for sftable", folder = "sftable")
     TableViewCorrelationOps(T:string) {
         TableView(T)
         | where RelativeUri endswith "CorrelationOps"
@@ -9,3 +9,4 @@
         | project-away Column*
         | order by Timestamp asc
     }
+

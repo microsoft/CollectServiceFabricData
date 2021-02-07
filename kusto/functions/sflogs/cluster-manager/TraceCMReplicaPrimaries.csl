@@ -1,4 +1,4 @@
-.create-or-alter function with (docstring = "[T:string] where T=table name. function to enumerate CM primary replicas",folder = "sflogs/cluster-manager") 
+.create-or-alter function with (docstring = "[T:string] where T=table name. function to enumerate CM primary replicas", folder = "sflogs/cluster-manager")
     TraceCMReplicaPrimaries(T:string) {
     let serviceGuid = '00000000-0000-0000-0000-000000002000'; // cluster
     //let serviceGuid = '00000000-0000-0000-0000-000000009000'; // EventStore

@@ -1,13 +1,13 @@
-.create-or-alter function with (docstring = "[T:string] where T=table name. function to search service fabric sflogs for application related entries",folder = "sflogs/application") 
+.create-or-alter function with (docstring = "[T:string] where T=table name. function to search service fabric sflogs for application related entries", folder = "sflogs/application")
     TraceAppUnhealthyReport(T:string) {
-        let extractPattern_HM_ProcessReport1 = @"HealthReport\(([^\s]*)[^=]*=([^\s]*)";
-        let extractPattern_HM_ProcessReport2 = @"exit\scode:([^.]*)";
-        let extractPattern_HM_ProcessReport3 = @"timeInQueue=([^\)]*)";
-        table(T)
-        | where Type startswith "HM.Complete_ProcessReport@fabric"
-        | where (Text contains "Error")
-        | extend Application = extract(extractPattern_HM_ProcessReport1, 1, Text, typeof(string))
-        | extend ExitCode = extract(extractPattern_HM_ProcessReport2, 1, Text, typeof(string))
-        | extend TimeInQueue = extract(extractPattern_HM_ProcessReport3, 1, Text, typeof(string))
-        | project Timestamp, Type, Text, Application, ExitCode, TimeInQueue, NodeName
-    }
+    let extractPattern_HM_ProcessReport1 = @"HealthReport\(([^\s]*)[^=]*=([^\s]*)";
+    let extractPattern_HM_ProcessReport2 = @"exit\scode:([^.]*)";
+    let extractPattern_HM_ProcessReport3 = @"timeInQueue=([^\)]*)";
+    table(T)
+    | where Type startswith "HM.Complete_ProcessReport@fabric"
+    | where (Text contains "Error")
+    | extend Application = extract(extractPattern_HM_ProcessReport1, 1, Text, typeof(string))
+    | extend ExitCode = extract(extractPattern_HM_ProcessReport2, 1, Text, typeof(string))
+    | extend TimeInQueue = extract(extractPattern_HM_ProcessReport3, 1, Text, typeof(string))
+    | project Timestamp, Type, Text, Application, ExitCode, TimeInQueue, NodeName
+}
