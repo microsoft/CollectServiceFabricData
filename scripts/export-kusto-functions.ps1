@@ -6,6 +6,7 @@ param(
     [string]$kustoCluster = '',
     [Parameter(Mandatory = $true)]
     [string]$kustoDatabase = '',
+    [string[]]$exclusions = @('sfrplog'),
     [switch]$test,
     [switch]$force,
     [string]$kustoDir = "$psscriptroot\..\kusto\functions"
@@ -45,9 +46,19 @@ function export-function($function)
 {
     write-host "exporting $($function.Name)"
     $functionScript = ".create-or-alter function with (docstring = `"$($function.DocString)`", folder = `"$($function.Folder)`")`r`n    $($function.Name)$($function.Parameters) $($function.Body)"
-    Write-Host $functionScript
+    Write-Verbose $functionScript
     $fileName = "$kustoDir\$($function.Folder)\$($function.Name).csl"
     $fileDirectory = [io.path]::GetDirectoryName($fileName)
+
+    foreach($exclusion in $exclusions)
+    {
+        if($fileName.Contains($exclusion))
+        {
+            write-warning "skipping exclusion $($function.Name)"
+            return
+        }
+    }
+
     if(!(test-path $fileDirectory)){
         mkdir $fileDirectory
     }
