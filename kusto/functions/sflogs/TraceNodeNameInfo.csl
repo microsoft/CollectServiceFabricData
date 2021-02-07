@@ -1,15 +1,10 @@
-// sflogs summarize NodeName
-
-.create-or-alter function with (docstring = '[T:string] where T=table name. function to enumerate distinct NodeName information.', folder = 'sflogs')
-    TraceNodeNameInfo (T:string) {
+.create-or-alter function with (docstring = "[T:string] where T=table name. function to enumerate distinct NodeName information.", folder = "sflogs")
+    TraceNodeNameInfo(T:string) {
     let table = materialize(table(T));
     table
     | extend instance = extract(@'.+@.[a-f0-9]+:(\d{18,})',1, Type)
-    //| summarize min(Timestamp), max(Timestamp), dcount(PID), dcount(TID) by NodeName, instance
-    //| summarize count(), min(Timestamp), max(Timestamp), dcount(PID), dcount(TID) by NodeName
-    | summarize min(Timestamp), max(Timestamp) by NodeName, instance
-    //| join T on $left.Timestamp==$right.Timestamp
-    //| join (T | where 
-    | where isnotempty(instance)
+            | summarize min(Timestamp), max(Timestamp) by NodeName, instance
+            | where isnotempty(instance)
     | order by NodeName asc, instance asc
 }
+

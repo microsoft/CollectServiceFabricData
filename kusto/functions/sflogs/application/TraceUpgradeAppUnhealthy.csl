@@ -1,29 +1,28 @@
-.create-or-alter function with (docstring = "[T:string] where T=table name. function to search service fabric sflogs for application related entries",folder = "sflogs/application") 
+.create-or-alter function with (docstring = "[T:string] where T=table name. function to search service fabric sflogs for application related entries", folder = "sflogs/application")
     TraceUpgradeAppUnhealthy(T:string) {
-        let extractPattern_HMUpgradeAppUnhealthy1 = @"app\s([^\s]*)[^:]*:[^\d]*([^.]*)[^\d]*([^\s]*)[^']*'([^']*)[^\d]*([^.]*)[^']*'([^']*)";
-        let extractPattern_HMUpgradeAppUnhealthy2 = @"SourceId[^']*'([^']*)[^:]*:'([^']*)";
-        let extractPattern_HMUpgradeAppUnhealthy3 = @"sourceUtc:([^']*)";
-        let extractPattern_HMUpgradeAppUnhealthy4 = @"exit\scode:([^.]*)";
-        let extractPattern_HMUpgradeAppUnhealthy5 = @"lastModifiedUtc:([^*\s]*\s[^*\s]*)[^:]*:[^\s]*\s[^\s]*[^:]*:([^\s]*\s[^\s]*)\s[^:]*:([^\s]*\s[^\s]*)[^:]*:([^\s]*\s[^\s]*)";
-        let extractPattern_HMEntityQueryCompleted = @"QueryEntityDetail\(([^\)]*)[^\[]*[^:]*:\s([^;]*)[^:]*:\s([^;]*)[^:]*:\s([^;]*)[^:]*:\s([^;]*)[^:]*:\s([^;]*)[^:]*:[^\d]*([^.]*)";
-        table(T)
-        | where Timestamp between (datetime(2020-10-26T10:01:33.995Z) .. datetime(2020-10-26T10:11:34.547Z))
-        | where Type startswith "HM.UpgradeAppUnhealthy@fabric"
-        | where (Text contains "Error")
-        | extend Application = extract(extractPattern_HMUpgradeAppUnhealthy1, 1, Text, typeof(string))
-        | extend EvaluationMessage = extract(extractPattern_HMUpgradeAppUnhealthy1, 2, Text, typeof(string))
-        | extend UnhealthyAppsAllowed = extract(extractPattern_HMUpgradeAppUnhealthy1, 3, Text, typeof(string))
-        | extend NodeReportedOn = extract(extractPattern_HMUpgradeAppUnhealthy1, 4, Text, typeof(string))
-        | extend PackagesUnhealthy = extract(extractPattern_HMUpgradeAppUnhealthy1, 5, Text, typeof(string))
-        | extend PackageName = extract(extractPattern_HMUpgradeAppUnhealthy1, 6, Text, typeof(string))
-        | extend SourceId = extract(extractPattern_HMUpgradeAppUnhealthy2, 1, Text, typeof(string))
-        | extend SourceProperty = extract(extractPattern_HMUpgradeAppUnhealthy2, 2, Text, typeof(string))
-        | extend SourceUtc = extract(extractPattern_HMUpgradeAppUnhealthy3, 1, Text, typeof(string))
-        | extend ExitCode = extract(extractPattern_HMUpgradeAppUnhealthy4, 1, Text, typeof(string))
-        | extend lastModifiedUtc = extract(extractPattern_HMUpgradeAppUnhealthy5, 1, Text, typeof(string))
-        | extend lastOKAt = extract(extractPattern_HMUpgradeAppUnhealthy5, 1, Text, typeof(string))
-        | extend lastWarningAt = extract(extractPattern_HMUpgradeAppUnhealthy5, 1, Text, typeof(string))
-        | extend lastErrorAt = extract(extractPattern_HMUpgradeAppUnhealthy5, 1, Text, typeof(string))
-        | extend lastErrorAt = extract(extractPattern_HMEntityQueryCompleted, 1, Text, typeof(string))
-        | project Timestamp, Type, Text, Application, EvaluationMessage, UnhealthyAppsAllowed, NodeReportedOn, PackagesUnhealthy, PackageName, SourceId, SourceProperty, SourceUtc, ExitCode, lastModifiedUtc, lastOKAt, lastWarningAt, lastErrorAt, NodeName    
-    }
+let extractPattern_HMUpgradeAppUnhealthy1 = @"app\s([^\s]*)[^:]*:[^\d]*([^.]*)[^\d]*([^\s]*)[^']*'([^']*)[^\d]*([^.]*)[^']*'([^']*)";
+let extractPattern_HMUpgradeAppUnhealthy2 = @"SourceId[^']*'([^']*)[^:]*:'([^']*)";
+let extractPattern_HMUpgradeAppUnhealthy3 = @"sourceUtc:([^']*)";
+let extractPattern_HMUpgradeAppUnhealthy4 = @"exit\scode:([^.]*)";
+let extractPattern_HMUpgradeAppUnhealthy5 = @"lastModifiedUtc:([^*\s]*\s[^*\s]*)[^:]*:[^\s]*\s[^\s]*[^:]*:([^\s]*\s[^\s]*)\s[^:]*:([^\s]*\s[^\s]*)[^:]*:([^\s]*\s[^\s]*)";
+let extractPattern_HMEntityQueryCompleted = @"QueryEntityDetail\(([^\)]*)[^\[]*[^:]*:\s([^;]*)[^:]*:\s([^;]*)[^:]*:\s([^;]*)[^:]*:\s([^;]*)[^:]*:\s([^;]*)[^:]*:[^\d]*([^.]*)";
+table(T)
+ //| where Timestamp between (datetime(2020-10-26T10:01:33.995Z) .. datetime(2020-10-26T10:11:34.547Z))
+ | where Type startswith "HM.UpgradeAppUnhealthy@fabric"
+ | where (Text contains "Error")
+ | extend Application = extract(extractPattern_HMUpgradeAppUnhealthy1, 1, Text, typeof(string))
+ | extend EvaluationMessage = extract(extractPattern_HMUpgradeAppUnhealthy1, 2, Text, typeof(string))
+ | extend UnhealthyAppsAllowed = extract(extractPattern_HMUpgradeAppUnhealthy1, 3, Text, typeof(string))
+ | extend NodeReportedOn = extract(extractPattern_HMUpgradeAppUnhealthy1, 4, Text, typeof(string))
+ | extend PackagesUnhealthy = extract(extractPattern_HMUpgradeAppUnhealthy1, 5, Text, typeof(string))
+ | extend PackageName = extract(extractPattern_HMUpgradeAppUnhealthy1, 6, Text, typeof(string))
+ | extend SourceId = extract(extractPattern_HMUpgradeAppUnhealthy2, 1, Text, typeof(string))
+ | extend SourceProperty = extract(extractPattern_HMUpgradeAppUnhealthy2, 2, Text, typeof(string))
+ | extend SourceUtc = extract(extractPattern_HMUpgradeAppUnhealthy3, 1, Text, typeof(string))
+ | extend ExitCode = extract(extractPattern_HMUpgradeAppUnhealthy4, 1, Text, typeof(string))
+ | extend lastModifiedUtc = extract(extractPattern_HMUpgradeAppUnhealthy5, 1, Text, typeof(string))
+ | extend lastOKAt = extract(extractPattern_HMUpgradeAppUnhealthy5, 1, Text, typeof(string))
+ | extend lastWarningAt = extract(extractPattern_HMUpgradeAppUnhealthy5, 1, Text, typeof(string))
+ | extend lastErrorAt = extract(extractPattern_HMUpgradeAppUnhealthy5, 1, Text, typeof(string))
+ | extend lastErrorAt = extract(extractPattern_HMEntityQueryCompleted, 1, Text, typeof(string))
+ | project Timestamp, Type, Text, Application, EvaluationMessage, UnhealthyAppsAllowed, NodeReportedOn, PackagesUnhealthy, PackageName, SourceId, SourceProperty, SourceUtc, ExitCode, lastModifiedUtc, lastOKAt, lastWarningAt, lastErrorAt, NodeName    }

@@ -1,4 +1,4 @@
-.create-or-alter function with (docstring = "function to enumerate FabricNode.State",folder = "sflogs/failover-manager") 
+.create-or-alter function with (docstring = "function to enumerate FabricNode.State", folder = "sflogs/failover-manager")
     TraceFMNodeState(T:string) {
     table(T)
     | where Type contains "FabricNode.State"
