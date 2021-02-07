@@ -1,4 +1,4 @@
-.create-or-alter function with (docstring = "function to create NodesOps TableView view for sftable",folder = "sftable") 
+.create-or-alter function with (docstring = "function to create NodesOps TableView view for sftable", folder = "sftable")
     TableViewNodesOps(T:string) {
         TableView(T)
         | where RelativeUri endswith "NodesOps"

@@ -1,4 +1,4 @@
-.create-or-alter function with (docstring = "[T:string] where T=table name. function to enumerate processes terminated with exitcode",folder = "sflogs/hosting") 
+.create-or-alter function with (docstring = "[T:string] where T=table name. function to enumerate processes terminated with exitcode", folder = "sflogs/hosting")
     TraceHostingTerminatingWithExitCode(T:string) {
         let extractPattern_Program = @'(Program\s=\s)([^,]*)';
         let extractPattern_ExitCode = @'(terminated with exitcode\s)([^.]*)';

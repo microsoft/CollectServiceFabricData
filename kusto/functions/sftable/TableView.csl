@@ -1,4 +1,4 @@
-.create-or-alter function with (docstring = 'function to create TableView view for sftable', folder = 'sftable')
+.create-or-alter function with (docstring = "function to create TableView view for sftable", folder = "sftable")
     TableView(T:string) {
         let Table = table(T);
         let DistinctEvents = Table | distinct Timestamp, PartitionKey, RowKey;

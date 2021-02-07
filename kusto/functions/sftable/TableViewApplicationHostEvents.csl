@@ -1,4 +1,4 @@
-.create-or-alter function with (docstring = "function to create ApplicationHostEvents TableView view for sftable",folder = "sftable") 
+.create-or-alter function with (docstring = "function to create ApplicationHostEvents TableView view for sftable", folder = "sftable")
     TableViewApplicationHostEvents(T:string) {
         TableView(T)
         | where RelativeUri endswith "ApplicationHostEvents"
@@ -17,3 +17,4 @@
         | project-away Column*
         | order by Timestamp asc
     }
+

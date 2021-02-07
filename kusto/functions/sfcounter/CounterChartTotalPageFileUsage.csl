@@ -1,7 +1,6 @@
-.create-or-alter function with (docstring = "service fabric counter log timechart for total page file usage. utilization greater than 20% could be contributing to disk usage and could be indicator of performance issues.",folder = "sfcounter") 
+.create-or-alter function with (docstring = "service fabric counter log timechart for total page file usage. utilization greater than 20% could be contributing to disk usage and could be indicator of performance issues.", folder = "sfcounter")
     CounterChartTotalPageFileUsage(T:string) {
         table(T)
         | where CounterName contains "Paging File(_Total)\\% Usage"
-        | summarize avg(CounterValue) by xtime=bin(Timestamp,1m), NodeName //CounterName, NodeName, disk
-        | render timechart;
+        | summarize avg(CounterValue) by xtime=bin(Timestamp,1m), NodeName         | render timechart;
     }

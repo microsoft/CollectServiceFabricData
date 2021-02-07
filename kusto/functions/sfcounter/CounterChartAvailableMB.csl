@@ -1,4 +1,4 @@
-.create-or-alter function with (docstring = "service fabric counter log timechart for Available Megabytes. downward trend or values below 1000 (1GB) could be contributing to disk usage (page file) and could be indicator of performance issues.",folder = "sfcounter") 
+.create-or-alter function with (docstring = "service fabric counter log timechart for Available Megabytes. downward trend or values below 1000 (1GB) could be contributing to disk usage (page file) and could be indicator of performance issues.", folder = "sfcounter")
     CounterChartAvailableMB(T:string) {
         table(T)
         | where CounterName contains "Available Mbytes"

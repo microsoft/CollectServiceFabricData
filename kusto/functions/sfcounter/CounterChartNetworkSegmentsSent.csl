@@ -1,7 +1,6 @@
-.create-or-alter function with (docstring = "service fabric counter log timechart for network segments sent. large spikes along with network segments retransmitted could be indicator of performance issues.",folder = "sfcounter") 
+.create-or-alter function with (docstring = "service fabric counter log timechart for network segments sent. large spikes along with network segments retransmitted could be indicator of performance issues.", folder = "sfcounter")
     CounterChartNetworkSegmentsSent(T:string) {
         table(T)
         | where CounterName contains "TCP" and CounterName contains "segments sent"
-        | summarize avg(CounterValue) by xtime=bin(Timestamp,1m), NodeName //CounterName, NodeName, disk
-        | render timechart;
+        | summarize avg(CounterValue) by xtime=bin(Timestamp,1m), NodeName         | render timechart;
     }

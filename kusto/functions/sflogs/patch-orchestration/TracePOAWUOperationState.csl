@@ -1,4 +1,4 @@
-.create-or-alter function with (docstring = "[T:string] where T=table name. function to enumerate Type 'POA-' patch orchestration windows update operational state'",folder = "sflogs/patch-orchestration") 
+.create-or-alter function with (docstring = "[T:string] where T=table name. function to enumerate Type 'POA-' patch orchestration windows update operational state'", folder = "sflogs/patch-orchestration")
     TracePOAWUOperationState(T:string) {
         table(T)
         | where Type contains 'POA-NodeAgentSFUtility'

@@ -1,4 +1,4 @@
-.create-or-alter function with (docstring = "[T:string] where T=table name. function to enumerate CRM reconfiguration operations.",folder = "sflogs/reconfiguration") 
+.create-or-alter function with (docstring = "[T:string] where T=table name. function to enumerate CRM reconfiguration operations.", folder = "sflogs/reconfiguration")
     TraceReconfigurationCRM(T:string) {
         table(T)
         | where Type contains "CRM.Operation" 
