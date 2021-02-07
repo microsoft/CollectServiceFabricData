@@ -2,5 +2,6 @@
     CounterChartNetworkSegmentsReset(T:string) {
         table(T)
         | where CounterName contains "TCP" and CounterName contains "reset"
-        | summarize avg(CounterValue) by xtime=bin(Timestamp,1m), NodeName         | render timechart;
+        | summarize avg(CounterValue) by xtime=bin(Timestamp,1m), NodeName
+        | render timechart;
     }
