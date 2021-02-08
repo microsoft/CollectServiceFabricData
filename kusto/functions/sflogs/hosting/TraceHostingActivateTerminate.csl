@@ -1,4 +1,4 @@
-.create-or-alter function with (docstring = '[T:string] where T=table name. function to enumerate hosting activate/terminate from Type field', folder = 'sflogs/hosting')
+.create-or-alter function with (docstring = "[T:string] where T=table name. function to enumerate hosting activate/terminate from Type field", folder = "sflogs/hosting")
     TraceHostingActivateTerminate(T:string) {
         table(T)
         | where Type contains 'hosting.'

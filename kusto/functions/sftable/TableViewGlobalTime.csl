@@ -1,4 +1,4 @@
-.create-or-alter function with (docstring = "function to create GlobalTime TableView view for sftable",folder = "sftable") 
+.create-or-alter function with (docstring = "function to create GlobalTime TableView view for sftable", folder = "sftable")
     TableViewGlobalTime(T:string) {
         TableViewTask(T,'FabricNode')
         | where RelativeUri endswith 'time'
