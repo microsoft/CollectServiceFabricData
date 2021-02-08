@@ -1,12 +1,11 @@
 <#
-    script to install kusto functions in .csl format using kusto-rest.ps1 
+    script to import kusto functions in .csl format using kusto-rest.ps1 
 #>
 param(
     [Parameter(Mandatory = $true)]
     [string]$kustoCluster = '',
     [Parameter(Mandatory = $true)]
     [string]$kustoDatabase = '',
-    [string]$location = '',
     [switch]$test,
     [switch]$force,
     [string]$kustoDir = "$psscriptroot\..\kusto"

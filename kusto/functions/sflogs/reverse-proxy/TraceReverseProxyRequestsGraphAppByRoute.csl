@@ -1,0 +1,24 @@
+.create-or-alter function with (docstring = "[T:string] where T=table name. function to graph reverse proxy requests by service endpoint .", folder = "sflogs/reverse-proxy")
+    TraceReverseProxyRequestsGraphAppByRoute(T:string, AppName:string, routePath:string) {
+    let extractPattern_ServiceUrl = @'((?:https?:\/\/[^,?]*))';
+    let extractPattern_ServiceUrls = @'((?:https?:\/\/[^,?]*))';
+    let extractPattern_FwdToUrl = @'((?:https?:\/\/[^,?]*))';
+    let extractPattern_AppServiceNames = @'19081\/([^\/]*)\/([^\/]*)';
+    let extractPattern_ControllerMethodNames = @'api\/([^\/]*)\/([^\/]*)';
+    table(T)
+    | where Type contains "ReverseProxy.RequestReceived"
+    | extend serviceUrls = extract_all(extractPattern_ServiceUrls, Text)        
+    | extend serviceUrl = tostring(array_slice(serviceUrls, 0, 0)[0])
+    | extend controllerMethodArray = split(serviceUrl, "/")
+    | extend controllerMethodSegments = array_length(controllerMethodArray)
+    | extend controllerMethod = controllerMethodArray[controllerMethodSegments-1]
+    | extend fwdToUrl = tostring(array_slice(serviceUrls, 1, 1)[0])
+    | extend appName = extract(extractPattern_AppServiceNames, 1, serviceUrl)
+    | extend serviceName = extract(extractPattern_AppServiceNames, 2, serviceUrl)
+    | extend controllerName = extract(extractPattern_ControllerMethodNames, 1, serviceUrl)
+    | extend methodName = extract(extractPattern_ControllerMethodNames, 2, serviceUrl)
+    | extend summarizedUrl = strcat(appName,':' , serviceName,':' , controllerName)
+    | where appName contains AppName and serviceUrl contains routePath
+    | summarize count() by xtime=bin(Timestamp,60s), tostring(summarizedUrl)
+    | render timechart;
+}

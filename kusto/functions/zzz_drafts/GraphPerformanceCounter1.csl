@@ -1,0 +1,12 @@
+.create-or-alter function with (docstring = "function to graph performance counters across nodes. draft copy", folder = "zzz_drafts")
+    GraphPerformanceCounter1(T:string, C1:string) {
+    // search Type or Text columns using regex insensitive match
+        let GraphCounter = (tableName:string, match1:string) {
+            table(tableName) 
+            | where CounterName contains match1
+            | sample 5000
+            | summarize avg(CounterValue) by xtime=bin(Timestamp,5m), NodeName //CounterName, NodeName, disk
+            | render timechart;
+        };        
+        GraphCounter(T, C1);
+}

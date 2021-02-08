@@ -1,4 +1,4 @@
-.create-or-alter function with (docstring = "function to create TableView Task view facet by TaskName for sftable",folder = "sftable") 
+.create-or-alter function with (docstring = "function to create TableView Task view facet by TaskName for sftable", folder = "sftable")
     TableViewTasks(T:string) {
         TableView(T)
         | summarize count(), min(Timestamp), max(Timestamp) by TaskName
