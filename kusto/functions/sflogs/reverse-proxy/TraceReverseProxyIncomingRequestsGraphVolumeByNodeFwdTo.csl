@@ -1,0 +1,16 @@
+.create-or-alter function with (docstring = "[T:string] where T=table name. function to graph incoming reverse proxy request volume by node the request was forwared to", folder = "sflogs/reverse-proxy")
+    TraceReverseProxyIncomingRequestsGraphVolumeByNodeFwdTo(T:string) {
+    let extractPattern_NodeIp = @'https?:\/\/([0-9.]*)';
+    table(T)
+    | where Type contains "ReverseProxy.RequestReceived"
+    | extend ReceivedOn = NodeName
+    //
+    | extend fwdToArray = extract_all(extractPattern_NodeIp, Text)        
+    | extend fwdToArray = split(fwdToArray, ",")
+    | extend fwdToSegments = array_length(fwdToArray)
+    | extend ForwardTo = fwdToArray[fwdToSegments-1]
+    //
+    | project Timestamp, ReceivedOn, ForwardTo
+    | summarize count() by xtime=bin(Timestamp,60s), tostring(ForwardTo)
+    | render timechart;
+}

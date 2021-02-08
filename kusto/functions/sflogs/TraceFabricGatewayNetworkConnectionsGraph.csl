@@ -1,5 +1,5 @@
-.create-or-alter function with (docstring = '[T:string] where T=table name. function sflogs trace query to graph fabric gateway network connections. default max 1000', folder = 'sflogs')
-    TraceFabricGatewayNetworkConnectionsGraph (T:string) {
+.create-or-alter function with (docstring = "[T:string] where T=table name. function sflogs trace query to graph fabric gateway network connections. default max 1000", folder = "sflogs")
+    TraceFabricGatewayNetworkConnectionsGraph(T:string) {
         table(T)
         | where Type contains 'EntreeServiceProxy.LifeCycle'
         | where Text contains 'accepted client connection: target='

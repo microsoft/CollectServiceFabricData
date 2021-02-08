@@ -1,5 +1,5 @@
-.create-or-alter function with (docstring = "[T:string] [[serviceGuid]] where T=table name and optional serviceGuid=service guid regex match. function to enumerate primary replicas",folder = "sflogs") 
-    TraceReplicaPrimaries(T:string,serviceGuid:string='.') {
+.create-or-alter function with (docstring = "[T:string] [[serviceGuid]] where T=table name and optional serviceGuid=service guid regex match. function to enumerate primary replicas", folder = "sflogs")
+    TraceReplicaPrimaries(T:string, serviceGuid:string=".") {
     //let serviceGuid = '00000000-0000-0000-0000-000000002000'; // cluster
     //let serviceGuid = '00000000-0000-0000-0000-000000009000'; // EventStore
     //let serviceGuid = '00000000-0000-0000-0000-000000000001'; // fm

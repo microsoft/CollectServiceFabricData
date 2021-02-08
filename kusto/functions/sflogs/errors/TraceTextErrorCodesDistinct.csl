@@ -1,4 +1,4 @@
-.create-or-alter function with (docstring = '[T:string] where T=table name. function to enumerate HResult / winerror error codes from Text field', folder = 'sflogs/errors')
+.create-or-alter function with (docstring = "[T:string] where T=table name. function to enumerate HResult / winerror error codes from Text field", folder = "sflogs/errors")
     TraceTextErrorCodesDistinct(T:string) {
         let baseUri = CreateKustoWebQueryLink('');
         table(T)

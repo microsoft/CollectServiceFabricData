@@ -1,4 +1,4 @@
-.create-or-alter function with (docstring = '[T:string] where T=table name. function to enumerate exceptions from Text field', folder = 'sflogs/errors')
+.create-or-alter function with (docstring = "[T:string] where T=table name. function to enumerate exceptions from Text field", folder = "sflogs/errors")
     TraceTextExceptionsDistinct(T:string) {
         let baseUri = CreateKustoWebQueryLink('');
         table(T)
