@@ -1,7 +1,5 @@
-// ReverseProxy, Track number of requests handled at reverse proxy by url
-
-.create-or-alter function with (docstring = '[T:string] where T=table name. function to graph reverse proxy requests by url.', folder = 'sflogs/reverse-proxy')
-    TraceReverseProxyRequestsGraphByUrl (T:string) {
+.create-or-alter function with (docstring = "[T:string] where T=table name. function to graph reverse proxy requests by url.", folder = "sflogs/reverse-proxy")
+    TraceReverseProxyRequestsGraphByUrl(T:string) {
         let extractPattern_ServiceUrl = @'((?:https?:\/\/[^,?]*))';
         table(T)
         | where Type contains "ReverseProxy.RequestReceived"

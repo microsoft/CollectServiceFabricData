@@ -1,0 +1,9 @@
+.create-or-alter function with (docstring = "[T:string] where T=table name. function to graph incoming reverse proxy request volume by node request was received", folder = "sflogs/reverse-proxy")
+    TraceReverseProxyIncomingRequestsGraphVolumeByNode(T:string) {
+    table(T)
+    | where Type contains "ReverseProxy.RequestReceived"
+    | extend ReceivedOn = NodeName            
+    | project Timestamp, ReceivedOn
+    | summarize count() by xtime=bin(Timestamp,60s), tostring(ReceivedOn)
+    | render timechart;
+}

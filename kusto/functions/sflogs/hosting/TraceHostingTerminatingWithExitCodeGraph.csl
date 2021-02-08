@@ -1,6 +1,6 @@
-.create-or-alter function with (docstring = "[T:string] where T=table name. function to graph processes terminated with exitcode",folder = "sflogs/hosting") 
+.create-or-alter function with (docstring = "[T:string] where T=table name. function to graph processes terminated with exitcode", folder = "sflogs/hosting")
     TraceHostingTerminatingWithExitCodeGraph(T:string) {
-        TraceHostingTerminatingWithExitCode(T)
-        | summarize count() by xtime=bin(Timestamp,60s), tostring(Program)
-        | render timechart;
+    TraceHostingTerminatingWithExitCode(T)
+    | summarize count() by xtime=bin(Timestamp,60s), tostring(Program)
+    | render timechart;
 }

@@ -1,4 +1,4 @@
-.create-or-alter function with (docstring = "function to create Applications TableView view for sftable",folder = "sftable") 
+.create-or-alter function with (docstring = "function to create Applications TableView view for sftable", folder = "sftable")
     TableViewApplications(T:string) {
         TableView(T)
         | where RelativeUri endswith "Applications"
@@ -26,3 +26,4 @@
         | project-away Column*
         | order by Timestamp asc
     }
+

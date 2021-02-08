@@ -1,4 +1,4 @@
-.create-or-alter function with (docstring = "service fabric counter log timechart for network segments received. large spikes along with network segments retransmitted could be indicator of performance issues.",folder = "sfcounter") 
+.create-or-alter function with (docstring = "service fabric counter log timechart for network segments received. large spikes along with network segments retransmitted could be indicator of performance issues.", folder = "sfcounter")
     CounterChartNetworkSegmentsReceived(T:string) {
         table(T)
         | where CounterName contains "TCP" and CounterName contains "segments received"

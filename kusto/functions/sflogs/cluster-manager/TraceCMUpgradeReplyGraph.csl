@@ -1,4 +1,4 @@
-.create-or-alter function with (docstring = "function to graph CM.UpgradeReply at default 5 second intervals",folder = "sflogs/cluster-manager") 
+.create-or-alter function with (docstring = "function to graph CM.UpgradeReply at default 5 second intervals", folder = "sflogs/cluster-manager")
     TraceCMUpgradeReplyGraph(T:string) {
     table(T)
     | where Type contains "CM.UpgradeReply"
