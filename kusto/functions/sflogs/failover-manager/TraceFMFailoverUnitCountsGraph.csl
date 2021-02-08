@@ -1,4 +1,4 @@
-.create-or-alter function with (docstring = "function to graph FM.FailoverUnitCounts at default 5 second intervals",folder = "sflogs/failover-manager") 
+.create-or-alter function with (docstring = "function to graph FM.FailoverUnitCounts at default 5 second intervals", folder = "sflogs/failover-manager")
     TraceFMFailoverUnitCountsGraph(T:string) {
         table(T)
         | where Type contains "FM.FailoverUnitCounts"
