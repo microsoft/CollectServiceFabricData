@@ -272,7 +272,7 @@ namespace CollectSFData.Azure
                         PartitionKey = result.PartitionKey,
                         RowKey = result.RowKey,
                         PropertyName = entity.Key,
-                        PropertyValue = $"\"{entity.Value.Trim('"')}\"",
+                        PropertyValue = $"\"{entity.Value.Trim('"').Replace("\"", "'")}\"",
                         RelativeUri = cloudTable.Name,
                         ResourceUri = Config.ResourceUri
                     });
