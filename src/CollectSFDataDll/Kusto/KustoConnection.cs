@@ -64,6 +64,12 @@ namespace CollectSFData.Kusto
         {
             try
             {
+                Log.Info("finished. cancelling", ConsoleColor.White);
+                _tokenSource.Cancel();
+                _monitorTask.Wait();
+                _monitorTask.Dispose();
+                IngestResourceIdKustoTableMapping();
+
                 if (IngestFileObjectsSucceeded.Any() && Config.Unique && Config.FileType == FileTypesEnum.table)
                 {
                     // only way for records from table to be unique since there is not a file reference
@@ -72,18 +78,12 @@ namespace CollectSFData.Kusto
                     schema = schema.Where(x => x.Name != "RelativeUri");
                     string names = string.Join(",", schema.Select(x => x.Name).ToList());
 
-                    string command = $".set-or-replace {Config.KustoTable} <| {Config.KustoTable} | distinct {names}";
+                    string command = $".set-or-replace {Config.KustoTable} <| {Config.KustoTable} | summarize min(RelativeUri) by {names}";
                     Log.Info(command);
 
                     Endpoint.Command(command);
                     Log.Info("removed duplicate records", ConsoleColor.White);
                 }
-
-                Log.Info("finished. cancelling", ConsoleColor.White);
-                _tokenSource.Cancel();
-                _monitorTask.Wait();
-                _monitorTask.Dispose();
-                IngestResourceIdKustoTableMapping();
 
                 if (_failureCount > 0)
                 {

@@ -1,4 +1,4 @@
-.create-or-alter function with (docstring = "[T:string] where T=table name. function to enumerate Type 'POA-' patch orchestration traces'",folder = "sflogs/patch-orchestration") 
+.create-or-alter function with (docstring = "[T:string] where T=table name. function to enumerate Type 'POA-' patch orchestration traces'", folder = "sflogs/patch-orchestration")
     TracePOADistinct(T:string) {
     let baseUri = CreateKustoWebQueryLink('');
     TraceTypeDistinct(T,"poa-")

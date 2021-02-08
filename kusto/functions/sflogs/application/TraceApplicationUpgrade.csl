@@ -1,5 +1,5 @@
-.create-or-alter function with (docstring = "[T:string] where T=table name, [A:string] where App=application table name. function to search service fabric sflogs for application related entries",folder = "sflogs/application") 
-    TraceApplicationUpgrade(T:string,A:string) {
+.create-or-alter function with (docstring = "[T:string] where T=table name, [A:string] where App=application table name. function to search service fabric sflogs for application related entries", folder = "sflogs/application")
+    TraceApplicationUpgrade(T:string, A:string) {
             let extractPattern_Context1 = @'(ApplicationUpgradeContext\()([^\)]*)\)\[([^,]*),\s([^,]*),\s([^,]*),\s([^,]*),\s([^\s]*)\s=\s([^,]*),\s([^\s]*)\s=\s';
             let extractPattern_Context2 = @'(Monitoring = action:)([^,]*),\swait:([^,]*),\sstable:([^,]*),\sretry:([^,]*),\sud:([^,]*),\soverall:([^,]*)';
             let extractPattern_AppHealthPolicy = @'(ApplicationHealthPolicy\s=\s{)"ConsiderWarningAsError":([^,]*),"MaxPercentUnhealthyDeployedApplications":([^,]*)';
@@ -7,13 +7,14 @@
             let extractPattern_Interrupted = @'interrupted\s=\s([^\s]*)'; 
             let extractPattern_PostHealthCheck = @'postHealthCheckComplete=([^\s]*)\sstart.utc=([^\s]*)\s([^\s]*)';
             table(T)
+            | where FileType == 'fabric'
             | where Type contains 'CM.UpgradeStart' 
                 or Type contains 'CM.UpgradeComplete'
                 or Type contains 'rollback' 
                 or (Type startswith "FM.AppUpgrade@" and Type contains tostring(A)) 
                 or (Level in ('Error') 
                     or (Level in ('Warning','Error') and Type contains "termination")
-                )
+                )            
             | extend UpgradeContext = extract(extractPattern_Context1, 2, Text, typeof(string))
             | extend Application = extract(extractPattern_Context1, 3, Text, typeof(string))
             | extend Version = extract(extractPattern_Context1, 4, Text, typeof(string))
@@ -41,7 +42,7 @@
             | extend postHealthCheckStartDateUtc = extract(extractPattern_PostHealthCheck, 2, Text, typeof(string))
             | extend postHealthCheckStartTimeUtc = extract(extractPattern_PostHealthCheck, 3, Text, typeof(string))
             //
-            | project Timestamp, Level, Type, Text, UpgradeContext, Application, Version, UgType, UgMode, ReplicaSetCheckTimeout, Action, HealthCheckWait, StableWait, retryTimeout, 
+            | project Timestamp, Level, Type, Text, NodeName, PID, UpgradeContext, Application, Version, UgType, UgMode, ReplicaSetCheckTimeout, Action, HealthCheckWait, StableWait, retryTimeout, 
             udTimeout, overallTimeout, ConsiderWarningAsError, MaxPercentUnhealthyDeployedApplications, MaxPercentUnhealthyServices, MaxPercentUnhealthyPartitionsPerService, 
             MaxPercentUnhealthyReplicasPerPartition, UpgradeInterrupted, postHealthCheckComplete, postHealthCheckStartDateUtc, postHealthCheckStartTimeUtc
         }

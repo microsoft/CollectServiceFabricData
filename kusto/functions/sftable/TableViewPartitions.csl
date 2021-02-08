@@ -1,4 +1,4 @@
-.create-or-alter function with (docstring = "function to create Partitions TableView view for sftable",folder = "sftable") 
+.create-or-alter function with (docstring = "function to create Partitions TableView view for sftable", folder = "sftable")
     TableViewPartitions(T:string) {
         TableView(T)
         | where RelativeUri endswith "Partitions"
@@ -18,4 +18,5 @@
         | project-away Column*
         | order by Timestamp asc    
     }
+
 

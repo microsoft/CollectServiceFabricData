@@ -1,12 +1,9 @@
-// ReverseProxy requests return codes
-
-.create-or-alter function with (docstring = '[T:string] where T=table name. function to extract reverse proxy request return codes.', folder = 'sflogs/reverse-proxy')
-    TraceReverseProxyRequestsReturnCodes (T:string) {
+.create-or-alter function with (docstring = "[T:string] where T=table name. function to extract reverse proxy request return codes.", folder = "sflogs/reverse-proxy")
+    TraceReverseProxyRequestsReturnCodes(T:string) {
         let extractPattern_StatusCode = @'(status code\s=\s)(\d+)';
         table(T)
         | where Type contains "ReverseProxy"
         | where Text contains "status code"
         | extend statusCode = extract(extractPattern_StatusCode, 2, Text, typeof(string))
         | project Timestamp , TID , PID , Level , Type , Text , NodeName , FileType, statusCode
-        | limit 10000
     }
