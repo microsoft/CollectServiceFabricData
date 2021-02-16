@@ -1,0 +1,7 @@
+.create-or-alter function with (docstring = "[T:string] where T=table name, [TimeNear:string] where TimeNear=timestamp, [Seconds:integer] where Seconds=number of seconds +/- around TimeNear. Function to view all traces near (+/- nn seconds) a specified Timestamp", folder = "sflogs/base")
+    TracesNearTimestamp(T:string, TimeNear:datetime, Seconds:int) {
+    let LowSide = datetime_add("Second", -Seconds, TimeNear);
+    let HighSide = datetime_add("Second", Seconds, TimeNear);
+    table(T)
+    | where Timestamp between (LowSide .. HighSide)
+}
