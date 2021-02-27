@@ -2,7 +2,7 @@
 
 ## 02/27/2021
 
-- adding net462 targetframework  
+- adding net462 targetframework
 
 ## 02/22/2021
 
