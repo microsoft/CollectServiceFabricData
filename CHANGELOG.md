@@ -1,5 +1,8 @@
 # Change log
 
+## 02/27/2021
+
+- adding net462 targetframework
 ## 02/22/2021
 
 - fix fields not matching in gathertype 'setup'. FormatTraceFile incorrectly using DtrTraceRecord instead of T. tested setup and trace gathertype
