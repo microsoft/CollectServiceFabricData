@@ -337,7 +337,7 @@ namespace CollectSFData.DataFile
 
                 fileObject.Stream.ResetPosition();
                 fileObject.Stream.Write(records);
-                return PopulateCollection<DtrTraceRecord>(fileObject);
+                return PopulateCollection<T>(fileObject);
             }
             catch (Exception e)
             {

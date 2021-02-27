@@ -17,6 +17,26 @@
         <copyright>© Microsoft Corporation. All rights reserved.</copyright>
         <tags>servicefabric</tags>
         <dependencies>
+            <group targetFramework=".NETFramework4.6.2">
+                <dependency id="Microsoft.Azure.KeyVault" version="3.0.4" exclude="Build,Analyzers" />
+                <dependency id="Microsoft.Azure.KeyVault.Core" version="3.0.4" exclude="Build,Analyzers" />
+                <dependency id="Microsoft.Azure.Kusto.Data" version="8.0.1" exclude="Build,Analyzers" />
+                <dependency id="Microsoft.Azure.Kusto.Ingest" version="8.0.1" exclude="Build,Analyzers" />
+                <dependency id="Microsoft.Azure.Storage.Blob" version="11.1.0" exclude="Build,Analyzers" />
+                <dependency id="Microsoft.Azure.Storage.Common" version="11.1.0" exclude="Build,Analyzers" />
+                <dependency id="Microsoft.Azure.Storage.Queue" version="11.1.0" exclude="Build,Analyzers" />
+                <dependency id="Microsoft.Extensions.CommandLineUtils" version="1.1.1" exclude="Build,Analyzers" />
+                <dependency id="Microsoft.Identity.Client" version="4.19.0" exclude="Build,Analyzers" />
+                <dependency id="Microsoft.Identity.Client.Extensions.Msal" version="2.15.0" exclude="Build,Analyzers" />
+                <dependency id="Microsoft.Rest.ClientRuntime" version="2.3.20" exclude="Build,Analyzers" />
+                <dependency id="Microsoft.Rest.ClientRuntime.Azure" version="3.3.19" exclude="Build,Analyzers" />
+                <dependency id="Newtonsoft.Json" version="12.0.2" exclude="Build,Analyzers" />
+                <dependency id="System.CodeDom" version="4.7.0" exclude="Build,Analyzers" />
+                <dependency id="System.Data.SqlClient" version="4.8.2" exclude="Build,Analyzers" />
+                <dependency id="System.Reactive" version="4.0.0" exclude="Build,Analyzers" />
+                <dependency id="System.Security.Cryptography.Cng" version="4.7.0" exclude="Build,Analyzers" />
+                <dependency id="System.Security.Cryptography.ProtectedData" version="4.7.0" exclude="Build,Analyzers" />
+            </group>
             <group targetFramework=".NETFramework4.7.2">
                 <dependency id="Microsoft.Azure.KeyVault" version="3.0.4" exclude="Build,Analyzers" />
                 <dependency id="Microsoft.Azure.KeyVault.Core" version="3.0.4" exclude="Build,Analyzers" />
@@ -59,6 +79,14 @@
             </group>
         </dependencies>
         <frameworkAssemblies>
+            <frameworkAssembly assemblyName="System.IO" targetFramework=".NETFramework4.6.2" />
+            <frameworkAssembly assemblyName="System.Net.Http" targetFramework=".NETFramework4.6.2" />
+            <frameworkAssembly assemblyName="System.Runtime" targetFramework=".NETFramework4.6.2" />
+            <frameworkAssembly assemblyName="System.Security.Claims" targetFramework=".NETFramework4.6.2" />
+            <frameworkAssembly assemblyName="System.Security.Cryptography.Algorithms" targetFramework=".NETFramework4.6.2" />
+            <frameworkAssembly assemblyName="System.Security.Cryptography.Encoding" targetFramework=".NETFramework4.6.2" />
+            <frameworkAssembly assemblyName="System.Security.Cryptography.Primitives" targetFramework=".NETFramework4.6.2" />
+            <frameworkAssembly assemblyName="System.Security.Cryptography.X509Certificates" targetFramework=".NETFramework4.6.2" />
             <frameworkAssembly assemblyName="System.IO.Compression" targetFramework=".NETFramework4.7.2" />
             <frameworkAssembly assemblyName="System.IO" targetFramework=".NETFramework4.7.2" />
             <frameworkAssembly assemblyName="System.Net.Http" targetFramework=".NETFramework4.7.2" />
@@ -71,6 +99,13 @@
         </frameworkAssemblies>
     </metadata>
     <files>
+        <file src="..\bin\$configuration$\net462\*.exe" target="tools\net462" />
+        <file src="..\bin\$configuration$\net462\*.dll" target="tools\net462" />
+        <file src="..\bin\$configuration$\net462\CollectSFDataDll.dll" target="lib\net462" />
+        <file src="..\bin\$configuration$\net462\Tx.Core.dll" target="lib\net462" />
+        <file src="..\bin\$configuration$\net462\Tx.Windows.dll" target="lib\net462" />
+        <file src="..\..\configurationFiles\collectsfdata.options.json" target="tools\net462" />
+        <file src="..\bin\$configuration$\net462\*.config" target="tools\net462" />
         <file src="..\bin\$configuration$\net472\*.exe" target="tools\net472" />
         <file src="..\bin\$configuration$\net472\*.dll" target="tools\net472" />
         <file src="..\bin\$configuration$\net472\CollectSFDataDll.dll" target="lib\net472" />
