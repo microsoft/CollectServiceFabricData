@@ -79,6 +79,14 @@
             </group>
         </dependencies>
         <frameworkAssemblies>
+            <frameworkAssembly assemblyName="System.IO" targetFramework=".NETFramework4.6.2" />
+            <frameworkAssembly assemblyName="System.Net.Http" targetFramework=".NETFramework4.6.2" />
+            <frameworkAssembly assemblyName="System.Runtime" targetFramework=".NETFramework4.6.2" />
+            <frameworkAssembly assemblyName="System.Security.Claims" targetFramework=".NETFramework4.6.2" />
+            <frameworkAssembly assemblyName="System.Security.Cryptography.Algorithms" targetFramework=".NETFramework4.6.2" />
+            <frameworkAssembly assemblyName="System.Security.Cryptography.Encoding" targetFramework=".NETFramework4.6.2" />
+            <frameworkAssembly assemblyName="System.Security.Cryptography.Primitives" targetFramework=".NETFramework4.6.2" />
+            <frameworkAssembly assemblyName="System.Security.Cryptography.X509Certificates" targetFramework=".NETFramework4.6.2" />
             <frameworkAssembly assemblyName="System.IO.Compression" targetFramework=".NETFramework4.7.2" />
             <frameworkAssembly assemblyName="System.IO" targetFramework=".NETFramework4.7.2" />
             <frameworkAssembly assemblyName="System.Net.Http" targetFramework=".NETFramework4.7.2" />
