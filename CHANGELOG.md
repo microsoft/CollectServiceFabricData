@@ -3,11 +3,11 @@
 ## 02/27/2021
 
 - adding net462 targetframework
+- fix for new kusto error when using blob as source Ingestion properties contains invalid CsvMapping ingestion mapping. Mapping: '' Invalidity reason: CsvMapping An item with the same key has already been added. Ordinal: '0' appears '1' times,
 
 ## 02/22/2021
 
 - fix fields not matching in gathertype 'setup'. FormatTraceFile incorrectly using DtrTraceRecord instead of T. tested setup and trace gathertype
-
 
 ## 02/08/2021
 
