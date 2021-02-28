@@ -111,9 +111,14 @@ function create-nuspec($targetFrameworks) {
         write-error "nuspec $nuspecFile does not exist"
         return
     }
-    $tempNuspec = $nuspecFile.Replace(".oem", "").Replace(".nuspec", ".oem.nuspec")
+    $tempNuspec = $nuspecFile.Replace(".oem", "").Replace(".nuspec", ".nuspec.oem")
+    write-host "adding temp file $tempNuspec to list" -ForegroundColor Yellow
+    [void]$global:tempFiles.add($tempNuspec)
+    
     $nuspecXml = [xml]::new()
     $nuspecXml.Load($nuspecFile)
+    $nuspecXml.Save($tempNuspec)
+
     $nuspecXml.package.files.RemoveAll()
     $filesElement = $nuspecxml.package.GetElementsByTagName("files")
 
@@ -153,15 +158,14 @@ function create-nuspec($targetFrameworks) {
         }
     }
 
-    $nuspecXml.Save($tempNuspec)
-    [void]$global:tempFiles.add($tempNuspec)
+    $nuspecXml.Save($nuspecFile)
     return $tempNuspec
 }
 
 function create-tempProject($projectFile) {
     $projContent = Get-Content -raw $projectFile
-    $targetFrameworkString = @($targetFramework) -join ";"
-    $tempProject = $projectFile.Replace(".oem", "").Replace(".csproj", ".oem.csproj")
+    $targetFrameworkString = @($targetFrameworks) -join ";"
+    $tempProject = $projectFile.Replace(".oem", "").Replace(".csproj", ".csproj.oem")
     
     write-host "saving to $tempProject" -ForegroundColor Green
     $projContent.trim() | out-file $tempProject -Force
@@ -182,6 +186,7 @@ function create-tempProject($projectFile) {
         write-host "new frameworks: $projContent" -ForegroundColor Green
         write-host "saving to $projectFile" -ForegroundColor Green
         $projContent.trim() | out-file $projectFile -Force
+        write-host "adding temp file $tempProject to list" -ForegroundColor Yellow
         [void]$global:tempFiles.add($tempProject)
         
         return $projectFile
