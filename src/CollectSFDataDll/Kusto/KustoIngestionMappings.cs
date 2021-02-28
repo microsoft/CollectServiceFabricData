@@ -13,7 +13,7 @@ namespace CollectSFData.Kusto
         public string ConstValue;
         public string DataType;
         public string Name;
-        public int Ordinal;
+        public int? Ordinal = null;
     }
 
     public class KustoIngestionMappings
