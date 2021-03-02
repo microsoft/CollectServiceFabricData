@@ -1,5 +1,9 @@
 # Change log
 
+## 03/02/2021
+
+- downgrade newtonsoft and kusto for .net462 jarvis asc integration
+
 ## 02/27/2021
 
 - adding net462 targetframework
