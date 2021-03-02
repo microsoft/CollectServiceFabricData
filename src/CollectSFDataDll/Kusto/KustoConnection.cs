@@ -156,7 +156,9 @@ namespace CollectSFData.Kusto
 
         private void IngestResourceIdKustoTableMapping()
         {
-            if (IngestFileObjectsSucceeded.Any() && Config.FileType == FileTypesEnum.trace)
+            string resourceUri = Config.ResourceUri;
+
+            if (string.IsNullOrEmpty(resourceUri) && IngestFileObjectsSucceeded.Any() && Config.FileType == FileTypesEnum.trace)
             {
                 // Fetch resource ID from ingested traces
                 var results = Endpoint.Query($"['{Endpoint.TableName}']" +
@@ -167,19 +169,19 @@ namespace CollectSFData.Kusto
                 {
                     Regex pattern = new Regex(@"resourceId\W+?(/[A-Za-z0-9./-]+)");
                     Match match = pattern.Match(results.FirstOrDefault());
-                    Config.ResourceUri = match.Groups[1].Value;
-                    Log.Info($"ResourceID: {Config.ResourceUri}");
+                    resourceUri = match.Groups[1].Value;
+                    Log.Info($"ResourceID: {resourceUri}");
                 }
             }
 
-            if (!string.IsNullOrWhiteSpace(Config.ResourceUri))
+            if (!string.IsNullOrWhiteSpace(resourceUri))
             {
                 var metaDatatableName = "TableMetaData";
                 var metaDatetableSchema = "TimeStamp:datetime, startTime:datetime, endTime:datetime, resourceId:string, tableName:string, logType:string";
 
                 if (Endpoint.CreateTable(metaDatatableName, metaDatetableSchema))
                 {
-                    Endpoint.IngestInline(metaDatatableName, string.Format("{0},{1},{2},{3},{4},{5}", DateTime.UtcNow, Config.StartTimeUtc.UtcDateTime, Config.EndTimeUtc.UtcDateTime, Config.ResourceUri, Config.KustoTable, Config.FileType));
+                    Endpoint.IngestInline(metaDatatableName, string.Format("{0},{1},{2},{3},{4},{5}", DateTime.UtcNow, Config.StartTimeUtc.UtcDateTime, Config.EndTimeUtc.UtcDateTime, resourceUri, Config.KustoTable, Config.FileType));
                 }
             }
         }
