@@ -22,8 +22,8 @@
       <group targetFramework=".NETFramework4.6.2">
         <dependency id="Microsoft.Azure.KeyVault" version="3.0.4" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Azure.KeyVault.Core" version="3.0.4" exclude="Build,Analyzers" />
-        <dependency id="Microsoft.Azure.Kusto.Data" version="8.0.1" exclude="Build,Analyzers" />
-        <dependency id="Microsoft.Azure.Kusto.Ingest" version="8.0.1" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.Azure.Kusto.Data" version="7.1.1" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.Azure.Kusto.Ingest" version="7.1.1" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Azure.Storage.Blob" version="11.1.0" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Azure.Storage.Common" version="11.1.0" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Azure.Storage.Queue" version="11.1.0" exclude="Build,Analyzers" />
@@ -32,7 +32,7 @@
         <dependency id="Microsoft.Identity.Client.Extensions.Msal" version="2.15.0" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Rest.ClientRuntime" version="2.3.20" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Rest.ClientRuntime.Azure" version="3.3.19" exclude="Build,Analyzers" />
-        <dependency id="Newtonsoft.Json" version="12.0.2" exclude="Build,Analyzers" />
+        <dependency id="Newtonsoft.Json" version="11.0.2" exclude="Build,Analyzers" />
         <dependency id="System.CodeDom" version="4.7.0" exclude="Build,Analyzers" />
         <dependency id="System.Data.SqlClient" version="4.8.2" exclude="Build,Analyzers" />
         <dependency id="System.Reactive" version="4.0.0" exclude="Build,Analyzers" />
