@@ -392,8 +392,7 @@ namespace CollectSFData.DataFile
                 CreateNoWindow = true,
                 UseShellExecute = false,
                 RedirectStandardError = true,
-                RedirectStandardOutput = true,
-                LoadUserProfile = false,
+                RedirectStandardOutput = true
             };
 
             Process convertFileProc = Process.Start(startInfo);
