@@ -192,13 +192,13 @@ The current layout of nuget package looks similar to below. Both .net framework 
 +---lib
 |   +---net472
 |   |       CollectSFDataDll.dll
-|   |       Tx.Core.dll
-|   |       Tx.Windows.dll
+|   |       Sf.Tx.Core.dll
+|   |       Sf.Tx.Windows.dll
 |   |
 |   \---netcoreapp3.1
 |           CollectSFDataDll.dll
-|           Tx.Core.dll
-|           Tx.Windows.dll
+|           Sf.Tx.Core.dll
+|           Sf.Tx.Windows.dll
 |
 +---package
 |   \---services
@@ -239,8 +239,8 @@ The current layout of nuget package looks similar to below. Both .net framework 
 |   |       System.Security.Cryptography.Cng.dll
 |   |       System.Security.Cryptography.ProtectedData.dll
 |   |       System.Security.Principal.Windows.dll
-|   |       Tx.Core.dll
-|   |       Tx.Windows.dll
+|   |       Sf.Tx.Core.dll
+|   |       Sf.Tx.Windows.dll
 |   |
 |   \---netcoreapp3.1
 |           CollectSFData.dll
@@ -273,8 +273,8 @@ The current layout of nuget package looks similar to below. Both .net framework 
 |           System.Reactive.dll
 |           System.Reactive.Linq.dll
 |           System.Security.Cryptography.ProtectedData.dll
-|           Tx.Core.dll
-|           Tx.Windows.dll
+|           Sf.Tx.Core.dll
+|           Sf.Tx.Windows.dll
 |
 \---_rels
         .rels
