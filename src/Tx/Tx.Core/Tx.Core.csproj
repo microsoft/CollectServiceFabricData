@@ -5,9 +5,9 @@
     <SignAssembly>true</SignAssembly>
     <!-- <AssemblyOriginatorKeyFile>..\key.snk</AssemblyOriginatorKeyFile> -->
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <AssemblyVersion>3.0.2.0</AssemblyVersion>
+    <!-- <AssemblyVersion>3.0.2.0</AssemblyVersion>
     <FileVersion>3.0.2.0</FileVersion>
-    <Version>3.0.2</Version>
+    <Version>3.0.2</Version> -->
     <Description>Tx (LINQ to Logs and Traces) core components, not specific to the event format</Description>
     <Copyright>Copyright © Microsoft. All Rights Reserved</Copyright>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
@@ -19,6 +19,11 @@
     <SignAssembly>true</SignAssembly>
     <DelaySign>false</DelaySign>
     <AssemblyOriginatorKeyFile>..\..\CollectSFDataKey.snk</AssemblyOriginatorKeyFile>
+    <AssemblyName>Sf.Tx.Core</AssemblyName>
+    <VersionSuffix>2.9.$([System.DateTime]::UtcNow.ToString("yyMM")).1$([System.DateTime]::UtcNow.ToString("ddHH"))</VersionSuffix>
+    <AssemblyVersion>$(VersionSuffix)</AssemblyVersion>
+    <Version>$(VersionSuffix)</Version>
+    <FileVersion>$(VersionSuffix)</FileVersion>
   </PropertyGroup>
 
   <!-- .NET Standard 2.0 references, compilation flags and build options -->
