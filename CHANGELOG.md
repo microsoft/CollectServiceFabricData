@@ -1,10 +1,15 @@
 # Change log
 
-## 03/02/2021
+## 03/09/2021  
+
+- 2.9
+- add strong name signing for binaries for jarvis integration
+
+## 03/02/2021 https://github.com/microsoft/CollectServiceFabricData/releases/tag/v2.8.2102.1282117
 
 - downgrade newtonsoft and kusto for .net462 jarvis asc integration
 
-## 02/27/2021
+## 02/27/2021 https://github.com/microsoft/CollectServiceFabricData/releases/tag/v2.8.2102.1282117
 
 - adding net462 targetframework
 - fix for new kusto error when using blob as source Ingestion properties contains invalid CsvMapping ingestion mapping. Mapping: '' Invalidity reason: CsvMapping An item with the same key has already been added. Ordinal: '0' appears '1' times,
@@ -13,7 +18,7 @@
 
 - fix fields not matching in gathertype 'setup'. FormatTraceFile incorrectly using DtrTraceRecord instead of T. tested setup and trace gathertype
 
-## 02/08/2021
+## 02/08/2021 https://github.com/microsoft/CollectServiceFabricData/releases/tag/v2.8.2102.1081337
 
 - 2.8
 - fix gathertype table propertyvalue add quotes and replace " and ,
