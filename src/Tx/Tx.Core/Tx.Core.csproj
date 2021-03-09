@@ -16,7 +16,9 @@
     <PackageTags>Tx Traces Logs Playback Replay</PackageTags>
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/Microsoft/Tx.git</RepositoryUrl>
+    <SignAssembly>true</SignAssembly>
     <DelaySign>false</DelaySign>
+    <AssemblyOriginatorKeyFile>..\..\CollectSFDataKey.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
   <!-- .NET Standard 2.0 references, compilation flags and build options -->
@@ -25,10 +27,10 @@
   </PropertyGroup>
   <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0'  Or '$(TargetFramework)'=='net46' Or '$(TargetFramework)'=='net472'">
     <PackageReference Include="System.Reactive" Version="4.0.0" />
-  </ItemGroup>  
+  </ItemGroup>
 
   <!-- .NET 4.5 references, compilation flags and build options -->
-  <ItemGroup Condition=" '$(TargetFramework)' == 'net45' ">		
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net45' ">
     <Reference Include="mscorlib" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -38,6 +40,6 @@
   </PropertyGroup>
   <ItemGroup Condition=" '$(TargetFramework)' == 'net45'">
     <PackageReference Include="System.Reactive" Version="3.0.0" />
-  </ItemGroup> 
+  </ItemGroup>
 
 </Project>
