@@ -24,6 +24,9 @@
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <Deterministic>false</Deterministic>
     <OutputPath>..\bin\$(Configuration)</OutputPath>
+    <SignAssembly>true</SignAssembly>
+    <DelaySign>false</DelaySign>
+    <AssemblyOriginatorKeyFile>..\CollectSFDataKey.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <PropertyGroup>
     <StartupObject>CollectSFData.Program</StartupObject>
@@ -74,7 +77,8 @@
     <PackageReference Include="Newtonsoft.Json" Version="12.0.2"/>
     <PackageReference Include="Microsoft.Azure.Kusto.Data" Version="8.0.1"/>
     <PackageReference Include="Microsoft.Azure.Kusto.Ingest" Version="8.0.1"/>
-  </ItemGroup>  <ItemGroup>
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="Microsoft.Azure.KeyVault">
       <Version>3.0.4</Version>
     </PackageReference>
