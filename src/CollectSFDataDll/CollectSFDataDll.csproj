@@ -8,17 +8,17 @@
     <RestorePackagesWithLockFile>false</RestorePackagesWithLockFile>
     <Deterministic>false</Deterministic>
     <AssemblyName>CollectSFDataDll</AssemblyName>
-    <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
-    <GenerateAssemblyDescriptionAttribute>false</GenerateAssemblyDescriptionAttribute>
-    <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
-    <GenerateAssemblyTitleAttribute>false</GenerateAssemblyTitleAttribute>
+    <GenerateAssemblyConfigurationAttribute>true</GenerateAssemblyConfigurationAttribute>
+    <GenerateAssemblyDescriptionAttribute>true</GenerateAssemblyDescriptionAttribute>
+    <GenerateAssemblyProductAttribute>true</GenerateAssemblyProductAttribute>
+    <GenerateAssemblyTitleAttribute>true</GenerateAssemblyTitleAttribute>
     <NoWarn>7035</NoWarn>
-    <VersionSuffix>2.8.$([System.DateTime]::UtcNow.ToString("yyMM")).1$([System.DateTime]::UtcNow.ToString("ddHHmm"))</VersionSuffix>
-    <AssemblyVersion Condition=" '$(VersionSuffix)' != '' ">$(VersionSuffix)</AssemblyVersion>
-    <Version Condition=" '$(VersionSuffix)' != '' ">$(VersionSuffix)</Version>
-    <FileVersion>$(Version)</FileVersion>
-    <GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
-    <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
+    <VersionSuffix>2.9.$([System.DateTime]::UtcNow.ToString("yyMM")).1$([System.DateTime]::UtcNow.ToString("ddHH"))</VersionSuffix>
+    <AssemblyVersion>$(VersionSuffix)</AssemblyVersion>
+    <Version>$(VersionSuffix)</Version>
+    <FileVersion>$(VersionSuffix)</FileVersion>
+    <GenerateAssemblyVersionAttribute>true</GenerateAssemblyVersionAttribute>
+    <GenerateAssemblyCompanyAttribute>true</GenerateAssemblyCompanyAttribute>
     <ApplicationIcon>..\FabricSupport.ico</ApplicationIcon>
     <RootNamespace>CollectSFData</RootNamespace>
     <OutputPath>..\bin\$(Configuration)</OutputPath>
