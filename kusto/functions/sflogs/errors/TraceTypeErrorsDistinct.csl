@@ -1,8 +1,6 @@
 .create-or-alter function with (docstring = "[T:string] where T=table name. function to enumerate distinct Type error / warning information.", folder = "sflogs/errors")
     TraceTypeErrorsDistinct(T:string, typeMatch:string=".") {
-    let baseUri = CreateKustoWebQueryLink('');
-    TraceTypeDistinct(T, typeMatch)
-    | where Level !contains 'info' and Level !contains 'verbose' and Level !contains 'unknown'
-    | extend link = strcat(baseUri, url_encode(strcat(T,' | where Type contains "',TypeName,'"',' and Level contains "',Level,'"')))
-    | order by Level asc, count_TypeName desc
+        let baseUri = CreateKustoWebQueryLink('');
+        TraceTypeDistinctTabular(table(T), typeMatch)
+        | extend link = strcat(baseUri, url_encode(strcat(T,' | where Type contains "',TypeName,'"',' and Level contains "',Level,'"')))
 }
