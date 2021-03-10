@@ -1,0 +1,6 @@
+.create-or-alter function with (docstring = "[T:string] where T=table name. function to enumerate distinct Type error / warning information.", folder = "sflogs/errors")
+    TraceTypeErrorsDistinctTabular(T:(Timestamp:datetime,Level:string,TID:int,PID:int,Type:string,Text:string,NodeName:string,FileType:string,RelativeUri:string), typeMatch:string=".") {
+        TraceTypeDistinctTabular(T, typeMatch)
+        | where Level !contains 'info' and Level !contains 'verbose' and Level !contains 'unknown'
+        | order by Level asc, count_TypeName desc
+}
