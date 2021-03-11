@@ -1,4 +1,4 @@
-.create-or-alter function with (docstring = "[T:table] where T=sflog table name. function to remove service fabric sflogs traces with misleading errors / failures", folder = "sflogs/base")
+.create-or-alter function with (docstring = "[T:table] where T=sflog table name. function to remove service fabric sflogs traces with misleading errors / failures", folder = "sflogs/errors")
     TraceFalsePositiveRemoveTabular(T:(Timestamp:datetime,Level:string,TID:int,PID:int,Type:string,Text:string,NodeName:string,FileType:string,RelativeUri:string)) {
             TraceFalsePositiveTabular(T)
             | where FalsePositive == false
