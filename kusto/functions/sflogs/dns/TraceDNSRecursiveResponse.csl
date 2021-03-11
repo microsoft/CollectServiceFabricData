@@ -1,4 +1,4 @@
-.create-or-alter function with (docstring = "[T:string] where T=table name. function to enumerate SF DNS resursive response information.", folder = "sflogs")
+.create-or-alter function with (docstring = "[T:string] where T=table name. function to enumerate SF DNS resursive response information.", folder = "sflogs/dns")
     TraceDNSRecursiveResponse(T:string) {
         table(T)
         | where Type contains "DNS"
