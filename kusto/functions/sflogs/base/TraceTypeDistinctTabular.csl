@@ -1,4 +1,4 @@
-.create-or-alter function with (docstring = "[T:table] [typeMatch:string] where T=sflog table name and optional typeMatch string /regex filter. function to enumerate distinct Type information.", folder = "sflogs")
+.create-or-alter function with (docstring = "[T:table] [typeMatch:string] where T=sflog table name and optional typeMatch string /regex filter. function to enumerate distinct Type information.", folder = "sflogs/base")
     TraceTypeDistinctTabular(T:(Timestamp:datetime,Level:string,TID:int,PID:int,Type:string,Text:string,NodeName:string,FileType:string,RelativeUri:string), typeMatch:string=".") {
         TraceTypeNameAndIdViewTabular(T, typeMatch) 
         //| where TypeName matches regex strcat('(?i:',typeMatch,')')

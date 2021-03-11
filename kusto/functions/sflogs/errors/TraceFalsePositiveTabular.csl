@@ -1,4 +1,4 @@
-.create-or-alter function with (docstring = "[T:string] where T=sf log table. function to create FalsePositives column by searching service fabric sflogs for false warning / error traces", folder = "sflogs/base")
+.create-or-alter function with (docstring = "[T:string] where T=sf log table. function to create FalsePositives column by searching service fabric sflogs for false warning / error traces", folder = "sflogs/errors")
     TraceFalsePositiveTabular(T:(Timestamp:datetime,Level:string,TID:int,PID:int,Type:string,Text:string,NodeName:string,FileType:string,RelativeUri:string)) {
         // search Type And Text column using string contains
         let TypeAndTextContains = (tableName:(Type:string,Text:string,FalsePositive:bool,Reason:string), issue:string, typeQuery:string, textQuery:string) {
