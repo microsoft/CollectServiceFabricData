@@ -1,5 +1,5 @@
 # [Choice] .NET Core version: 3.1, 2.1
-ARG VARIANT=3.1
+ARG VARIANT=5.0
 FROM mcr.microsoft.com/vscode/devcontainers/dotnetcore:${VARIANT}
 
 # [Option] Install Node.js
@@ -34,10 +34,10 @@ RUN wget https://packages.microsoft.com/config/ubuntu/18.04/packages-microsoft-p
 RUN sudo dpkg -i packages-microsoft-prod.deb
 
 # sdk
-RUN sudo apt-get update; \
-  sudo apt-get install -y apt-transport-https && \
-  sudo apt-get update && \
-  sudo apt-get install -y dotnet-sdk-5.0
+# RUN sudo apt-get update; \
+#   sudo apt-get install -y apt-transport-https && \
+#   sudo apt-get update && \
+#   sudo apt-get install -y dotnet-sdk-5.0
 
 # runtime asp
 # RUN sudo apt-get update; \
@@ -46,4 +46,4 @@ RUN sudo apt-get update; \
 #  sudo apt-get install -y aspnetcore-runtime-5.0
 
 # runtime net5
-RUN sudo apt-get install -y dotnet-runtime-5.0
+#RUN sudo apt-get install -y dotnet-runtime-5.0
