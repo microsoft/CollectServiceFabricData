@@ -693,7 +693,7 @@ namespace CollectSFData.Common
                 DeleteCache = false;
             }
 
-            if (FileType != FileTypesEnum.trace && KustoUseBlobAsSource)
+            if (FileType != FileTypesEnum.unknown && FileType != FileTypesEnum.trace && KustoUseBlobAsSource)
             {
                 Log.Warning($"setting KustoUseBlobAsSource to false for FileType: {FileType}");
                 KustoUseBlobAsSource = false;
