@@ -91,11 +91,11 @@
       "$id": "#/properties/CacheLocation",
       "type": "string",
       "title": "CacheLocation",
-      "description": "local device cache source / destination if UseMemoryStream = false",
+      "description": "local device cache source / destination path if UseMemoryStream = false",
       "default": null,
       "examples": [
         null,
-        "c:\\temp\\csfd.log"
+        "c:\\temp"
       ],
       "pattern": "^(.+)$"
     },
