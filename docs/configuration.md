@@ -274,7 +274,7 @@ NOTE: for standalone clusters a central diagnostic store must be configured
   "EndTimeStamp": "10/31/2018 22:30:00 +00:00",
   "Threads": 8,
   "UriFilter": "",
-  "NodeFilter": "fabric_traces",
+  "NodeFilter": "nt0",
   "KustoCluster": "https://ingest-kustodb.eastus.kusto.windows.net/serviceFabricDB",
   "KustoRecreateTable": true,
   "KustoTable": "_00000000000001"
