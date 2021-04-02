@@ -67,11 +67,11 @@
       "$id": "#/properties/AzureSubscriptionId",
       "type": "string",
       "title": "AzureSubscriptionId",
-      "description": "azure subscription id for certain non-default azure operations",
+      "description": "azure subscription id guid for certain non-default azure operations",
       "default": null,
       "examples": [
         null,
-        "{{subscriptionId}}"
+        "123456578-1234-1234-1234-123456789012"
       ],
       "pattern": "^([a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12})$"
     },
@@ -79,11 +79,11 @@
       "$id": "#/properties/AzureTenantId",
       "type": "string",
       "title": "AzureTenantId",
-      "description": "azure tenant id for certain non-default azure operations",
+      "description": "azure tenant id guid for certain non-default azure operations",
       "default": null,
       "examples": [
         null,
-        "d2378f24-eaf6-49bc-96f6-ff46fed1391a"
+        "123456578-1234-1234-1234-123456789012"
       ],
       "pattern": "^([a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12})$"
     },
@@ -234,7 +234,7 @@
       "type": "boolean",
       "title": "KustoUseBlobAsSource",
       "description": "true to ingest dtr.zip logs directly from cluster storage account. available in service fabric 6.5",
-      "default": false,
+      "default": true,
       "examples": [
         false,
         true
@@ -245,7 +245,7 @@
       "type": "boolean",
       "title": "KustoUseIngestMessage",
       "description": "true to use Kusto (service bus) messaging for success and failure ingests",
-      "default": true,
+      "default": false,
       "examples": [
         false,
         true
@@ -404,7 +404,7 @@
       "description": "path and file name to log output",
       "default": "",
       "examples": [
-        "collectsfdata.log"
+        "c:\\temp\\collectsfdata.log"
       ],
       "pattern": "^(.+)$"
     },
@@ -444,7 +444,7 @@
       "default": null,
       "examples": [
         null,
-        "/subscriptions/{{subscriptionId}}}/resourceGroups/{{resourceGroup}}/Microsoft.ServiceFabric/clusters/{{clusterName}}"
+        "/subscriptions/{{subscriptionId}}/resourceGroups/{{resourceGroup}}/Microsoft.ServiceFabric/clusters/{{clusterName}}"
       ],
       "pattern": "^(/subscriptions/[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}/resourceGroups/\\w+providers/Microsoft.ServiceFabric/clusters/.+)$"
     },
@@ -510,7 +510,10 @@
       "description": "string / regex used for filtering of blob storage account uri downloads",
       "default": null,
       "examples": [
-        null
+        null,
+        ".trace",
+        "fabric_",
+        "lease_"
       ],
       "pattern": "^(.+)$"
     },
