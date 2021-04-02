@@ -1,4 +1,4 @@
-.create-or-alter function with (docstring = "[T:table] [typeMatch:string] function to split Type column into TypeName and TypeId", folder = "sflogs")
+.create-or-alter function with (docstring = "[T:table] [typeMatch:string] function to split Type column into TypeName and TypeId", folder = "sflogs/base")
     TraceTypeNameAndIdViewTabular(T:(Timestamp:datetime,Level:string,TID:int,PID:int,Type:string,Text:string,NodeName:string,FileType:string,RelativeUri:string), typeMatch:string=".") {
         T
         | where Type matches regex strcat('(?i:',typeMatch,')')
