@@ -37,6 +37,8 @@ namespace CollectSFData.Common
 
         public CommandOption Examples { get; set; }
 
+        public CommandOption FileUris { get; set; }
+
         public CommandOption GatherType { get; set; }
 
         public CommandOption KustoCluster { get; set; }
@@ -387,6 +389,12 @@ namespace CollectSFData.Common
             Examples = CmdLineApp.Option("-ex|--examples",
                     "[bool] show example commands",
                     CommandOptionType.SingleValue);
+
+            FileUris = CmdLineApp.Option("-uris|--fileUris",
+                    "[string[]] optional comma separated string array list of files to ingest." +
+                    $"{newLine} overrides default collection from diagnosticsStore" +
+                    $"{newLine} example: D:\\temp\\lease_trace1.dtr.zip,D:\\temp\\lease_trace2.dtr.zip",
+                    CommandOptionType.MultipleValue);
 
             GatherType = CmdLineApp.Option("-type|--gatherType",
                     $"[string] Gather data type:" +
