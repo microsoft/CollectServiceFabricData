@@ -80,6 +80,8 @@ namespace CollectSFData.Common
 
         public FileTypesEnum FileType { get; private set; }
 
+        public string[] FileUris {get; set;}
+
         public string GatherType
         {
             get => FileType.ToString();
@@ -363,6 +365,9 @@ namespace CollectSFData.Common
 
                 switch (token.Type)
                 {
+                    case JTokenType.Array:
+                        instanceValue = token.Values<string>().ToArray();
+                        break;
                     case JTokenType.Null:
                         instanceValue = null;
                         break;
@@ -717,9 +722,9 @@ namespace CollectSFData.Common
         {
             bool retval = true;
 
-            if (!SasEndpointInfo.IsPopulated() & !IsCacheLocationPreConfigured())
+            if (!SasEndpointInfo.IsPopulated() & !IsCacheLocationPreConfigured() & FileUris.Length < 1)
             {
-                Log.Error($"sasKey or cacheLocation should be populated as file source.");
+                Log.Error($"sasKey, fileUris, or cacheLocation should be populated as file source.");
                 retval = false;
             }
 
@@ -866,7 +871,11 @@ namespace CollectSFData.Common
                     Log.Debug($"argumentProperty: {argumentProperty.Name}");
                     Log.Debug($"instanceProperty: {instanceProperty.Name}");
 
-                    if (instanceProperty.PropertyType == typeof(string))
+                    if (instanceProperty.PropertyType == typeof(string[]))
+                    {
+                        SetPropertyValue(instanceProperty, instanceValue.ToString().Split(','));
+                    }
+                    else if (instanceProperty.PropertyType == typeof(string))
                     {
                         SetPropertyValue(instanceProperty, instanceValue.ToString());
                     }

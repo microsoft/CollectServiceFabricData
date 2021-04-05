@@ -80,7 +80,7 @@ namespace CollectSFData.DataFile
                 }
             }
 
-            if (!string.IsNullOrEmpty(BaseUri))
+            if (!string.IsNullOrEmpty(BaseUri) & Uri.IsWellFormedUriString(fileUri, UriKind.Relative))
             {
                 if (!fileUri.ToLower().StartsWith(BaseUri.ToLower()))
                 {
