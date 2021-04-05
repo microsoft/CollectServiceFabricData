@@ -20,6 +20,7 @@ namespace CollectSFData.Common
         public const string DefaultOptionsFile = "collectsfdata.options.json";
         public const int DefaultStartTimeHours = -2;
         public const string DumpExtension = ".dmp";
+        public const string EtlExtension = ".etl";
         public const string FalseStringPattern = @"(false|0|off|null)";
         public const string JsonExtension = ".json";
         public const string KustoUrlPattern = "https://(?<ingest>ingest-){1}(?<clusterName>.+?)\\.(?<location>.+?){0,1}\\.(?<domainName>.+?)/(?<databaseName>.+?){1}(/|$)";
@@ -43,6 +44,7 @@ namespace CollectSFData.Common
         public const int ThreadSleepMs10000 = 10000;
         public const int ThreadSleepMsWarning = 5000;
         public const string TraceFileExtension = ".dtr";
+        public const string TraceZipExtension = ".dtr.zip";
         public const string TrueStringPattern = @"(true|1|on)";
         public const int WarningJsonTransmitBytes = (int)(MaxJsonTransmitBytes * .95);
         public const int WarningTimeSpanHours = 4;
