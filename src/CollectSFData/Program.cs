@@ -48,7 +48,8 @@ namespace CollectSFData
                 // change config to download files to parse and fix csv fields
                 config.KustoUseBlobAsSource = false;
                 config.KustoRecreateTable = false;
-                retval = collector.Collect(kusto.IngestFileObjectsFailed.Select(x => x.FileUri).ToList());
+                config.FileUris = kusto.IngestFileObjectsFailed.Select(x => x.FileUri).ToArray();
+                retval = collector.Collect();
             }
 
             return retval;
