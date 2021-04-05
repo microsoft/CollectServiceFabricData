@@ -89,11 +89,93 @@ namespace CollectSFData.DataFile
 
             if (!found)
             {
+                // try by just file extension
+                fileDataType = MapFileDataTypeExtension(fileUri);
+            }
+
+            if (fileDataType == FileDataTypesEnum.unknown)
+            {
                 Log.Warning($"unable to determine datatypepattern:{fileUri} using values:{string.Join(",", _fileDataTypes)}");
             }
 
             Log.Debug($"returning FileDataTypesEnum.{fileDataType.ToString()}");
             return fileDataType;
+        }
+
+        public static FileDataTypesEnum MapFileDataTypeExtension(string fileUri)
+        {
+            FileDataTypesEnum extension = FileDataTypesEnum.unknown;
+            switch (Path.GetExtension(fileUri.ToLower()))
+            {
+                case Constants.PerfCsvExtension:
+                case Constants.PerfCtrExtension:
+                    {
+                        extension = FileDataTypesEnum.counter;
+                        break;
+                    }
+
+                case Constants.TableExtension:
+                    {
+                        extension = FileDataTypesEnum.table;
+                        break;
+                    }
+
+                case Constants.DumpExtension:
+                    {
+                        extension = FileDataTypesEnum.fabriccrashdumps;
+                        break;
+                    }
+
+                case Constants.TraceZipExtension:
+                case Constants.TraceFileExtension:
+                    {
+                        // using default fabric / lease
+                        extension = FileDataTypesEnum.fabric;
+                        break;
+                    }
+
+                case Constants.SetupExtension:
+                    {
+                        // using default fabricsetup / fabricdeployer
+                        extension = FileDataTypesEnum.fabricsetup;
+                        break;
+                    }
+
+                case Constants.ZipExtension:
+                    {
+                        // todo: implement
+                        extension = FileDataTypesEnum.unknown;
+                        break;
+                    }
+
+                case Constants.JsonExtension:
+                    {
+                        // todo: implement
+                        extension = FileDataTypesEnum.unknown;
+                        break;
+                    }
+                case Constants.EtlExtension:
+                    {
+                        // todo: implement
+                        extension = FileDataTypesEnum.unknown;
+                        break;
+                    }
+                case Constants.CsvExtension:
+                    {
+                        // todo: implement
+                        extension = FileDataTypesEnum.unknown;
+                        break;
+                    }
+
+                default:
+                    {
+                        extension = FileDataTypesEnum.unknown;
+                        break;
+                    }
+            }
+
+            Log.Debug($"returning {extension}");
+            return extension;
         }
 
         public static FileTypesEnum MapFileTypeUri(string fileUri)
