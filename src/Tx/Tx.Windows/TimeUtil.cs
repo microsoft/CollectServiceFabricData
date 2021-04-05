@@ -8,7 +8,7 @@ namespace Tx.Windows
     {
         // DateTimeKind option needed for overriding DateTimeKind if parsing 
         // performance counter blg from different timezone than creation time zone
-        public static DateTimeKind DateTimeKind = DateTimeKind.Local;
+        public static DateTimeKind DateTimeKind {get; set;} = DateTimeKind.Local;
         private const Int64 TicksPerMillisecond = 10000;
         private const Int64 TicksPerSecond = TicksPerMillisecond * 1000;
         private const Int64 TicksPerMinute = TicksPerSecond * 60;
