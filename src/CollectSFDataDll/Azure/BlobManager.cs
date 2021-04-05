@@ -109,7 +109,7 @@ namespace CollectSFData.Azure
             DownloadBlobsFromContainer(container);
         }
 
-        public void DownloadFiles(List<string> uris)
+        public void DownloadFiles(string[] uris)
         {
             List<IListBlobItem> blobItems = new List<IListBlobItem>();
 

@@ -41,11 +41,6 @@ namespace CollectSFData
 
         public int Collect()
         {
-            return Collect(new List<string>());
-        }
-
-        public int Collect(List<string> uris = null)
-        {
             try
             {
                 if (!Initialize() || !InitializeKusto() || !InitializeLogAnalytics())
@@ -55,11 +50,11 @@ namespace CollectSFData
 
                 if (Config.SasEndpointInfo.IsPopulated())
                 {
-                    DownloadAzureData(uris);
+                    DownloadAzureData();
                 }
-                else if (Config.IsCacheLocationPreConfigured())
+                else if (Config.IsCacheLocationPreConfigured() | Config.FileUris.Length > 0)
                 {
-                    UploadCacheData(uris);
+                    UploadCacheData();
                 }
 
                 CustomTaskManager.WaitAll();
@@ -172,7 +167,7 @@ namespace CollectSFData
             return true;
         }
 
-        private void DownloadAzureData(List<string> uris = null)
+        private void DownloadAzureData()
         {
             string containerPrefix = null;
             string tablePrefix = null;
@@ -213,9 +208,9 @@ namespace CollectSFData
 
                 if (blobMgr.Connect())
                 {
-                    if (uris?.Count > 0)
+                    if (Config.FileUris.Length > 0)
                     {
-                        blobMgr.DownloadFiles(uris);
+                        blobMgr.DownloadFiles(Config.FileUris);
                     }
                     else
                     {
@@ -374,14 +369,14 @@ namespace CollectSFData
             }
         }
 
-        private void UploadCacheData(List<string> uris)
+        private void UploadCacheData()
         {
             Log.Info("enter");
             List<string> files = new List<string>();
 
-            if (uris.Count > 0)
+            if (Config.FileUris.Length > 0)
             {
-                foreach(string file in uris)
+                foreach(string file in Config.FileUris)
                 {
                     if(File.Exists(file))
                     {
