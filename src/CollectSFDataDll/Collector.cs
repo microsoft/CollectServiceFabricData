@@ -58,7 +58,8 @@ namespace CollectSFData
                 {
                     DownloadAzureData();
                 }
-                else if (Config.IsCacheLocationPreConfigured() | Config.FileUris.Length > 0)
+                
+                if (Config.IsCacheLocationPreConfigured() | Config.FileUris.Length > 0)
                 {
                     UploadCacheData();
                 }
