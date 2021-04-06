@@ -704,6 +704,12 @@ namespace CollectSFData.Common
                 KustoUseBlobAsSource = false;
             }
 
+            if (FileUris.Length > 0 && KustoUseBlobAsSource)
+            {
+                Log.Warning($"setting KustoUseBlobAsSource to false for FileUris");
+                KustoUseBlobAsSource = false;
+            }
+
             return retval;
         }
 
