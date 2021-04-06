@@ -12,7 +12,7 @@ namespace CollectSFData.Common
 {
     public class Instance : Constants
     {
-        public ConfigurationOptions Config;
+        protected internal ConfigurationOptions Config;
         public FileManager FileMgr;
         public bool IsWindows = Environment.OSVersion.Platform.Equals(PlatformID.Win32NT);
         public KustoConnection Kusto;

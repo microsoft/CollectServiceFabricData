@@ -109,7 +109,7 @@ namespace CollectSFData.Azure
             DownloadBlobsFromContainer(container);
         }
 
-        public void DownloadFiles(List<string> uris)
+        public void DownloadFiles(string[] uris)
         {
             List<IListBlobItem> blobItems = new List<IListBlobItem>();
 
@@ -117,7 +117,15 @@ namespace CollectSFData.Azure
             {
                 try
                 {
-                    blobItems.Add(_blobClient.GetBlobReferenceFromServer(new Uri(uri)));
+                    if(Path.IsPathRooted(uri))
+                    {
+                        Log.Warning($"not blob storage path. skipping:{uri}");
+                        continue;
+                    }
+                    else
+                    {
+                        blobItems.Add(_blobClient.GetBlobReferenceFromServer(new Uri(uri)));
+                    }
                 }
                 catch (Exception e)
                 {
