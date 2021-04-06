@@ -28,7 +28,7 @@ namespace CollectSFData
         private Tuple<int, int, int, int, int, int, int> _progressTuple = new Tuple<int, int, int, int, int, int, int>(0, 0, 0, 0, 0, 0, 0);
         private CustomTaskManager _taskManager = new CustomTaskManager(true);
 
-        private ConfigurationOptions Config => Instance.Config;
+        public ConfigurationOptions Config {get => Instance.Config;}
 
         public Instance Instance { get; } = Instance.Singleton();
 
@@ -37,6 +37,12 @@ namespace CollectSFData
             _args = args;
             Log.IsConsole = isConsole;
             //Initialize();
+        }
+
+        public int Collect(ConfigurationOptions configurationOptions)
+        {
+            Instance.Config = configurationOptions;
+            return Collect();
         }
 
         public int Collect()
@@ -376,9 +382,9 @@ namespace CollectSFData
 
             if (Config.FileUris.Length > 0)
             {
-                foreach(string file in Config.FileUris)
+                foreach (string file in Config.FileUris)
                 {
-                    if(File.Exists(file))
+                    if (File.Exists(file))
                     {
                         Log.Info($"adding file to list: {file}");
                         files.Add(file);
