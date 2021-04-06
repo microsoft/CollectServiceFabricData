@@ -80,6 +80,8 @@ namespace CollectSFData.Common
 
         public FileTypesEnum FileType { get; private set; }
 
+        public string[] FileUris {get; set;}
+
         public string GatherType
         {
             get => FileType.ToString();
@@ -191,7 +193,7 @@ namespace CollectSFData.Common
         
         public bool VersionOption { get; set; }
 
-        public ConfigurationOptions()
+        protected internal ConfigurationOptions()
         {
             _cmdLineArgs.CmdLineApp.OnExecute(() => MergeCmdLine());
             _cmdLineArgs.InitFromCmdLine();
@@ -363,6 +365,9 @@ namespace CollectSFData.Common
 
                 switch (token.Type)
                 {
+                    case JTokenType.Array:
+                        instanceValue = token.Values<string>().ToArray();
+                        break;
                     case JTokenType.Null:
                         instanceValue = null;
                         break;
@@ -477,7 +482,7 @@ namespace CollectSFData.Common
                 }
                 else if (Validate())
                 {
-                    Log.Info($"options:", ShallowCopy());
+                    Log.Info($"options:", Clone());
                     DisplayStatus();
                     return true;
                 }
@@ -699,6 +704,12 @@ namespace CollectSFData.Common
                 KustoUseBlobAsSource = false;
             }
 
+            if (FileUris.Length > 0 && KustoUseBlobAsSource)
+            {
+                Log.Warning($"setting KustoUseBlobAsSource to false for FileUris");
+                KustoUseBlobAsSource = false;
+            }
+
             return retval;
         }
 
@@ -717,9 +728,9 @@ namespace CollectSFData.Common
         {
             bool retval = true;
 
-            if (!SasEndpointInfo.IsPopulated() & !IsCacheLocationPreConfigured())
+            if (!SasEndpointInfo.IsPopulated() & !IsCacheLocationPreConfigured() & FileUris.Length < 1)
             {
-                Log.Error($"sasKey or cacheLocation should be populated as file source.");
+                Log.Error($"sasKey, fileUris, or cacheLocation should be populated as file source.");
                 retval = false;
             }
 
@@ -866,7 +877,11 @@ namespace CollectSFData.Common
                     Log.Debug($"argumentProperty: {argumentProperty.Name}");
                     Log.Debug($"instanceProperty: {instanceProperty.Name}");
 
-                    if (instanceProperty.PropertyType == typeof(string))
+                    if (instanceProperty.PropertyType == typeof(string[]))
+                    {
+                        SetPropertyValue(instanceProperty, instanceValue.ToString().Split(','));
+                    }
+                    else if (instanceProperty.PropertyType == typeof(string))
                     {
                         SetPropertyValue(instanceProperty, instanceValue.ToString());
                     }
@@ -980,7 +995,7 @@ namespace CollectSFData.Common
             }
         }
 
-        private ConfigurationOptions ShallowCopy()
+        public ConfigurationOptions Clone()
         {
             return (ConfigurationOptions)MemberwiseClone();
         }

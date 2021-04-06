@@ -10,6 +10,7 @@
   "ContainerFilter": null,
   "DeleteCache": false,
   "EndTimeStamp": null,
+  "FileUris": [],
   "GatherType": "unknown",
   "KustoCluster": null,
   "KustoCompressed": true,
