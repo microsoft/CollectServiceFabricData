@@ -85,11 +85,12 @@ namespace CollectSFData.DataFile
                 if (!fileUri.ToLower().StartsWith(BaseUri.ToLower()))
                 {
                     fileUri = BaseUri.TrimEnd('/') + "/" + fileUri.TrimStart('/');
+                    Log.Debug($"concatenated baseUri + fileUri:{fileUri}");
                 }
             }
 
             _fileUri = fileUri;
-            Log.Info($"extracted node properties: node: {NodeName}: filetype: {FileDataType.ToString()}\r\n file: {RelativeUri}", ConsoleColor.Cyan);
+            Log.Info($"extracted node properties:node:{NodeName} filetype:{FileDataType.ToString()}\r\n relativeUri:{RelativeUri}", ConsoleColor.Cyan);
             return fileUri;
         }
     }
