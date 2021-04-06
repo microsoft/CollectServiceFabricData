@@ -28,7 +28,7 @@ namespace CollectSFData
         private Tuple<int, int, int, int, int, int, int> _progressTuple = new Tuple<int, int, int, int, int, int, int>(0, 0, 0, 0, 0, 0, 0);
         private CustomTaskManager _taskManager = new CustomTaskManager(true);
 
-        private ConfigurationOptions Config => Instance.Config;
+        public ConfigurationOptions Config {get => Instance.Config;}
 
         public Instance Instance { get; } = Instance.Singleton();
 
@@ -39,12 +39,13 @@ namespace CollectSFData
             //Initialize();
         }
 
-        public int Collect()
+        public int Collect(ConfigurationOptions configurationOptions)
         {
-            return Collect(new List<string>());
+            Instance.Config = configurationOptions;
+            return Collect();
         }
 
-        public int Collect(List<string> uris = null)
+        public int Collect()
         {
             try
             {
@@ -55,11 +56,12 @@ namespace CollectSFData
 
                 if (Config.SasEndpointInfo.IsPopulated())
                 {
-                    DownloadAzureData(uris);
+                    DownloadAzureData();
                 }
-                else if (Config.IsCacheLocationPreConfigured())
+                
+                if (Config.IsCacheLocationPreConfigured() | Config.FileUris.Length > 0)
                 {
-                    UploadCacheData(uris);
+                    UploadCacheData();
                 }
 
                 CustomTaskManager.WaitAll();
@@ -172,7 +174,7 @@ namespace CollectSFData
             return true;
         }
 
-        private void DownloadAzureData(List<string> uris = null)
+        private void DownloadAzureData()
         {
             string containerPrefix = null;
             string tablePrefix = null;
@@ -213,9 +215,9 @@ namespace CollectSFData
 
                 if (blobMgr.Connect())
                 {
-                    if (uris?.Count > 0)
+                    if (Config.FileUris.Length > 0)
                     {
-                        blobMgr.DownloadFiles(uris);
+                        blobMgr.DownloadFiles(Config.FileUris);
                     }
                     else
                     {
@@ -374,16 +376,16 @@ namespace CollectSFData
             }
         }
 
-        private void UploadCacheData(List<string> uris)
+        private void UploadCacheData()
         {
             Log.Info("enter");
             List<string> files = new List<string>();
 
-            if (uris.Count > 0)
+            if (Config.FileUris.Length > 0)
             {
-                foreach(string file in uris)
+                foreach (string file in Config.FileUris)
                 {
-                    if(File.Exists(file))
+                    if (File.Exists(file))
                     {
                         Log.Info($"adding file to list: {file}");
                         files.Add(file);
