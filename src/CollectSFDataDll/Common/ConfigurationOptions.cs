@@ -193,7 +193,7 @@ namespace CollectSFData.Common
         
         public bool VersionOption { get; set; }
 
-        public ConfigurationOptions()
+        protected internal ConfigurationOptions()
         {
             _cmdLineArgs.CmdLineApp.OnExecute(() => MergeCmdLine());
             _cmdLineArgs.InitFromCmdLine();
@@ -482,7 +482,7 @@ namespace CollectSFData.Common
                 }
                 else if (Validate())
                 {
-                    Log.Info($"options:", ShallowCopy());
+                    Log.Info($"options:", Clone());
                     DisplayStatus();
                     return true;
                 }
@@ -989,7 +989,7 @@ namespace CollectSFData.Common
             }
         }
 
-        private ConfigurationOptions ShallowCopy()
+        public ConfigurationOptions Clone()
         {
             return (ConfigurationOptions)MemberwiseClone();
         }
