@@ -13,7 +13,6 @@ using System.Linq;
 using System.Reactive.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using Tx.Core;
 using Tx.Windows;
 
 namespace CollectSFData.DataFile
@@ -514,6 +513,10 @@ namespace CollectSFData.DataFile
 
         private bool TxBlg(FileObject fileObject, string outputFile)
         {
+            // this forces blg output timestamps to use local capture timezone which is utc for azure
+            // Tx module is not able to determine with PDH api blg source timezone
+            TimeUtil.DateTimeKind = DateTimeKind.Unspecified;
+
             DateTime startTime = DateTime.Now;
             IObservable<PerformanceSample> observable = default(IObservable<PerformanceSample>);
             PerfCounterObserver<PerformanceSample> counterSession = default(PerfCounterObserver<PerformanceSample>);
