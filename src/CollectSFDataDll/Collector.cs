@@ -28,7 +28,7 @@ namespace CollectSFData
         private Tuple<int, int, int, int, int, int, int> _progressTuple = new Tuple<int, int, int, int, int, int, int>(0, 0, 0, 0, 0, 0, 0);
         private CustomTaskManager _taskManager = new CustomTaskManager(true);
 
-        public ConfigurationOptions Config {get => Instance.Config;}
+        public ConfigurationOptions Config { get => Instance.Config; }
 
         public Instance Instance { get; } = Instance.Singleton();
 
@@ -58,7 +58,7 @@ namespace CollectSFData
                 {
                     DownloadAzureData();
                 }
-                
+
                 if (Config.IsCacheLocationPreConfigured() | Config.FileUris.Length > 0)
                 {
                     UploadCacheData();
@@ -395,6 +395,11 @@ namespace CollectSFData
                         Log.Warning($"file does not exist: {file}");
                     }
                 }
+
+                if (files.Count < 1)
+                {
+                    Log.Error($"configuration set to upload cache files from 'fileUris' count:{Config.FileUris.Length} but no files found");
+                }
             }
             else
             {
@@ -434,11 +439,11 @@ namespace CollectSFData
                         Log.Warning($"invalid filetype for cache upload. returning {Config.FileType}");
                         return;
                 }
-            }
 
-            if (files.Count < 1)
-            {
-                Log.Error($"configuration set to upload cache files from 'cachelocation' {Config.CacheLocation} but no files found");
+                if (files.Count < 1)
+                {
+                    Log.Error($"configuration set to upload cache files from 'cachelocation' {Config.CacheLocation} but no files found");
+                }
             }
 
             foreach (string file in files)
