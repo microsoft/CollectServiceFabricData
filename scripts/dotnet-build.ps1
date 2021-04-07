@@ -1,4 +1,3 @@
-
 <#
 .SYNOPSIS    script to build different frameworks with dotnet
 
@@ -11,8 +10,8 @@ param(
     [ValidateSet('win-x64', 'ubuntu.18.04-x64')]
     $runtimeIdentifier = 'win-x64',
     [switch]$publish,
-    [string]$projectDir = (resolve-path "$psscriptroot\..\src"),
-    [string]$nugetFallbackFolder = "$($env:userprofile)\.dotnet\NuGetFallbackFolder",
+    [string]$projectDir = (resolve-path "$psscriptroot/../src"),
+    [string]$nugetFallbackFolder = "$($env:userprofile)/.dotnet/NuGetFallbackFolder",
     [switch]$clean,
     [switch]$replace
 )
@@ -21,32 +20,32 @@ $ErrorActionPreference = 'continue'
 
 $error.Clear()
 $global:tempFiles = [collections.arraylist]::new()
-$csproj = "$projectDir\CollectSFData\CollectSFData.csproj"
-$dllcsproj = "$projectDir\CollectSFDataDll\CollectSFDataDll.csproj"
+$csproj = "$projectDir/CollectSFData/CollectSFData.csproj"
+$dllcsproj = "$projectDir/CollectSFDataDll/CollectSFDataDll.csproj"
 $frameworksPattern = "\<TargetFrameworks\>(.+?)\</TargetFrameworks\>"
 $ignoreCase = [text.regularExpressions.regexOptions]::IgnoreCase
-$nuspecFile = "$projectDir\CollectSFData\CollectSFData.nuspec"
+$nuspecFile = "$projectDir/CollectSFData/CollectSFData.nuspec"
 $xmlns = "http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd"
 
 $commonNugetFiles = @{
-    '..\bin\$configuration$\$targetFramework\*.exe'='tools\$targetFramework'
-    '..\bin\$configuration$\$targetFramework\*.dll'='tools\$targetFramework'
-    '..\bin\$configuration$\$targetFramework\CollectSFDataDll.dll'='lib\$targetFramework'
-    '..\bin\$configuration$\$targetFramework\Sf.Tx.Core.dll'='lib\$targetFramework'
-    '..\bin\$configuration$\$targetFramework\Sf.Tx.Windows.dll'='lib\$targetFramework'
-    '..\..\configurationFiles\collectsfdata.options.json'='tools\$targetFramework'
-    '..\bin\$configuration$\$targetFramework\*.config'='tools\$targetFramework'
-    '..\FabricSupport.png'='images\'
+    '../bin/$configuration$/$targetFramework/*.exe'                = 'tools/$targetFramework'
+    '../bin/$configuration$/$targetFramework/*.dll'                = 'tools/$targetFramework'
+    '../bin/$configuration$/$targetFramework/CollectSFDataDll.dll' = 'lib/$targetFramework'
+    '../bin/$configuration$/$targetFramework/Sf.Tx.Core.dll'       = 'lib/$targetFramework'
+    '../bin/$configuration$/$targetFramework/Sf.Tx.Windows.dll'    = 'lib/$targetFramework'
+    '../../configurationFiles/collectsfdata.options.json'          = 'tools/$targetFramework'
+    '../bin/$configuration$/$targetFramework/*.config'             = 'tools/$targetFramework'
+    '../FabricSupport.png'                                         = 'images/'
 }
 
 $netCoreNugetFiles = @{
-    '..\bin\$configuration$\$targetFramework\*.runtimeconfig.json'='tools\$targetFramework'
+    '../bin/$configuration$/$targetFramework/*.runtimeconfig.json' = 'tools/$targetFramework'
 }
 
 function main() {
 
     if ($clean) {
-        . "$psscriptroot\clean-build.ps1"
+        . "$psscriptroot/clean-build.ps1"
     }
 
     try {
@@ -65,6 +64,9 @@ function main() {
             build-configuration $configuration
         }
         return
+    }
+    catch {
+        write-error "exception:$($_ | Format-List * | out-string)"
     }
     finally {
         if ($global:tempFiles) {
@@ -97,7 +99,7 @@ function build-configuration($configuration) {
         dotnet publish $csproj -f $targetFrameworks -r $runtimeIdentifier -c $configuration --self-contained $true -p:PublishSingleFile=true -p:PublishedTrimmed=true
     }
 
-    $nugetFile = "$projectDir\bin\$configuration\*.nupkg"
+    $nugetFile = "$projectDir/bin/$configuration/*.nupkg"
     $nugetFile = (resolve-path $nugetFile)[-1]
     
     if ((test-path $nugetFile)) {
@@ -141,8 +143,8 @@ function create-nuspec($targetFrameworks) {
         
         if ($targetFramework -imatch "netcore") {
             foreach ($netCoreNugetFile in $netCoreNugetFiles.GetEnumerator()) {
-                $srcPath = $netCoreNugetFile.Key.Replace("`$targetFramework",$targetFramework)
-                $targetPath = $netCoreNugetFile.Value.Replace("`$targetFramework",$targetFramework)
+                $srcPath = $netCoreNugetFile.Key.Replace("`$targetFramework", $targetFramework)
+                $targetPath = $netCoreNugetFile.Value.Replace("`$targetFramework", $targetFramework)
     
                 $element = $nuspecXml.CreateElement("file")
                 $src = $nuspecXml.CreateAttribute("src")
@@ -196,6 +198,3 @@ function create-tempProject($projectFile) {
 }
 
 main
-
-
-
