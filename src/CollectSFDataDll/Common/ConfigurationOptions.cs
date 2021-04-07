@@ -80,7 +80,7 @@ namespace CollectSFData.Common
 
         public FileTypesEnum FileType { get; private set; }
 
-        public string[] FileUris {get; set;}
+        public string[] FileUris {get; set;} = new string[0];
 
         public string GatherType
         {
