@@ -81,12 +81,6 @@ namespace CollectSFData.Common
             Log.Info("taskmanager cancelled", ConsoleColor.White);
         }
 
-        internal static void Reset()
-        {
-            Cancel();
-            Resume();
-        }
-
         public static void Resume()
         {
             if (!_isRunning)
