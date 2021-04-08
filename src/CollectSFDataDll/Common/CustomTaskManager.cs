@@ -29,6 +29,8 @@ namespace CollectSFData.Common
 
         public TaskCreationOptions CreationOptions { get; set; } = TaskCreationOptions.PreferFairness;
 
+        public bool IsCancellationRequested { get => _cancellationTokenSource.IsCancellationRequested; }
+
         public SynchronizedList<TaskObject> QueuedTaskObjects { get; set; } = new SynchronizedList<TaskObject>();
 
         public bool RemoveWhenComplete { get; set; }
@@ -58,7 +60,7 @@ namespace CollectSFData.Common
                     Log.Highlight($"{CallerName} started taskmonitor. status: {_taskMonitor.Status}", ConsoleColor.White);
                 }
 
-                if(_taskMonitor.Status != TaskStatus.RanToCompletion)
+                if (_taskMonitor.Status != TaskStatus.RanToCompletion)
                 {
                     Log.Info($"{CallerName} adding task instance. taskmonitor status: {_taskMonitor.Status}", ConsoleColor.White);
                     _allInstances.Add(this);
@@ -271,8 +273,7 @@ namespace CollectSFData.Common
 
         private Task ScheduleTaskAction(Action<object> action, object state)
         {
-            CancellationToken token = new CancellationToken();
-            Task task = Task.Factory.StartNew(action, state, token, CreationOptions, _customScheduler);
+            Task task = Task.Factory.StartNew(action, state, _cancellationTokenSource.Token, CreationOptions, _customScheduler);
 
             AllTasks.Add(task);
             Log.Debug($"schedule action state task scheduled {task.Id}");
@@ -283,8 +284,7 @@ namespace CollectSFData.Common
         {
             bool hasContinueWith = taskObject.ContinueWith != null;
             Log.Debug($"scheduling action continuewith:{hasContinueWith}");
-            CancellationToken token = new CancellationToken();
-            Task task = Task.Factory.StartNew(taskObject.Action, token, CreationOptions, _customScheduler);
+            Task task = Task.Factory.StartNew(taskObject.Action, _cancellationTokenSource.Token, CreationOptions, _customScheduler);
 
             if (hasContinueWith)
             {
@@ -300,8 +300,7 @@ namespace CollectSFData.Common
         {
             bool hasContinueWith = taskObject.ContinueWith != null;
             Log.Debug("scheduling function state continuewith");
-            CancellationToken token = new CancellationToken();
-            Task<object> task = Task.Factory.StartNew(taskObject.Func, null, token, CreationOptions, _customScheduler);
+            Task<object> task = Task.Factory.StartNew(taskObject.Func, null, _cancellationTokenSource.Token, CreationOptions, _customScheduler);
 
             if (hasContinueWith)
             {
