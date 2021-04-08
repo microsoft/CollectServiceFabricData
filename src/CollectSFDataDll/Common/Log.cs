@@ -222,15 +222,16 @@ namespace CollectSFData.Common
 
                 if (!LogFileEnabled)
                 {
-                    if (!Directory.Exists(Path.GetDirectoryName(logFile)))
+                    string directoryName = Path.GetDirectoryName(logFile);
+                    if (!string.IsNullOrEmpty(directoryName) && !Directory.Exists(directoryName))
                     {
-                        Directory.CreateDirectory(Path.GetDirectoryName(logFile));
+                        Directory.CreateDirectory(directoryName);
                     }
 
                     File.Create(logFile).Close();
                     LogFileEnabled = true;
                 }
-                
+
                 return true;
             }
             catch (Exception e)
