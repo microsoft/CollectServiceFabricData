@@ -56,21 +56,8 @@ namespace CollectSFData.Common
             get => _endTime;
             set
             {
-                if (string.IsNullOrEmpty(value))
-                {
-                    return;
-                }
-
-                DateTimeOffset dto;
-
-                if (DateTimeOffset.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.None, out dto))
-                {
-                    EndTimeUtc = dto.UtcDateTime;
-                    _endTime = value;
-                    return;
-                }
-
-                throw new FormatException($"EndTimeStamp (--to) invalid format, got '{value}' but expecting pattern:{DefaultDatePattern}");
+                EndTimeUtc = ConvertToUtcTime(value);
+                _endTime = ConvertToUtcTimeString(value);
             }
         }
 
@@ -155,21 +142,8 @@ namespace CollectSFData.Common
             get => _startTime;
             set
             {
-                if (string.IsNullOrEmpty(value))
-                {
-                    return;
-                }
-
-                DateTimeOffset dto;
-
-                if (DateTimeOffset.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.None, out dto))
-                {
-                    StartTimeUtc = dto.UtcDateTime;
-                    _startTime = value;
-                    return;
-                }
-
-                throw new FormatException($"StartTimeStamp (--from) invalid format, got '{value}' but was expecting pattern:{DefaultDatePattern}");
+                StartTimeUtc = ConvertToUtcTime(value);
+                _startTime = ConvertToUtcTimeString(value);
             }
         }
 
@@ -728,6 +702,7 @@ namespace CollectSFData.Common
 
         public bool ValidateTime()
         {
+            Log.Info("enter");
             bool retval = true;
 
             if (string.IsNullOrEmpty(_startTime) != string.IsNullOrEmpty(_endTime))
@@ -738,7 +713,11 @@ namespace CollectSFData.Common
 
             if (!string.IsNullOrEmpty(_startTime) & !string.IsNullOrEmpty(_endTime))
             {
-                if (EndTimeUtc <= StartTimeUtc)
+                if (ConvertToUtcTime(_startTime) == DateTime.MinValue | ConvertToUtcTime(_endTime) == DateTime.MinValue)
+                {
+                    retval = false;
+                }
+                else if (EndTimeUtc <= StartTimeUtc)
                 {
                     Log.Error("supply start time less than end time");
                     retval = false;
@@ -753,7 +732,44 @@ namespace CollectSFData.Common
                 }
             }
 
+            Log.Info($"exit:return:{retval}");
             return retval;
+        }
+
+
+        private DateTime ConvertToUtcTime(string timeString)
+        {
+            DateTimeOffset dateTimeOffset;
+
+            if (DateTimeOffset.TryParse(timeString, CultureInfo.InvariantCulture, DateTimeStyles.None, out dateTimeOffset))
+            {
+                Log.Info($"TimeStamp valid format:input:'{timeString}'");
+                return dateTimeOffset.UtcDateTime;
+            }
+
+            Log.Error($"TimeStamp invalid format:input:'{timeString}' but expecting pattern:'{DefaultDatePattern}' example:'{DateTime.Now.ToString(DefaultDatePattern)}'");
+            return DateTime.MinValue;
+        }
+
+        private string ConvertToUtcTimeString(string timeString)
+        {
+            DateTime dateTime = DateTime.MinValue;
+
+            if (string.IsNullOrEmpty(timeString))
+            {
+                Log.Warning("empty time string");
+            }
+            else
+            {
+                dateTime = ConvertToUtcTime(timeString);
+                if (dateTime != DateTime.MinValue)
+                {
+                    timeString = dateTime.ToString("o");
+                }
+            }
+
+            Log.Info($"returning:time string:'{timeString}'");
+            return timeString;
         }
 
         private static FileTypesEnum ConvertFileType(string fileTypeString)
