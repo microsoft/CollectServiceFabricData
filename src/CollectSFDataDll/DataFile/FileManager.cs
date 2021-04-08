@@ -58,12 +58,6 @@ namespace CollectSFData.DataFile
 
             if (fileObject.DownloadAction != null)
             {
-                if (_fileTasks.IsCancellationRequested)
-                {
-                    Log.Debug("skipping download. _fileTasks cancelled.");
-                    return new FileObjectCollection();
-                }
-
                 Log.Info($"downloading:{fileObject.FileUri}", ConsoleColor.Cyan, ConsoleColor.DarkBlue);
                 _fileTasks.TaskAction(fileObject.DownloadAction).Wait();
                 Log.Info($"downloaded:{fileObject.FileUri}", ConsoleColor.DarkCyan, ConsoleColor.DarkBlue);
