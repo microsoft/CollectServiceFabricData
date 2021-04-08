@@ -513,7 +513,7 @@ namespace CollectSFData.Kusto
 
         private void QueueMonitor()
         {
-            while (!_tokenSource.IsCancellationRequested | IngestFileObjectsPending.Any())
+            while ((!_tokenSource.IsCancellationRequested | IngestFileObjectsPending.Any()) & !_kustoTasks.IsCancellationRequested)
             {
                 Thread.Sleep(ThreadSleepMs100);
                 QueueMessageMonitor();
@@ -610,18 +610,25 @@ namespace CollectSFData.Kusto
             CloudBlobContainer blobContainer = new CloudBlobContainer(blobUri);
             CloudBlockBlob blockBlob = blobContainer.GetBlockBlobReference(blobName);
 
-            if (Config.UseMemoryStream)
+            if (!_kustoTasks.IsCancellationRequested)
             {
-                _kustoTasks.TaskAction(() => blockBlob.UploadFromStreamAsync(fileObject.Stream.Get(), null, blobRequestOptions, null).Wait()).Wait();
-                fileObject.Stream.Dispose();
+                if (Config.UseMemoryStream)
+                {
+                    _kustoTasks.TaskAction(() => blockBlob.UploadFromStreamAsync(fileObject.Stream.Get(), null, blobRequestOptions, null).Wait()).Wait();
+                    fileObject.Stream.Dispose();
+                }
+                else
+                {
+                    _kustoTasks.TaskAction(() => blockBlob.UploadFromFileAsync(fileObject.FileUri, null, blobRequestOptions, null).Wait()).Wait();
+                }
+
+                Log.Info($"uploaded: {fileObject.FileUri} to {blobContainerUri}", ConsoleColor.DarkMagenta);
+                return $"{blockBlob.Uri.AbsoluteUri}{blobUri.Query}";
             }
             else
             {
-                _kustoTasks.TaskAction(() => blockBlob.UploadFromFileAsync(fileObject.FileUri, null, blobRequestOptions, null).Wait()).Wait();
+                return null;
             }
-
-            Log.Info($"uploaded: {fileObject.FileUri} to {blobContainerUri}", ConsoleColor.DarkMagenta);
-            return $"{blockBlob.Uri.AbsoluteUri}{blobUri.Query}";
         }
     }
 }
