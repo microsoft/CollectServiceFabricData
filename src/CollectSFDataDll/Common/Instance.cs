@@ -12,12 +12,14 @@ namespace CollectSFData.Common
 {
     public class Instance : Constants
     {
-        protected internal ConfigurationOptions Config;
-        public FileManager FileMgr;
-        public bool IsWindows = Environment.OSVersion.Platform.Equals(PlatformID.Win32NT);
-        public KustoConnection Kusto;
-        public LogAnalyticsConnection LogAnalytics;
-        public DateTime StartTime;
+        protected internal ConfigurationOptions Config { get; set; }
+        public FileManager FileMgr { get; set; }
+        public bool IsWindows { get; } = Environment.OSVersion.Platform.Equals(PlatformID.Win32NT);
+        public KustoConnection Kusto { get; set; }
+        public LogAnalyticsConnection LogAnalytics { get; set; }
+        public DateTime StartTime { get; set; }
+
+        public bool TimedOut;
         public int TotalErrors;
         public int TotalFilesConverted;
         public int TotalFilesDownloaded;
@@ -49,6 +51,7 @@ namespace CollectSFData.Common
             _instance.Kusto = new KustoConnection();
             _instance.LogAnalytics = new LogAnalyticsConnection();
             _instance.StartTime = DateTime.Now;
+            _instance.TimedOut = false;
             _instance.TotalErrors = 0;
             _instance.TotalFilesConverted = 0;
             _instance.TotalFilesDownloaded = 0;
