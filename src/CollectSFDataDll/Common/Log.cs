@@ -244,12 +244,9 @@ namespace CollectSFData.Common
 
         private static void CloseFile()
         {
-            if (_streamWriter != null)
-            {
-                _streamWriter.Flush();
-                _streamWriter.Close();
-                _streamWriter = null;
-            }
+            _streamWriter?.Flush();
+            _streamWriter?.Close();
+            _streamWriter = null;
         }
 
         private static void Log_JsonErrorHandler(object sender, Newtonsoft.Json.Serialization.ErrorEventArgs e)
