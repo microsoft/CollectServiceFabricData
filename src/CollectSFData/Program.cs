@@ -27,20 +27,10 @@ namespace CollectSFData
                 Console.WriteLine("only supported on win32 x64");
             }
 
-            // default constructor
             Collector collector = new Collector(args, true);
-
-            // use config to modify / validate configuration parameters
-            // config.Validate();
             ConfigurationOptions config = collector.Config;
 
-            // collect data
             int retval = collector.Collect();
-
-            // or use Clone() to create shallow copy for multiple configurations
-            // ConfigurationOptions config = collector.Config.Clone();
-            // config.LogDebug = 6;
-            // int retval = collector.Collect(config);
 
             // mitigation for dtr files not being csv compliant causing kusto ingest to fail
             if ((collector.Instance.Kusto.IngestFileObjectsFailed.Count() > 0
@@ -55,9 +45,10 @@ namespace CollectSFData
                 // change config to download files to parse and fix csv fields
                 config.KustoUseBlobAsSource = false;
                 config.KustoRecreateTable = false;
+
                 config.FileUris = kusto.IngestFileObjectsFailed.Select(x => x.FileUri).ToArray();
                 config.FileUris.AddRange(kusto.IngestFileObjectsPending.Select(x => x.FileUri).ToList());
-                retval = collector.Collect(config);
+                retval = collector.Collect();
             }
 
             return retval;
