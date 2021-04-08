@@ -79,7 +79,11 @@ Minimum configuration has to be set before calling Collector.Collect(). The main
 
 ### Calling Collector.Collect()
 
-Once configuration options have been set, call Collector.Collect(). Collect can optionally be passed list of Uris that need to be ingested. See example below on how to use.
+Once configuration options have been set, call Collector.Collect(). 
+Collect can optionally be passed ConfigurationsOptions for queueing multiple configurations to collect.
+Use Clone() to create a shallow copy of existing configuration.
+
+See examples below on how to use:
 
 ### Example
 
@@ -87,9 +91,7 @@ Once configuration options have been set, call Collector.Collect(). Collect can 
 private static int Main(string[] args)
 {
         Collector collector = new Collector(args, true);
-        ConfigurationOptions config = collector.Instance.Config;
-
-        Log.MessageLogged += Log_MessageLogged;
+        ConfigurationOptions config = collector.Config;
 
         config.GatherType = FileTypesEnum.counter.ToString();
         config.UseMemoryStream = true;
@@ -101,15 +103,31 @@ private static int Main(string[] args)
         //config.Validate();
 
         return collector.Collect();
-
-        /*
-        return collector.Collect(new List<string> 
-        {
-                "C:\\temp\\test\\counter\\DataCollector01.blg"
-        });
-        */
 }
 ```
+
+### Example
+
+```c#
+private static int Main(string[] args)
+{
+        Collector collector = new Collector(args, true);
+        ConfigurationOptions config = collector.Config.Clone();
+
+        config.GatherType = FileTypesEnum.counter.ToString();
+        config.UseMemoryStream = true;
+        config.KustoCluster = "https://ingest-sfcluster.kusto.windows.net/sfdatabase";
+        config.KustoTable = "sfclusterlogs";
+        config.KustoRecreateTable = true;
+        config.LogDebug = 5;
+        config.LogFile = "c:\\temp\\csfd.3.log";
+        //config.Validate();
+
+        return collector.Collect(config);
+
+}
+```
+
 
 ## Logging
 
@@ -118,12 +136,18 @@ Externally there is logging both to console output and optionally to a log file.
 ### Example
 
 
+LogMessage Callback
 ```c#
+Log.MessageLogged += Log_MessageLogged;
+
 private static void Log_MessageLogged(object sender, LogMessage args)
 {
     Console.WriteLine(args.Message);
 }
+```
 
+LogMessage Class
+```c#
 public class LogMessage : EventArgs
 {
     public ConsoleColor? BackgroundColor {get; set;}
@@ -155,20 +179,23 @@ private static int Main(string[] args)
 
     int retval = collector.Collect();
 
-    // mitigation for dtr files not being csv compliant
-    // causing kusto ingest to fail
-    if (collector.Instance.Kusto.IngestFileObjectsFailed.Count() > 0
+    // mitigation for dtr files not being csv compliant causing kusto ingest to fail
+    if ((collector.Instance.Kusto.IngestFileObjectsFailed.Count() > 0
+        | collector.Instance.Kusto.IngestFileObjectsPending.Count() > 0)
         && config.IsKustoConfigured()
         && config.KustoUseBlobAsSource == true
         && config.FileType == DataFile.FileTypesEnum.trace)
     {
-    KustoConnection kusto = collector.Instance.Kusto;
-    Log.Warning("failed ingests due to csv compliance. restarting.");
+        KustoConnection kusto = collector.Instance.Kusto;
+        Log.Warning("failed ingests due to csv compliance. restarting.");
 
-    // change config to download files to parse and fix csv fields
-    config.KustoUseBlobAsSource = false;
-    config.KustoRecreateTable = false;
-    retval = collector.Collect(kusto.IngestFileObjectsFailed.Select(x => x.FileUri).ToList());
+        // change config to download files to parse and fix csv fields
+        config.KustoUseBlobAsSource = false;
+        config.KustoRecreateTable = false;
+
+        config.FileUris = kusto.IngestFileObjectsFailed.Select(x => x.FileUri).ToArray();
+        config.FileUris.AddRange(kusto.IngestFileObjectsPending.Select(x => x.FileUri).ToList());
+        retval = collector.Collect();
     }
 
     return retval;
@@ -179,10 +206,13 @@ private static int Main(string[] args)
 
 ### NuGet Package Layout
 
-The current layout of nuget package looks similar to below. Both .net framework and .net core versions are provided in both exe and dll format. The exe's are located in the 'tools' directory and include all the required dependent dll's for direct use from command line.
+The current layout of nuget package looks similar to below. 
+Both .net framework and .net core versions are provided in both exe and dll format. 
+The exe's are located in the 'tools' directory and include all the required dependent dll's for direct use from command line.
+Binaries are signed.
 
 ```text
-\MICROSOFT.SERVICEFABRIC.COLLECTSFDATA.2.8.2102.1080317.NUPKG
+C:.
 |   Microsoft.ServiceFabric.CollectSFData.nuspec
 |   [Content_Types].xml
 |
@@ -190,6 +220,11 @@ The current layout of nuget package looks similar to below. Both .net framework 
 |       FabricSupport.png
 |
 +---lib
+|   +---net462
+|   |       CollectSFDataDll.dll
+|   |       Sf.Tx.Core.dll
+|   |       Sf.Tx.Windows.dll
+|   |
 |   +---net472
 |   |       CollectSFDataDll.dll
 |   |       Sf.Tx.Core.dll
@@ -204,9 +239,140 @@ The current layout of nuget package looks similar to below. Both .net framework 
 |   \---services
 |       \---metadata
 |           \---core-properties
-|                   de55b4d8f8f74dbe9582305e2fc0996e.psmdcp
+|                   59d18c1edf7540bd9f273bd2344bed15.psmdcp
 |
 +---tools
+|   +---net462
+|   |       CollectSFData.exe
+|   |       CollectSFData.exe.config
+|   |       collectsfdata.options.json
+|   |       CollectSFDataDll.dll
+|   |       Kusto.Cloud.Platform.Azure.dll
+|   |       Kusto.Cloud.Platform.dll
+|   |       Kusto.Data.dll
+|   |       Kusto.Ingest.dll
+|   |       Microsoft.Azure.KeyVault.Core.dll
+|   |       Microsoft.Azure.KeyVault.dll
+|   |       Microsoft.Azure.KeyVault.WebKey.dll
+|   |       Microsoft.Azure.Storage.Blob.dll
+|   |       Microsoft.Azure.Storage.Common.dll
+|   |       Microsoft.Azure.Storage.Queue.dll
+|   |       Microsoft.Extensions.CommandLineUtils.dll
+|   |       Microsoft.Identity.Client.dll
+|   |       Microsoft.Identity.Client.Extensions.Msal.dll
+|   |       Microsoft.IdentityModel.Clients.ActiveDirectory.dll
+|   |       Microsoft.IO.RecyclableMemoryStream.dll
+|   |       Microsoft.Rest.ClientRuntime.Azure.dll
+|   |       Microsoft.Rest.ClientRuntime.dll
+|   |       Microsoft.Win32.Primitives.dll
+|   |       Microsoft.WindowsAzure.Storage.dll
+|   |       netstandard.dll
+|   |       Newtonsoft.Json.dll
+|   |       Sf.Tx.Core.dll
+|   |       Sf.Tx.Windows.dll
+|   |       System.AppContext.dll
+|   |       System.CodeDom.dll
+|   |       System.Collections.Concurrent.dll
+|   |       System.Collections.dll
+|   |       System.Collections.Immutable.dll
+|   |       System.Collections.NonGeneric.dll
+|   |       System.Collections.Specialized.dll
+|   |       System.ComponentModel.dll
+|   |       System.ComponentModel.EventBasedAsync.dll
+|   |       System.ComponentModel.Primitives.dll
+|   |       System.ComponentModel.TypeConverter.dll
+|   |       System.Console.dll
+|   |       System.Data.Common.dll
+|   |       System.Data.SqlClient.dll
+|   |       System.Diagnostics.Contracts.dll
+|   |       System.Diagnostics.Debug.dll
+|   |       System.Diagnostics.FileVersionInfo.dll
+|   |       System.Diagnostics.Process.dll
+|   |       System.Diagnostics.StackTrace.dll
+|   |       System.Diagnostics.TextWriterTraceListener.dll
+|   |       System.Diagnostics.Tools.dll
+|   |       System.Diagnostics.TraceSource.dll
+|   |       System.Diagnostics.Tracing.dll
+|   |       System.Drawing.Primitives.dll
+|   |       System.Dynamic.Runtime.dll
+|   |       System.Globalization.Calendars.dll
+|   |       System.Globalization.dll
+|   |       System.Globalization.Extensions.dll
+|   |       System.IO.Compression.dll
+|   |       System.IO.Compression.ZipFile.dll
+|   |       System.IO.dll
+|   |       System.IO.FileSystem.dll
+|   |       System.IO.FileSystem.DriveInfo.dll
+|   |       System.IO.FileSystem.Primitives.dll
+|   |       System.IO.FileSystem.Watcher.dll
+|   |       System.IO.IsolatedStorage.dll
+|   |       System.IO.MemoryMappedFiles.dll
+|   |       System.IO.Pipes.dll
+|   |       System.IO.UnmanagedMemoryStream.dll
+|   |       System.Linq.dll
+|   |       System.Linq.Expressions.dll
+|   |       System.Linq.Parallel.dll
+|   |       System.Linq.Queryable.dll
+|   |       System.Net.Http.dll
+|   |       System.Net.NameResolution.dll
+|   |       System.Net.NetworkInformation.dll
+|   |       System.Net.Ping.dll
+|   |       System.Net.Primitives.dll
+|   |       System.Net.Requests.dll
+|   |       System.Net.Security.dll
+|   |       System.Net.Sockets.dll
+|   |       System.Net.WebHeaderCollection.dll
+|   |       System.Net.WebSockets.Client.dll
+|   |       System.Net.WebSockets.dll
+|   |       System.ObjectModel.dll
+|   |       System.Reactive.dll
+|   |       System.Reactive.Linq.dll
+|   |       System.Reflection.dll
+|   |       System.Reflection.Extensions.dll
+|   |       System.Reflection.Primitives.dll
+|   |       System.Resources.Reader.dll
+|   |       System.Resources.ResourceManager.dll
+|   |       System.Resources.Writer.dll
+|   |       System.Runtime.CompilerServices.VisualC.dll
+|   |       System.Runtime.dll
+|   |       System.Runtime.Extensions.dll
+|   |       System.Runtime.Handles.dll
+|   |       System.Runtime.InteropServices.dll
+|   |       System.Runtime.InteropServices.RuntimeInformation.dll
+|   |       System.Runtime.Numerics.dll
+|   |       System.Runtime.Serialization.Formatters.dll
+|   |       System.Runtime.Serialization.Json.dll
+|   |       System.Runtime.Serialization.Primitives.dll
+|   |       System.Runtime.Serialization.Xml.dll
+|   |       System.Security.Claims.dll
+|   |       System.Security.Cryptography.Algorithms.dll
+|   |       System.Security.Cryptography.Cng.dll
+|   |       System.Security.Cryptography.Csp.dll
+|   |       System.Security.Cryptography.Encoding.dll
+|   |       System.Security.Cryptography.Primitives.dll
+|   |       System.Security.Cryptography.ProtectedData.dll
+|   |       System.Security.Cryptography.X509Certificates.dll
+|   |       System.Security.Principal.dll
+|   |       System.Security.Principal.Windows.dll
+|   |       System.Security.SecureString.dll
+|   |       System.Text.Encoding.dll
+|   |       System.Text.Encoding.Extensions.dll
+|   |       System.Text.RegularExpressions.dll
+|   |       System.Threading.dll
+|   |       System.Threading.Overlapped.dll
+|   |       System.Threading.Tasks.dll
+|   |       System.Threading.Tasks.Parallel.dll
+|   |       System.Threading.Thread.dll
+|   |       System.Threading.ThreadPool.dll
+|   |       System.Threading.Timer.dll
+|   |       System.ValueTuple.dll
+|   |       System.Xml.ReaderWriter.dll
+|   |       System.Xml.XDocument.dll
+|   |       System.Xml.XmlDocument.dll
+|   |       System.Xml.XmlSerializer.dll
+|   |       System.Xml.XPath.dll
+|   |       System.Xml.XPath.XDocument.dll
+|   |
 |   +---net472
 |   |       CollectSFData.exe
 |   |       CollectSFData.exe.config
@@ -231,6 +397,8 @@ The current layout of nuget package looks similar to below. Both .net framework 
 |   |       Microsoft.Rest.ClientRuntime.dll
 |   |       Microsoft.WindowsAzure.Storage.dll
 |   |       Newtonsoft.Json.dll
+|   |       Sf.Tx.Core.dll
+|   |       Sf.Tx.Windows.dll
 |   |       System.CodeDom.dll
 |   |       System.Collections.Immutable.dll
 |   |       System.Data.SqlClient.dll
@@ -239,8 +407,6 @@ The current layout of nuget package looks similar to below. Both .net framework 
 |   |       System.Security.Cryptography.Cng.dll
 |   |       System.Security.Cryptography.ProtectedData.dll
 |   |       System.Security.Principal.Windows.dll
-|   |       Sf.Tx.Core.dll
-|   |       Sf.Tx.Windows.dll
 |   |
 |   \---netcoreapp3.1
 |           CollectSFData.dll
@@ -268,13 +434,13 @@ The current layout of nuget package looks similar to below. Both .net framework 
 |           Microsoft.Rest.ClientRuntime.dll
 |           Microsoft.WindowsAzure.Storage.dll
 |           Newtonsoft.Json.dll
+|           Sf.Tx.Core.dll
+|           Sf.Tx.Windows.dll
 |           System.CodeDom.dll
 |           System.Data.SqlClient.dll
 |           System.Reactive.dll
 |           System.Reactive.Linq.dll
 |           System.Security.Cryptography.ProtectedData.dll
-|           Sf.Tx.Core.dll
-|           Sf.Tx.Windows.dll
 |
 \---_rels
         .rels
