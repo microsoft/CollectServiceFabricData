@@ -31,7 +31,7 @@ namespace CollectSFData
 
             // use config to modify / validate config
             // config.Validate();
-            ConfigurationOptions config = collector.Instance.Config;
+            ConfigurationOptions config = collector.Config;
 
             // collect data
             int retval = collector.Collect();
