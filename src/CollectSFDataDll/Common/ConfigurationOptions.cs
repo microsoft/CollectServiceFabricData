@@ -56,7 +56,7 @@ namespace CollectSFData.Common
             get => _endTime;
             set
             {
-                if (value == null)
+                if (string.IsNullOrEmpty(value))
                 {
                     return;
                 }
@@ -70,7 +70,7 @@ namespace CollectSFData.Common
                     return;
                 }
 
-                throw new FormatException($"EndTimeStamp (--to) invalid format, got {value} but expecting pattern:{DefaultDatePattern}");
+                throw new FormatException($"EndTimeStamp (--to) invalid format, got '{value}' but expecting pattern:{DefaultDatePattern}");
             }
         }
 
@@ -155,7 +155,7 @@ namespace CollectSFData.Common
             get => _startTime;
             set
             {
-                if (value == null)
+                if (string.IsNullOrEmpty(value))
                 {
                     return;
                 }
@@ -169,7 +169,7 @@ namespace CollectSFData.Common
                     return;
                 }
 
-                throw new FormatException($"StartTimeStamp (--from) invalid format, got {value} but was expecting pattern:{DefaultDatePattern}");
+                throw new FormatException($"StartTimeStamp (--from) invalid format, got '{value}' but was expecting pattern:{DefaultDatePattern}");
             }
         }
 
@@ -188,7 +188,7 @@ namespace CollectSFData.Common
         public bool UseMemoryStream { get; set; } = true;
 
         public bool UseTx { get; set; }
-        
+
         public bool VersionOption { get; set; }
 
         public ConfigurationOptions()
@@ -515,12 +515,12 @@ namespace CollectSFData.Common
 
             if (IsKustoConfigured())
             {
-                options.Property("KustoTable").Value = Regex.Replace(KustoTable, $"^{GatherType}_", "");
+                options.Property("KustoTable").Value = CleanTableName(KustoTable);
             }
 
             if (IsLogAnalyticsConfigured())
             {
-                options.Property("LogAnalyticsName").Value = Regex.Replace(LogAnalyticsName, $"^{GatherType}_", "");
+                options.Property("LogAnalyticsName").Value = CleanTableName(LogAnalyticsName);
             }
 
             if (!IsCacheLocationPreConfigured())
@@ -594,7 +594,7 @@ namespace CollectSFData.Common
 
             if (IsKustoConfigured() | IsKustoPurgeRequested())
             {
-                KustoTable = FileType + "_" + Regex.Replace(KustoTable, $"^{FileType}_", "");
+                KustoTable = CleanTableName(KustoTable, true);
                 Log.Info($"adding prefix to KustoTable: {KustoTable}");
 
                 if (IsKustoPurgeRequested())
@@ -621,7 +621,7 @@ namespace CollectSFData.Common
 
             if (IsLogAnalyticsConfigured() | IsLogAnalyticsPurgeRequested())
             {
-                LogAnalyticsName = FileType + "_" + LogAnalyticsName;
+                LogAnalyticsName = CleanTableName(LogAnalyticsName, true);
                 Log.Info($"adding prefix to logAnalyticsName: {LogAnalyticsName}");
 
                 if (IsLogAnalyticsConfigured() & Unique & string.IsNullOrEmpty(AzureSubscriptionId))
@@ -820,6 +820,16 @@ namespace CollectSFData.Common
                 Log.LogFile = FileManager.NormalizePath(LogFile);
                 Log.Info($"setting output log file to: {LogFile}");
             }
+        }
+
+        private string CleanTableName(string tableName, bool withGatherType = false)
+        {
+            if (withGatherType)
+            {
+                return FileType + "_" + Regex.Replace(tableName, $"^({FileType}_)", "", RegexOptions.IgnoreCase);
+            }
+
+            return Regex.Replace(tableName, $"^({FileType}_)", "", RegexOptions.IgnoreCase);
         }
 
         private bool DefaultConfig()
