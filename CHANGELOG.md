@@ -1,6 +1,17 @@
 # Change log
 
-## 03/09/2021  
+## 04/08/2021
+
+- fix intermittent table name truncation after gathertype bad: trace_agilber_test good: trace_jagilber_test
+- modify NoProgressTimeout from throw exception to tasks Cancel() allowing collector.Collect() to return 1 to caller
+- modify EndTimeStamp / StartTimeStamp to ignore empty strings
+- modify Log.Last to always log regardless of LogDebug value
+- sync Sf.Tx with microsoft.Tx final changes for DateTimeKind.Unspecified. waiting for next microsoft.Tx release to remove Sf.Tx
+- update collectsfdata.schema.json with additional examples
+- fix creation of log name when directory is not specified. will create in working directory
+- expose ConfigurationOptions on collector instead of instance
+
+## 03/09/2021  https://github.com/microsoft/CollectServiceFabricData/releases/tag/v2.9.2103.10923
 
 - 2.9
 - add strong name signing for binaries for jarvis integration
