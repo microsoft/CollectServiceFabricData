@@ -36,7 +36,6 @@ namespace CollectSFData
         {
             _args = args;
             Log.IsConsole = isConsole;
-            //Initialize();
         }
 
         public int Collect(ConfigurationOptions configurationOptions)
@@ -267,6 +266,7 @@ namespace CollectSFData
             Log.Last($"{Instance.TotalFilesSkipped} files skipped.");
             Log.Last($"{Instance.TotalFilesFormatted} files formatted.");
             Log.Last($"{Instance.TotalErrors} errors.");
+            Log.Last($"timed out: {Instance.TimedOut}.");
             Log.Last($"{Instance.TotalRecords} records.");
 
             if (Instance.TotalFilesEnumerated > 0)
@@ -337,12 +337,10 @@ namespace CollectSFData
                         Log.Warning($"kusto failed:", Instance.Kusto.IngestFileObjectsFailed);
                     }
 
-                    LogSummary();
-
                     string message = $"no progress timeout reached {Config.NoProgressTimeoutMin}. exiting application.";
                     Log.Error(message);
-                    Log.Reset();
-                    throw new TimeoutException(message);
+                    Instance.TimedOut = true;
+                    CustomTaskManager.Cancel();
                 }
 
                 ++_noProgressCounter;
@@ -357,6 +355,12 @@ namespace CollectSFData
         private void QueueForIngest(FileObject fileObject)
         {
             Log.Debug("enter");
+
+            if (_taskManager.IsCancellationRequested)
+            {
+                Log.Debug("skipping ingest. _taskManager cancelled.");
+                return;
+            }
 
             if (Config.IsKustoConfigured() | Config.IsLogAnalyticsConfigured())
             {
@@ -374,6 +378,8 @@ namespace CollectSFData
             {
                 _taskManager.QueueTaskAction(() => Instance.FileMgr.ProcessFile(fileObject));
             }
+
+            Log.Debug("exit");
         }
 
         private void UploadCacheData()
