@@ -89,7 +89,10 @@ namespace CollectSFData.Azure
 
             foreach (BlobResultSegment segment in EnumerateContainerBlobs(container))
             {
-                _blobTasks.TaskAction(() => QueueBlobSegmentDownload(segment.Results));
+                if(!_blobTasks.IsCancellationRequested)
+                {
+                    _blobTasks.TaskAction(() => QueueBlobSegmentDownload(segment.Results));
+                }
             }
         }
 
@@ -99,7 +102,10 @@ namespace CollectSFData.Azure
 
             foreach (BlobResultSegment segment in EnumerateDirectoryBlobs(directory))
             {
-                _blobChildTasks.TaskAction(() => QueueBlobSegmentDownload(segment.Results));
+                if(!_blobChildTasks.IsCancellationRequested)
+                {
+                    _blobChildTasks.TaskAction(() => QueueBlobSegmentDownload(segment.Results));
+                }
             }
         }
 
@@ -134,7 +140,7 @@ namespace CollectSFData.Azure
             BlobResultSegment resultSegment = default(BlobResultSegment);
             BlobContinuationToken blobToken = null;
 
-            while (true)
+            while (!_blobTasks.IsCancellationRequested)
             {
                 resultSegment = _blobTasks.TaskFunction((blobresultsegment) =>
                 cloudBlobContainer.ListBlobsSegmentedAsync(
@@ -257,7 +263,7 @@ namespace CollectSFData.Azure
             BlobResultSegment resultSegment = default(BlobResultSegment);
             BlobContinuationToken blobToken = null;
 
-            while (true)
+            while (!_blobChildTasks.IsCancellationRequested)
             {
                 resultSegment = _blobChildTasks.TaskFunction((blobresultsegment) =>
                 cloudBlobDirectory.ListBlobsSegmentedAsync(
