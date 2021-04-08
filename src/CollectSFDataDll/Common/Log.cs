@@ -159,10 +159,7 @@ namespace CollectSFData.Common
                                 object jsonSerializer = null,
                                 [CallerMemberName] string callerName = "")
         {
-            if (LogDebug >= LoggingLevel.Warning)
-            {
-                Process(message, foregroundColor, backgroundColor, jsonSerializer, false, true, callerName: callerName);
-            }
+            Process(message, foregroundColor, backgroundColor, jsonSerializer, false, true, callerName: callerName);
         }
 
         public static void Min(string message,
