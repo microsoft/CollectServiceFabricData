@@ -89,10 +89,7 @@ namespace CollectSFData.Azure
 
             foreach (BlobResultSegment segment in EnumerateContainerBlobs(container))
             {
-                if(!_blobTasks.IsCancellationRequested)
-                {
-                    _blobTasks.TaskAction(() => QueueBlobSegmentDownload(segment.Results));
-                }
+                _blobTasks.TaskAction(() => QueueBlobSegmentDownload(segment.Results));
             }
         }
 
@@ -102,10 +99,7 @@ namespace CollectSFData.Azure
 
             foreach (BlobResultSegment segment in EnumerateDirectoryBlobs(directory))
             {
-                if(!_blobChildTasks.IsCancellationRequested)
-                {
-                    _blobChildTasks.TaskAction(() => QueueBlobSegmentDownload(segment.Results));
-                }
+                _blobChildTasks.TaskAction(() => QueueBlobSegmentDownload(segment.Results));
             }
         }
 
