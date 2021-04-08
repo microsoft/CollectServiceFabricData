@@ -91,9 +91,11 @@ namespace CollectSFData
             }
             finally
             {
-                CustomTaskManager.Reset();
-                Log.Close();
+                CustomTaskManager.Cancel();
                 _noProgressTimer?.Dispose();
+                Log.Close();
+
+                CustomTaskManager.Resume();
             }
         }
 
@@ -136,6 +138,7 @@ namespace CollectSFData
 
         public bool Initialize()
         {
+            _noProgressCounter = 0;
             _noProgressTimer = new Timer(NoProgressCallback, null, 0, 60 * 1000);
             Log.Open();
             CustomTaskManager.Resume();
@@ -311,9 +314,10 @@ namespace CollectSFData
         {
             Log.Highlight($"checking progress {_noProgressCounter} of {Config.NoProgressTimeoutMin}.");
 
-            if (Config.NoProgressTimeoutMin < 1)
+            if (Config.NoProgressTimeoutMin < 1 | _taskManager.IsCancellationRequested)
             {
-                _noProgressTimer.Dispose();
+                _noProgressTimer?.Dispose();
+                return;
             }
 
             Tuple<int, int, int, int, int, int, int> tuple = new Tuple<int, int, int, int, int, int, int>(
