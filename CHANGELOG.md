@@ -1,5 +1,16 @@
 # Change log
 
+## 04/08/2021
+
+- fix intermittent table name truncation after gathertype bad: trace_agilber_test good: trace_jagilber_test
+- modify NoProgressTimeout from throw exception to tasks Cancel() allowing collector.Collect() to return 1 to caller
+- modify EndTimeStamp / StartTimeStamp to ignore empty strings
+- modify Log.Last to always log regardless of LogDebug value
+- sync Sf.Tx with microsoft.Tx final changes for DateTimeKind.Unspecified. waiting for next microsoft.Tx release to remove Sf.Tx
+- update collectsfdata.schema.json with additional examples
+- fix creation of log name when directory is not specified. will create in working directory
+- expose ConfigurationOptions on collector instead of instance
+
 ## 04/06/2021
 
 - add FileUris string array optional parameter (-uris|--fileUris) to pass file uri strings for upload. this will override default file collection from service fabric diagnosticsStore
@@ -39,7 +50,7 @@
     int retval = collector.Collect(config);
     ```
 
-## 03/09/2021 https://github.com/microsoft/CollectServiceFabricData/releases/tag/v2.9.2103.10923
+## 03/09/2021  https://github.com/microsoft/CollectServiceFabricData/releases/tag/v2.9.2103.10923
 
 - 2.9
 - add strong name signing for binaries for jarvis integration
