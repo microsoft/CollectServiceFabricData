@@ -627,7 +627,7 @@ namespace CollectSFData.Kusto
             }
             else
             {
-                return null;
+                return $"task cancelled:{blockBlob.Uri.AbsoluteUri}{blobUri.Query}";
             }
         }
     }
