@@ -6,6 +6,7 @@
 using CollectSFData.Common;
 using CollectSFData.Kusto;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace CollectSFData
@@ -37,7 +38,8 @@ namespace CollectSFData
             int retval = collector.Collect();
 
             // mitigation for dtr files not being csv compliant causing kusto ingest to fail
-            if (collector.Instance.Kusto.IngestFileObjectsFailed.Count() > 0
+            if ((collector.Instance.Kusto.IngestFileObjectsFailed.Count() > 0
+                | collector.Instance.Kusto.IngestFileObjectsPending.Count() > 0)
                 && config.IsKustoConfigured()
                 && config.KustoUseBlobAsSource == true
                 && config.FileType == DataFile.FileTypesEnum.trace)
@@ -48,7 +50,11 @@ namespace CollectSFData
                 // change config to download files to parse and fix csv fields
                 config.KustoUseBlobAsSource = false;
                 config.KustoRecreateTable = false;
-                retval = collector.Collect(kusto.IngestFileObjectsFailed.Select(x => x.FileUri).ToList());
+
+                List<string> ingestList = kusto.IngestFileObjectsFailed.Select(x => x.FileUri).ToList();
+                ingestList.AddRange(kusto.IngestFileObjectsPending.Select(x => x.FileUri).ToList());
+
+                retval = collector.Collect(ingestList);
             }
 
             return retval;
