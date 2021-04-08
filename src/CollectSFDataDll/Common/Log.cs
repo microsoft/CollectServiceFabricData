@@ -26,7 +26,7 @@ namespace CollectSFData.Common
         private static SynchronizedList<LogMessage> _messageList = new SynchronizedList<LogMessage>();
         private static StreamWriter _streamWriter;
         private static Task _taskWriter;
-        private static CancellationTokenSource _taskWriterCancellationToken;
+        private static CancellationTokenSource _taskWriterCancellationToken => CustomTaskManager.CancellationTokenSource;
         private static int _threadSleepMs = Constants.ThreadSleepMs100;
 
         public delegate void LogMessageHandler(object sender, LogMessage args);
@@ -57,22 +57,26 @@ namespace CollectSFData.Common
             Open();
         }
 
-        public static void Reset()
-        {
-            Close();
-            Open();
-        }
-
         public static void Close()
         {
             try
             {
-                _messageList.AddRange(_lastMessageList);
-                _lastMessageList.Clear();
-                _taskWriterCancellationToken.Cancel();
-                _taskWriter.Wait();
-                _taskWriter.Dispose();
-                _isRunning = false;
+                if (_isRunning)
+                {
+                    _messageList.AddRange(_lastMessageList);
+                    _lastMessageList.Clear();
+
+                    if (_taskWriterCancellationToken.IsCancellationRequested)
+                    {
+                        _taskWriter.Wait();
+                    }
+                    else if (_messageList.Any())
+                    {
+                        _taskWriter.Wait(Constants.ThreadSleepMs1000);
+                    }
+
+                    _isRunning = false;
+                }
             }
             catch (TaskCanceledException) { }
             catch (AggregateException e)
@@ -178,7 +182,6 @@ namespace CollectSFData.Common
         {
             if (!_isRunning)
             {
-                _taskWriterCancellationToken = new CancellationTokenSource();
                 _taskWriter = new Task(TaskWriter, _taskWriterCancellationToken.Token);
                 _taskWriter.Start();
                 _isRunning = true;
@@ -343,7 +346,7 @@ namespace CollectSFData.Common
             while (!_taskWriterCancellationToken.IsCancellationRequested
                 || (_taskWriterCancellationToken.IsCancellationRequested & _messageList.Any()))
             {
-                while (_messageList.Any())
+                while (_messageList.Any() & _isRunning)
                 {
                     foreach (LogMessage result in _messageList.DeListAll())
                     {
@@ -359,7 +362,15 @@ namespace CollectSFData.Common
                     }
                 }
 
-                Thread.Sleep(_threadSleepMs);
+                if (_isRunning)
+                {
+                    Thread.Sleep(_threadSleepMs);
+                }
+                else
+                {
+                    _messageList.Clear();
+                    break;
+                }
             }
 
             CloseFile();
