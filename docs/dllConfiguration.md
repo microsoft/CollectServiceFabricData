@@ -193,8 +193,10 @@ private static int Main(string[] args)
         config.KustoUseBlobAsSource = false;
         config.KustoRecreateTable = false;
 
-        config.FileUris = kusto.IngestFileObjectsFailed.Select(x => x.FileUri).ToArray();
-        config.FileUris.AddRange(kusto.IngestFileObjectsPending.Select(x => x.FileUri).ToList());
+        List<string> ingestList = kusto.IngestFileObjectsFailed.Select(x => x.FileUri).ToList();
+        ingestList.AddRange(kusto.IngestFileObjectsPending.Select(x => x.FileUri));
+        config.FileUris = ingestList.ToArray();
+
         retval = collector.Collect();
     }
 
