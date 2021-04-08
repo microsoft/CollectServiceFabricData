@@ -28,7 +28,7 @@ namespace CollectSFData
         private Tuple<int, int, int, int, int, int, int> _progressTuple = new Tuple<int, int, int, int, int, int, int>(0, 0, 0, 0, 0, 0, 0);
         private CustomTaskManager _taskManager = new CustomTaskManager(true);
 
-        private ConfigurationOptions Config => Instance.Config;
+        public ConfigurationOptions Config => Instance.Config;
 
         public Instance Instance { get; } = Instance.Singleton();
 
