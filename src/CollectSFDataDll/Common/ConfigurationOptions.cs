@@ -594,7 +594,7 @@ namespace CollectSFData.Common
 
             if (IsKustoConfigured() | IsKustoPurgeRequested())
             {
-                KustoTable = FileType + "_" + KustoTable.TrimStart(FileType.ToString().ToCharArray()).TrimStart('_');
+                KustoTable = FileType + "_" + Regex.Replace(KustoTable, $"^{FileType}_", "");
                 Log.Info($"adding prefix to KustoTable: {KustoTable}");
 
                 if (IsKustoPurgeRequested())
