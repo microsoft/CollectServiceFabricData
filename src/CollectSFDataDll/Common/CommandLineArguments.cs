@@ -13,6 +13,8 @@ namespace CollectSFData.Common
     {
         public CommandOption AzureClientId { get; set; }
 
+        public CommandOption AzureClientCertificate { get; set; }
+
         public CommandOption AzureClientSecret { get; set; }
 
         public CommandOption AzureResourceGroup { get; set; }
@@ -337,6 +339,12 @@ namespace CollectSFData.Common
 
             AzureClientId = CmdLineApp.Option("-client|--azureClientId",
                     $"[string] azure application id / client id for use with authentication" +
+                    $"{newLine} for non interactive to kusto. default is to use integrated AAD auth token" +
+                    $"{newLine} and leave this blank.",
+                    CommandOptionType.SingleValue);
+
+            AzureClientCertificate = CmdLineApp.Option("-cert|--azureClientCertificate",
+                    $"[string] azure application id / client id certificate for use with authentication" +
                     $"{newLine} for non interactive to kusto. default is to use integrated AAD auth token" +
                     $"{newLine} and leave this blank.",
                     CommandOptionType.SingleValue);
