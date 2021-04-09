@@ -11,6 +11,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -175,7 +176,14 @@ namespace CollectSFData.Azure
             }
             else if (Config.IsClientIdConfigured() & !prompt)
             {
-                CreateConfidentialClient(resource);
+                if (!string.IsNullOrEmpty(Config.AzureClientCertificate))
+                {
+                    CreateConfidentialClient(resource, Config.AzureClientCertificate);
+                }
+                else
+                {
+                    CreateConfidentialClient(resource);
+                }
                 return true;
             }
             else
@@ -185,7 +193,23 @@ namespace CollectSFData.Azure
             }
         }
 
-        public bool CreateConfidentialClient(string resource)
+        public void CreateConfidentialClient(string resource, string clientCertificate)
+        {
+            X509Certificate2 certificate = ReadCertificate(clientCertificate);
+            _confidentialClientApp = ConfidentialClientApplicationBuilder
+                .CreateWithApplicationOptions(new ConfidentialClientApplicationOptions
+                {
+                    ClientId = Config.AzureClientId,
+                    RedirectUri = resource,
+                    TenantId = Config.AzureTenantId,
+                    ClientName = Config.AzureClientId
+                })
+                .WithAuthority(AzureCloudInstance.AzurePublic, Config.AzureTenantId)
+                .WithCertificate(certificate)
+                .Build();
+            AddClientScopes();
+        }
+        public void CreateConfidentialClient(string resource)
         {
             Log.Info($"enter: {resource}");
             // no prompt with clientid and secret
@@ -202,6 +226,11 @@ namespace CollectSFData.Azure
                .WithLogging(MsalLoggerCallback, LogLevel.Verbose, true, true)
                .Build();
 
+            AddClientScopes();
+        }
+
+        private void AddClientScopes()
+        {
             if (Scopes.Count < 1)
             {
                 Scopes = _defaultScope;
@@ -219,8 +248,6 @@ namespace CollectSFData.Azure
                     .ExecuteAsync().Result;
                 Log.Debug($"scope authentication result:", AuthenticationResult);
             }
-
-            return true;
         }
 
         public bool CreatePublicClient(bool prompt, bool deviceLogin = false)
@@ -369,6 +396,39 @@ namespace CollectSFData.Azure
         {
             Log.Highlight("azure ad reauthenticate");
             Authenticate(true, _resource);
+        }
+
+        private X509Certificate2 ReadCertificate(string certificateId)
+        {
+            X509Certificate2 certificate = null;
+            certificate = ReadCertificateFromStore(certificateId);
+
+            if (certificate == null)
+            {
+                certificate = ReadCertificateFromStore(certificateId, StoreName.My, StoreLocation.LocalMachine);
+            }
+            return certificate;
+        }
+
+        private static X509Certificate2 ReadCertificateFromStore(string certificateId, StoreName storeName = StoreName.My, StoreLocation storeLocation = StoreLocation.CurrentUser)
+        {
+            X509Certificate2 certificate = null;
+
+            using (X509Store store = new X509Store(storeName, storeLocation))
+            {
+                store.Open(OpenFlags.ReadOnly);
+                X509Certificate2Collection certCollection = store.Certificates;
+
+                // Find unexpired certificates.
+                X509Certificate2Collection currentCerts = certCollection.Find(X509FindType.FindByTimeValid, DateTime.Now, false);
+
+                // From the collection of unexpired certificates, find the ones with the correct name.
+                X509Certificate2Collection signingCert = currentCerts.Find(X509FindType.FindBySubjectName, certificateId, false);
+
+                // Return the first certificate in the collection, has the right name and is current.
+                certificate = signingCert.OfType<X509Certificate2>().OrderByDescending(c => c.NotBefore).FirstOrDefault();
+            }
+            return certificate;
         }
 
         public Http SendRequest(string uri, HttpMethod method = null, string body = "")
