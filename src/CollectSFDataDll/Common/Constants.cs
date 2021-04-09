@@ -4,7 +4,6 @@
 // ------------------------------------------------------------
 
 using System;
-using System.Diagnostics;
 
 namespace CollectSFData.Common
 {
@@ -48,7 +47,6 @@ namespace CollectSFData.Common
         public const int WarningTimeSpanHours = 4;
         public const double WarningTimeSpanMinHours = .5F;
         public const string ZipExtension = ".zip";
-        public static readonly string Version = $"{Process.GetCurrentProcess().MainModule?.FileVersionInfo.FileVersion}";
         public static long DiscoveredMaxDateTicks = DateTime.MinValue.Ticks;
         public static long DiscoveredMinDateTicks = DateTime.MaxValue.Ticks;
     }
