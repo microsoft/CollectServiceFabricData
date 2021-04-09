@@ -33,7 +33,20 @@ namespace CollectSFDataGui.Server.Controllers
         }
 
         [HttpGet]
-        public IEnumerable<JsonResult> Get()//(string resource = null)
+        public IEnumerable<JsonResult> Get()
+        {
+            //_logger.LogWarning($"Get:enter:request:{resource}");
+            ConfigurationProperties var = _config.Clone();
+            string jsonString = JsonSerializer.Serialize(var);
+            _logger.LogWarning($"Get:enter:jsonString:{jsonString}");
+
+            //    return new List<JsonResult>() { new JsonResult(_config.Clone()) }.AsEnumerable();
+            return new List<JsonResult>() { new JsonResult(new ConfigurationProperties()) }.AsEnumerable();
+        }
+
+        [HttpGet]
+        [Route("/GetConfiguration")]
+        public IEnumerable<JsonResult> GetConfiguration()//(string resource = null)
         {
             //_logger.LogWarning($"Get:enter:request:{resource}");
             ConfigurationProperties var = _config.Clone();
