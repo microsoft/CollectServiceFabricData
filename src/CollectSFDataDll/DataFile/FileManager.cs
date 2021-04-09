@@ -266,7 +266,6 @@ namespace CollectSFData.DataFile
                 DeleteFile(fileObject.FileUri);
             }
 
-
             return PopulateCollection<CsvCounterRecord>(fileObject);
         }
 
@@ -475,7 +474,6 @@ namespace CollectSFData.DataFile
             fileObject.FileUri = $"{sourceFile}{JsonExtension}";
             FileObjectCollection collection = new FileObjectCollection();
             string relativeUri = fileObject.RelativeUri.TrimEnd(JsonExtension.ToCharArray()) + JsonExtension;
-
 
             if (fileObject.Length > MaxJsonTransmitBytes)
             {

@@ -5,8 +5,8 @@
 
 using CollectSFData.Common;
 using System;
-using System.IO;
 using System.Collections;
+using System.IO;
 
 namespace CollectSFData.Kusto
 {
@@ -35,7 +35,6 @@ namespace CollectSFData.Kusto
         {
             Initialize(fileUri, relativeUri, clientRequestId);
         }
-
 
         public bool Equals(KustoQueueMessage message)
         {

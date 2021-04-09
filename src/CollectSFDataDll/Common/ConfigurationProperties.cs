@@ -3,16 +3,10 @@
 // Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
-using CollectSFData.Azure;
-using CollectSFData.DataFile;
-using System;
-using System.Globalization;
-
 namespace CollectSFData.Common
 {
     public class ConfigurationProperties : Constants
     {
-
         public string AzureClientId { get; set; }
 
         public string AzureClientSecret { get; set; }
