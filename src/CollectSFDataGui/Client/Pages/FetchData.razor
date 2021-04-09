@@ -1,0 +1,66 @@
+﻿@page "/fetchdata"
+@using CollectSFDataGui.Shared
+@using CollectSFData.Common
+@inject HttpClient Http
+
+<h1>Weather config</h1>
+
+<p>This component demonstrates fetching data from the server.</p>
+
+@if (configs == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Value</th>
+                <th></th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var config in configs)
+            {
+                <tr>
+                    <td>AzureClientId</td>
+                    <td>@config.AzureClientId</td>
+                </tr>
+                <tr>
+                    <td>AzureClientSecret</td>
+                    <td>@config.AzureClientSecret</td>
+                </tr>
+                <tr>
+                    <td>AzureResourceGroup</td>
+                    <td>@config.AzureResourceGroup</td>
+                </tr>
+                <tr>
+                    <td>NoProgressTimeoutMin</td>
+                    <td>@config.NoProgressTimeoutMin</td>
+                </tr>
+                <tr>
+                    <td>StartTimeStamp</td>
+                    <td>@config.StartTimeStamp</td>
+                </tr>
+                <tr>
+                    <td>EndTimeStamp</td>
+                    <td>@config.EndTimeStamp</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private ConfigurationProperties[] configs;
+
+    protected override async Task OnInitializedAsync()
+    {
+        configs = await Http.GetFromJsonAsync<ConfigurationProperties[]>("Configuration");
+
+    }
+
+}
