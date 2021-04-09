@@ -1,5 +1,4 @@
-﻿using CollectSFData;
-using CollectSFData.Common;
+﻿using CollectSFData.Common;
 using System;
 using System.Collections.Generic;
 using Tx.Windows;

@@ -13,16 +13,18 @@ namespace CollectSFData.Common
 {
     public class CustomTaskManager : Constants
     {
-        public static CancellationTokenSource CancellationTokenSource { get; private set; } = new CancellationTokenSource();
         private static SynchronizedList<CustomTaskManager> _allInstances = new SynchronizedList<CustomTaskManager>();
-        private static CustomTaskScheduler _customScheduler; // init in constructor after starting _taskMonitor to avoid exception
+        private static CustomTaskScheduler _customScheduler;
+
+        // init in constructor after starting _taskMonitor to avoid exception
         private static Instance _instance;
+
         private static bool _isRunning;
         private static Task _taskMonitor = new Task(TaskMonitor);
         private static object _taskMonLock = new object();
         private static ConfigurationOptions Config;
         private string CallerName;
-
+        public static CancellationTokenSource CancellationTokenSource { get; private set; } = new CancellationTokenSource();
         public SynchronizedList<Task> AllTasks { get; set; } = new SynchronizedList<Task>();
 
         public TaskContinuationOptions ContinuationOptions { get; set; } = TaskContinuationOptions.OnlyOnRanToCompletion;
