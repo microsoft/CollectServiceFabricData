@@ -20,7 +20,7 @@ using System.Threading;
 
 namespace CollectSFData.Common
 {
-    public class ConfigurationOptions : Constants
+    public class ConfigurationOptions : ConfigurationProperties
     {
         private static readonly string _workDir = "csfd";
         private readonly CommandLineArguments _cmdLineArgs = new CommandLineArguments();
@@ -31,43 +31,7 @@ namespace CollectSFData.Common
         private string _tempPath;
         private int _threads;
 
-        public string AzureClientId { get; set; }
-
-        public string AzureClientSecret { get; set; }
-
-        public string AzureResourceGroup { get; set; }
-
-        public string AzureResourceGroupLocation { get; set; }
-
-        public string AzureSubscriptionId { get; set; }
-
-        public string AzureTenantId { get; set; }
-
-        public string CacheLocation { get; set; }
-
-        public string ConfigurationFile { get; set; }
-
-        public string ContainerFilter { get; set; }
-
-        public bool DeleteCache { get; set; }
-
-        public string EndTimeStamp
-        {
-            get => _endTime;
-            set
-            {
-                EndTimeUtc = ConvertToUtcTime(value);
-                _endTime = ConvertToUtcTimeString(value);
-            }
-        }
-
-        public DateTimeOffset EndTimeUtc { get; private set; }
-
-        public bool Examples { get; private set; }
-
-        public FileTypesEnum FileType { get; private set; }
-
-        public string GatherType
+        public new string GatherType
         {
             get => FileType.ToString();
             set
@@ -83,61 +47,28 @@ namespace CollectSFData.Common
             }
         }
 
-        public string KustoCluster { get; set; }
+        public new string EndTimeStamp
+        {
+            get => _endTime; 
+            set
+            {
+                EndTimeUtc = ConvertToUtcTime(value);
+                _endTime = ConvertToUtcTimeString(value);
+            }
+        }
 
-        public bool KustoCompressed { get; set; } = true;
+        public DateTimeOffset EndTimeUtc { get; set; }
 
-        public string KustoPurge { get; set; }
+        public FileTypesEnum FileType { get; private set; }
 
-        public bool KustoRecreateTable { get; set; }
-
-        public string KustoTable { get; set; }
-
-        public bool KustoUseBlobAsSource { get; set; } = true;
-
-        public bool KustoUseIngestMessage { get; set; }
-
-        public bool List { get; set; }
-
-        public bool LogAnalyticsCreate { get; set; }
-
-        public string LogAnalyticsId { get; set; }
-
-        public string LogAnalyticsKey { get; set; }
-
-        public string LogAnalyticsName { get; set; }
-
-        public string LogAnalyticsPurge { get; set; }
-
-        public bool LogAnalyticsRecreate { get; set; }
-
-        public string LogAnalyticsWorkspaceName { get; set; }
-
-        public string LogAnalyticsWorkspaceSku { get; set; } = "PerGB2018";
-
-        public int LogDebug
+        public new int LogDebug
         {
             get => Log.LogDebug = _logDebug;
             set => Log.LogDebug = _logDebug = value;
         }
 
-        public string LogFile { get; set; }
-
-        public string NodeFilter { get; set; }
-
-        public int NoProgressTimeoutMin { get; set; } = 10;
-
-        public string ResourceUri { get; set; }
-
         public SasEndpoints SasEndpointInfo { get; private set; } = new SasEndpoints();
-
-        public string SasKey { get; set; } = string.Empty;
-
-        public string SaveConfiguration { get; set; }
-
-        public string Schema { get; set; }
-
-        public string StartTimeStamp
+        public new string StartTimeStamp
         {
             get => _startTime;
             set
@@ -147,23 +78,15 @@ namespace CollectSFData.Common
             }
         }
 
-        public DateTimeOffset StartTimeUtc { get; private set; }
+        public DateTimeOffset StartTimeUtc { get; set; }
 
-        public int Threads
+        public new int Threads
         {
             get => _threads < 1 ? Environment.ProcessorCount : _threads;
             set => _threads = value < 1 ? Environment.ProcessorCount : value;
         }
 
-        public bool Unique { get; set; } = true;
-
-        public string UriFilter { get; set; }
-
-        public bool UseMemoryStream { get; set; } = true;
-
-        public bool UseTx { get; set; }
-
-        public bool VersionOption { get; set; }
+        public string Version { get; set; }
 
         public ConfigurationOptions()
         {
@@ -451,7 +374,7 @@ namespace CollectSFData.Common
                 }
                 else if (Validate())
                 {
-                    Log.Info($"options:", ShallowCopy());
+                    Log.Info($"options:", Clone());
                     DisplayStatus();
                     return true;
                 }
@@ -467,11 +390,11 @@ namespace CollectSFData.Common
             }
         }
 
-        public void SaveConfigFile()
+        public string SaveConfigFile()
         {
             if (string.IsNullOrEmpty(SaveConfiguration))
             {
-                return;
+                return null;
             }
 
             // remove options that should not be saved in configuration file
@@ -506,6 +429,7 @@ namespace CollectSFData.Common
 
             File.WriteAllText(SaveConfiguration, options.ToString());
             Log.Info($"configuration file saved to: {SaveConfiguration}", ConsoleColor.Green);
+            return options.ToString();
         }
 
         public bool Validate()
@@ -1006,7 +930,7 @@ namespace CollectSFData.Common
             }
         }
 
-        private ConfigurationOptions ShallowCopy()
+        public ConfigurationOptions Clone()
         {
             return (ConfigurationOptions)MemberwiseClone();
         }

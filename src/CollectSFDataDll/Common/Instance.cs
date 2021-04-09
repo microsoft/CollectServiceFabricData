@@ -7,6 +7,7 @@ using CollectSFData.DataFile;
 using CollectSFData.Kusto;
 using CollectSFData.LogAnalytics;
 using System;
+using System.Reflection;
 
 namespace CollectSFData.Common
 {
@@ -37,6 +38,7 @@ namespace CollectSFData.Common
             if (_instance.Config == null)
             {
                 _instance.Config = new ConfigurationOptions();
+                _instance.Config.Version = $"{Assembly.GetEntryAssembly().GetName().Version}"; // $"{Process.GetCurrentProcess().MainModule?.FileVersionInfo.FileVersion}";
                 Initialize();
             }
         }
