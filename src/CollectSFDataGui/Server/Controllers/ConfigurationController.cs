@@ -29,6 +29,7 @@ namespace CollectSFDataGui.Server.Controllers
         }
 
         [HttpGet]
+        [Route("/api")]
         public IEnumerable<JsonResult> Get()
         {
             //_logger.LogWarning($"Get:enter:request:{resource}");
@@ -41,7 +42,7 @@ namespace CollectSFDataGui.Server.Controllers
         }
 
         [HttpGet]
-        [Route("/GetConfiguration")]
+        [Route("/api/configuration")]
         public IEnumerable<JsonResult> GetConfiguration()//(string resource = null)
         {
             //_logger.LogWarning($"Get:enter:request:{resource}");
@@ -54,7 +55,7 @@ namespace CollectSFDataGui.Server.Controllers
         }
 
         [HttpGet]
-        [Route("/Index")]
+        [Route("/api/index")]
         public IEnumerable<ConfigurationProperties> Index()
         {
             return new List<ConfigurationProperties>() { _config.Clone() }.AsEnumerable();
