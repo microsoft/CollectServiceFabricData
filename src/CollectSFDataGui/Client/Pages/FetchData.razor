@@ -1,4 +1,4 @@
-﻿@page "/fetchdata"
+﻿@page "/configuration"
 @using CollectSFDataGui.Shared
 @using CollectSFData.Common
 @inject HttpClient Http
@@ -55,11 +55,11 @@ else
 }
 
 @code {
-    private ConfigurationProperties[] configs;
+    private ConfigurationOptions[] configs;
 
     protected override async Task OnInitializedAsync()
     {
-        configs = await Http.GetFromJsonAsync<ConfigurationProperties[]>("Configuration");
+        configs = await Http.GetFromJsonAsync<ConfigurationOptions[]>("Configuration");
 
     }
 
