@@ -159,7 +159,7 @@ namespace CollectSFData
 
                 _initialized = true;
 
-                Log.Info($"version: {Version}");
+                Log.Info($"version: {Config.Version}");
                 _parallelConfig = new ParallelOptions { MaxDegreeOfParallelism = Config.Threads };
                 ServicePointManager.DefaultConnectionLimit = Config.Threads * MaxThreadMultiplier;
                 ServicePointManager.Expect100Continue = true;
