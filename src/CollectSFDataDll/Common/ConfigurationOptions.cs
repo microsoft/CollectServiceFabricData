@@ -33,8 +33,10 @@ namespace CollectSFData.Common
 
         public string AzureClientId { get; set; }
 
-        public string AzureClientSecret { get; set; }
+        public string AzureClientCertificate { get; set; }
 
+        public string AzureClientSecret { get; set; }
+        
         public string AzureResourceGroup { get; set; }
 
         public string AzureResourceGroupLocation { get; set; }
@@ -264,7 +266,7 @@ namespace CollectSFData.Common
 
         public bool IsClientIdConfigured()
         {
-            return AzureClientId?.Length > 0 & AzureClientSecret?.Length > 0 & AzureTenantId?.Length > 0;
+            return AzureClientId?.Length > 0 & (AzureClientSecret?.Length > 0 | AzureClientCertificate?.Length > 0)  & AzureTenantId?.Length > 0;
         }
 
         public bool IsKustoConfigured()
