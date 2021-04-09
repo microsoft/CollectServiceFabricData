@@ -167,7 +167,6 @@ namespace CollectSFData
 
                 ThreadPool.SetMinThreads(Config.Threads * MinThreadMultiplier, Config.Threads * MinThreadMultiplier);
                 ThreadPool.SetMaxThreads(Config.Threads * MaxThreadMultiplier, Config.Threads * MaxThreadMultiplier);
-
             }
 
             return true;
@@ -388,9 +387,9 @@ namespace CollectSFData
 
             if (uris.Count > 0)
             {
-                foreach(string file in uris)
+                foreach (string file in uris)
                 {
-                    if(File.Exists(file))
+                    if (File.Exists(file))
                     {
                         Log.Info($"adding file to list: {file}");
                         files.Add(file);
