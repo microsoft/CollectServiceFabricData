@@ -2,6 +2,7 @@
 
 ## 04/08/2021
 
+- add AzureClientCertificate property for use with AzureTenantId and AzureClientId for confidentialClient authentication with certificate in LocalMachine or CurrentUser My
 - fix intermittent table name truncation after gathertype bad: trace_agilber_test good: trace_jagilber_test
 - modify NoProgressTimeout from throw exception to tasks Cancel() allowing collector.Collect() to return 1 to caller
 - modify EndTimeStamp / StartTimeStamp to ignore empty strings and better timeformat error handling, logging
