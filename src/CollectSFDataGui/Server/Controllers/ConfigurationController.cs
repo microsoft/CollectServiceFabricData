@@ -1,15 +1,10 @@
-﻿using CollectSFDataGui.Shared;
+﻿using CollectSFData;
+using CollectSFData.Common;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
-using CollectSFData;
-using CollectSFData.Common;
-using System.Text.Json.Serialization;
 using System.Text.Json;
-using System.Text;
 
 namespace CollectSFDataGui.Server.Controllers
 {
@@ -17,15 +12,16 @@ namespace CollectSFDataGui.Server.Controllers
     [Route("[controller]")]
     public class ConfigurationController : ControllerBase
     {
+        private static Collector _collector = new Collector(new string[0], false);
+
+        private readonly ILogger<ConfigurationController> _logger;
+
+        private static ConfigurationOptions _config { get; set; }
+
         static ConfigurationController()
         {
             _config = _collector.Config;
         }
-        private static Collector _collector = new Collector(new string[0], false);
-
-        private static ConfigurationOptions _config { get; set; }
-
-        private readonly ILogger<ConfigurationController> _logger;
 
         public ConfigurationController(ILogger<ConfigurationController> logger)
         {
@@ -54,7 +50,7 @@ namespace CollectSFDataGui.Server.Controllers
             _logger.LogWarning($"Get:enter:jsonString:{jsonString}");
 
             //    return new List<JsonResult>() { new JsonResult(_config.Clone()) }.AsEnumerable();
-            return new List<JsonResult>() { new JsonResult(new ConfigurationProperties()) }.AsEnumerable();
+            return new List<JsonResult>() { new JsonResult(_config.Clone()) }.AsEnumerable();
         }
 
         [HttpGet]
@@ -63,6 +59,5 @@ namespace CollectSFDataGui.Server.Controllers
         {
             return new List<ConfigurationProperties>() { _config.Clone() }.AsEnumerable();
         }
-
     }
 }

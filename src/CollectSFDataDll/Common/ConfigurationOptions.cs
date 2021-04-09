@@ -31,6 +31,20 @@ namespace CollectSFData.Common
         private string _tempPath;
         private int _threads;
 
+        public new string EndTimeStamp
+        {
+            get => _endTime;
+            set
+            {
+                EndTimeUtc = ConvertToUtcTime(value);
+                _endTime = ConvertToUtcTimeString(value);
+            }
+        }
+
+        public DateTimeOffset EndTimeUtc { get; set; }
+
+        public FileTypesEnum FileType { get; private set; }
+
         public new string GatherType
         {
             get => FileType.ToString();
@@ -47,20 +61,6 @@ namespace CollectSFData.Common
             }
         }
 
-        public new string EndTimeStamp
-        {
-            get => _endTime; 
-            set
-            {
-                EndTimeUtc = ConvertToUtcTime(value);
-                _endTime = ConvertToUtcTimeString(value);
-            }
-        }
-
-        public DateTimeOffset EndTimeUtc { get; set; }
-
-        public FileTypesEnum FileType { get; private set; }
-
         public new int LogDebug
         {
             get => Log.LogDebug = _logDebug;
@@ -68,6 +68,7 @@ namespace CollectSFData.Common
         }
 
         public SasEndpoints SasEndpointInfo { get; private set; } = new SasEndpoints();
+
         public new string StartTimeStamp
         {
             get => _startTime;
@@ -138,6 +139,11 @@ namespace CollectSFData.Common
             {
                 Log.Last(response);
             }
+        }
+
+        public ConfigurationOptions Clone()
+        {
+            return (ConfigurationOptions)MemberwiseClone();
         }
 
         public void DisplayStatus()
@@ -660,42 +666,6 @@ namespace CollectSFData.Common
             return retval;
         }
 
-
-        private DateTime ConvertToUtcTime(string timeString)
-        {
-            DateTimeOffset dateTimeOffset;
-
-            if (DateTimeOffset.TryParse(timeString, CultureInfo.InvariantCulture, DateTimeStyles.None, out dateTimeOffset))
-            {
-                Log.Info($"TimeStamp valid format:input:'{timeString}'");
-                return dateTimeOffset.UtcDateTime;
-            }
-
-            Log.Error($"TimeStamp invalid format:input:'{timeString}' but expecting pattern:'{DefaultDatePattern}' example:'{DateTime.Now.ToString(DefaultDatePattern)}'");
-            return DateTime.MinValue;
-        }
-
-        private string ConvertToUtcTimeString(string timeString)
-        {
-            DateTime dateTime = DateTime.MinValue;
-
-            if (string.IsNullOrEmpty(timeString))
-            {
-                Log.Warning("empty time string");
-            }
-            else
-            {
-                dateTime = ConvertToUtcTime(timeString);
-                if (dateTime != DateTime.MinValue)
-                {
-                    timeString = dateTime.ToString("o");
-                }
-            }
-
-            Log.Info($"returning:time string:'{timeString}'");
-            return timeString;
-        }
-
         private static FileTypesEnum ConvertFileType(string fileTypeString)
         {
             if (string.IsNullOrEmpty(fileTypeString) || !Enum.TryParse(fileTypeString.ToLower(), out FileTypesEnum fileType))
@@ -770,6 +740,41 @@ namespace CollectSFData.Common
             }
 
             return Regex.Replace(tableName, $"^({FileType}_)", "", RegexOptions.IgnoreCase);
+        }
+
+        private DateTime ConvertToUtcTime(string timeString)
+        {
+            DateTimeOffset dateTimeOffset;
+
+            if (DateTimeOffset.TryParse(timeString, CultureInfo.InvariantCulture, DateTimeStyles.None, out dateTimeOffset))
+            {
+                Log.Info($"TimeStamp valid format:input:'{timeString}'");
+                return dateTimeOffset.UtcDateTime;
+            }
+
+            Log.Error($"TimeStamp invalid format:input:'{timeString}' but expecting pattern:'{DefaultDatePattern}' example:'{DateTime.Now.ToString(DefaultDatePattern)}'");
+            return DateTime.MinValue;
+        }
+
+        private string ConvertToUtcTimeString(string timeString)
+        {
+            DateTime dateTime = DateTime.MinValue;
+
+            if (string.IsNullOrEmpty(timeString))
+            {
+                Log.Warning("empty time string");
+            }
+            else
+            {
+                dateTime = ConvertToUtcTime(timeString);
+                if (dateTime != DateTime.MinValue)
+                {
+                    timeString = dateTime.ToString("o");
+                }
+            }
+
+            Log.Info($"returning:time string:'{timeString}'");
+            return timeString;
         }
 
         private bool DefaultConfig()
@@ -928,11 +933,6 @@ namespace CollectSFData.Common
             {
                 Log.Debug($"property not writable:{propertyInstance.Name}");
             }
-        }
-
-        public ConfigurationOptions Clone()
-        {
-            return (ConfigurationOptions)MemberwiseClone();
         }
     }
 }
