@@ -38,7 +38,7 @@ namespace CollectSFData.Common
             if (_instance.Config == null)
             {
                 _instance.Config = new ConfigurationOptions();
-                _instance.Config.Version = $"{Assembly.GetEntryAssembly().GetName().Version}"; // $"{Process.GetCurrentProcess().MainModule?.FileVersionInfo.FileVersion}";
+                _instance.Config.Version = "${Process.GetCurrentProcess().MainModule?.FileVersionInfo.FileVersion}";
                 Initialize();
             }
         }
