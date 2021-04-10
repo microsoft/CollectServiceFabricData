@@ -167,13 +167,13 @@ else
                         </div>
                     </div>
                 </RadzenFieldset>
-                <RadzenFieldset Text="POS Info">
+                <RadzenFieldset Text="SAS Info">
                     <div class="row">
                         <div class="align-items-center d-flex col-md-3">
-                            <RadzenLabel Text="Trans #" />
+                            <RadzenLabel Text="SAS Key" />
                         </div>
                         <div class="col-md-9">
-                            <RadzenTextBox Disabled="true" Placeholder="S4485" style="width: 100%;" Name="TransId" />
+                            <RadzenTextBox @bind-Value="config.SasKey" Placeholder="enter sas key" style="width: 100%;" />
                         </div>
                     </div>
                     <div class="row">
@@ -233,8 +233,11 @@ else
             </div>
             <div class="row justify-content-left">
                 <RadzenButton Text="Upload" Click=@(args => upload.Upload()) Style="margin-left: 20px;" />
-                <RadzenUpload @ref="upload" Auto="false" Multiple="false" Url="upload/single" Style="margin-left: 20px;" Change=@(args => OnChange(args, "Manual Upload"))
-                          Progress=@(args => OnProgress(args, "Manual Upload")) />
+                <RadzenUpload @ref="upload" Auto="false" Multiple="false" Url="upload/single" Style="margin-left: 20px;" 
+                    Change=@(args => OnChange(args, "Manual Upload"))
+                    Progress=@(args => OnProgress(args, "Manual Upload")) 
+                    Complete=@OnComplete
+                    />
                 @*<RadzenUpload ChooseText="Upload" Url="upload/single" Style="margin-left: 20px;" Progress=@(args => OnProgress(args, "Single file upload")) />*@
             </div>
             <div class="col-xl-6">
@@ -325,6 +328,11 @@ else
     void Submit(ConfigurationOptions arg)
     {
         //
+    }
+
+    async void UpdateConfig(string uploadedJson)
+    {
+      var response = await Http.PostAsJsonAsync("api/configuration/update", uploadedJson);
     }
 
     void Cancel()

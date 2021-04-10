@@ -54,6 +54,13 @@ namespace CollectSFDataGui.Server.Controllers
             return new List<JsonResult>() { new JsonResult(_config.Clone()) }.AsEnumerable();
         }
 
+        [HttpPost("/api/configuration/update")]
+        public IActionResult ImportConfiguration([FromBody] ConfigurationProperties properties)
+        {
+            // todo:implement
+            return Created($"update/{properties.GatherType}", properties);
+        }
+
         [HttpGet]
         [Route("/api/index")]
         public IEnumerable<ConfigurationProperties> Index()
