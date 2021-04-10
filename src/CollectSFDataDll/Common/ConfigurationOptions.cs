@@ -23,6 +23,7 @@ namespace CollectSFData.Common
     public class ConfigurationOptions : ConfigurationProperties
     {
         private static readonly string _workDir = "csfd";
+        private static bool _cmdLineInited;
         private readonly CommandLineArguments _cmdLineArgs = new CommandLineArguments();
         private bool _defaultConfigLoaded;
         private string _endTime;
@@ -91,8 +92,12 @@ namespace CollectSFData.Common
 
         public ConfigurationOptions()
         {
-            _cmdLineArgs.CmdLineApp.OnExecute(() => MergeCmdLine());
-            _cmdLineArgs.InitFromCmdLine();
+            if (!_cmdLineInited)
+            {
+                _cmdLineInited = true;
+                _cmdLineArgs.CmdLineApp.OnExecute(() => MergeCmdLine());
+                _cmdLineArgs.InitFromCmdLine();
+            }
 
             DateTimeOffset defaultOffset = DateTimeOffset.Now;
             StartTimeUtc = defaultOffset.UtcDateTime.AddHours(DefaultStartTimeHours);
