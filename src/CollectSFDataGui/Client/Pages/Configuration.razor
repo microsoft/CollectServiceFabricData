@@ -3,8 +3,11 @@
 @using CollectSFData.Common
 @using CollectSFData
 @using BlazorApp.Helpers
+@using Microsoft.Extensions.Logging;
+
 @inject HttpClient Http
 @inject NavigationManager navigationManager
+@inject ILogger<Configuration> logger;
 
 <style>
     form .row {
@@ -220,19 +223,32 @@ else
                 </RadzenFieldset>
             </div>
         </div>
-        <div class="row justify-content-center">
-            <div class="col-md-12 d-flex align-items-end justify-content-center" style="margin-top: 16px;">
-                <RadzenButton ButtonType="ButtonType.Submit" Icon="save" Text="Save" />
-                <RadzenButton ButtonStyle="ButtonStyle.Light" Icon="cancel" style="display: inline-block; margin-left: 10px;" Text="Cancel" Click="@Cancel" />
+        <div>
+            @* class="row justify-content-center">*@
+            <div class="row justify-content-left">
+                <RadzenButton ButtonType="ButtonType.Submit" Icon="save" style="margin-left: 20px;" Text="Save" />
             </div>
+            <div class="row justify-content-left">
+                <RadzenButton ButtonStyle="ButtonStyle.Light" Icon="cancel" style="margin-left: 20px;" Text="Cancel" Click="@Cancel" />
+            </div>
+            <div class="row justify-content-left">
+                <RadzenButton Text="Upload" Click=@(args => upload.Upload()) Style="margin-left: 20px;" />
+                <RadzenUpload @ref="upload" Auto="false" Multiple="false" Url="upload/single" Style="margin-left: 20px;" Change=@(args => OnChange(args, "Manual Upload"))
+                          Progress=@(args => OnProgress(args, "Manual Upload")) />
+                @*<RadzenUpload ChooseText="Upload" Url="upload/single" Style="margin-left: 20px;" Progress=@(args => OnProgress(args, "Single file upload")) />*@
+            </div>
+            <div class="col-xl-6">
+                <EventConsole @ref=@console />
+            </div>
+
         </div>
     </RadzenTemplateForm>
 }
 
 @code {
     private List<string> GatherTypes;
-    private ConfigurationOptions config { get; set; }//=configs[0].Clone();
-    private ConfigurationOptions tempconfig { get; set; }//=configs[0].Clone();
+    private ConfigurationOptions config { get; set; }
+    private ConfigurationOptions tempconfig { get; set; }
     private string tableName;
 
     // temp
@@ -314,5 +330,44 @@ else
     void Cancel()
     {
         //
+    }
+
+    // file upload
+    EventConsole console;
+    RadzenUpload upload;
+    int progress;
+    string info;
+
+    int customParameter = 1;
+
+    void OnChange(UploadChangeEventArgs args, string name)
+    {
+        foreach (var file in args.Files)
+        {
+            console.Log($"File: {file.Name} / {file.Size} bytes");
+        }
+
+        console.Log($"{name} changed");
+    }
+
+    void OnProgress(UploadProgressArgs args, string name)
+    {
+        this.info = $"% '{name}' / {args.Loaded} of {args.Total} bytes.";
+        this.progress = args.Progress;
+
+        if (args.Progress == 100)
+        {
+            console.Clear();
+
+            foreach (var file in args.Files)
+            {
+                console.Log($"Uploaded: {file.Name} / {file.Size} bytes");
+            }
+        }
+    }
+
+    void OnComplete(UploadCompleteEventArgs args)
+    {
+        console.Log($"Server response: {args.RawResponse}");
     }
 }
