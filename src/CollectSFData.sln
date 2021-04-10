@@ -22,11 +22,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tx.Core", "Tx\Tx.Core\Tx.Co
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tx.Windows", "Tx\Tx.Windows\Tx.Windows.csproj", "{C12D1737-15A7-4DF2-8A9B-BD10089606B9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CollectSFDataGui.Server", "CollectSFDataGui\Server\CollectSFDataGui.Server.csproj", "{36869845-FD23-4A39-8617-AA8F7D192F3E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CollectSFDataGui.Server", "CollectSFDataGui\Server\CollectSFDataGui.Server.csproj", "{36869845-FD23-4A39-8617-AA8F7D192F3E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CollectSFDataGui.Client", "CollectSFDataGui\Client\CollectSFDataGui.Client.csproj", "{16231DA2-0F3A-4D34-88D6-53D8196BA86D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CollectSFDataGui.Client", "CollectSFDataGui\Client\CollectSFDataGui.Client.csproj", "{16231DA2-0F3A-4D34-88D6-53D8196BA86D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CollectSFDataGui.Shared", "CollectSFDataGui\Shared\CollectSFDataGui.Shared.csproj", "{162B3A3C-6A4A-4954-84F8-748893945515}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CollectSFDataGui.Shared", "CollectSFDataGui\Shared\CollectSFDataGui.Shared.csproj", "{162B3A3C-6A4A-4954-84F8-748893945515}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
