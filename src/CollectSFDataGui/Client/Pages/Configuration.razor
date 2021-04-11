@@ -133,7 +133,7 @@ else
                 </RadzenFieldset>
             </div>
             <div class="col-md-6">
-                <RadzenFieldset Text="Store Info">
+                <RadzenFieldset Text="Azure Information">
                     <div class="row">
                         <div class="align-items-center d-flex col-md-2">
                             <RadzenLabel Text="Store #" />
@@ -206,21 +206,6 @@ else
                         </div>
                         <div class="col-md-9">
                             <RadzenTextBox Value="@config.SasEndpointInfo.SasToken" style="width: 100%;" Name="SasToken" />
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="align-items-center d-flex col-md-3">
-                            <RadzenLabel Text="Config Date" />
-                        </div>
-                        <div class="col-md-3">
-                            <RadzenDatePicker style="width: 100%;" Name="ConfigDate" @bind-Value="config.StartTimeUtc" />
-                        </div>
-                        <div class="align-items-center d-flex col-md-2">
-                            <RadzenLabel Text="Ship Date" />
-                        </div>
-                        <div class="col-md-4">
-                            <RadzenDatePicker style="width: 100%;" Name="ShipDate" @bind-Value="config.EndTimeUtc" />
                         </div>
                     </div>
                 </RadzenFieldset>
