@@ -43,6 +43,10 @@ namespace CollectSFData.Azure
 
         public string TableEndpoint { get; private set; }
 
+        public SasEndpoints()
+        {
+        }
+
         public SasEndpoints(string sasKey = "")
         {
             if (sasKey.ToLower().Contains("endpoint="))
