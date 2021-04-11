@@ -21,34 +21,33 @@ namespace CollectSFData.Azure
             queue,
         }
 
-        public string AbsolutePath { get; private set; }
+        public string AbsolutePath { get; set; }
 
-        public string BlobEndpoint { get; private set; }
+        public string BlobEndpoint { get; set; }
 
-        public string ConnectionString { get; private set; }
+        public string ConnectionString { get; set; }
 
-        public string FileEndpoint { get; private set; }
+        public string FileEndpoint { get; set; }
 
-        public bool IsConnectionString { get; private set; }
+        public bool IsConnectionString { get; set; }
 
-        public SasParameters Parameters { get; private set; }
+        public SasParameters Parameters { get; set; }
 
-        public string QueueEndpoint { get; private set; }
+        public string QueueEndpoint { get; set; }
 
-        public string SasToken { get; private set; } = string.Empty;
+        public string Saskey { get; set; }
+        public string SasToken { get; set; } = string.Empty;
 
-        public string StorageAccountName { get; private set; }
+        public string StorageAccountName { get; set; }
 
-        public string StorageAccountSuffix { get; private set; }
+        public string StorageAccountSuffix { get; set; }
 
-        public string TableEndpoint { get; private set; }
-
-        public SasEndpoints()
-        {
-        }
+        public string TableEndpoint { get; set; }
 
         public SasEndpoints(string sasKey = "")
         {
+            Saskey = sasKey;
+
             if (sasKey.ToLower().Contains("endpoint="))
             {
                 IsConnectionString = true;
