@@ -19,14 +19,16 @@ namespace CollectSFDataGui.Server.Controllers
     {
         private static Collector _collector;
 
+        private static List<LogMessage> _logMessages;
         private static ConfigurationOptions _config;
         private static ILogger<ConfigurationController> _logger;
 
         static ConfigurationController()
         {
             Collector _collector = new Collector(new string[0], false);
-            // to subscribe to log messages
-            Log.MessageLogged += Log_MessageLogged;
+            _logMessages = new List<LogMessage>();
+        // to subscribe to log messages
+        Log.MessageLogged += Log_MessageLogged;
             _config = _collector.Config;
         }
 
@@ -111,7 +113,9 @@ namespace CollectSFDataGui.Server.Controllers
                 else
                 {
                     //return Created($"/api/configuration/update", jsonString);
-                    return ValidationProblem("failed validation", this.GetHashCode().ToString(), 400, "/api/conifguration/update");
+                    string jsonErrorString = JsonSerializer.Serialize(_logMessages, GetJsonSerializerOptions());
+                    _logMessages.Clear();
+                    return ValidationProblem($"failed validation:\r\n{jsonErrorString}", this.GetHashCode().ToString(), 400, "/api/configuration/update");
                 }
             }
             catch (Exception e)
@@ -131,6 +135,10 @@ namespace CollectSFDataGui.Server.Controllers
         private static void Log_MessageLogged(object sender, LogMessage args)
         {
             _logger.LogInformation($"ConfigurationController:CSFDMessage:{args.Message}");
+            if (args.IsError)
+            {
+                _logMessages.Add(args);
+            }
         }
 
         private JsonSerializerOptions GetJsonSerializerOptions()
