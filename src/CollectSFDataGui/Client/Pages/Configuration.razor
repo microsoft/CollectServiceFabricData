@@ -181,31 +181,31 @@ else
                             <RadzenLabel Text="Absolute Path" />
                         </div>
                         <div class="col-md-9">
-                            <RadzenLabel Text="@config.SasEndpointInfo.AbsolutePath" style="width: 100%;" Name="AbsolutePath" />
+                            <RadzenTextBox @bind-Value="config.SasEndpointInfo.AbsolutePath" style="width: 100%;" Name="AbsolutePath" />
                         </div>
                     </div>
-                                        <div class="row">
+                    <div class="row">
                         <div class="align-items-center d-flex col-md-3">
                             <RadzenLabel Text="Blob Endpoint" />
                         </div>
                         <div class="col-md-9">
-                            <RadzenLabel Text="@config.SasEndpointInfo.BlobEndpoint" style="width: 100%;" Name="BlobEndpoint" />
+                            <RadzenTextBox @bind-Value="config.SasEndpointInfo.BlobEndpoint" style="width: 100%;" Name="BlobEndpoint" />
                         </div>
                     </div>
-                                        <div class="row">
+                    <div class="row">
                         <div class="align-items-center d-flex col-md-3">
                             <RadzenLabel Text="Storage Account Name" />
                         </div>
                         <div class="col-md-9">
-                            <RadzenLabel Text="@config.SasEndpointInfo.StorageAccountName" style="width: 100%;" Name="StorageAccountName" />
+                            <RadzenTextBox Value="@config.SasEndpointInfo.StorageAccountName" style="width: 100%;" Name="StorageAccountName" />
                         </div>
                     </div>
-                                        <div class="row">
+                    <div class="row">
                         <div class="align-items-center d-flex col-md-3">
                             <RadzenLabel Text="SAS Token" />
                         </div>
                         <div class="col-md-9">
-                            <RadzenLabel Text="@config.SasEndpointInfo.SasToken" style="width: 100%;" Name="SasToken" />
+                            <RadzenTextBox Value="@config.SasEndpointInfo.SasToken" style="width: 100%;" Name="SasToken" />
                         </div>
                     </div>
 
@@ -285,7 +285,7 @@ else
     protected override async Task OnInitializedAsync()
     {
 
-        ConfigurationProperties[] configs = await Http.GetFromJsonAsync<ConfigurationProperties[]>("api/configuration");
+        ConfigurationProperties[] configs = await Http.GetFromJsonAsync<ConfigurationProperties[]>("api/configurationJson");
         config = configs[0];
         tableName = config.KustoTable;
         GatherTypes = Enum.GetNames(typeof(CollectSFData.DataFile.FileTypesEnum)).ToList();
@@ -356,6 +356,7 @@ else
     JsonSerializerOptions GetJsonSerializerOptions()
     {
         JsonSerializerOptions options = new JsonSerializerOptions(JsonSerializerDefaults.General);
+        options.Converters.Add(new StringConverter());
         options.AllowTrailingCommas = true;
         options.MaxDepth = 10;
         options.PropertyNameCaseInsensitive = false;
