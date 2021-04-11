@@ -32,18 +32,6 @@ namespace CollectSFData.Common
         private string _tempPath;
         private int _threads;
 
-        public new string EndTimeStamp
-        {
-            get => _endTime;
-            set
-            {
-                EndTimeUtc = ConvertToUtcTime(value);
-                _endTime = ConvertToUtcTimeString(value);
-            }
-        }
-
-        public DateTimeOffset EndTimeUtc { get; set; }
-
         public FileTypesEnum FileType { get; private set; }
 
         public new string GatherType
@@ -67,20 +55,6 @@ namespace CollectSFData.Common
             get => Log.LogDebug = _logDebug;
             set => Log.LogDebug = _logDebug = value;
         }
-
-        public SasEndpoints SasEndpointInfo { get; private set; } = new SasEndpoints();
-
-        public new string StartTimeStamp
-        {
-            get => _startTime;
-            set
-            {
-                StartTimeUtc = ConvertToUtcTime(value);
-                _startTime = ConvertToUtcTimeString(value);
-            }
-        }
-
-        public DateTimeOffset StartTimeUtc { get; set; }
 
         public new int Threads
         {
@@ -149,6 +123,22 @@ namespace CollectSFData.Common
         public ConfigurationOptions Clone()
         {
             return (ConfigurationOptions)MemberwiseClone();
+        }
+
+        public new DateTime ConvertToUtcTime(string timeString)
+        {
+            DateTime result = base.ConvertToUtcTime(timeString);
+
+            if (result == DateTime.MinValue)
+            {
+                Log.Error($"TimeStamp invalid format:input:'{timeString}' but expecting pattern:'{DefaultDatePattern}' example:'{DateTime.Now.ToString(DefaultDatePattern)}'");
+            }
+            else
+            {
+                Log.Info($"TimeStamp valid format:input:'{timeString}'");
+            }
+
+            return result;
         }
 
         public void DisplayStatus()
@@ -227,6 +217,12 @@ namespace CollectSFData.Common
         {
             JObject fileOptions = ReadConfigFile(optionsFile);
             MergeConfig(fileOptions);
+        }
+
+        public void MergeConfig(ConfigurationProperties configurationProperties)
+        {
+            JObject options = JObject.FromObject(configurationProperties);
+            MergeConfig(options);
         }
 
         public void MergeConfig(ConfigurationOptions configurationOptions)
@@ -399,6 +395,11 @@ namespace CollectSFData.Common
                 Log.Last(_cmdLineArgs.CmdLineApp.GetHelpText());
                 return false;
             }
+        }
+
+        public ConfigurationProperties PropertyClone()
+        {
+            return (ConfigurationProperties)base.MemberwiseClone();
         }
 
         public string SaveConfigFile()
@@ -745,41 +746,6 @@ namespace CollectSFData.Common
             }
 
             return Regex.Replace(tableName, $"^({FileType}_)", "", RegexOptions.IgnoreCase);
-        }
-
-        private DateTime ConvertToUtcTime(string timeString)
-        {
-            DateTimeOffset dateTimeOffset;
-
-            if (DateTimeOffset.TryParse(timeString, CultureInfo.InvariantCulture, DateTimeStyles.None, out dateTimeOffset))
-            {
-                Log.Info($"TimeStamp valid format:input:'{timeString}'");
-                return dateTimeOffset.UtcDateTime;
-            }
-
-            Log.Error($"TimeStamp invalid format:input:'{timeString}' but expecting pattern:'{DefaultDatePattern}' example:'{DateTime.Now.ToString(DefaultDatePattern)}'");
-            return DateTime.MinValue;
-        }
-
-        private string ConvertToUtcTimeString(string timeString)
-        {
-            DateTime dateTime = DateTime.MinValue;
-
-            if (string.IsNullOrEmpty(timeString))
-            {
-                Log.Warning("empty time string");
-            }
-            else
-            {
-                dateTime = ConvertToUtcTime(timeString);
-                if (dateTime != DateTime.MinValue)
-                {
-                    timeString = dateTime.ToString("o");
-                }
-            }
-
-            Log.Info($"returning:time string:'{timeString}'");
-            return timeString;
         }
 
         private bool DefaultConfig()

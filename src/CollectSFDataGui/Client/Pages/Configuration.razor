@@ -3,8 +3,8 @@
 @using CollectSFData.Common
 @using CollectSFData
 @using BlazorApp.Helpers
-@using Microsoft.Extensions.Logging;
-
+@using Microsoft.Extensions.Logging
+@using System.Text.Json
 @inject HttpClient Http
 @inject NavigationManager navigationManager
 @inject ILogger<Configuration> logger;
@@ -21,7 +21,7 @@
 }
 else
 {
-    <RadzenTemplateForm Data="@config" Submit="@((ConfigurationOptions args) => { Submit(args); })">
+    <RadzenTemplateForm Data="@config" Submit="@((ConfigurationProperties args) => { Submit(args); })">
         <div class="row">
             <div class="col-md-6">
                 <RadzenFieldset Text="Required Information">
@@ -167,7 +167,7 @@ else
                         </div>
                     </div>
                 </RadzenFieldset>
-                <RadzenFieldset Text="SAS Info">
+                <RadzenFieldset Text="SAS Endpoint Information">
                     <div class="row">
                         <div class="align-items-center d-flex col-md-3">
                             <RadzenLabel Text="SAS Key" />
@@ -178,34 +178,37 @@ else
                     </div>
                     <div class="row">
                         <div class="align-items-center d-flex col-md-3">
-                            <RadzenLabel Text="Register" />
+                            <RadzenLabel Text="Absolute Path" />
                         </div>
                         <div class="col-md-9">
-                            <RadzenTextBox Disabled="true" Placeholder="Register #4" style="width: 100%;" Name="Register" />
+                            <RadzenLabel Text="@config.SasEndpointInfo.AbsolutePath" style="width: 100%;" Name="AbsolutePath" />
                         </div>
                     </div>
-                    <div class="row">
+                                        <div class="row">
                         <div class="align-items-center d-flex col-md-3">
-                            <RadzenLabel Text="Clerk" />
+                            <RadzenLabel Text="Blob Endpoint" />
                         </div>
                         <div class="col-md-9">
-                            <RadzenTextBox Disabled="true" Placeholder="Jane Doe" style="width: 100%;" Name="Clerk" />
+                            <RadzenLabel Text="@config.SasEndpointInfo.BlobEndpoint" style="width: 100%;" Name="BlobEndpoint" />
                         </div>
                     </div>
-                    <div class="row">
+                                        <div class="row">
                         <div class="align-items-center d-flex col-md-3">
-                            <RadzenLabel Text="Amount" />
+                            <RadzenLabel Text="Storage Account Name" />
                         </div>
-                        <div class="col-md-3">
-                            <RadzenNumeric Placeholder="300" style="width: 100%;" Name="Amount" @bind-Value="Amount" />
-                        </div>
-                        <div class="align-items-center d-flex col-md-2">
-                            <RadzenLabel Text="Tax" />
-                        </div>
-                        <div class="col-md-4">
-                            <RadzenNumeric Placeholder="123" style="width: 100%;" Name="Tax" @bind-Value="Tax" />
+                        <div class="col-md-9">
+                            <RadzenLabel Text="@config.SasEndpointInfo.StorageAccountName" style="width: 100%;" Name="StorageAccountName" />
                         </div>
                     </div>
+                                        <div class="row">
+                        <div class="align-items-center d-flex col-md-3">
+                            <RadzenLabel Text="SAS Token" />
+                        </div>
+                        <div class="col-md-9">
+                            <RadzenLabel Text="@config.SasEndpointInfo.SasToken" style="width: 100%;" Name="SasToken" />
+                        </div>
+                    </div>
+
                     <div class="row">
                         <div class="align-items-center d-flex col-md-3">
                             <RadzenLabel Text="Config Date" />
@@ -229,17 +232,17 @@ else
                 <RadzenButton ButtonType="ButtonType.Submit" Icon="save" style="margin-left: 20px;" Text="Save" />
             </div>
             <div class="row justify-content-left">
-                <RadzenButton ButtonStyle="ButtonStyle.Light" Icon="cancel" style="margin-left: 20px;" Text="Cancel" Click="@Cancel" />
-            </div>
-            <div class="row justify-content-left">
                 <RadzenButton Text="Upload" Click=@(args => upload.Upload()) Style="margin-left: 20px;" />
-                <RadzenUpload @ref="upload" Auto="false" Multiple="false" Url="upload/single" Style="margin-left: 20px;" 
-                    Change=@(args => OnChange(args, "Manual Upload"))
-                    Progress=@(args => OnProgress(args, "Manual Upload")) 
-                    Complete=@OnComplete
-                    />
+                <RadzenUpload @ref="upload" Auto="false" Multiple="false" Url="upload/single" Style="margin-left: 20px;"
+                          Change=@(args => OnChange(args, "Manual Upload"))
+                          Progress=@(args => OnProgress(args, "Manual Upload"))
+                          Complete=@OnComplete />
                 @*<RadzenUpload ChooseText="Upload" Url="upload/single" Style="margin-left: 20px;" Progress=@(args => OnProgress(args, "Single file upload")) />*@
             </div>
+            <div class="row justify-content-left">
+                <RadzenButton ButtonStyle="ButtonStyle.Light" Icon="cancel" style="margin-left: 20px;" Text="Cancel" Click="@Cancel" />
+            </div>
+
             <div class="col-xl-6">
                 <EventConsole @ref=@console />
             </div>
@@ -250,8 +253,8 @@ else
 
 @code {
     private List<string> GatherTypes;
-    private ConfigurationOptions config { get; set; }
-    private ConfigurationOptions tempconfig { get; set; }
+    private ConfigurationProperties config { get; set; }
+    private ConfigurationProperties tempconfig { get; set; }
     private string tableName;
 
     // temp
@@ -281,19 +284,18 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        ConfigurationOptions[] configs;
-        var queryString = navigationManager.QueryString();
-        configs = await Http.GetFromJsonAsync<ConfigurationOptions[]>("api/configuration");
-        config = configs[0].Clone();
-        tempconfig = configs[0].Clone();
+
+        ConfigurationProperties[] configs = await Http.GetFromJsonAsync<ConfigurationProperties[]>("api/configuration");
+        config = configs[0];
         tableName = config.KustoTable;
         GatherTypes = Enum.GetNames(typeof(CollectSFData.DataFile.FileTypesEnum)).ToList();
+        //GetCurrentConfig();
     }
     public class ConfigSubmit
     {
-        ConfigurationOptions Properties { get; set; }
+        ConfigurationProperties Properties { get; set; }
         public ConfigSubmit() { }
-        public ConfigSubmit(ConfigurationOptions properties)
+        public ConfigSubmit(ConfigurationProperties properties)
         {
             Properties = properties;
         }
@@ -325,20 +327,48 @@ else
     new Country() { Id = 2, Name = "Germany" }
     };
 
-    void Submit(ConfigurationOptions arg)
+    void Submit(ConfigurationProperties arg)
     {
         //
     }
 
     async void UpdateConfig(string uploadedJson)
     {
-      var response = await Http.PostAsJsonAsync("api/configuration/update", uploadedJson);
+        HttpResponseMessage response = await Http.PostAsJsonAsync("api/configuration/update", uploadedJson, GetJsonSerializerOptions());
+
+        string jsonString = await response.Content.ReadAsStringAsync();
+        jsonString = jsonString.Replace("\"{", "{").Replace("}\"", "}").Replace("\\\"", "\"");
+        ConfigurationProperties configurationProperties = JsonSerializer.Deserialize<ConfigurationProperties>(jsonString, GetJsonSerializerOptions());
+        console.Log($"UpdateConfig:exit:{configurationProperties.NoProgressTimeoutMin}");
+
+        var test = await response.Content.ReadAsStringAsync();
+        config = configurationProperties;
+        tableName = config.KustoTable;
+        console.Log($"UpdateConfig:exit:{test} changed");
+        //GetCurrentConfig();
     }
 
     void Cancel()
     {
         //
     }
+
+    JsonSerializerOptions GetJsonSerializerOptions()
+    {
+        JsonSerializerOptions options = new JsonSerializerOptions(JsonSerializerDefaults.General);
+        options.AllowTrailingCommas = true;
+        options.MaxDepth = 10;
+        options.PropertyNameCaseInsensitive = false;
+        return options;
+    }
+
+    async void GetCurrentConfig()
+    {
+        ConfigurationProperties[] configs = await Http.GetFromJsonAsync<ConfigurationProperties[]>("api/configuration", GetJsonSerializerOptions());
+        config = configs[0];
+        tableName = config.KustoTable;
+    }
+
 
     // file upload
     EventConsole console;
@@ -376,6 +406,9 @@ else
 
     void OnComplete(UploadCompleteEventArgs args)
     {
-        console.Log($"Server response: {args.RawResponse}");
+        string jsonString = args.RawResponse;
+
+        console.Log($"Server response: {jsonString}");
+        UpdateConfig(jsonString);
     }
 }
