@@ -73,6 +73,7 @@ namespace CollectSFData.Common
                 _cmdLineArgs.InitFromCmdLine();
             }
 
+            _tempPath = FileManager.NormalizePath(Path.GetTempPath() + _workDir);
             DateTimeOffset defaultOffset = DateTimeOffset.Now;
             StartTimeUtc = defaultOffset.UtcDateTime.AddHours(DefaultStartTimeHours);
             _startTime = defaultOffset.AddHours(DefaultStartTimeHours).ToString(DefaultDatePattern);
@@ -317,8 +318,6 @@ namespace CollectSFData.Common
         {
             try
             {
-                _tempPath = FileManager.NormalizePath(Path.GetTempPath() + _workDir);
-
                 if (args.Length == 0 && !_defaultConfigLoaded && GatherType == FileTypesEnum.unknown.ToString())
                 {
                     Log.Last(_cmdLineArgs.CmdLineApp.GetHelpText());
