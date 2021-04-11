@@ -27,6 +27,11 @@ namespace CollectSFData.DataFile
 
         public static string NormalizePath(string path, string directorySeparator = "/")
         {
+            if (string.IsNullOrEmpty(path))
+            {
+                return path;
+            }
+
             if (path.Contains("\\"))
             {
                 path = path.Replace("\\\\", directorySeparator);
