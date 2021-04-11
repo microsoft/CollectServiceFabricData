@@ -35,7 +35,8 @@ namespace CollectSFData.Azure
 
         public string QueueEndpoint { get; set; }
 
-        public string Saskey { get; set; }
+        public string Saskey { get; private set; }
+
         public string SasToken { get; set; } = string.Empty;
 
         public string StorageAccountName { get; set; }
