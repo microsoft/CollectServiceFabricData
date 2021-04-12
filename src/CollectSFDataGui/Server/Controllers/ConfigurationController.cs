@@ -1,13 +1,12 @@
-﻿using CollectSFDataGui.Shared;
-using CollectSFData;
+﻿using CollectSFData;
 using CollectSFData.Common;
+using CollectSFDataGui.Shared;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
-using System.Net;
 
 namespace CollectSFDataGui.Server.Controllers
 {
@@ -19,16 +18,16 @@ namespace CollectSFDataGui.Server.Controllers
     {
         private static Collector _collector;
 
-        private static List<LogMessage> _logMessages;
         private static ConfigurationOptions _config;
         private static ILogger<ConfigurationController> _logger;
+        private static List<LogMessage> _logMessages;
 
         static ConfigurationController()
         {
-            Collector _collector = new Collector(new string[0], false);
+            _collector = new Collector(new string[0], false);
             _logMessages = new List<LogMessage>();
-        // to subscribe to log messages
-        Log.MessageLogged += Log_MessageLogged;
+            // to subscribe to log messages
+            Log.MessageLogged += Log_MessageLogged;
             _config = _collector.Config;
         }
 
@@ -140,6 +139,5 @@ namespace CollectSFDataGui.Server.Controllers
                 _logMessages.Add(args);
             }
         }
-
     }
 }
