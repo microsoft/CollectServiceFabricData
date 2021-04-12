@@ -5,6 +5,7 @@
 
 using System;
 using System.Net;
+
 namespace CollectSFData.Azure
 {
     public class SasParameters
@@ -13,6 +14,7 @@ namespace CollectSFData.Azure
 
         public bool IsServiceSas { get; set; }
 
+        public string SasToken { get; private set; }
         public string Signature { get; set; }
 
         public string SignedExpiry { get; set; }
@@ -39,9 +41,10 @@ namespace CollectSFData.Azure
 
         public string SignedVersion { get; set; }
 
-        public string SasToken{get;private set;}
+        public SasParameters()
+        {
+        }
 
-        public SasParameters() { }
         public SasParameters(string sasToken)
         {
             SasToken = sasToken.TrimStart('?');

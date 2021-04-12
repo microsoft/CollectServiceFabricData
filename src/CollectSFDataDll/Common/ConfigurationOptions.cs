@@ -32,6 +32,16 @@ namespace CollectSFData.Common
         private string _tempPath;
         private int _threads;
 
+        public new string EndTimeStamp
+        {
+            get => _endTime;
+            set
+            {
+                EndTimeUtc = ConvertToUtcTime(value);
+                _endTime = ConvertToUtcTimeString(value);
+            }
+        }
+
         public FileTypesEnum FileType { get; private set; }
 
         public new string GatherType
@@ -54,6 +64,16 @@ namespace CollectSFData.Common
         {
             get => Log.LogDebug = _logDebug;
             set => Log.LogDebug = _logDebug = value;
+        }
+
+        public new string StartTimeStamp
+        {
+            get => _startTime;
+            set
+            {
+                StartTimeUtc = ConvertToUtcTime(value);
+                _startTime = ConvertToUtcTimeString(value);
+            }
         }
 
         public new int Threads
@@ -125,6 +145,7 @@ namespace CollectSFData.Common
         {
             return (ConfigurationOptions)MemberwiseClone();
         }
+
         public DateTime ConvertToUtcTime(string timeString)
         {
             DateTimeOffset dateTimeOffset;
@@ -137,26 +158,6 @@ namespace CollectSFData.Common
 
             Log.Error($"TimeStamp invalid format:input:'{timeString}' but expecting pattern:'{DefaultDatePattern}' example:'{DateTime.Now.ToString(DefaultDatePattern)}'");
             return DateTime.MinValue;
-        }
-
-        public new string EndTimeStamp
-        {
-            get => _endTime;
-            set
-            {
-                EndTimeUtc = ConvertToUtcTime(value);
-                _endTime = ConvertToUtcTimeString(value);
-            }
-        }
-
-        public new string StartTimeStamp
-        {
-            get => _startTime;
-            set
-            {
-                StartTimeUtc = ConvertToUtcTime(value);
-                _startTime = ConvertToUtcTimeString(value);
-            }
         }
 
         public string ConvertToUtcTimeString(string timeString)
@@ -179,6 +180,7 @@ namespace CollectSFData.Common
             Log.Info($"returning:time string:'{timeString}'");
             return timeString;
         }
+
         public void DisplayStatus()
         {
             Log.Min($"      Gathering: {FileType.ToString()}", ConsoleColor.White);
