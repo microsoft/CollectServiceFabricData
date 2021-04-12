@@ -9,8 +9,9 @@
             "request": "launch",
             "browser": "edge",
             "type": "blazorwasm",
-            "program": "${workspaceFolder}/src/CollectSFDataGui/bin/Debug/net5.0/CollectSFDataGui.dll",
-            "cwd": "${workspaceFolder}/src/CollectSFDataGui"
+            //"program": "${workspaceFolder}src/CollectSFDataGui/Client/bin/Debug/net5.0/CollectSFData.exe",
+            "program": "${workspaceFolder}src/CollectSFDataGui/Client/bin/Debug/net5.0/CollectSFDataGui.Client.dll",
+            "cwd": "${workspaceFolder}/src/CollectSFDataGui/Client/bin/Debug/net5.0"
         },
         {
             "name": "Attach to Edge",
@@ -23,6 +24,7 @@
             "name": ".NET Core Launch (web)",
             "type": "coreclr",
             "request": "launch",
+            "justMyCode": false,
             "preLaunchTask": "build",
             "program": "${workspaceFolder}/src/CollectSFDataGui/bin/Debug/net5.0/wwwroot/_framework/CollectSFDataGui.dll",
             "args": [],
