@@ -387,12 +387,16 @@ else
                 </RadzenFieldset>
                 <RadzenFieldset Text="Operations">
                     <div class="row justify-content-left">
-                        <RadzenButton Text="Upload" Click=@(args => upload.Upload()) Style="margin-left: 20px;" />
+                        @* <RadzenButton Text="Upload" Click=@(args => upload.Upload()) Style="margin-left: 20px;" />
                         <RadzenUpload @ref="upload" Auto="false" Multiple="false" Url="upload/single" Style="margin-left: 20px;"
                         Change=@(args => OnChange(args, "Manual Upload")) Progress=@(args => OnProgress(args, "Manual Upload"))
-                        Complete=@OnComplete />
-                        @*<RadzenUpload ChooseText="Upload" Url="upload/single" Style="margin-left: 20px;" Progress=@(args =>
-                            OnProgress(args, "Single file upload")) />*@
+                        Complete=@OnComplete /> *@
+                        <RadzenUpload
+                            ChooseText="Upload" 
+                            Url="upload/single" 
+                            Style="margin-left: 20px;" 
+                            Complete=@(args => OnComplete(args))
+                        />
                     </div>
                     <div class="row justify-content-left">
                         <RadzenButton ButtonType="ButtonType.Submit" Icon="save" style="margin-left: 20px;" Text="Save" />
@@ -406,7 +410,9 @@ else
         </div>
     </RadzenTemplateForm>
     <div class="container">
+        <div class="console-content">
         <EventConsole @ref=@console />
+        </div>
     </div>
 }
 
