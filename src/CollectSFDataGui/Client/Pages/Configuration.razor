@@ -136,6 +136,190 @@ else
                         </Tabs>
                     </RadzenTabs>
                 </RadzenFieldset>
+                <RadzenFieldset Text="Filters">
+                    <div class="row">
+                        <div class="col-md-4 align-items-center d-flex">
+                            <RadzenLabel Text="Container Filter" />
+                        </div>
+                        <div class="col-md-8">
+                            <RadzenTextBox @bind-Value=@config.ContainerFilter style="width: 100%;" Placeholder="string or regex filter pattern for container names" />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 align-items-center d-flex">
+                            <RadzenLabel Text="Node Filter" />
+                        </div>
+                        <div class="col-md-8">
+                            <RadzenTextBox @bind-Value=@config.NodeFilter style="width: 100%;" Placeholder="string or regex filter pattern for node names" />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 align-items-center d-flex">
+                            <RadzenLabel Text="Uri Filter" />
+                        </div>
+                        <div class="col-md-8">
+                            <RadzenTextBox @bind-Value=@config.UriFilter style="width: 100%;" Placeholder="string or regex filter pattern for storage blob uris" />
+                        </div>
+                    </div>
+                </RadzenFieldset>
+                <RadzenFieldset Text="Operations">
+                    <div class="row justify-content-left">
+                        @* <RadzenButton Text="Upload" Click=@(args => upload.Upload()) Style="margin-left: 20px;" />
+                        <RadzenUpload @ref="upload" Auto="false" Multiple="false" Url="upload/single" Style="margin-left: 20px;"
+                        Change=@(args => OnChange(args, "Manual Upload")) Progress=@(args => OnProgress(args, "Manual Upload"))
+                        Complete=@OnComplete /> *@
+                        <RadzenUpload
+                            ChooseText="Upload" 
+                            Url="upload/single" 
+                            Style="margin-left: 20px;" 
+                            Complete=@(args => OnComplete(args))
+                        />
+                    </div>
+                    <div class="row justify-content-left">
+                        <RadzenButton ButtonType="ButtonType.Submit" Icon="save" style="margin-left: 20px;" Text="Save" />
+                    </div>
+                    <div class="row justify-content-left">
+                        <RadzenButton ButtonStyle="ButtonStyle.Light" Icon="cancel" style="margin-left: 20px;" Text="Cancel"
+                        Click="@Cancel" />
+                    </div>
+                </RadzenFieldset>
+            </div>
+            <div class="col-md-6">                
+                <RadzenFieldset Text="Azure Information">
+                    <RadzenTabs SelectedIndex="0">
+                        <Tabs>
+                            <RadzenTabsItem Text="SAS Endpoint Information">
+                                <div class="row">
+                                    <div class="align-items-center d-flex col-md-3">
+                                        <RadzenLabel Text="SAS Key" />
+                                    </div>
+                                    <div class="col-md-9">
+                                        <RadzenTextBox @bind-Value=@config.SasKey Placeholder="enter sas key" style="width: 100%;" />
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="align-items-center d-flex col-md-3">
+                                        <RadzenLabel Text="Blob Endpoint" />
+                                    </div>
+                                    <div class="col-md-9">
+                                        <RadzenTextBox Value=@config.SasEndpointInfo.BlobEndpoint style="width: 100%;" Disabled="true" ReadOnly="true"/> 
+
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="align-items-center d-flex col-md-3">
+                                        <RadzenLabel Text="Storage Account" />
+                                    </div>
+                                    <div class="col-md-9">
+                                        <RadzenTextBox Value=@config.SasEndpointInfo.StorageAccountName style="width: 100%;" Disabled="true" ReadOnly="true"/> 
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="align-items-center d-flex col-md-3">
+                                        <RadzenLabel Text="SAS Token" />
+                                    </div>
+                                    <div class="col-md-9">
+                                        <RadzenTextBox Value=@config.SasEndpointInfo.SasToken style="width: 100%;" Disabled="true" ReadOnly="true"/> 
+                                </div>
+                                </div>
+                                <div class="row">
+                                    <div class="align-items-center d-flex col-md-3">
+                                        <RadzenLabel Text="Token Start Time Utc" />
+                                    </div>
+                                    <div class="col-md-3">
+                                        <RadzenDatePicker style="width: 100%;" TValue="DateTime" @bind-Value=@config.SasEndpointInfo.Parameters.SignedStartUtc Disabled="true" ReadOnly="true" />
+                                    </div>
+                                    <div class="align-items-center d-flex col-md-3">
+                                        <RadzenLabel Text="Token Expire Time Utc" />
+                                    </div>
+                                    <div class="col-md-3">
+                                        <RadzenDatePicker style="width: 100%;" TValue="DateTime" @bind-Value=@config.SasEndpointInfo.Parameters.SignedExpiryUtc Disabled="true" ReadOnly="true" />
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="align-items-center d-flex col-md-3">
+                                        <RadzenLabel Text="Signed Services" />
+                                    </div>
+                                    <div class="col-md-3">
+                                        <RadzenTextBox Value=@config.SasEndpointInfo.Parameters.SignedServices style="width: 100%;" Disabled="true" ReadOnly="true"/> 
+                                    </div>
+                                    <div class="align-items-center d-flex col-md-3">
+                                        <RadzenLabel Text="Signed Resource Types" />
+                                    </div>
+                                    <div class="col-md-3">
+                                        <RadzenTextBox Value=@config.SasEndpointInfo.Parameters.SignedResourceTypes style="width: 100%;" Disabled="true" ReadOnly="true"/>                             
+                                    </div>
+                                </div>
+                            </RadzenTabsItem>
+                            <RadzenTabsItem Text="Azure Authentication">
+                                <div class="row">
+                                    <div class="align-items-center d-flex col-md-3">
+                                        <RadzenLabel Text="Azure Client Id" />
+                                    </div>
+                                    <div class="col-md-9">
+                                        <RadzenTextBox @bind-Value=@config.AzureClientId Placeholder="enter azure client id" style="width: 100%;" />
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="align-items-center d-flex col-md-3">
+                                        <RadzenLabel Text="Azure Client Certificate" />
+                                    </div>
+                                    <div class="col-md-9">
+                                        <RadzenTextBox @bind-Value=@config.AzureClientSecret Placeholder="enter azure client id certificate" style="width: 100%;" />
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="align-items-center d-flex col-md-3">
+                                        <RadzenLabel Text="Azure Client Secret" />
+                                    </div>
+                                    <div class="col-md-9">
+                                        <RadzenTextBox @bind-Value=@config.AzureClientSecret Placeholder="enter client id secret" style="width: 100%;" />
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="align-items-center d-flex col-md-3">
+                                        <RadzenLabel Text="Azure Subscription Id" />
+                                    </div>
+                                    <div class="col-md-9">
+                                        <RadzenTextBox @bind-Value=@config.AzureSubscriptionId Placeholder="enter azure subscription id" style="width: 100%;" />
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="align-items-center d-flex col-md-3">
+                                        <RadzenLabel Text="Azure Tenant Id" />
+                                    </div>
+                                    <div class="col-md-9">
+                                        <RadzenTextBox @bind-Value=@config.AzureTenantId Placeholder="enter azure tenant id" style="width: 100%;" />
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="align-items-center d-flex col-md-3">
+                                        <RadzenLabel Text="Azure Resource Group" />
+                                    </div>
+                                    <div class="col-md-9">
+                                        <RadzenTextBox @bind-Value=@config.AzureResourceGroup Placeholder="enter azure resource group (log analytics only)" style="width: 100%;" />
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="align-items-center d-flex col-md-3">
+                                        <RadzenLabel Text="Azure Resource Group Location" />
+                                    </div>
+                                    <div class="col-md-9">
+                                        <RadzenTextBox @bind-Value=@config.AzureResourceGroupLocation Placeholder="enter azure resource group (log analytics only)" style="width: 100%;" />
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="align-items-center d-flex col-md-3">
+                                        <RadzenLabel Text="Azure Resource Uri" />
+                                    </div>
+                                    <div class="col-md-9">
+                                        <RadzenTextBox @bind-Value=@config.ResourceUri Placeholder="enter azure resource uri (for support use only)" style="width: 100%;" />
+                                    </div>
+                                </div>
+                            </RadzenTabsItem>
+                        </Tabs>
+                    </RadzenTabs>
+                </RadzenFieldset>
                 <RadzenFieldset Text="Options">
                     <div class="row">
                         <div class="col-md-4 align-items-center d-flex">
@@ -228,182 +412,6 @@ else
                         <div class="col-md-8">
                             <RadzenNumeric @bind-Value=@config.Threads TValue="int" Min="1" Max="64" />
                         </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-4 align-items-center d-flex">
-                            <RadzenLabel Text="Container Filter" />
-                        </div>
-                        <div class="col-md-8">
-                            <RadzenTextBox @bind-Value=@config.ContainerFilter style="width: 100%;" Placeholder="string or regex filter pattern for container names" />
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-4 align-items-center d-flex">
-                            <RadzenLabel Text="Node Filter" />
-                        </div>
-                        <div class="col-md-8">
-                            <RadzenTextBox @bind-Value=@config.NodeFilter style="width: 100%;" Placeholder="string or regex filter pattern for node names" />
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-4 align-items-center d-flex">
-                            <RadzenLabel Text="Uri Filter" />
-                        </div>
-                        <div class="col-md-8">
-                            <RadzenTextBox @bind-Value=@config.UriFilter style="width: 100%;" Placeholder="string or regex filter pattern for storage blob uris" />
-                        </div>
-                    </div>
-                </RadzenFieldset>
-            </div>
-            <div class="col-md-6">
-                <RadzenFieldset Text="Azure Information">
-                    <div class="row">
-                        <div class="align-items-center d-flex col-md-3">
-                            <RadzenLabel Text="Azure Client Id" />
-                        </div>
-                        <div class="col-md-9">
-                            <RadzenTextBox @bind-Value=@config.AzureClientId Placeholder="enter azure client id" style="width: 100%;" />
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="align-items-center d-flex col-md-3">
-                            <RadzenLabel Text="Azure Client Certificate" />
-                        </div>
-                        <div class="col-md-9">
-                            <RadzenTextBox @bind-Value=@config.AzureClientSecret Placeholder="enter azure client id certificate" style="width: 100%;" />
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="align-items-center d-flex col-md-3">
-                            <RadzenLabel Text="Azure Client Secret" />
-                        </div>
-                        <div class="col-md-9">
-                            <RadzenTextBox @bind-Value=@config.AzureClientSecret Placeholder="enter client id secret" style="width: 100%;" />
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="align-items-center d-flex col-md-3">
-                            <RadzenLabel Text="Azure Subscription Id" />
-                        </div>
-                        <div class="col-md-9">
-                            <RadzenTextBox @bind-Value=@config.AzureSubscriptionId Placeholder="enter azure subscription id" style="width: 100%;" />
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="align-items-center d-flex col-md-3">
-                            <RadzenLabel Text="Azure Tenant Id" />
-                        </div>
-                        <div class="col-md-9">
-                            <RadzenTextBox @bind-Value=@config.AzureTenantId Placeholder="enter azure tenant id" style="width: 100%;" />
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="align-items-center d-flex col-md-3">
-                            <RadzenLabel Text="Azure Resource Group" />
-                        </div>
-                        <div class="col-md-9">
-                            <RadzenTextBox @bind-Value=@config.AzureResourceGroup Placeholder="enter azure resource group (log analytics only)" style="width: 100%;" />
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="align-items-center d-flex col-md-3">
-                            <RadzenLabel Text="Azure Resource Group Location" />
-                        </div>
-                        <div class="col-md-9">
-                            <RadzenTextBox @bind-Value=@config.AzureResourceGroupLocation Placeholder="enter azure resource group (log analytics only)" style="width: 100%;" />
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="align-items-center d-flex col-md-3">
-                            <RadzenLabel Text="Azure Resource Uri" />
-                        </div>
-                        <div class="col-md-9">
-                            <RadzenTextBox @bind-Value=@config.ResourceUri Placeholder="enter azure resource uri (for support use only)" style="width: 100%;" />
-                        </div>
-                    </div>
-                </RadzenFieldset>
-                <RadzenFieldset Text="SAS Endpoint Information">
-                    <div class="row">
-                        <div class="align-items-center d-flex col-md-3">
-                            <RadzenLabel Text="SAS Key" />
-                        </div>
-                        <div class="col-md-9">
-                            <RadzenTextBox @bind-Value=@config.SasKey Placeholder="enter sas key" style="width: 100%;" />
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="align-items-center d-flex col-md-3">
-                            <RadzenLabel Text="Blob Endpoint" />
-                        </div>
-                        <div class="col-md-9">
-                             <RadzenTextBox Value=@config.SasEndpointInfo.BlobEndpoint style="width: 100%;" Disabled="true" ReadOnly="true"/> 
-
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="align-items-center d-flex col-md-3">
-                            <RadzenLabel Text="Storage Account" />
-                        </div>
-                        <div class="col-md-9">
-                            <RadzenTextBox Value=@config.SasEndpointInfo.StorageAccountName style="width: 100%;" Disabled="true" ReadOnly="true"/> 
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="align-items-center d-flex col-md-3">
-                            <RadzenLabel Text="SAS Token" />
-                        </div>
-                        <div class="col-md-9">
-                            <RadzenTextBox Value=@config.SasEndpointInfo.SasToken style="width: 100%;" Disabled="true" ReadOnly="true"/> 
-                       </div>
-                    </div>
-                    <div class="row">
-                        <div class="align-items-center d-flex col-md-3">
-                            <RadzenLabel Text="Token Start Time Utc" />
-                        </div>
-                        <div class="col-md-3">
-                            <RadzenDatePicker style="width: 100%;" TValue="DateTime" @bind-Value=@config.SasEndpointInfo.Parameters.SignedStartUtc Disabled="true" ReadOnly="true" />
-                        </div>
-                        <div class="align-items-center d-flex col-md-3">
-                            <RadzenLabel Text="Token Expire Time Utc" />
-                        </div>
-                        <div class="col-md-3">
-                            <RadzenDatePicker style="width: 100%;" TValue="DateTime" @bind-Value=@config.SasEndpointInfo.Parameters.SignedExpiryUtc Disabled="true" ReadOnly="true" />
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="align-items-center d-flex col-md-3">
-                            <RadzenLabel Text="Signed Services" />
-                        </div>
-                        <div class="col-md-3">
-                            <RadzenTextBox Value=@config.SasEndpointInfo.Parameters.SignedServices style="width: 100%;" Disabled="true" ReadOnly="true"/> 
-                        </div>
-                        <div class="align-items-center d-flex col-md-3">
-                            <RadzenLabel Text="Signed Resource Types" />
-                        </div>
-                        <div class="col-md-3">
-                            <RadzenTextBox Value=@config.SasEndpointInfo.Parameters.SignedResourceTypes style="width: 100%;" Disabled="true" ReadOnly="true"/>                             
-                        </div>
-                    </div>
-                </RadzenFieldset>
-                <RadzenFieldset Text="Operations">
-                    <div class="row justify-content-left">
-                        @* <RadzenButton Text="Upload" Click=@(args => upload.Upload()) Style="margin-left: 20px;" />
-                        <RadzenUpload @ref="upload" Auto="false" Multiple="false" Url="upload/single" Style="margin-left: 20px;"
-                        Change=@(args => OnChange(args, "Manual Upload")) Progress=@(args => OnProgress(args, "Manual Upload"))
-                        Complete=@OnComplete /> *@
-                        <RadzenUpload
-                            ChooseText="Upload" 
-                            Url="upload/single" 
-                            Style="margin-left: 20px;" 
-                            Complete=@(args => OnComplete(args))
-                        />
-                    </div>
-                    <div class="row justify-content-left">
-                        <RadzenButton ButtonType="ButtonType.Submit" Icon="save" style="margin-left: 20px;" Text="Save" />
-                    </div>
-                    <div class="row justify-content-left">
-                        <RadzenButton ButtonStyle="ButtonStyle.Light" Icon="cancel" style="margin-left: 20px;" Text="Cancel"
-                        Click="@Cancel" />
                     </div>
                 </RadzenFieldset>
             </div>
