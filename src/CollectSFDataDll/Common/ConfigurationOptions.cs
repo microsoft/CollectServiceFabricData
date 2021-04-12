@@ -125,23 +125,60 @@ namespace CollectSFData.Common
         {
             return (ConfigurationOptions)MemberwiseClone();
         }
-
-        public new DateTime ConvertToUtcTime(string timeString)
+        public DateTime ConvertToUtcTime(string timeString)
         {
-            DateTime result = base.ConvertToUtcTime(timeString);
+            DateTimeOffset dateTimeOffset;
 
-            if (result == DateTime.MinValue)
+            if (DateTimeOffset.TryParse(timeString, CultureInfo.InvariantCulture, DateTimeStyles.None, out dateTimeOffset))
             {
-                Log.Error($"TimeStamp invalid format:input:'{timeString}' but expecting pattern:'{DefaultDatePattern}' example:'{DateTime.Now.ToString(DefaultDatePattern)}'");
+                Log.Info($"TimeStamp valid format:input:'{timeString}'");
+                return dateTimeOffset.UtcDateTime;
+            }
+
+            Log.Error($"TimeStamp invalid format:input:'{timeString}' but expecting pattern:'{DefaultDatePattern}' example:'{DateTime.Now.ToString(DefaultDatePattern)}'");
+            return DateTime.MinValue;
+        }
+
+        public new string EndTimeStamp
+        {
+            get => _endTime;
+            set
+            {
+                EndTimeUtc = ConvertToUtcTime(value);
+                _endTime = ConvertToUtcTimeString(value);
+            }
+        }
+
+        public new string StartTimeStamp
+        {
+            get => _startTime;
+            set
+            {
+                StartTimeUtc = ConvertToUtcTime(value);
+                _startTime = ConvertToUtcTimeString(value);
+            }
+        }
+
+        public string ConvertToUtcTimeString(string timeString)
+        {
+            DateTime dateTime = DateTime.MinValue;
+
+            if (string.IsNullOrEmpty(timeString))
+            {
+                Log.Warning("empty time string");
             }
             else
             {
-                Log.Info($"TimeStamp valid format:input:'{timeString}'");
+                dateTime = ConvertToUtcTime(timeString);
+                if (dateTime != DateTime.MinValue)
+                {
+                    timeString = dateTime.ToString("o");
+                }
             }
 
-            return result;
+            Log.Info($"returning:time string:'{timeString}'");
+            return timeString;
         }
-
         public void DisplayStatus()
         {
             Log.Min($"      Gathering: {FileType.ToString()}", ConsoleColor.White);
