@@ -132,6 +132,64 @@ else
                                 </div>
                             </RadzenTabsItem>
                             <RadzenTabsItem Text="Log Analytics">
+                            <div class="row">
+                                <div class="col-md-4 align-items-center d-flex">
+                                    <RadzenLabel Text="Log Analytics Id" />
+                                </div>
+                                <div class="col-md-8">
+                                    <RadzenTextBox @bind-Value=@config.LogAnalyticsId style="width: 100%;" Placeholder="log analytics workspace id" />
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-4 align-items-center d-flex">
+                                    <RadzenLabel Text="Log Analytics Key" />
+                                </div>
+                                <div class="col-md-8">
+                                    <RadzenTextBox @bind-Value=@config.LogAnalyticsKey style="width: 100%;" Placeholder="log analytics workspace key" />
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-4 align-items-center d-flex">
+                                    <RadzenLabel Text="Log Analytics Workspace Name" />
+                                </div>
+                                <div class="col-md-8">
+                                    <RadzenTextBox @bind-Value=@config.LogAnalyticsWorkspaceName style="width: 100%;" Placeholder="name of log analytics workspace name (for creation only)" />
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-4 align-items-center d-flex">
+                                    <RadzenLabel Text="Log Analytics Workspace Sku" />
+                                </div>
+                                <div class="col-md-8">
+                                    <RadzenTextBox @bind-Value=@config.LogAnalyticsWorkspaceSku style="width: 100%;" Placeholder="name of log analytics workspace sku typically 'PerGB2018'" />
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-4 align-items-center d-flex">
+                                    <RadzenLabel Text="Log Analytics Create Table" />
+                                </div>
+                                <div class="col-md-8">
+                                    <RadzenSelectBar @bind-Value=@config.LogAnalyticsCreate TValue="bool">
+                                        <Items>
+                                            <RadzenSelectBarItem Text="On" Value="true" />
+                                            <RadzenSelectBarItem Text="Off" Value="false" />
+                                        </Items>
+                                    </RadzenSelectBar>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-4 align-items-center d-flex">
+                                    <RadzenLabel Text="Log Analytics Recreate Table" />
+                                </div>
+                                <div class="col-md-8">
+                                    <RadzenSelectBar @bind-Value=@config.LogAnalyticsRecreate TValue="bool">
+                                        <Items>
+                                            <RadzenSelectBarItem Text="On" Value="true" />
+                                            <RadzenSelectBarItem Text="Off" Value="false" />
+                                        </Items>
+                                    </RadzenSelectBar>
+                                </div>
+                            </div>
                             </RadzenTabsItem>
                         </Tabs>
                     </RadzenTabs>
@@ -185,7 +243,7 @@ else
                 </RadzenFieldset>
             </div>
             <div class="col-md-6">                
-                <RadzenFieldset Text="Azure Information">
+                <RadzenFieldset Text="Authorization">
                     <RadzenTabs SelectedIndex="0">
                         <Tabs>
                             <RadzenTabsItem Text="SAS Endpoint Information">
@@ -251,7 +309,7 @@ else
                                     </div>
                                 </div>
                             </RadzenTabsItem>
-                            <RadzenTabsItem Text="Azure Authentication">
+                            <RadzenTabsItem Text="Azure Configuration">
                                 <div class="row">
                                     <div class="align-items-center d-flex col-md-3">
                                         <RadzenLabel Text="Azure Client Id" />
