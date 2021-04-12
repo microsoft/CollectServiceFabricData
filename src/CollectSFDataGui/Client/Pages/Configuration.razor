@@ -1,5 +1,6 @@
 ﻿@page "/configuration"
 @using CollectSFDataGui.Shared
+@using CollectSFData.Azure
 @using CollectSFData.Common
 @using CollectSFData
 @using BlazorApp.Helpers
@@ -8,6 +9,7 @@
 @inject HttpClient Http
 @inject NavigationManager navigationManager
 @inject ILogger<Configuration> logger;
+
 
 <style>
     form .row {
@@ -30,8 +32,8 @@ else
                             <RadzenLabel Text="Gather Type" />
                         </div>
                         <div class="col-md-8">
-                            <RadzenDropDown @bind-Value="config.GatherType
-                            " AllowClear="true" Placeholder="Select something" Data="@GatherTypes" style="width: 100%;" TextProperty="Gather Type" ValueProperty="GatherTypeValue" Name="GatherType">
+                            <RadzenDropDown @bind-Value=@config.GatherType AllowClear="true" Placeholder="Select something" Data="@GatherTypes" style="width: 100%;"
+                            TextProperty="Gather Type" ValueProperty="GatherTypeValue" Name="GatherType">
                             </RadzenDropDown>
                         </div>
                     </div>
@@ -40,7 +42,7 @@ else
                             <RadzenLabel Text="Start Time Stamp" />
                         </div>
                         <div class="col-md-8">
-                            <RadzenDatePicker style="width: 100%;" Name="StartDate" @bind-Value="config.StartTimeUtc" />
+                            <RadzenDatePicker style="width: 100%;" Name="StartDate" @bind-Value=@config.StartTimeUtc />
                         </div>
                     </div>
                     <div class="row">
@@ -48,7 +50,7 @@ else
                             <RadzenLabel Text="End Time Stamp" />
                         </div>
                         <div class="col-md-8">
-                            <RadzenDatePicker style="width: 100%;" Name="EndDate" @bind-Value="config.EndTimeUtc" />
+                            <RadzenDatePicker style="width: 100%;" Name="EndDate" @bind-Value=@config.EndTimeUtc />
                         </div>
                     </div>
                 </RadzenFieldset>
@@ -58,7 +60,7 @@ else
                             <RadzenLabel Text="Table Name" />
                         </div>
                         <div class="col-md-8">
-                            <RadzenTextBox @bind-Value="tableName" style="width: 100%;" Name="TableName" />
+                            <RadzenTextBox @bind-Value=@tableName style="width: 100%;" Name="TableName" />
                         </div>
                     </div>
                     <RadzenTabs SelectedIndex="0">
@@ -69,7 +71,9 @@ else
                                         <RadzenLabel Text="Kusto Cluster" />
                                     </div>
                                     <div class="col-md-10">
-                                        <RadzenTextBox @bind-Value="config.KustoCluster" Placeholder="https://ingest-sfcluster.kusto.windows.net/sfdatabase" style="width: 100%;" Name="KustoCluster" />
+                                        <RadzenTextBox @bind-Value=@config.KustoCluster
+                                        Placeholder="https://ingest-sfcluster.kusto.windows.net/sfdatabase"
+                                        style="width: 100%;" Name="KustoCluster" />
                                     </div>
                                 </div>
 
@@ -140,7 +144,8 @@ else
                         </div>
                         <div class="col-md-10">
                             <RadzenTextBox Placeholder="123" style="width: 45.3125px;" Name="StoreId" />
-                            <RadzenButton ButtonStyle="ButtonStyle.Info" Icon="add_location" style="margin-left: 11px; width: 166.046875px;" Text="Locate store">
+                            <RadzenButton ButtonStyle="ButtonStyle.Info" Icon="add_location"
+                            style="margin-left: 11px; width: 166.046875px;" Text="Locate store">
                             </RadzenButton>
                         </div>
                     </div>
@@ -149,7 +154,8 @@ else
                             <RadzenLabel Text="Name" />
                         </div>
                         <div class="col-md-10">
-                            <RadzenTextBox Disabled="true" Placeholder="The warehouse" style="width: 100%;" Name="Warehouse" />
+                            <RadzenTextBox Disabled="true" Placeholder="The warehouse" style="width: 100%;"
+                            Name="Warehouse" />
                         </div>
                     </div>
                     <div class="row">
@@ -173,7 +179,7 @@ else
                             <RadzenLabel Text="SAS Key" />
                         </div>
                         <div class="col-md-9">
-                            <RadzenTextBox @bind-Value="config.SasKey" Placeholder="enter sas key" style="width: 100%;" />
+                            <RadzenTextBox @bind-Value=@config.SasKey Placeholder="enter sas key" style="width: 100%;" />
                         </div>
                     </div>
                     <div class="row">
@@ -181,7 +187,7 @@ else
                             <RadzenLabel Text="Absolute Path" />
                         </div>
                         <div class="col-md-9">
-                            <RadzenTextBox @bind-Value="config.SasEndpointInfo.AbsolutePath" style="width: 100%;" Name="AbsolutePath" />
+                            <RadzenTextBox Value=@config.SasEndpointInfo.AbsolutePath style="width: 100%;" Name="AbsolutePath" Disabled="true" ReadOnly="true"/>
                         </div>
                     </div>
                     <div class="row">
@@ -189,15 +195,17 @@ else
                             <RadzenLabel Text="Blob Endpoint" />
                         </div>
                         <div class="col-md-9">
-                            <RadzenTextBox @bind-Value="config.SasEndpointInfo.BlobEndpoint" style="width: 100%;" Name="BlobEndpoint" />
+                             <RadzenTextBox Value=@config.SasEndpointInfo.BlobEndpoint style="width: 100%;"
+                                Name="BlobEndpoint" Disabled="true" ReadOnly="true"/> 
+
                         </div>
                     </div>
                     <div class="row">
                         <div class="align-items-center d-flex col-md-3">
-                            <RadzenLabel Text="Storage Account Name" />
+                            <RadzenLabel Text="Storage Account" />
                         </div>
                         <div class="col-md-9">
-                            <RadzenTextBox Value="@config.SasEndpointInfo.StorageAccountName" style="width: 100%;" Name="StorageAccountName" />
+                            <RadzenTextBox Value=@config.SasEndpointInfo.StorageAccountName style="width: 100%;" Name="StorageAccountName" Disabled="true" ReadOnly="true"/> 
                         </div>
                     </div>
                     <div class="row">
@@ -205,7 +213,35 @@ else
                             <RadzenLabel Text="SAS Token" />
                         </div>
                         <div class="col-md-9">
-                            <RadzenTextBox Value="@config.SasEndpointInfo.SasToken" style="width: 100%;" Name="SasToken" />
+                            <RadzenTextBox Value=@config.SasEndpointInfo.SasToken style="width: 100%;" Name="SasToken" Disabled="true" ReadOnly="true"/> 
+                       </div>
+                    </div>
+                    <div class="row">
+                        <div class="align-items-center d-flex col-md-3">
+                            <RadzenLabel Text="Token Start Time Utc" />
+                        </div>
+                        <div class="col-md-3">
+                            <RadzenDatePicker style="width: 100%;" Name="EndDate" TValue="DateTime" @bind-Value=@config.SasEndpointInfo.Parameters.SignedStartUtc Disabled="true" ReadOnly="true" />
+                        </div>
+                        <div class="align-items-center d-flex col-md-3">
+                            <RadzenLabel Text="Token Expire Time Utc" />
+                        </div>
+                        <div class="col-md-3">
+                            <RadzenDatePicker style="width: 100%;" Name="EndDate" TValue="DateTime" @bind-Value=@config.SasEndpointInfo.Parameters.SignedExpiryUtc Disabled="true" ReadOnly="true" />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="align-items-center d-flex col-md-3">
+                            <RadzenLabel Text="Signed Services" />
+                        </div>
+                        <div class="col-md-3">
+                            <RadzenTextBox Value=@config.SasEndpointInfo.Parameters.SignedServices style="width: 100%;" Name="SasToken" Disabled="true" ReadOnly="true"/> 
+                        </div>
+                        <div class="align-items-center d-flex col-md-3">
+                            <RadzenLabel Text="Signed Resource Types" />
+                        </div>
+                        <div class="col-md-3">
+                            <RadzenTextBox Value=@config.SasEndpointInfo.Parameters.SignedResourceTypes style="width: 100%;" Name="SasToken" Disabled="true" ReadOnly="true"/>                             
                         </div>
                     </div>
                 </RadzenFieldset>
@@ -219,13 +255,14 @@ else
             <div class="row justify-content-left">
                 <RadzenButton Text="Upload" Click=@(args => upload.Upload()) Style="margin-left: 20px;" />
                 <RadzenUpload @ref="upload" Auto="false" Multiple="false" Url="upload/single" Style="margin-left: 20px;"
-                          Change=@(args => OnChange(args, "Manual Upload"))
-                          Progress=@(args => OnProgress(args, "Manual Upload"))
-                          Complete=@OnComplete />
-                @*<RadzenUpload ChooseText="Upload" Url="upload/single" Style="margin-left: 20px;" Progress=@(args => OnProgress(args, "Single file upload")) />*@
+                Change=@(args => OnChange(args, "Manual Upload")) Progress=@(args => OnProgress(args, "Manual Upload"))
+                Complete=@OnComplete />
+                @*<RadzenUpload ChooseText="Upload" Url="upload/single" Style="margin-left: 20px;" Progress=@(args =>
+                    OnProgress(args, "Single file upload")) />*@
             </div>
             <div class="row justify-content-left">
-                <RadzenButton ButtonStyle="ButtonStyle.Light" Icon="cancel" style="margin-left: 20px;" Text="Cancel" Click="@Cancel" />
+                <RadzenButton ButtonStyle="ButtonStyle.Light" Icon="cancel" style="margin-left: 20px;" Text="Cancel"
+                Click="@Cancel" />
             </div>
 
             <div class="col-xl-6">
@@ -269,6 +306,9 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+#if DEBUG
+//await Task.Delay(10000);
+#endif
 
         ConfigurationProperties[] configs = await Http.GetFromJsonAsync<ConfigurationProperties[]>("api/configurationJson");
         config = configs[0];
@@ -302,15 +342,15 @@ else
 
     List<CreditCard> cards = new List<CreditCard>()
 {
-    new CreditCard() { CardId = 1, CardNr = "5555555555554444" },
-    new CreditCard() { CardId = 2, CardNr = "4012888888881881" }
-    };
+new CreditCard() { CardId = 1, CardNr = "5555555555554444" },
+new CreditCard() { CardId = 2, CardNr = "4012888888881881" }
+};
 
     List<Country> countries = new List<Country>()
-    {
-    new Country() { Id = 1, Name = "USA" },
-    new Country() { Id = 2, Name = "Germany" }
-    };
+{
+new Country() { Id = 1, Name = "USA" },
+new Country() { Id = 2, Name = "Germany" }
+};
 
     void Submit(ConfigurationProperties arg)
     {
@@ -319,12 +359,15 @@ else
 
     async void UpdateConfig(string uploadedJson)
     {
-        HttpResponseMessage response = await Http.PostAsJsonAsync("api/configuration/update", uploadedJson, GetJsonSerializerOptions());
+        HttpResponseMessage response = await Http.PostAsJsonAsync("api/configuration/update", uploadedJson,
+        JsonHelpers.GetJsonSerializerOptions());
 
         string jsonString = await response.Content.ReadAsStringAsync();
+        console.Log($"UpdateConfig:responseString:{jsonString}");
         jsonString = jsonString.Replace("\"{", "{").Replace("}\"", "}").Replace("\\\"", "\"");
-        ConfigurationProperties configurationProperties = JsonSerializer.Deserialize<ConfigurationProperties>(jsonString, GetJsonSerializerOptions());
-        console.Log($"UpdateConfig:exit:{configurationProperties.NoProgressTimeoutMin}");
+        ConfigurationProperties configurationProperties = JsonSerializer.Deserialize<ConfigurationProperties>(jsonString,
+        JsonHelpers.GetJsonSerializerOptions());
+        console.Log($"UpdateConfig:configurationProperties:{configurationProperties.NoProgressTimeoutMin}");
 
         var test = await response.Content.ReadAsStringAsync();
         config = configurationProperties;
@@ -338,19 +381,12 @@ else
         //
     }
 
-    JsonSerializerOptions GetJsonSerializerOptions()
-    {
-        JsonSerializerOptions options = new JsonSerializerOptions(JsonSerializerDefaults.General);
-        options.Converters.Add(new StringConverter());
-        options.AllowTrailingCommas = true;
-        options.MaxDepth = 10;
-        options.PropertyNameCaseInsensitive = false;
-        return options;
-    }
+
 
     async void GetCurrentConfig()
     {
-        ConfigurationProperties[] configs = await Http.GetFromJsonAsync<ConfigurationProperties[]>("api/configuration", GetJsonSerializerOptions());
+        ConfigurationProperties[] configs = await Http.GetFromJsonAsync<ConfigurationProperties[]>("api/configuration",
+        JsonHelpers.GetJsonSerializerOptions());
         config = configs[0];
         tableName = config.KustoTable;
     }
