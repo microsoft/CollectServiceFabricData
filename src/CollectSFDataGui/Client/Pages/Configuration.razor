@@ -6,6 +6,7 @@
 @using BlazorApp.Helpers
 @using Microsoft.Extensions.Logging
 @using System.Text.Json
+@using System.Net
 @inject HttpClient Http
 @inject NavigationManager navigationManager
 @inject ILogger<Configuration> logger;
@@ -421,11 +422,10 @@ else
 //await Task.Delay(10000);
 #endif
 
-        ConfigurationProperties[] configs = await Http.GetFromJsonAsync<ConfigurationProperties[]>("api/configurationJson");
-        config = configs[0];
-        tableName = config.KustoTable;
+        //config = await Http.GetFromJsonAsync<ConfigurationProperties>("api/configurationJson", JsonHelpers.GetJsonSerializerOptions());
+        //tableName = config.KustoTable;
         GatherTypes = Enum.GetNames(typeof(CollectSFData.DataFile.FileTypesEnum)).ToList();
-        //GetCurrentConfig();
+        await GetCurrentConfig();
     }
  
     void Submit(ConfigurationProperties arg)
@@ -435,36 +435,39 @@ else
 
     async void UpdateConfig(string uploadedJson)
     {
-        HttpResponseMessage response = await Http.PostAsJsonAsync("api/configuration/update", uploadedJson,
-        JsonHelpers.GetJsonSerializerOptions());
+        HttpResponseMessage response = await Http.PostAsJsonAsync("api/configuration/update", uploadedJson, JsonHelpers.GetJsonSerializerOptions());
 
         string jsonString = await response.Content.ReadAsStringAsync();
         console.Log($"UpdateConfig:responseString:{jsonString}");
         jsonString = jsonString.Replace("\"{", "{").Replace("}\"", "}").Replace("\\\"", "\"");
-        ConfigurationProperties configurationProperties = JsonSerializer.Deserialize<ConfigurationProperties>(jsonString,
-        JsonHelpers.GetJsonSerializerOptions());
-        console.Log($"UpdateConfig:configurationProperties:{configurationProperties.NoProgressTimeoutMin}");
 
-        var test = await response.Content.ReadAsStringAsync();
-        config = configurationProperties;
-        tableName = config.KustoTable;
-        console.Log($"UpdateConfig:exit:{test} changed");
-        //GetCurrentConfig();
+        if(response.StatusCode == HttpStatusCode.Created){
+            ConfigurationProperties configurationProperties = JsonSerializer.Deserialize<ConfigurationProperties>(jsonString, JsonHelpers.GetJsonSerializerOptions());
+            console.Log($"UpdateConfig:configurationProperties:{configurationProperties.NoProgressTimeoutMin}");
+            config = configurationProperties;
+            tableName = config.KustoTable;
+            console.Log($"UpdateConfig:exit:properties changed");
+        }
+        else
+        {
+            console.Log($"ERROR:{response.StatusCode}");
+            GetCurrentConfig();
+        }
     }
 
     void Cancel()
     {
-        //
+        Http.CancelPendingRequests();
     }
 
 
 
-    async void GetCurrentConfig()
+    async Task GetCurrentConfig()
     {
-        ConfigurationProperties[] configs = await Http.GetFromJsonAsync<ConfigurationProperties[]>("api/configuration",
-        JsonHelpers.GetJsonSerializerOptions());
-        config = configs[0];
+
+        config = await Http.GetFromJsonAsync<ConfigurationProperties>("api/configurationJson", JsonHelpers.GetJsonSerializerOptions());
         tableName = config.KustoTable;
+
     }
 
 
