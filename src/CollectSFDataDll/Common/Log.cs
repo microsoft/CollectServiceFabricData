@@ -18,8 +18,6 @@ namespace CollectSFData.Common
     {
         public static int LogErrors = 0;
         public static bool LogFileEnabled;
-        private static ConsoleColor _highlightBackground = Console.ForegroundColor;
-        private static ConsoleColor _highlightForeground = Console.BackgroundColor;
         private static bool _isRunning;
         private static JsonSerializerSettings _jsonSerializerSettings;
         private static SynchronizedList<LogMessage> _lastMessageList = new SynchronizedList<LogMessage>();
@@ -210,10 +208,9 @@ namespace CollectSFData.Common
         {
             try
             {
-                if (string.IsNullOrEmpty(logFile))
+                if ((Environment.OSVersion.Platform != PlatformID.Win32NT & Environment.OSVersion.Platform != PlatformID.Unix) | string.IsNullOrEmpty(logFile))
                 {
                     LogFileEnabled = false;
-                    Close();
                     return true;
                 }
 
