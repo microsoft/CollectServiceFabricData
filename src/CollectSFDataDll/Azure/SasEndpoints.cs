@@ -31,11 +31,9 @@ namespace CollectSFData.Azure
 
         public bool IsConnectionString { get; set; }
 
-        public SasParameters Parameters { get; set; }
+        public SasParameters Parameters { get; set; } = new SasParameters();
 
         public string QueueEndpoint { get; set; }
-
-        public string Saskey { get; private set; }
 
         public string SasToken { get; set; } = string.Empty;
 
@@ -45,10 +43,10 @@ namespace CollectSFData.Azure
 
         public string TableEndpoint { get; set; }
 
+        public SasEndpoints(){}
+        
         public SasEndpoints(string sasKey = "")
         {
-            Saskey = sasKey;
-
             if (sasKey.ToLower().Contains("endpoint="))
             {
                 IsConnectionString = true;
