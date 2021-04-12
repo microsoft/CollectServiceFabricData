@@ -42,7 +42,7 @@ namespace CollectSFDataGui.Server.Controllers
         public IEnumerable<JsonResult> Get()
         {
             ConfigurationOptions ConfigurationOptions = _config.Clone();
-            string jsonString = JsonSerializer.Serialize(ConfigurationOptions, GetJsonSerializerOptions());
+            string jsonString = JsonSerializer.Serialize(ConfigurationOptions, JsonHelpers.GetJsonSerializerOptions());
 
             _logger.LogInformation($"Get:enter:jsonString:{jsonString}");
             return new List<JsonResult>() { new JsonResult(new ConfigurationOptions()) }.AsEnumerable();
@@ -53,10 +53,10 @@ namespace CollectSFDataGui.Server.Controllers
         public IEnumerable<JsonResult> GetConfiguration()
         {
             ConfigurationOptions ConfigurationOptions = _config.Clone();
-            string jsonString = JsonSerializer.Serialize(ConfigurationOptions, GetJsonSerializerOptions());
+            string jsonString = JsonSerializer.Serialize(ConfigurationOptions, JsonHelpers.GetJsonSerializerOptions());
             _logger.LogInformation($"Get:enter:jsonString:{jsonString}");
 
-            JsonResult jsonResult = new JsonResult(ConfigurationOptions, GetJsonSerializerOptions());
+            JsonResult jsonResult = new JsonResult(ConfigurationOptions, JsonHelpers.GetJsonSerializerOptions());
             jsonResult.ContentType = "application/json;charset=utf-8";
 
             return new List<JsonResult>() { jsonResult }.AsEnumerable();
@@ -67,10 +67,10 @@ namespace CollectSFDataGui.Server.Controllers
         public IEnumerable<string> GetOptionsConfiguration()
         {
             ConfigurationOptions configurationOptions = _config.Clone();
-            string jsonString = JsonSerializer.Serialize(configurationOptions, GetJsonSerializerOptions());
+            string jsonString = JsonSerializer.Serialize(configurationOptions, JsonHelpers.GetJsonSerializerOptions());
             _logger.LogInformation($"Get:enter:jsonString:{jsonString}");
 
-            JsonResult jsonResult = new JsonResult(configurationOptions, GetJsonSerializerOptions());
+            JsonResult jsonResult = new JsonResult(configurationOptions, JsonHelpers.GetJsonSerializerOptions());
             jsonResult.ContentType = "application/json;charset=utf-8";
 
             //return new List<JsonResult>() { jsonResult }.AsEnumerable();
@@ -82,10 +82,10 @@ namespace CollectSFDataGui.Server.Controllers
         public IEnumerable<string> GetPropertiesConfiguration()
         {
             ConfigurationProperties configurationProperties = _config.PropertyClone();
-            string jsonString = JsonSerializer.Serialize(configurationProperties, GetJsonSerializerOptions());
+            string jsonString = JsonSerializer.Serialize(configurationProperties, JsonHelpers.GetJsonSerializerOptions());
             _logger.LogInformation($"Get:enter:jsonString:{jsonString}");
 
-            JsonResult jsonResult = new JsonResult(configurationProperties, GetJsonSerializerOptions());
+            JsonResult jsonResult = new JsonResult(configurationProperties, JsonHelpers.GetJsonSerializerOptions());
             jsonResult.ContentType = "application/json;charset=utf-8";
 
             //return new List<JsonResult>() { jsonResult }.AsEnumerable();
@@ -97,14 +97,14 @@ namespace CollectSFDataGui.Server.Controllers
         {
             try
             {
-                ConfigurationOptions configurationProperties = JsonSerializer.Deserialize<ConfigurationOptions>(properties.ToString());
+                ConfigurationOptions configurationProperties = JsonSerializer.Deserialize<ConfigurationOptions>(properties.ToString(), JsonHelpers.GetJsonSerializerOptions());
                 _config.MergeConfig(configurationProperties);
                 bool validated = _config.Validate();
                 ConfigurationOptions newConfigurationOptions = _config.Clone();
 
-                JsonResult jsonResult = new JsonResult(newConfigurationOptions, GetJsonSerializerOptions());
+                JsonResult jsonResult = new JsonResult(newConfigurationOptions, JsonHelpers.GetJsonSerializerOptions());
                 jsonResult.ContentType = "application/json;charset=utf-8";
-                string jsonString = JsonSerializer.Serialize(newConfigurationOptions, GetJsonSerializerOptions());
+                string jsonString = JsonSerializer.Serialize(newConfigurationOptions, JsonHelpers.GetJsonSerializerOptions());
 
                 if (validated)
                 {
@@ -113,7 +113,7 @@ namespace CollectSFDataGui.Server.Controllers
                 else
                 {
                     //return Created($"/api/configuration/update", jsonString);
-                    string jsonErrorString = JsonSerializer.Serialize(_logMessages, GetJsonSerializerOptions());
+                    string jsonErrorString = JsonSerializer.Serialize(_logMessages, JsonHelpers.GetJsonSerializerOptions());
                     _logMessages.Clear();
                     return ValidationProblem($"failed validation:\r\n{jsonErrorString}", this.GetHashCode().ToString(), 400, "/api/configuration/update");
                 }
@@ -141,14 +141,5 @@ namespace CollectSFDataGui.Server.Controllers
             }
         }
 
-        private JsonSerializerOptions GetJsonSerializerOptions()
-        {
-            JsonSerializerOptions options = new JsonSerializerOptions(JsonSerializerDefaults.General);
-            options.Converters.Add(new StringConverter());
-            options.AllowTrailingCommas = true;
-            options.MaxDepth = 10;
-            options.PropertyNameCaseInsensitive = false;
-            return options;
-        }
     }
 }

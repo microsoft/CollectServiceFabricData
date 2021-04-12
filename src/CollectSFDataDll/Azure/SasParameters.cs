@@ -5,7 +5,6 @@
 
 using System;
 using System.Net;
-
 namespace CollectSFData.Azure
 {
     public class SasParameters
@@ -40,13 +39,14 @@ namespace CollectSFData.Azure
 
         public string SignedVersion { get; set; }
 
-        private string _sasToken { get; set; }
+        public string SasToken{get;private set;}
 
+        public SasParameters() { }
         public SasParameters(string sasToken)
         {
-            _sasToken = sasToken.TrimStart('?');
+            SasToken = sasToken.TrimStart('?');
 
-            foreach (string parameter in _sasToken.Split('&'))
+            foreach (string parameter in SasToken.Split('&'))
             {
                 string paramName = parameter.ToLower().Split('=')[0];
                 string encodedParamValue = parameter.Split('=')[1];
