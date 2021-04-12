@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
+using System.Net.Http.Json;
 
 namespace CollectSFDataGui.Server.Controllers
 {
@@ -49,16 +50,17 @@ namespace CollectSFDataGui.Server.Controllers
 
         [HttpGet]
         [Route("/api/configurationJson")]
-        public IEnumerable<JsonResult> GetConfiguration()
+        public ActionResult GetConfiguration()
         {
             ConfigurationOptions ConfigurationOptions = _config.Clone();
             string jsonString = JsonSerializer.Serialize(ConfigurationOptions, JsonHelpers.GetJsonSerializerOptions());
             _logger.LogInformation($"Get:enter:jsonString:{jsonString}");
 
-            JsonResult jsonResult = new JsonResult(ConfigurationOptions, JsonHelpers.GetJsonSerializerOptions());
+            JsonResult jsonResult = new JsonResult(ConfigurationOptions, JsonHelpers.GetJsonSerializerOptions()){};
+            //jsonResult.JsonRequestBehavior = JsonRequestBehavior.AllowGet
             jsonResult.ContentType = "application/json;charset=utf-8";
 
-            return new List<JsonResult>() { jsonResult }.AsEnumerable();
+            return jsonResult;
         }
 
         [HttpGet]
