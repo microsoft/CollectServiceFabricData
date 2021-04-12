@@ -11,9 +11,6 @@ namespace CollectSFData.Common
 {
     public class ConfigurationProperties : Constants
     {
-        private string _endTime;
-        private string _startTime;
-
         public string AzureClientId { get; set; }
 
         public string AzureClientSecret { get; set; }
@@ -34,16 +31,7 @@ namespace CollectSFData.Common
 
         public bool DeleteCache { get; set; }
 
-        public string EndTimeStamp
-        {
-            get => _endTime;
-            set
-            {
-                EndTimeUtc = ConvertToUtcTime(value);
-                _endTime = ConvertToUtcTimeString(value);
-            }
-        }
-
+        public string EndTimeStamp { get; set; }
         public DateTimeOffset EndTimeUtc { get; set; }
 
         public bool Examples { get; private set; }
@@ -92,22 +80,15 @@ namespace CollectSFData.Common
         public string ResourceUri { get; set; }
 
         public SasEndpoints SasEndpointInfo { get; set; } = new SasEndpoints();
+
         public string SasKey { get; set; } = string.Empty;
 
         public string SaveConfiguration { get; set; }
 
         public string Schema { get; set; }
 
-        public string StartTimeStamp
-        {
-            get => _startTime;
-            set
-            {
-                StartTimeUtc = ConvertToUtcTime(value);
-                _startTime = ConvertToUtcTimeString(value);
-            }
-        }
-
+        public string StartTimeStamp { get; set; }
+       
         public DateTimeOffset StartTimeUtc { get; set; }
 
         public int Threads { get; set; }
@@ -126,44 +107,5 @@ namespace CollectSFData.Common
         {
         }
 
-        public DateTime ConvertToUtcTime(string timeString)
-        {
-            DateTimeOffset dateTimeOffset;
-
-            if (DateTimeOffset.TryParse(timeString, CultureInfo.InvariantCulture, DateTimeStyles.None, out dateTimeOffset))
-            {
-                //Log.Info($"TimeStamp valid format:input:'{timeString}'");
-                return dateTimeOffset.UtcDateTime;
-            }
-
-            //Log.Error($"TimeStamp invalid format:input:'{timeString}' but expecting pattern:'{DefaultDatePattern}' example:'{DateTime.Now.ToString(DefaultDatePattern)}'");
-            return DateTime.MinValue;
-        }
-
-        public string ConvertToUtcTimeString(string timeString)
-        {
-            DateTime dateTime = DateTime.MinValue;
-
-            if (string.IsNullOrEmpty(timeString))
-            {
-                //Log.Warning("empty time string");
-            }
-            else
-            {
-                dateTime = ConvertToUtcTime(timeString);
-                if (dateTime != DateTime.MinValue)
-                {
-                    timeString = dateTime.ToString("o");
-                }
-            }
-
-            //Log.Info($"returning:time string:'{timeString}'");
-            return timeString;
-        }
-
-        //public ConfigurationProperties Clone()
-        //{
-        //    return (ConfigurationProperties)MemberwiseClone();
-        //}
     }
 }
