@@ -5,7 +5,6 @@
 
 using CollectSFData.Azure;
 using System;
-using System.Globalization;
 
 namespace CollectSFData.Common
 {
@@ -88,7 +87,7 @@ namespace CollectSFData.Common
         public string Schema { get; set; }
 
         public string StartTimeStamp { get; set; }
-       
+
         public DateTimeOffset StartTimeUtc { get; set; }
 
         public int Threads { get; set; }
@@ -106,6 +105,5 @@ namespace CollectSFData.Common
         public ConfigurationProperties()
         {
         }
-
     }
 }

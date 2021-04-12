@@ -1,13 +1,10 @@
 ﻿using System;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace CollectSFDataGui.Shared
 {
-
     public class JsonHelpers
     {
-
         public static JsonSerializerOptions GetJsonSerializerOptions()
         {
             JsonSerializerOptions options = new JsonSerializerOptions(JsonSerializerDefaults.Web);
@@ -42,7 +39,6 @@ namespace CollectSFDataGui.Shared
             {
                 writer.WriteStringValue(value);
             }
-
         }
     }
 }
