@@ -161,7 +161,7 @@ namespace CollectSFData.Kusto
             if (string.IsNullOrEmpty(resourceUri) && IngestFileObjectsSucceeded.Any() && Config.FileType == FileTypesEnum.trace)
             {
                 // Fetch resource ID from ingested traces
-                var results = Endpoint.Query($"['{Endpoint.TableName}']" +
+                List<string> results = Endpoint.Query($"['{Endpoint.TableName}']" +
                     $" | where Type == 'InfrastructureService.RestClientHelper'" +
                     $" | take 1");
 
@@ -176,8 +176,8 @@ namespace CollectSFData.Kusto
 
             if (!string.IsNullOrWhiteSpace(resourceUri))
             {
-                var metaDatatableName = "TableMetaData";
-                var metaDatetableSchema = "TimeStamp:datetime, startTime:datetime, endTime:datetime, resourceId:string, tableName:string, logType:string";
+                string metaDatatableName = "TableMetaData";
+                string metaDatetableSchema = "TimeStamp:datetime, startTime:datetime, endTime:datetime, resourceId:string, tableName:string, logType:string";
 
                 if (Endpoint.CreateTable(metaDatatableName, metaDatetableSchema))
                 {
