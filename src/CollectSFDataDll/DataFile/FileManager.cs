@@ -375,7 +375,7 @@ namespace CollectSFData.DataFile
 
         private PerfCounterObserver<T> ReadCounterRecords<T>(IObservable<T> source)
         {
-            var observer = new PerfCounterObserver<T>();
+            PerfCounterObserver<T> observer = new PerfCounterObserver<T>();
             source.Subscribe(observer);
             Log.Info($"complete: {observer.Complete}");
             return observer;
@@ -536,7 +536,7 @@ namespace CollectSFData.DataFile
                 records = counterSession.Records;
             }
 
-            foreach (var record in records)
+            foreach (PerformanceSample record in records)
             {
                 if (!string.IsNullOrEmpty(record.Value.ToString()))
                 {
