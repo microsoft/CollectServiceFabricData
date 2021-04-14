@@ -4,6 +4,9 @@
 // ------------------------------------------------------------
 
 using CollectSFData.Common;
+using Microsoft.Azure.KeyVault.Models;
+using Microsoft.Azure.KeyVault;
+using Microsoft.Azure.Services.AppAuthentication;
 using Microsoft.Identity.Client;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -205,10 +208,12 @@ namespace CollectSFData.Azure
                     ClientName = Config.AzureClientId
                 })
                 .WithAuthority(AzureCloudInstance.AzurePublic, Config.AzureTenantId)
+                .WithLogging(MsalLoggerCallback, LogLevel.Verbose, true, true)
                 .WithCertificate(certificate)
                 .Build();
             AddClientScopes();
         }
+
         public void CreateConfidentialClient(string resource)
         {
             Log.Info($"enter: {resource}");
@@ -227,27 +232,6 @@ namespace CollectSFData.Azure
                .Build();
 
             AddClientScopes();
-        }
-
-        private void AddClientScopes()
-        {
-            if (Scopes.Count < 1)
-            {
-                Scopes = _defaultScope;
-            }
-
-            if (_instance.IsWindows)
-            {
-                TokenCacheHelper.EnableSerialization(_confidentialClientApp.AppTokenCache);
-            }
-
-            foreach (string scope in Scopes)
-            {
-                AuthenticationResult = _confidentialClientApp
-                    .AcquireTokenForClient(new List<string>() { scope })
-                    .ExecuteAsync().Result;
-                Log.Debug($"scope authentication result:", AuthenticationResult);
-            }
         }
 
         public bool CreatePublicClient(bool prompt, bool deviceLogin = false)
@@ -317,6 +301,18 @@ namespace CollectSFData.Azure
 
             Log.Info($"resourcegroup exists {resourceId}");
             return true;
+        }
+
+        public X509Certificate2 GetCertificateFromKeyvault(string keyvaultResourceId, string secretName /*Config.AzureClientCertificate*/)
+        {
+            AzureServiceTokenProvider azureServiceTokenProvider = new AzureServiceTokenProvider();
+            KeyVaultClient client = new KeyVaultClient(new KeyVaultClient.AuthenticationCallback(azureServiceTokenProvider.KeyVaultTokenCallback));
+            SecretBundle secret = client.GetSecretAsync(keyvaultResourceId, secretName).Result;
+
+            byte[] privateKeyBytes = Convert.FromBase64String(secret.ToString());
+            X509Certificate2 certificate = new X509Certificate2(privateKeyBytes, string.Empty);
+
+            return certificate;
         }
 
         public Task MsalDeviceCodeCallback(DeviceCodeResult arg)
@@ -398,39 +394,6 @@ namespace CollectSFData.Azure
             Authenticate(true, _resource);
         }
 
-        private X509Certificate2 ReadCertificate(string certificateId)
-        {
-            X509Certificate2 certificate = null;
-            certificate = ReadCertificateFromStore(certificateId);
-
-            if (certificate == null)
-            {
-                certificate = ReadCertificateFromStore(certificateId, StoreName.My, StoreLocation.LocalMachine);
-            }
-            return certificate;
-        }
-
-        private static X509Certificate2 ReadCertificateFromStore(string certificateId, StoreName storeName = StoreName.My, StoreLocation storeLocation = StoreLocation.CurrentUser)
-        {
-            X509Certificate2 certificate = null;
-
-            using (X509Store store = new X509Store(storeName, storeLocation))
-            {
-                store.Open(OpenFlags.ReadOnly);
-                X509Certificate2Collection certCollection = store.Certificates;
-
-                // Find unexpired certificates.
-                X509Certificate2Collection currentCerts = certCollection.Find(X509FindType.FindByTimeValid, DateTime.Now, false);
-
-                // From the collection of unexpired certificates, find the ones with the correct name.
-                X509Certificate2Collection signingCert = currentCerts.Find(X509FindType.FindBySubjectName, certificateId, false);
-
-                // Return the first certificate in the collection, has the right name and is current.
-                certificate = signingCert.OfType<X509Certificate2>().OrderByDescending(c => c.NotBefore).FirstOrDefault();
-            }
-            return certificate;
-        }
-
         public Http SendRequest(string uri, HttpMethod method = null, string body = "")
         {
             method = method ?? _httpClient.Method;
@@ -460,6 +423,76 @@ namespace CollectSFData.Azure
                 Log.Info($"authentication result:", ConsoleColor.Green, null, AuthenticationResult);
                 return false;
             }
+        }
+
+        private static X509Certificate2 ReadCertificateFromStore(string certificateId, StoreName storeName = StoreName.My, StoreLocation storeLocation = StoreLocation.CurrentUser)
+        {
+            Log.Info($"enter:certificateId:{certificateId} storename:{storeName} storelocation:{storeLocation}");
+            X509Certificate2 certificate = null;
+
+            using (X509Store store = new X509Store(storeName, storeLocation))
+            {
+                store.Open(OpenFlags.ReadOnly);
+                X509Certificate2Collection certCollection = store.Certificates;
+
+                // Find unexpired certificates.
+                X509Certificate2Collection currentCerts = certCollection.Find(X509FindType.FindByTimeValid, DateTime.Now, false);
+
+                // From the collection of unexpired certificates, find the ones with the correct name.
+                X509Certificate2Collection signingCert = currentCerts.Find(X509FindType.FindBySubjectName, certificateId, false);
+                Log.Debug("active:", signingCert);
+
+                // Return the first certificate in the collection, has the right name and is current.
+                certificate = signingCert.OfType<X509Certificate2>().OrderByDescending(c => c.NotBefore).FirstOrDefault();
+            }
+
+            if (certificate != null)
+            {
+                Log.Info("exit:success");
+            }
+            else
+            {
+                Log.Error($"exit:unable to find certificate for {certificateId}");
+            }
+
+            Log.Debug("exit:", certificate);
+            return certificate;
+        }
+
+        private void AddClientScopes()
+        {
+            if (Scopes.Count < 1)
+            {
+                Scopes = _defaultScope;
+            }
+
+            if (_instance.IsWindows)
+            {
+                TokenCacheHelper.EnableSerialization(_confidentialClientApp.AppTokenCache);
+            }
+
+            foreach (string scope in Scopes)
+            {
+                AuthenticationResult = _confidentialClientApp
+                    .AcquireTokenForClient(new List<string>() { scope })
+                    .ExecuteAsync().Result;
+                Log.Debug($"scope authentication result:", AuthenticationResult);
+            }
+        }
+
+        private X509Certificate2 ReadCertificate(string certificateId)
+        {
+            Log.Info("enter");
+            X509Certificate2 certificate = null;
+            certificate = ReadCertificateFromStore(certificateId);
+
+            if (certificate == null)
+            {
+                certificate = ReadCertificateFromStore(certificateId, StoreName.My, StoreLocation.LocalMachine);
+            }
+
+            Log.Info("exit");
+            return certificate;
         }
     }
 }
