@@ -25,6 +25,7 @@ namespace CollectSFData.Kusto
 {
     public class KustoEndpoint : Constants
     {
+        public string Cursor;
         private static ICslAdminProvider _kustoAdminClient;
         private static ICslQueryProvider _kustoQueryClient;
         private static int maxKustoClientTimeMs = 300 * 1000;
@@ -39,8 +40,6 @@ namespace CollectSFData.Kusto
         private ConfigurationOptions Config => _instance.Config;
 
         public KustoConnectionStringBuilder DatabaseConnection { get; set; }
-
-        public string Cursor;
         public string DatabaseName { get; set; }
 
         public bool DeleteSourceOnSuccess { get; set; }

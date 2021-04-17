@@ -28,7 +28,7 @@ namespace CollectSFData
         private Tuple<int, int, int, int, int, int, int> _progressTuple = new Tuple<int, int, int, int, int, int, int>(0, 0, 0, 0, 0, 0, 0);
         private CustomTaskManager _taskManager = new CustomTaskManager(true);
 
-        public ConfigurationOptions Config => Instance.Config;
+        public ConfigurationOptions Config { get => Instance.Config; }
 
         public Instance Instance { get; } = Instance.Singleton();
 
@@ -38,12 +38,13 @@ namespace CollectSFData
             Log.IsConsole = isConsole;
         }
 
-        public int Collect()
+        public int Collect(ConfigurationOptions configurationOptions)
         {
-            return Collect(new List<string>());
+            Instance.Config = configurationOptions;
+            return Collect();
         }
 
-        public int Collect(List<string> uris = null)
+        public int Collect()
         {
             try
             {
@@ -54,11 +55,12 @@ namespace CollectSFData
 
                 if (Config.SasEndpointInfo.IsPopulated())
                 {
-                    DownloadAzureData(uris);
+                    DownloadAzureData();
                 }
-                else if (Config.IsCacheLocationPreConfigured())
+
+                if (Config.IsCacheLocationPreConfigured() | Config.FileUris.Any())
                 {
-                    UploadCacheData(uris);
+                    UploadCacheData();
                 }
 
                 CustomTaskManager.WaitAll();
@@ -159,7 +161,7 @@ namespace CollectSFData
 
                 _initialized = true;
 
-                Log.Info($"version: {Version}");
+                Log.Info($"version: {Config.Version}");
                 _parallelConfig = new ParallelOptions { MaxDegreeOfParallelism = Config.Threads };
                 ServicePointManager.DefaultConnectionLimit = Config.Threads * MaxThreadMultiplier;
                 ServicePointManager.Expect100Continue = true;
@@ -167,13 +169,12 @@ namespace CollectSFData
 
                 ThreadPool.SetMinThreads(Config.Threads * MinThreadMultiplier, Config.Threads * MinThreadMultiplier);
                 ThreadPool.SetMaxThreads(Config.Threads * MaxThreadMultiplier, Config.Threads * MaxThreadMultiplier);
-
             }
 
             return true;
         }
 
-        private void DownloadAzureData(List<string> uris = null)
+        private void DownloadAzureData()
         {
             string containerPrefix = null;
             string tablePrefix = null;
@@ -214,9 +215,14 @@ namespace CollectSFData
 
                 if (blobMgr.Connect())
                 {
-                    if (uris?.Count > 0)
+                    string[] azureFiles = Config.FileUris.Where(x => FileTypes.MapFileUriType(x) == FileUriTypesEnum.azureUri).ToArray();
+                    
+                    if (azureFiles.Any())
                     {
-                        blobMgr.DownloadFiles(uris);
+                        blobMgr.DownloadFiles(azureFiles);
+                        List<string> fileUris = Config.FileUris.ToList();
+                        fileUris.RemoveAll(x => azureFiles.Contains(x));
+                        Config.FileUris = fileUris.ToArray();
                     }
                     else
                     {
@@ -235,6 +241,14 @@ namespace CollectSFData
             else if (Config.IsKustoConfigured())
             {
                 Log.Last($"{DataExplorer}/clusters/{Instance.Kusto.Endpoint.ClusterName}/databases/{Instance.Kusto.Endpoint.DatabaseName}", ConsoleColor.Cyan);
+            }
+
+            if (Instance.Kusto.IngestFileObjectsFailed.Any() | Instance.Kusto.IngestFileObjectsPending.Any())
+            {
+                List<string> ingestList = new List<string>();
+                Instance.Kusto.IngestFileObjectsFailed.ForEach(x => ingestList.Add(x.FileUri));
+                Instance.Kusto.IngestFileObjectsPending.ForEach(x => ingestList.Add(x.FileUri));
+                Config.FileUris = ingestList.ToArray();
             }
         }
 
@@ -381,27 +395,42 @@ namespace CollectSFData
             Log.Debug("exit");
         }
 
-        private void UploadCacheData(List<string> uris)
+        private void UploadCacheData()
         {
             Log.Info("enter");
             List<string> files = new List<string>();
 
-            if (uris.Count > 0)
+            string[] localFiles = Config.FileUris.Where(x => FileTypes.MapFileUriType(x) == FileUriTypesEnum.fileUri).ToArray();
+
+            if (localFiles.Any())
             {
-                foreach(string file in uris)
+                List<string> fileUris = Config.FileUris.ToList();
+
+                foreach (string file in localFiles)
                 {
-                    if(File.Exists(file))
+                    if (File.Exists(file))
                     {
                         Log.Info($"adding file to list: {file}");
                         files.Add(file);
+                        fileUris.Remove(file);
                     }
                     else
                     {
                         Log.Warning($"file does not exist: {file}");
                     }
                 }
+
+                if (files.Any())
+                {
+                    Config.FileUris = fileUris.ToArray();
+                }
+                else
+                {
+                    Log.Error($"configuration set to upload cache files from 'fileUris' count:{Config.FileUris.Length} but no files found");
+                }
             }
-            else
+
+            if(Config.IsCacheLocationPreConfigured())
             {
                 switch (Config.FileType)
                 {
@@ -439,11 +468,11 @@ namespace CollectSFData
                         Log.Warning($"invalid filetype for cache upload. returning {Config.FileType}");
                         return;
                 }
-            }
 
-            if (files.Count < 1)
-            {
-                Log.Error($"configuration set to upload cache files from 'cachelocation' {Config.CacheLocation} but no files found");
+                if (files.Count < 1)
+                {
+                    Log.Error($"configuration set to upload cache files from 'cachelocation' {Config.CacheLocation} but no files found");
+                }
             }
 
             foreach (string file in files)
