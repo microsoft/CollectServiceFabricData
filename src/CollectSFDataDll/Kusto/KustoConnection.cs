@@ -24,6 +24,7 @@ namespace CollectSFData.Kusto
         public KustoQueueMessages IngestFileObjectsFailed = new KustoQueueMessages();
         public KustoQueueMessages IngestFileObjectsPending = new KustoQueueMessages();
         public KustoQueueMessages IngestFileObjectsSucceeded = new KustoQueueMessages();
+        private bool _appendingToExistingTableUnique;
         private const int _maxMessageCount = 32;
         private readonly CustomTaskManager _kustoTasks = new CustomTaskManager(true);
         private readonly TimeSpan _messageTimeToLive = new TimeSpan(0, 1, 0, 0);
@@ -70,12 +71,14 @@ namespace CollectSFData.Kusto
                 _monitorTask.Dispose();
                 IngestResourceIdKustoTableMapping();
 
-                if (IngestFileObjectsSucceeded.Any() && Config.Unique && Config.FileType == FileTypesEnum.table)
+                if (_appendingToExistingTableUnique
+                    && Config.FileType == FileTypesEnum.table
+                    && IngestFileObjectsSucceeded.Any())
                 {
-                    // only way for records from table to be unique since there is not a file reference
+                    // only way for records from table storage to be unique since there is not a file reference
                     Log.Info("removing duplicate records", ConsoleColor.White);
                     IEnumerable<KustoCsvSchema> schema = new KustoIngestionMappings(new FileObject()).TableSchema();
-                    schema = schema.Where(x => x.Name != "RelativeUri");
+                    //schema = schema.Where(x => x.Name != "RelativeUri");
                     string names = string.Join(",", schema.Select(x => x.Name).ToList());
 
                     string command = $".set-or-replace {Config.KustoTable} <| {Config.KustoTable} | summarize min(RelativeUri) by {names}";
@@ -125,6 +128,7 @@ namespace CollectSFData.Kusto
             }
             else if (Config.Unique && Endpoint.HasTable(Endpoint.TableName))
             {
+                _appendingToExistingTableUnique = true;
                 Endpoint.Query($"['{Endpoint.TableName}']|distinct RelativeUri")
                     .ForEach(x => IngestFileObjectsSucceeded.Add(relativeUri: x));
             }
