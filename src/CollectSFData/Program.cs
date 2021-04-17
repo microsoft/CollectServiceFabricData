@@ -13,13 +13,6 @@ namespace CollectSFData
 {
     internal class Program
     {
-        // to subscribe to log messages
-        // Log.MessageLogged += Log_MessageLogged;
-        private static void Log_MessageLogged(object sender, LogMessage args)
-        {
-            throw new NotImplementedException();
-        }
-
         private static int Main(string[] args)
         {
             if (!Environment.Is64BitOperatingSystem | Environment.OSVersion.Platform != PlatformID.Win32NT)
@@ -27,34 +20,24 @@ namespace CollectSFData
                 Console.WriteLine("only supported on win32 x64");
             }
 
-            // default constructor
             Collector collector = new Collector(args, true);
-
-            // use config to modify / validate config
-            // config.Validate();
             ConfigurationOptions config = collector.Config;
 
-            // collect data
             int retval = collector.Collect();
 
             // mitigation for dtr files not being csv compliant causing kusto ingest to fail
-            if ((collector.Instance.Kusto.IngestFileObjectsFailed.Count() > 0
-                | collector.Instance.Kusto.IngestFileObjectsPending.Count() > 0)
-                && config.IsKustoConfigured()
+            if (config.IsKustoConfigured()
+                && (collector.Instance.Kusto.IngestFileObjectsFailed.Any() | collector.Instance.Kusto.IngestFileObjectsPending.Any())
                 && config.KustoUseBlobAsSource == true
                 && config.FileType == DataFile.FileTypesEnum.trace)
             {
-                KustoConnection kusto = collector.Instance.Kusto;
                 Log.Warning("failed ingests due to csv compliance. restarting.");
 
                 // change config to download files to parse and fix csv fields
                 config.KustoUseBlobAsSource = false;
                 config.KustoRecreateTable = false;
 
-                List<string> ingestList = kusto.IngestFileObjectsFailed.Select(x => x.FileUri).ToList();
-                ingestList.AddRange(kusto.IngestFileObjectsPending.Select(x => x.FileUri).ToList());
-
-                retval = collector.Collect(ingestList);
+                retval = collector.Collect();
             }
 
             return retval;
