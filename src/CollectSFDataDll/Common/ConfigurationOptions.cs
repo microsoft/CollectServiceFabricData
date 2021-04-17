@@ -23,11 +23,12 @@ namespace CollectSFData.Common
     public class ConfigurationOptions : ConfigurationProperties
     {
         private static readonly string _workDir = "csfd";
+        private static string[] _args = new string[0];
         private static bool _cmdLineExecuted;
+        private static ConfigurationOptions _defaultConfig;
         private readonly CommandLineArguments _cmdLineArgs = new CommandLineArguments();
-        private bool _defaultConfigLoaded;
+        private bool _defaultConfigLoaded => _defaultConfig != null;
         private string _endTime;
-        private int _logDebug = LoggingLevel.Info;
         private string _startTime;
         private string _tempPath;
         private int _threads;
@@ -62,8 +63,8 @@ namespace CollectSFData.Common
 
         public new int LogDebug
         {
-            get => Log.LogDebug = _logDebug;
-            set => Log.LogDebug = _logDebug = value;
+            get => Log.LogDebug = base.LogDebug;
+            set => Log.LogDebug = base.LogDebug = value;
         }
 
         public new string StartTimeStamp
@@ -84,9 +85,14 @@ namespace CollectSFData.Common
 
         public string Version { get; set; }
 
-        public ConfigurationOptions()
+        public ConfigurationOptions() : this(new string[0])
         {
-            _cmdLineArgs.CmdLineApp.OnExecute(() => MergeCmdLine());
+
+        }
+
+        public ConfigurationOptions(string[] args)
+        {
+            _args = args;
             _cmdLineArgs.InitFromCmdLine();
             _tempPath = FileManager.NormalizePath(Path.GetTempPath() + _workDir);
 
@@ -95,7 +101,12 @@ namespace CollectSFData.Common
             _startTime = defaultOffset.AddHours(DefaultStartTimeHours).ToString(DefaultDatePattern);
             EndTimeUtc = defaultOffset.UtcDateTime;
             _endTime = defaultOffset.ToString(DefaultDatePattern);
-            DefaultConfig();
+            LoadDefaultConfig();
+
+            if (args.Any())
+            {
+                ParseCmdLine(args);
+            }
         }
 
         public void CheckReleaseVersion()
@@ -352,27 +363,27 @@ namespace CollectSFData.Common
             }
         }
 
-        public bool PopulateConfig(string[] args)
+        public bool PopulateConfig()
         {
             try
             {
-                if (args.Length == 0 && !_defaultConfigLoaded && GatherType == FileTypesEnum.unknown.ToString())
+                if (_args.Length == 0 && !_defaultConfigLoaded && GatherType == FileTypesEnum.unknown.ToString())
                 {
                     Log.Last(_cmdLineArgs.CmdLineApp.GetHelpText());
                     Log.Last("error: no configuration provided");
                     return false;
                 }
 
-                if (args.Length == 1)
+                if (_args.Length == 1)
                 {
                     // check for help and FTA
-                    if (!args[0].StartsWith("/?") && !args[0].StartsWith("-") && args[0].EndsWith(".json") && File.Exists(args[0]))
+                    if (!_args[0].StartsWith("/?") && !_args[0].StartsWith("-") && _args[0].EndsWith(".json") && File.Exists(_args[0]))
                     {
-                        ConfigurationFile = args[0];
+                        ConfigurationFile = _args[0];
                         MergeConfig(ConfigurationFile);
                         Log.Info($"setting options to {DefaultOptionsFile}", ConsoleColor.Yellow);
                     }
-                    else if (args[0].StartsWith("/?") | args[0].StartsWith("-?") | args[0].StartsWith("--?"))
+                    else if (_args[0].StartsWith("/?") | _args[0].StartsWith("-?") | _args[0].StartsWith("--?"))
                     {
                         Log.Last(_cmdLineArgs.CmdLineApp.GetHelpText());
                         return false;
@@ -380,10 +391,10 @@ namespace CollectSFData.Common
                 }
 
                 // check for name and value pair
-                for (int i = 0; i < args.Length - 1; i++)
+                for (int i = 0; i < _args.Length - 1; i++)
                 {
-                    string name = args[i];
-                    string value = args[++i];
+                    string name = _args[i];
+                    string value = _args[++i];
 
                     if (!Regex.IsMatch($"{name} {value}", "-\\w+ [^-]"))
                     {
@@ -393,7 +404,7 @@ namespace CollectSFData.Common
                     }
                 }
 
-                if (!ParseCmdLine(args))
+                if (!ParseCmdLine(_args))
                 {
                     return false;
                 }
@@ -791,16 +802,25 @@ namespace CollectSFData.Common
             return Regex.Replace(tableName, $"^({FileType}_)", "", RegexOptions.IgnoreCase);
         }
 
-        private bool DefaultConfig()
+        private bool LoadDefaultConfig()
         {
-            if (File.Exists(DefaultOptionsFile))
+            if (_defaultConfig == null)
             {
-                MergeConfig(DefaultOptionsFile);
-                _defaultConfigLoaded = true;
-                return true;
+                if (File.Exists(DefaultOptionsFile))
+                {
+                    MergeConfig(DefaultOptionsFile);
+                    _defaultConfig = Clone();
+                    return true;
+                }
+
+                return false;
+            }
+            else
+            {
+                MergeConfig(_defaultConfig);
             }
 
-            return false;
+            return true;
         }
 
         private PropertyInfo[] InstanceProperties()
@@ -893,11 +913,14 @@ namespace CollectSFData.Common
                 if (!_cmdLineExecuted & args.Any())
                 {
                     _cmdLineExecuted = true;
+                    _cmdLineArgs.CmdLineApp.OnExecute(() => MergeCmdLine());
 
                     if (_cmdLineArgs.CmdLineApp.Execute(args) == 0)
                     {
                         return false;
                     }
+
+                    _defaultConfig = Clone();
                 }
 
                 return true;

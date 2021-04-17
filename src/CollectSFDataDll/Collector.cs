@@ -19,7 +19,6 @@ namespace CollectSFData
 
     public class Collector : Constants
     {
-        private string[] _args;
         private bool _checkedVersion;
         private int _noProgressCounter = 0;
         private Timer _noProgressTimer;
@@ -31,9 +30,8 @@ namespace CollectSFData
 
         public Instance Instance { get; } = Instance.Singleton();
 
-        public Collector(string[] args = null, bool isConsole = false)
+        public Collector(bool isConsole = false)
         {
-            _args = args;
             Log.IsConsole = isConsole;
         }
 
@@ -149,12 +147,12 @@ namespace CollectSFData
             Instance.Initialize(configurationOptions);
             Log.Info($"version: {Config.Version}");
 
-            if (!Config.PopulateConfig(_args))
+            if (!Config.PopulateConfig())
             {
                 Config.SaveConfigFile();
                 return false;
             }
-
+            
             _parallelConfig = new ParallelOptions { MaxDegreeOfParallelism = Config.Threads };
 
             ServicePointManager.DefaultConnectionLimit = Config.Threads * MaxThreadMultiplier;
