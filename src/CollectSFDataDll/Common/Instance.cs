@@ -7,6 +7,7 @@ using CollectSFData.DataFile;
 using CollectSFData.Kusto;
 using CollectSFData.LogAnalytics;
 using System;
+using System.Diagnostics;
 
 namespace CollectSFData.Common
 {
@@ -32,17 +33,22 @@ namespace CollectSFData.Common
 
         static Instance()
         {
-            Initialize(new ConfigurationOptions());
+            Initialize();
         }
 
         private Instance()
         {
         }
 
-        public static void Initialize(ConfigurationOptions configurationOptions)
+        public static void Initialize(ConfigurationOptions configurationOptions=null)
         {
-            _instance.Config = configurationOptions;
-            _instance.Config.Version = "${Process.GetCurrentProcess().MainModule?.FileVersionInfo.FileVersion}";
+            _instance.Config = new ConfigurationOptions();
+
+            if(configurationOptions != null){
+                 _instance.Config.MergeConfig(configurationOptions.Clone());
+             }
+
+            _instance.Config.Version = $"{Process.GetCurrentProcess().MainModule?.FileVersionInfo.FileVersion}";
             _instance.FileMgr = new FileManager();
             _instance.Kusto = new KustoConnection();
             _instance.LogAnalytics = new LogAnalyticsConnection();

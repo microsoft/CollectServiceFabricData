@@ -4,10 +4,7 @@
 // ------------------------------------------------------------
 
 using CollectSFData.Common;
-using CollectSFData.Kusto;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace CollectSFData
 {
@@ -20,8 +17,8 @@ namespace CollectSFData
                 Console.WriteLine("only supported on win32 x64");
             }
 
-            Collector collector = new Collector(args, true);
-            ConfigurationOptions config = new ConfigurationOptions();
+            Collector collector = new Collector(true);
+            ConfigurationOptions config = new ConfigurationOptions(args);
             int retval = collector.Collect(config);
 
             // mitigation for dtr files not being csv compliant causing kusto ingest to fail
