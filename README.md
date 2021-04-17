@@ -132,6 +132,9 @@ Options:
   -to|--stop                         [DateTime] end time range to collect data to. default is now.
                                          example: "04/21/2020 09:03:49 -04:00"
   -ex|--examples                     [bool] show example commands
+  -uris|--fileUris                   [string[]] optional comma separated string array list of files to ingest.
+                                         overrides default collection from diagnosticsStore
+                                         example: D:\temp\lease_trace1.dtr.zip,D:\temp\lease_trace2.dtr.zip
   -type|--gatherType                 [string] Gather data type:
                                         counter
                                         trace
