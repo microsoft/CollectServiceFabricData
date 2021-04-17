@@ -27,7 +27,7 @@ namespace CollectSFData
 
             // mitigation for dtr files not being csv compliant causing kusto ingest to fail
             if (config.IsKustoConfigured()
-                && (collector.Instance.Kusto.IngestFileObjectsFailed.Count() > 0 | collector.Instance.Kusto.IngestFileObjectsPending.Count() > 0)
+                && (collector.Instance.Kusto.IngestFileObjectsFailed.Any() | collector.Instance.Kusto.IngestFileObjectsPending.Any())
                 && config.KustoUseBlobAsSource == true
                 && config.FileType == DataFile.FileTypesEnum.trace)
             {
