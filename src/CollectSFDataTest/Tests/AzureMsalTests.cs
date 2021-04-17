@@ -30,7 +30,7 @@ namespace CollectSFDataTest
              {
                  config.AzureClientId = "test";
                  return config.ValidateAad();
-             }, utils.Collector.Instance.Config);
+             }, utils.Collector.Config);
 
             Assert.IsTrue(results.ToString().Contains("client_id_must_be_guid"), results.ToString());
             Assert.IsTrue(results.HasErrors(), results.ToString());
@@ -43,7 +43,7 @@ namespace CollectSFDataTest
             ProcessOutput results = utils.ExecuteTest((config) =>
             {
                 return config.ValidateAad();
-            }, utils.Collector.Instance.Config);
+            }, utils.Collector.Config);
 
             Assert.IsFalse(results.HasErrors(), results.ToString());
         }
@@ -83,7 +83,7 @@ namespace CollectSFDataTest
                 config.AzureTenantId = null;
 
                 return config.ValidateAad();
-            }, utils.Collector.Instance.Config);
+            }, utils.Collector.Config);
 
             /* known cng error in .net core that test is running as and azure-az modules
              * fix is to use cert thumb as secret but cert may have to be real / from ca
@@ -119,7 +119,7 @@ namespace CollectSFDataTest
         private TestUtilities DefaultUtilities()
         {
             TestUtilities utils = new TestUtilities();
-            ConfigurationOptions config = utils.Collector.Instance.Config;
+            ConfigurationOptions config = utils.Collector.Config;
 
             config.SasKey = TestUtilities.TestProperties.SasKey;
             config.CacheLocation = TestUtilities.TempDir;
