@@ -23,7 +23,7 @@ namespace CollectSFData.Common
     public class ConfigurationOptions : ConfigurationProperties
     {
         private static readonly string _workDir = "csfd";
-        private static bool _cmdLineInited;
+        private static bool _cmdLineExecuted;
         private readonly CommandLineArguments _cmdLineArgs = new CommandLineArguments();
         private bool _defaultConfigLoaded;
         private string _endTime;
@@ -84,16 +84,12 @@ namespace CollectSFData.Common
 
         public string Version { get; set; }
 
-        protected internal ConfigurationOptions()
+        public ConfigurationOptions()
         {
-            if (!_cmdLineInited)
-            {
-                _cmdLineInited = true;
-                _cmdLineArgs.CmdLineApp.OnExecute(() => MergeCmdLine());
-                _cmdLineArgs.InitFromCmdLine();
-            }
-
+            _cmdLineArgs.CmdLineApp.OnExecute(() => MergeCmdLine());
+            _cmdLineArgs.InitFromCmdLine();
             _tempPath = FileManager.NormalizePath(Path.GetTempPath() + _workDir);
+
             DateTimeOffset defaultOffset = DateTimeOffset.Now;
             StartTimeUtc = defaultOffset.UtcDateTime.AddHours(DefaultStartTimeHours);
             _startTime = defaultOffset.AddHours(DefaultStartTimeHours).ToString(DefaultDatePattern);
@@ -228,7 +224,7 @@ namespace CollectSFData.Common
 
         public bool IsClientIdConfigured()
         {
-            return AzureClientId?.Length > 0 & (AzureClientSecret?.Length > 0 | AzureClientCertificate?.Length > 0)  & AzureTenantId?.Length > 0;
+            return AzureClientId?.Length > 0 & (AzureClientSecret?.Length > 0 | AzureClientCertificate?.Length > 0) & AzureTenantId?.Length > 0;
         }
 
         public bool IsKustoConfigured()
@@ -894,9 +890,14 @@ namespace CollectSFData.Common
             try
             {
                 // can only be called once
-                if (_cmdLineArgs.CmdLineApp.Execute(args) == 0)
+                if (!_cmdLineExecuted & args.Any())
                 {
-                    return false;
+                    _cmdLineExecuted = true;
+
+                    if (_cmdLineArgs.CmdLineApp.Execute(args) == 0)
+                    {
+                        return false;
+                    }
                 }
 
                 return true;
