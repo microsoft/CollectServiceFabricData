@@ -21,7 +21,6 @@ namespace CollectSFData
     {
         private string[] _args;
         private bool _checkedVersion;
-        private bool _initialized;
         private int _noProgressCounter = 0;
         private Timer _noProgressTimer;
         private ParallelOptions _parallelConfig;
@@ -32,23 +31,22 @@ namespace CollectSFData
 
         public Instance Instance { get; } = Instance.Singleton();
 
-        public Collector(string[] args, bool isConsole = false)
+        public Collector(string[] args = null, bool isConsole = false)
         {
             _args = args;
             Log.IsConsole = isConsole;
         }
 
-        public int Collect(ConfigurationOptions configurationOptions)
+        public int Collect()
         {
-            Instance.Config = configurationOptions;
-            return Collect();
+            return Collect(new ConfigurationOptions());
         }
 
-        public int Collect()
+        public int Collect(ConfigurationOptions configurationOptions)
         {
             try
             {
-                if (!Initialize() || !InitializeKusto() || !InitializeLogAnalytics())
+                if (!Initialize(configurationOptions) || !InitializeKusto() || !InitializeLogAnalytics())
                 {
                     return 1;
                 }
@@ -138,38 +136,33 @@ namespace CollectSFData
             return clusterId;
         }
 
-        public bool Initialize()
+        public bool Initialize(ConfigurationOptions configurationOptions)
         {
             _noProgressCounter = 0;
             _noProgressTimer = new Timer(NoProgressCallback, null, 0, 60 * 1000);
+            
             Log.Open();
             CustomTaskManager.Resume();
+            _taskManager?.Wait();
+            _taskManager = new CustomTaskManager();
 
-            if (_initialized)
+            Instance.Initialize(configurationOptions);
+            Log.Info($"version: {Config.Version}");
+
+            if (!Config.PopulateConfig(_args))
             {
-                _taskManager?.Wait();
-                _taskManager = new CustomTaskManager();
-                Instance.Initialize();
+                Config.SaveConfigFile();
+                return false;
             }
-            else
-            {
-                if (!Config.PopulateConfig(_args))
-                {
-                    Config.SaveConfigFile();
-                    return false;
-                }
 
-                _initialized = true;
+            _parallelConfig = new ParallelOptions { MaxDegreeOfParallelism = Config.Threads };
 
-                Log.Info($"version: {Config.Version}");
-                _parallelConfig = new ParallelOptions { MaxDegreeOfParallelism = Config.Threads };
-                ServicePointManager.DefaultConnectionLimit = Config.Threads * MaxThreadMultiplier;
-                ServicePointManager.Expect100Continue = true;
-                ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
+            ServicePointManager.DefaultConnectionLimit = Config.Threads * MaxThreadMultiplier;
+            ServicePointManager.Expect100Continue = true;
+            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
 
-                ThreadPool.SetMinThreads(Config.Threads * MinThreadMultiplier, Config.Threads * MinThreadMultiplier);
-                ThreadPool.SetMaxThreads(Config.Threads * MaxThreadMultiplier, Config.Threads * MaxThreadMultiplier);
-            }
+            ThreadPool.SetMinThreads(Config.Threads * MinThreadMultiplier, Config.Threads * MinThreadMultiplier);
+            ThreadPool.SetMaxThreads(Config.Threads * MaxThreadMultiplier, Config.Threads * MaxThreadMultiplier);
 
             return true;
         }
@@ -216,7 +209,7 @@ namespace CollectSFData
                 if (blobMgr.Connect())
                 {
                     string[] azureFiles = Config.FileUris.Where(x => FileTypes.MapFileUriType(x) == FileUriTypesEnum.azureUri).ToArray();
-                    
+
                     if (azureFiles.Any())
                     {
                         blobMgr.DownloadFiles(azureFiles);
@@ -430,7 +423,7 @@ namespace CollectSFData
                 }
             }
 
-            if(Config.IsCacheLocationPreConfigured())
+            if (Config.IsCacheLocationPreConfigured())
             {
                 switch (Config.FileType)
                 {

@@ -32,21 +32,17 @@ namespace CollectSFData.Common
 
         static Instance()
         {
-            // set instances in static ctor
-            if (_instance.Config == null)
-            {
-                _instance.Config = new ConfigurationOptions();
-                _instance.Config.Version = "${Process.GetCurrentProcess().MainModule?.FileVersionInfo.FileVersion}";
-                Initialize();
-            }
+            Initialize(new ConfigurationOptions());
         }
 
         private Instance()
         {
         }
 
-        public static void Initialize()
+        public static void Initialize(ConfigurationOptions configurationOptions)
         {
+            _instance.Config = configurationOptions;
+            _instance.Config.Version = "${Process.GetCurrentProcess().MainModule?.FileVersionInfo.FileVersion}";
             _instance.FileMgr = new FileManager();
             _instance.Kusto = new KustoConnection();
             _instance.LogAnalytics = new LogAnalyticsConnection();
