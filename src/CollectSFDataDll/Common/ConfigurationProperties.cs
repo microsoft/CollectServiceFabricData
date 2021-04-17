@@ -12,6 +12,8 @@ namespace CollectSFData.Common
     {
         public string AzureClientId { get; set; }
 
+        public string AzureClientCertificate { get; set; }
+
         public string AzureClientSecret { get; set; }
 
         public string AzureResourceGroup { get; set; }
@@ -31,11 +33,15 @@ namespace CollectSFData.Common
         public bool DeleteCache { get; set; }
 
         public string EndTimeStamp { get; set; }
+        
         public DateTimeOffset EndTimeUtc { get; set; }
 
         public bool Examples { get; private set; }
 
+        public string[] FileUris {get; set;} = new string[0];
+
         public string GatherType { get; set; }
+        
         public string KustoCluster { get; set; }
 
         public bool KustoCompressed { get; set; } = true;
