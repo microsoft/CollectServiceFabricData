@@ -32,6 +32,7 @@ namespace CollectSFData
                 && config.KustoUseBlobAsSource == true
                 && config.FileType == DataFile.FileTypesEnum.trace)
             {
+                List<string> ingestList = new List<string>();
                 KustoConnection kusto = collector.Instance.Kusto;
                 Log.Warning("failed ingests due to csv compliance. restarting.");
 
@@ -39,10 +40,10 @@ namespace CollectSFData
                 config.KustoUseBlobAsSource = false;
                 config.KustoRecreateTable = false;
 
-                List<string> ingestList = kusto.IngestFileObjectsFailed.Select(x => x.FileUri).ToList();
-                ingestList.AddRange(kusto.IngestFileObjectsPending.Select(x => x.FileUri));
-                config.FileUris = ingestList.ToArray();
+                kusto.IngestFileObjectsFailed.ForEach(x => ingestList.Add(x.FileUri));
+                kusto.IngestFileObjectsPending.ForEach(x => ingestList.Add(x.FileUri));
 
+                config.FileUris = ingestList.ToArray();
                 retval = collector.Collect();
             }
 
