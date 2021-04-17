@@ -35,6 +35,9 @@ Options:
   -to|--stop                         [DateTime] end time range to collect data to. default is now.
                                          example: "04/21/2020 09:03:49 -04:00"
   -ex|--examples                     [bool] show example commands
+  -uris|--fileUris                   [string[]] optional comma separated string array list of files to ingest.
+                                         overrides default collection from diagnosticsStore
+                                         example: D:\temp\lease_trace1.dtr.zip,D:\temp\lease_trace2.dtr.zip
   -type|--gatherType                 [string] Gather data type:
                                         counter
                                         trace
@@ -108,8 +111,11 @@ To use a default configuration file without having to specify on the command lin
 
 #### collectsfdata general arguments
 
+- **CacheLocation** - required. string. path to blob download location. this path depending on configuration may need to have many GB free and should be premium / fast ssd disk for best performance. **NOTE:** this path should be as short as possible as downloaded file names lengths are close to MAX_PATH.
 - **ContainerFilter** - optional. string / regex. default null. if populated, pattern will be used to filter which containers are enumerated for blob download.
 - **DeleteCache** - bool. default false. if true, blobs downloaded from storage account into 'cacheLocation' will be deleted at end after successful formatting and ingestion.
+- **EndTimeStamp** - datetime string. default is now. example format: "10/31/2018 22:00:00 +00:00".
+- **FileUris** - optional, string[]. default null. if populated, FileUris will be used for the source file ingestion and will bypass default behavior of enumerating cluster 'diagnosticsStore'.
 - **GatherType** - required. string. options: counter, exception, table, trace, any
   - **counter** - 'counter' will enumerate service fabric performance counter (.blg) blobs from 'fabriccounters*' container.
   - **exception** - 'exception' will enumerate service fabric fabric crash dumps (.dmp) blobs from 'fabriccrashdumps*' container.
@@ -119,24 +125,36 @@ To use a default configuration file without having to specify on the command lin
 - **List** - bool. default false. if true, lists the blobs meeting all criteria for download but does not download the file.
 - **LogDebug** - int. default 4. if > 0, logs additional 'debug' output to console for troubleshooting. 0-disabled, 1-exception, 2-error, 3-warning, 4-info, 5-debug.
 - **LogFile** - optional. string. default null. if populated with file and path, will log all console output to specified file. file is recreated every execution if exists.
-- **CacheLocation** - required. string. path to blob download location. this path depending on configuration may need to have many GB free and should be premium / fast ssd disk for best performance. **NOTE:** this path should be as short as possible as downloaded file names lengths are close to MAX_PATH.
-- **SasKey** - required unless using existing data in 'outputlocation' cache from prior execution, then leave empty. string. string type options: account sas uri, service sas uri, or sas connection string. see [shared access signatures](https://docs.microsoft.com/en-us/rest/api/storageservices/delegating-access-with-a-shared-access-signature).
-- **StartTimeStamp** - datetime string. default is -2 hours. example format: "10/31/2018 20:00:00 +00:00".
-- **EndTimeStamp** - datetime string. default is now. example format: "10/31/2018 22:00:00 +00:00".
-- **Threads** - int. default is number of cpu. if specified, is the number of concurrent threads to use for download and ingest to Kusto overriding number of cpus.
-- **UriFilter** - optional. string. if populated has to be blob uri prefix and uses fast server side searching for blobs.
 - **NodeFilter** -  optional. string / regex. if populated uses client side searching for blobs after enumeration before download.
 - **NoProgressTimeoutMin** - optional. int. default 10. if no progress has been made during given timeout, utility will exit. set to 0 to disable.
+- **ResourceUri** - optional. string. used internally for resource tracking.
+- **SasKey** - required unless using existing data in 'CacheLocation' from prior execution or 'FileUris'. string. string type options: account sas uri, service sas uri, or sas connection string. see [shared access signatures](https://docs.microsoft.com/en-us/rest/api/storageservices/delegating-access-with-a-shared-access-signature).
+- **StartTimeStamp** - datetime string. default is -2 hours. example format: "10/31/2018 20:00:00 +00:00".
+- **Threads** - int. default is number of cpu. if specified, is the number of concurrent threads to use for download and ingest to Kusto overriding number of cpus.
+- **UriFilter** - optional. string. if populated has to be blob uri prefix and uses fast server side searching for blobs.
+- **UseMemoryStream** - optional. bool. default true. if enabled, uses MemoryStream instead of disk for all operations except parsing of counter files. this option improves performance by not having to rely on disk.
+- **Unique** - optional. bool. default true. if enabled, option ensures duplicate records are not ingested into same table.
+
+#### collectsfdata azure arguments (optional)
+
+- **AzureClientId** - optional. guid.
+- **AzureClientSecret** - required if AzureClientId is specified. string.
+- **AzureResourceGroup** - required if using Log Analytics and creating a workspace. string. if populated, value is used for creation of Log Analytics workspace if Log Analytics configuration is set to create.
+- **AzureSubscriptionId** - required if tenant contains multiple subscriptions and using AzureClientId.
+- **AzureTenantId** - optional. guid. used in confidential and public client authentication if *not* using 'common'.
 
 #### collectsfdata kusto arguments
 
 - **KustoCluster** - required. uri. kusto cluster ingest url found in properties in azure portal. example: https://ingest-{{cluster}}[.{{location}}].kusto.windows.net/{{database}}
+- **KustoCompressed** - optional. bool. default true. if enabled, will compress (zip) files before sending to kusto saving network bandwidth.
+- **KustoPurge** - optional. bool. default false. if enabled, will attempt to remove data from Kusto database.
 - **KustoRecreateTable** - bool. default false. if true, will drop (recreate) table before ingesting new data regardless if table is currently populated.
 - **KustoTable** - required. string. name of kusto table to create and or use.
-- **KustoUseBlobAsSource** - **not currently used**. bool. default false. if true will ingest service diagnostic logs directly from storage account instead of downloading and formatting. to use this option, service fabric .dtr files have to be CSV compliant.
+- **KustoUseBlobAsSource** - bool. default true. if true will ingest service diagnostic logs directly from azure storage account instead of downloading and formatting. this option is remarkably faster and is preferred option when collecting data from azure clusters. **NOTE:** this option will *not* work if there is a firewall in between Kusto ingest queue servers and storage account.
 - **KustoUseIngestMessage** - bool. default true. if true, will use kusto fail and success queue messaging for data ingestion (service bus additional overhead). if false, use kusto 'ingestion failures' table and data table 'RelativeUri' field for confirmation. better performance when set to false for larger ingests example 'KustoUseBlobAsSource'.
 
 #### collectsfdata log analytics arguments
+
 - **LogAnalyticsId** - required. guid. log analytics workspace id guid.
 - **LogAnalyticsKey** - required. base64 key. primary / secondary key located in workspace advanced settings.
 - **LogAnalyticsName** - string. name / tag for custom log ingest. requires first character to be alpha.
@@ -272,6 +290,28 @@ NOTE: for standalone clusters a central diagnostic store must be configured
   "SasKey": "https://sflogsxxxxxxxxxxxxx.blob.core.windows.net/?sv=2017-11-09&ss=bfqt&srt=sco&sp=rwdlacup&se=2018-12-05T23:51:08Z&st=2018-11-05T15:51:08Z&spr=https&sig=VYT1J9Ene1NktyCgsu1gEH%2FN%2BNH9zRhJO05auUPQkSA%3D",
   "StartTimeStamp": "10/31/2018 20:00:00 +00:00",
   "EndTimeStamp": "10/31/2018 22:30:00 +00:00",
+  "Threads": 8,
+  "UriFilter": "",
+  "NodeFilter": "nt0",
+  "KustoCluster": "https://ingest-kustodb.eastus.kusto.windows.net/serviceFabricDB",
+  "KustoRecreateTable": true,
+  "KustoTable": "_00000000000001"
+}
+```
+
+#### **example configuration for ingesting adhoc / custom service fabric diagnostic trace logs into kusto**
+
+```json
+{
+  "ContainerFilter": "",
+  "DeleteCache": true,
+  "GatherType": "trace",
+  "LogDebug": 4,
+  "FileUris":[
+    "https://sflogsbmnjfzoagi7jc2.blob.core.windows.net/fabriclogs-8de7b13a-4137-454a-9ad5-a356fa0c3159/_nt0_2/Fabric/bc4316ec4b0814dcc367388a46d9903e_fabric_traces_7.2.457.9590_132610909242411002_3_00637522249901331579_0000000000.dtr.zip",
+    "c:/temp/trace.dtr.zip"
+   ],
+  "SasKey": "https://sflogsxxxxxxxxxxxxx.blob.core.windows.net/?sv=2017-11-09&ss=bfqt&srt=sco&sp=rwdlacup&se=2018-12-05T23:51:08Z&st=2018-11-05T15:51:08Z&spr=https&sig=VYT1J9Ene1NktyCgsu1gEH%2FN%2BNH9zRhJO05auUPQkSA%3D",
   "Threads": 8,
   "UriFilter": "",
   "NodeFilter": "nt0",
