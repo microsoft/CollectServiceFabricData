@@ -44,8 +44,6 @@ namespace CollectSFData.Common
 
         public FileTypesEnum FileType { get; private set; }
 
-        public string[] FileUris {get; set;} = new string[0];
-
         public new string GatherType
         {
             get => FileType.ToString();
@@ -957,11 +955,6 @@ namespace CollectSFData.Common
             {
                 Log.Debug($"property not writable:{propertyInstance.Name}");
             }
-        }
-
-        public ConfigurationOptions Clone()
-        {
-            return (ConfigurationOptions)MemberwiseClone();
         }
     }
 }
