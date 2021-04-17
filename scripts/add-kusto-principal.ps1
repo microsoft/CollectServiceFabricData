@@ -22,7 +22,7 @@ param(
     [string]$principalType = "aaduser",
     [string]$principalDescription = "$principalType (AAD)",
     [ValidateSet('admins','ingestors','monitors','unrestrictedviewers','users','viewers')]
-    [string]$principalRole = 'users'
+    [string]$principalRole = 'users',
     [switch]$whatIf,
     [switch]$force
 )
