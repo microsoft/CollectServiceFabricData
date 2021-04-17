@@ -117,7 +117,7 @@ namespace CollectSFData.Azure
             {
                 try
                 {
-                    if(Path.IsPathRooted(uri))
+                    if(FileTypes.MapFileUriType(uri) != FileUriTypesEnum.azureUri)
                     {
                         Log.Warning($"not blob storage path. skipping:{uri}");
                         continue;
@@ -134,6 +134,7 @@ namespace CollectSFData.Azure
             }
 
             QueueBlobSegmentDownload(blobItems);
+            uris = blobItems.Select(x => x.Uri.ToString()).ToArray();
         }
 
         private IEnumerable<BlobResultSegment> EnumerateContainerBlobs(CloudBlobContainer cloudBlobContainer)
