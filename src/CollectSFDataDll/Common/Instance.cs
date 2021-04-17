@@ -12,13 +12,6 @@ namespace CollectSFData.Common
 {
     public class Instance : Constants
     {
-        protected internal ConfigurationOptions Config { get; set; }
-        public FileManager FileMgr { get; set; }
-        public bool IsWindows { get; } = Environment.OSVersion.Platform.Equals(PlatformID.Win32NT);
-        public KustoConnection Kusto { get; set; }
-        public LogAnalyticsConnection LogAnalytics { get; set; }
-        public DateTime StartTime { get; set; }
-
         public bool TimedOut;
         public int TotalErrors;
         public int TotalFilesConverted;
@@ -30,6 +23,12 @@ namespace CollectSFData.Common
         public int TotalRecords;
         private static readonly Instance _instance = new Instance();
         private static object _instanceLock = new object();
+        public FileManager FileMgr { get; set; }
+        public bool IsWindows { get; } = Environment.OSVersion.Platform.Equals(PlatformID.Win32NT);
+        public KustoConnection Kusto { get; set; }
+        public LogAnalyticsConnection LogAnalytics { get; set; }
+        public DateTime StartTime { get; set; }
+        protected internal ConfigurationOptions Config { get; set; }
 
         static Instance()
         {
@@ -37,6 +36,7 @@ namespace CollectSFData.Common
             if (_instance.Config == null)
             {
                 _instance.Config = new ConfigurationOptions();
+                _instance.Config.Version = "${Process.GetCurrentProcess().MainModule?.FileVersionInfo.FileVersion}";
                 Initialize();
             }
         }
