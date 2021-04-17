@@ -238,6 +238,14 @@ namespace CollectSFData
             {
                 Log.Last($"{DataExplorer}/clusters/{Instance.Kusto.Endpoint.ClusterName}/databases/{Instance.Kusto.Endpoint.DatabaseName}", ConsoleColor.Cyan);
             }
+
+            if(Instance.Kusto.IngestFileObjectsFailed.Count() > 0 | Instance.Kusto.IngestFileObjectsPending.Count() > 0)
+            {
+                List<string> ingestList = new List<string>();
+                Instance.Kusto.IngestFileObjectsFailed.ForEach(x => ingestList.Add(x.FileUri));
+                Instance.Kusto.IngestFileObjectsPending.ForEach(x => ingestList.Add(x.FileUri));
+                Config.FileUris = ingestList.ToArray();
+            }
         }
 
         private bool InitializeKusto()
