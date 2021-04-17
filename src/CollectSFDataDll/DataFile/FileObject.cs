@@ -20,25 +20,27 @@ namespace CollectSFData.DataFile
 
         public Action DownloadAction { get; set; }
 
-        public bool Exists => File.Exists(FileUri);
+        public bool Exists { get => File.Exists(FileUri); }
 
         public FileDataTypesEnum FileDataType { get; set; }
 
-        public FileExtensionTypesEnum FileExtensionType => FileTypes.MapKnownFileExtension(FileUri);
+        public FileExtensionTypesEnum FileExtensionType { get => FileTypes.MapKnownFileExtension(FileUri); }
 
-        public FileTypesEnum FileType => FileTypes.MapFileTypeUri(FileUri);
+        public FileTypesEnum FileType { get => FileTypes.MapFileTypeUri(FileUri); }
 
         public string FileUri { get => _fileUri; set => ExtractProperties(value); }
 
+        public FileUriTypesEnum FileUriType { get => FileTypes.MapFileUriType(FileUri); }
+
         public DateTimeOffset LastModified { get; set; }
 
-        public long Length => (long)Stream?.Length;
+        public long Length { get => (long)Stream?.Length; }
 
         public string NodeName { get; private set; } = FileDataTypesEnum.unknown.ToString();
 
         public int RecordCount { get; set; }
 
-        public string RelativeUri => Regex.Replace(_fileUri ?? "", BaseUri ?? "", "", RegexOptions.IgnoreCase).TrimStart('/');
+        public string RelativeUri { get => Regex.Replace(_fileUri ?? "", BaseUri ?? "", "", RegexOptions.IgnoreCase).TrimStart('/'); }
 
         public StreamManager Stream { get; set; }
 
