@@ -58,7 +58,7 @@ namespace CollectSFData
                     DownloadAzureData();
                 }
 
-                if (Config.IsCacheLocationPreConfigured() | Config.FileUris.Length > 0)
+                if (Config.IsCacheLocationPreConfigured() | Config.FileUris.Any())
                 {
                     UploadCacheData();
                 }
@@ -216,9 +216,14 @@ namespace CollectSFData
 
                 if (blobMgr.Connect())
                 {
-                    if (Config.FileUris.Length > 0)
+                    string[] azureFiles = Config.FileUris.Where(x => FileTypes.MapFileUriType(x) == FileUriTypesEnum.azureUri).ToArray();
+                    
+                    if (azureFiles.Any())
                     {
-                        blobMgr.DownloadFiles(Config.FileUris);
+                        blobMgr.DownloadFiles(azureFiles);
+                        List<string> fileUris = Config.FileUris.ToList();
+                        fileUris.RemoveAll(x => azureFiles.Contains(x));
+                        Config.FileUris = fileUris.ToArray();
                     }
                     else
                     {
@@ -239,7 +244,7 @@ namespace CollectSFData
                 Log.Last($"{DataExplorer}/clusters/{Instance.Kusto.Endpoint.ClusterName}/databases/{Instance.Kusto.Endpoint.DatabaseName}", ConsoleColor.Cyan);
             }
 
-            if(Instance.Kusto.IngestFileObjectsFailed.Any() | Instance.Kusto.IngestFileObjectsPending.Any())
+            if (Instance.Kusto.IngestFileObjectsFailed.Any() | Instance.Kusto.IngestFileObjectsPending.Any())
             {
                 List<string> ingestList = new List<string>();
                 Instance.Kusto.IngestFileObjectsFailed.ForEach(x => ingestList.Add(x.FileUri));
@@ -396,14 +401,19 @@ namespace CollectSFData
             Log.Info("enter");
             List<string> files = new List<string>();
 
-            if (Config.FileUris.Length > 0)
+            string[] localFiles = Config.FileUris.Where(x => FileTypes.MapFileUriType(x) == FileUriTypesEnum.fileUri).ToArray();
+
+            if (localFiles.Any())
             {
-                foreach (string file in Config.FileUris)
+                List<string> fileUris = Config.FileUris.ToList();
+
+                foreach (string file in localFiles)
                 {
                     if (File.Exists(file))
                     {
                         Log.Info($"adding file to list: {file}");
                         files.Add(file);
+                        fileUris.Remove(file);
                     }
                     else
                     {
@@ -411,12 +421,17 @@ namespace CollectSFData
                     }
                 }
 
-                if (files.Count < 1)
+                if (files.Any())
+                {
+                    Config.FileUris = fileUris.ToArray();
+                }
+                else
                 {
                     Log.Error($"configuration set to upload cache files from 'fileUris' count:{Config.FileUris.Length} but no files found");
                 }
             }
-            else
+
+            if(Config.IsCacheLocationPreConfigured())
             {
                 switch (Config.FileType)
                 {

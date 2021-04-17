@@ -51,8 +51,9 @@ namespace CollectSFData.DataFile
     public enum FileUriTypesEnum
     {
         unknown,
-        local,
-        remote
+        azureUri,
+        fileUri,
+        httpUri
     }
 
     public static class FileTypes
@@ -238,16 +239,21 @@ namespace CollectSFData.DataFile
 
             FileUriTypesEnum fileUriTypesEnum = FileUriTypesEnum.unknown;
 
-            if(string.IsNullOrEmpty(fileUri))
+            if (string.IsNullOrEmpty(fileUri))
             {
             }
-            else if(fileUri.ToLower().StartsWith("http")
+            else if (fileUri.ToLower().StartsWith("http"))
             {
-                fileUriTypesEnum = FileUriTypesEnum.remote;
+                fileUriTypesEnum = FileUriTypesEnum.httpUri;
+
+                if (fileUri.ToLower().Contains(Constants.AzureStorageSuffix))
+                {
+                    fileUriTypesEnum = FileUriTypesEnum.azureUri;
+                }
             }
             else
             {
-                fileUriTypesEnum = FileUriTypesEnum.local;
+                fileUriTypesEnum = FileUriTypesEnum.fileUri;
             }
 
             Log.Debug($"returning {fileUriTypesEnum}");
