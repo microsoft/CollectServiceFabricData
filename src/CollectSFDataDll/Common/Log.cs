@@ -17,8 +17,7 @@ namespace CollectSFData.Common
     public static class Log
     {
         public static int LogErrors = 0;
-        private static ConsoleColor _highlightBackground = Console.ForegroundColor;
-        private static ConsoleColor _highlightForeground = Console.BackgroundColor;
+        public static bool LogFileEnabled;
         private static bool _isRunning;
         private static JsonSerializerSettings _jsonSerializerSettings;
         private static SynchronizedList<LogMessage> _lastMessageList = new SynchronizedList<LogMessage>();
@@ -26,7 +25,6 @@ namespace CollectSFData.Common
         private static SynchronizedList<LogMessage> _messageList = new SynchronizedList<LogMessage>();
         private static StreamWriter _streamWriter;
         private static Task _taskWriter;
-        private static CancellationTokenSource _taskWriterCancellationToken => CustomTaskManager.CancellationTokenSource;
         private static int _threadSleepMs = Constants.ThreadSleepMs100;
 
         public delegate void LogMessageHandler(object sender, LogMessage args);
@@ -36,12 +34,9 @@ namespace CollectSFData.Common
         private static event EventHandler<Newtonsoft.Json.Serialization.ErrorEventArgs> JsonErrorHandler;
 
         public static bool IsConsole { get; set; }
-
         public static int LogDebug { get; set; }
-
         public static string LogFile { get => _logFile; set => _logFile = CheckLogFile(value) ? value : string.Empty; }
-
-        public static bool LogFileEnabled;
+        private static CancellationTokenSource _taskWriterCancellationToken => CustomTaskManager.CancellationTokenSource;
 
         static Log()
         {
@@ -213,10 +208,9 @@ namespace CollectSFData.Common
         {
             try
             {
-                if (string.IsNullOrEmpty(logFile))
+                if ((Environment.OSVersion.Platform != PlatformID.Win32NT & Environment.OSVersion.Platform != PlatformID.Unix) | string.IsNullOrEmpty(logFile))
                 {
                     LogFileEnabled = false;
-                    Close();
                     return true;
                 }
 

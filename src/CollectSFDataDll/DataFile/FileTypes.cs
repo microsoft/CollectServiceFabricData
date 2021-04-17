@@ -48,6 +48,14 @@ namespace CollectSFData.DataFile
         table
     }
 
+    public enum FileUriTypesEnum
+    {
+        unknown,
+        azureUri,
+        fileUri,
+        httpUri
+    }
+
     public static class FileTypes
     {
         private static readonly string[] _fileDataTypes = Enum.GetNames(typeof(FileDataTypesEnum));
@@ -89,11 +97,93 @@ namespace CollectSFData.DataFile
 
             if (!found)
             {
+                // try by just file extension
+                fileDataType = MapFileDataTypeExtension(fileUri);
+            }
+
+            if (fileDataType == FileDataTypesEnum.unknown)
+            {
                 Log.Warning($"unable to determine datatypepattern:{fileUri} using values:{string.Join(",", _fileDataTypes)}");
             }
 
             Log.Debug($"returning FileDataTypesEnum.{fileDataType.ToString()}");
             return fileDataType;
+        }
+
+        public static FileDataTypesEnum MapFileDataTypeExtension(string fileUri)
+        {
+            FileDataTypesEnum extension = FileDataTypesEnum.unknown;
+            switch (Path.GetExtension(fileUri.ToLower()))
+            {
+                case Constants.PerfCsvExtension:
+                case Constants.PerfCtrExtension:
+                    {
+                        extension = FileDataTypesEnum.counter;
+                        break;
+                    }
+
+                case Constants.TableExtension:
+                    {
+                        extension = FileDataTypesEnum.table;
+                        break;
+                    }
+
+                case Constants.DumpExtension:
+                    {
+                        extension = FileDataTypesEnum.fabriccrashdumps;
+                        break;
+                    }
+
+                case Constants.TraceZipExtension:
+                case Constants.TraceFileExtension:
+                    {
+                        // using default fabric / lease
+                        extension = FileDataTypesEnum.fabric;
+                        break;
+                    }
+
+                case Constants.SetupExtension:
+                    {
+                        // using default fabricsetup / fabricdeployer
+                        extension = FileDataTypesEnum.fabricsetup;
+                        break;
+                    }
+
+                case Constants.ZipExtension:
+                    {
+                        // todo: implement
+                        extension = FileDataTypesEnum.unknown;
+                        break;
+                    }
+
+                case Constants.JsonExtension:
+                    {
+                        // todo: implement
+                        extension = FileDataTypesEnum.unknown;
+                        break;
+                    }
+                case Constants.EtlExtension:
+                    {
+                        // todo: implement
+                        extension = FileDataTypesEnum.unknown;
+                        break;
+                    }
+                case Constants.CsvExtension:
+                    {
+                        // todo: implement
+                        extension = FileDataTypesEnum.unknown;
+                        break;
+                    }
+
+                default:
+                    {
+                        extension = FileDataTypesEnum.unknown;
+                        break;
+                    }
+            }
+
+            Log.Debug($"returning {extension}");
+            return extension;
         }
 
         public static FileTypesEnum MapFileTypeUri(string fileUri)
@@ -141,6 +231,33 @@ namespace CollectSFData.DataFile
 
             Log.Debug($"returning {fileTypesEnum}");
             return fileTypesEnum;
+        }
+
+        public static FileUriTypesEnum MapFileUriType(string fileUri)
+        {
+            Log.Debug($"enter:{fileUri}");
+
+            FileUriTypesEnum fileUriTypesEnum = FileUriTypesEnum.unknown;
+
+            if (string.IsNullOrEmpty(fileUri))
+            {
+            }
+            else if (fileUri.ToLower().StartsWith("http"))
+            {
+                fileUriTypesEnum = FileUriTypesEnum.httpUri;
+
+                if (fileUri.ToLower().Contains(Constants.AzureStorageSuffix))
+                {
+                    fileUriTypesEnum = FileUriTypesEnum.azureUri;
+                }
+            }
+            else
+            {
+                fileUriTypesEnum = FileUriTypesEnum.fileUri;
+            }
+
+            Log.Debug($"returning {fileUriTypesEnum}");
+            return fileUriTypesEnum;
         }
 
         public static string MapFileTypeUriPrefix(FileTypesEnum fileType)
