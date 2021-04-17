@@ -11,6 +11,7 @@ namespace CollectSFData.Common
     public class Constants
     {
         public const string ArmApiVersion = "api-version=2018-05-01";
+        public const string AzureStorageSuffix = "core.windows.net";
         public const string CodeLatestRelease = "https://api.github.com/repos/microsoft/CollectServiceFabricData/releases/latest";
         public const string CodeRepository = "https://github.com/microsoft/CollectServiceFabricData";
         public const string CsvExtension = ".csv";
