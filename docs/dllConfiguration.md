@@ -18,7 +18,7 @@ CollectSFData can be used as an exe or as a dll from Microsoft signed nuget pack
 
 ## Design
 
-CollectSFData is a high performance multi-threaded binary with a custom task scheduler. The 'Instance' state class is a singleton and therefore Collector class should be reusable by calling Collect() multiple times, but only one instance of Collector should be used concurrently.  
+CollectSFData is a high performance multi-threaded binary with a custom task scheduler. The 'Instance' state class is a singleton. Collector is reusable by calling Collect() multiple times, but only one instance of Collector should be used concurrently.  
 
 ## Supported Configurations
 
@@ -61,13 +61,15 @@ In Visual Studio, use 'NuGet Package Manager' to install package.
 
 ### Creating Kusto Cluster
 
+(todo: see scripts directory)
+
 ### Headless Execution with Client Credentials
 
-Use these steps to optionally configure CollectSFData to run headless with client credentials and secret. 
+Use these steps to optionally configure CollectSFData to run headless with client credentials and client certificate. 
 
 #### Configuration of Azure Active Directory App Registration
 
-#### Configuration of Secret
+#### Configuration of Client Certificate
 
 ## Implementing Collector
 
@@ -91,7 +93,7 @@ See examples below on how to use:
 private static int Main(string[] args)
 {
         Collector collector = new Collector(args, true);
-        ConfigurationOptions config = collector.Config;
+        ConfigurationOptions config = new ConfigurationOptions();
 
         config.GatherType = FileTypesEnum.counter.ToString();
         config.UseMemoryStream = true;
@@ -100,6 +102,26 @@ private static int Main(string[] args)
         config.KustoRecreateTable = true;
         config.LogDebug = 5;
         config.LogFile = "c:\\temp\\csfd.3.log";
+
+        return collector.Collect(config);
+}
+```
+
+### Example
+
+```c#
+private static int Main(string[] args)
+{
+        Collector collector = new Collector(args, true);
+        ConfigurationOptions config = collector.Config;
+
+        config.GatherType = "trace";
+        config.UseMemoryStream = true;
+        config.KustoCluster = "https://ingest-sfcluster.kusto.windows.net/sfdatabase";
+        config.KustoTable = "sfclusterlogs";
+        config.KustoRecreateTable = true;
+        config.LogDebug = 5;
+        config.LogFile = null;
         //config.Validate();
 
         return collector.Collect();
@@ -124,10 +146,8 @@ private static int Main(string[] args)
         //config.Validate();
 
         return collector.Collect(config);
-
 }
 ```
-
 
 ## Logging
 

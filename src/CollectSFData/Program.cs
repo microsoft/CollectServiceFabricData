@@ -21,9 +21,8 @@ namespace CollectSFData
             }
 
             Collector collector = new Collector(args, true);
-            ConfigurationOptions config = collector.Config;
-
-            int retval = collector.Collect();
+            ConfigurationOptions config = new ConfigurationOptions();
+            int retval = collector.Collect(config);
 
             // mitigation for dtr files not being csv compliant causing kusto ingest to fail
             if (config.IsKustoConfigured()
