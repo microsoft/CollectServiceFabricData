@@ -1,5 +1,17 @@
 # Change log
 
+## 4/18/2021
+
+- fix potential scenario where blob could be deleted from storage by hardcoding RetainBlobOnSuccess = true
+- fix issue where uriString may be null for temporary container or ingestionqueue resources for kusto upload
+- fix nuget warnings during build for net5.0
+- split properties from ConfigurationOptions.cs into ConfigurationProperties.cs for class reuse
+- allow new ConfigurationOptions instances to be used.
+- add ConfigurationOptions argument to Collector
+- ConfigurationOptions
+- add DefaultConfiguration to ConfigurationOptions populated with default 'collectsfdata.options.json' and any commandline arguments if passed to constructor
+- update [dllConfiguration](./docs/dllConfiguration.md)
+
 ## 04/08/2021
 
 - add AzureClientCertificate property for use with AzureTenantId and AzureClientId for confidentialClient authentication with certificate in LocalMachine or CurrentUser My

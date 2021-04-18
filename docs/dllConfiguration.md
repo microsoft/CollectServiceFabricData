@@ -79,6 +79,32 @@ After CollectSFData nuget package has been added to project, use the following i
 
 Minimum configuration has to be set before calling Collector.Collect(). The main configuration is the type of data to collect with configuration option 'GatherType'. Configuration can be set by command line arguments, configuration file, or by using ConfigurationOptions class before calling Collector.Collect(). See [configuration](./configuration.md).
 
+ConfigurationOptions constructor can be used to pass commandline 'args'. Default option file 'collectsfdata.options.json' and 'args' if any will be added to a static base DefaultConfiguration. Use GetDefaultConfiguration() and SetDefaultConfiguration() if modification is needed.
+
+#### Example ConfigurationOptions default Constructor
+
+```c#
+ConfigurationOptions config = new ConfigurationOptions();
+```
+
+#### Example to use ConfigurationOptions constructor passing command line arguments from Main(string[] args)
+
+```c#
+ConfigurationOptions config = new ConfigurationOptions(args);
+```
+
+#### Example to reuse existing configuration after collect using Clone()
+
+```c#
+ConfigurationOptions config = collector.Config.Clone();
+```
+
+#### Example to reuse existing configuration after collect using Clone()
+
+```c#
+ConfigurationOptions config = collector.Config.Clone();
+```
+
 ### Calling Collector.Collect()
 
 Once configuration options have been set, call Collector.Collect(). 
@@ -87,7 +113,7 @@ Use Clone() to create a shallow copy of existing configuration.
 
 See examples below on how to use:
 
-### Example
+#### Example
 
 ```c#
 private static int Main(string[] args)
@@ -107,7 +133,7 @@ private static int Main(string[] args)
 }
 ```
 
-### Example
+#### Example
 
 ```c#
 private static int Main(string[] args)
@@ -128,7 +154,7 @@ private static int Main(string[] args)
 }
 ```
 
-### Example
+#### Example
 
 ```c#
 private static int Main(string[] args)
