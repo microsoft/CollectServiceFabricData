@@ -195,13 +195,13 @@ namespace CollectSFData.Kusto
             string blobUriWithSas = null;
             string ingestionMapping = SetIngestionMapping(fileObject);
 
-            if (!_tempContainerEnumerator.MoveNext())
+            if (!_tempContainerEnumerator.MoveNext() | string.IsNullOrEmpty(_tempContainerEnumerator.Current))
             {
                 _tempContainerEnumerator.Reset();
                 _tempContainerEnumerator.MoveNext();
             }
 
-            if (!_ingestionQueueEnumerator.MoveNext())
+            if (!_ingestionQueueEnumerator.MoveNext() | string.IsNullOrEmpty(_ingestionQueueEnumerator.Current))
             {
                 _ingestionQueueEnumerator.Reset();
                 _ingestionQueueEnumerator.MoveNext();
@@ -357,7 +357,7 @@ namespace CollectSFData.Kusto
                 RawDataSize = Convert.ToInt32(blobSizeBytes),
                 DatabaseName = Endpoint.DatabaseName,
                 TableName = Endpoint.TableName,
-                RetainBlobOnSuccess = !Config.KustoUseBlobAsSource,
+                RetainBlobOnSuccess = true,
                 Format = FileExtensionTypesEnum.csv.ToString(),
                 FlushImmediately = true,
                 ReportLevel = Config.KustoUseIngestMessage ? 2 : 1, //(int)IngestionReportLevel.FailuresAndSuccesses, // 2 FailuresAndSuccesses, 0 failures, 1 none
@@ -370,6 +370,7 @@ namespace CollectSFData.Kusto
                 }
             };
 
+            Log.Debug($"ingestion message:", message);
             return message;
         }
 
