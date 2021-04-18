@@ -28,18 +28,15 @@ namespace CollectSFData.Common
         private static ConfigurationOptions _defaultConfig;
         private readonly CommandLineArguments _cmdLineArgs = new CommandLineArguments();
         private bool _defaultConfigLoaded => _defaultConfig != null;
-        private string _endTime;
-        private string _startTime;
         private string _tempPath;
-        private int _threads;
 
         public new string EndTimeStamp
         {
-            get => _endTime;
+            get => base.EndTimeStamp;
             set
             {
                 EndTimeUtc = ConvertToUtcTime(value);
-                _endTime = ConvertToUtcTimeString(value);
+                base.EndTimeStamp = ConvertToUtcTimeString(value);
             }
         }
 
@@ -47,7 +44,7 @@ namespace CollectSFData.Common
 
         public new string GatherType
         {
-            get => FileType.ToString();
+            get => base.GatherType;
             set
             {
                 FileTypesEnum fileType = ConvertFileType(value);
@@ -58,6 +55,7 @@ namespace CollectSFData.Common
                 }
 
                 FileType = fileType;
+                base.GatherType = FileType.ToString();
             }
         }
 
@@ -69,18 +67,18 @@ namespace CollectSFData.Common
 
         public new string StartTimeStamp
         {
-            get => _startTime;
+            get => base.StartTimeStamp;
             set
             {
                 StartTimeUtc = ConvertToUtcTime(value);
-                _startTime = ConvertToUtcTimeString(value);
+                base.StartTimeStamp = ConvertToUtcTimeString(value);
             }
         }
 
         public new int Threads
         {
-            get => _threads < 1 ? Environment.ProcessorCount : _threads;
-            set => _threads = value < 1 ? Environment.ProcessorCount : value;
+            get => base.Threads < 1 ? Environment.ProcessorCount : base.Threads;
+            set => base.Threads = value < 1 ? Environment.ProcessorCount : value;
         }
 
         public string Version { get; set; }
@@ -98,9 +96,9 @@ namespace CollectSFData.Common
 
             DateTimeOffset defaultOffset = DateTimeOffset.Now;
             StartTimeUtc = defaultOffset.UtcDateTime.AddHours(DefaultStartTimeHours);
-            _startTime = defaultOffset.AddHours(DefaultStartTimeHours).ToString(DefaultDatePattern);
+            StartTimeStamp = defaultOffset.AddHours(DefaultStartTimeHours).ToString(DefaultDatePattern);
             EndTimeUtc = defaultOffset.UtcDateTime;
-            _endTime = defaultOffset.ToString(DefaultDatePattern);
+            EndTimeStamp = defaultOffset.ToString(DefaultDatePattern);
             LoadDefaultConfig();
 
             if (args.Any())
@@ -695,15 +693,15 @@ namespace CollectSFData.Common
             Log.Info("enter");
             bool retval = true;
 
-            if (string.IsNullOrEmpty(_startTime) != string.IsNullOrEmpty(_endTime))
+            if (string.IsNullOrEmpty(StartTimeStamp) != string.IsNullOrEmpty(EndTimeStamp))
             {
                 Log.Error("supply start and end time");
                 retval = false;
             }
 
-            if (!string.IsNullOrEmpty(_startTime) & !string.IsNullOrEmpty(_endTime))
+            if (!string.IsNullOrEmpty(StartTimeStamp) & !string.IsNullOrEmpty(EndTimeStamp))
             {
-                if (ConvertToUtcTime(_startTime) == DateTime.MinValue | ConvertToUtcTime(_endTime) == DateTime.MinValue)
+                if (ConvertToUtcTime(StartTimeStamp) == DateTime.MinValue | ConvertToUtcTime(EndTimeStamp) == DateTime.MinValue)
                 {
                     retval = false;
                 }
