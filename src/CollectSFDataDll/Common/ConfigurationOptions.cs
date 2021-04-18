@@ -22,12 +22,11 @@ namespace CollectSFData.Common
 {
     public class ConfigurationOptions : ConfigurationProperties
     {
+        private static readonly CommandLineArguments _cmdLineArgs = new CommandLineArguments();
         private static readonly string _workDir = "csfd";
         private static string[] _args = new string[0];
         private static bool _cmdLineExecuted;
         private static ConfigurationOptions _defaultConfig;
-        private readonly CommandLineArguments _cmdLineArgs = new CommandLineArguments();
-        private bool _defaultConfigLoaded => _defaultConfig != null;
         private string _tempPath;
 
         public new string EndTimeStamp
@@ -62,8 +61,8 @@ namespace CollectSFData.Common
         public new int LogDebug
         {
             get => base.LogDebug;
-            set 
-            { 
+            set
+            {
                 base.LogDebug = value;
                 Log.LogDebug = value;
             }
@@ -87,15 +86,24 @@ namespace CollectSFData.Common
 
         public string Version { get; set; }
 
+        private bool _defaultConfigLoaded => _defaultConfig != null;
+
+        static ConfigurationOptions()
+        {
+            _cmdLineArgs.InitFromCmdLine();
+        }
+
         public ConfigurationOptions() : this(new string[0])
         {
-
         }
 
         public ConfigurationOptions(string[] args)
         {
-            _args = args;
-            _cmdLineArgs.InitFromCmdLine();
+            if (args.Any())
+            {
+                _args = args;
+            }
+
             _tempPath = FileManager.NormalizePath(Path.GetTempPath() + _workDir);
 
             DateTimeOffset defaultOffset = DateTimeOffset.Now;
@@ -104,11 +112,6 @@ namespace CollectSFData.Common
             EndTimeUtc = defaultOffset.UtcDateTime;
             EndTimeStamp = defaultOffset.ToString(DefaultDatePattern);
             LoadDefaultConfig();
-
-            if (args.Any())
-            {
-                ParseCmdLine(args);
-            }
         }
 
         public void CheckReleaseVersion()
@@ -161,7 +164,7 @@ namespace CollectSFData.Common
 
             if (DateTimeOffset.TryParse(timeString, CultureInfo.InvariantCulture, DateTimeStyles.None, out dateTimeOffset))
             {
-                Log.Info($"TimeStamp valid format:input:'{timeString}'");
+                Log.Debug($"TimeStamp valid format:input:'{timeString}'");
                 return dateTimeOffset.UtcDateTime;
             }
 
@@ -182,11 +185,11 @@ namespace CollectSFData.Common
                 dateTime = ConvertToUtcTime(timeString);
                 if (dateTime != DateTime.MinValue)
                 {
-                    timeString = dateTime.ToString("o");
+                    timeString = dateTime.ToString(DefaultDatePattern);
                 }
             }
 
-            Log.Info($"returning:time string:'{timeString}'");
+            Log.Debug($"returning:time string:'{timeString}'");
             return timeString;
         }
 
@@ -226,6 +229,13 @@ namespace CollectSFData.Common
                     Log.Min($"AzureResourceGroupLocation: {AzureResourceGroupLocation}", ConsoleColor.Yellow);
                 }
             }
+        }
+
+        public ConfigurationOptions GetDefaultConfig()
+        {
+            LoadDefaultConfig();
+            Log.Debug($"exit:", _defaultConfig);
+            return _defaultConfig;
         }
 
         public bool IsCacheLocationPreConfigured()
@@ -319,6 +329,7 @@ namespace CollectSFData.Common
                     case JTokenType.Array:
                         instanceValue = token.Values<string>().ToArray();
                         break;
+
                     case JTokenType.Null:
                         instanceValue = null;
                         break;
@@ -363,6 +374,8 @@ namespace CollectSFData.Common
 
                 SetPropertyValue(instanceProperty, instanceValue);
             }
+
+            SetDefaultConfig(Clone());
         }
 
         public bool PopulateConfig()
@@ -492,6 +505,12 @@ namespace CollectSFData.Common
             File.WriteAllText(SaveConfiguration, options.ToString());
             Log.Info($"configuration file saved to: {SaveConfiguration}", ConsoleColor.Green);
             return options.ToString();
+        }
+
+        public void SetDefaultConfig(ConfigurationOptions configurationOptions)
+        {
+            Log.Debug($"enter:", configurationOptions);
+            _defaultConfig = configurationOptions;
         }
 
         public bool Validate()
@@ -804,6 +823,11 @@ namespace CollectSFData.Common
             return Regex.Replace(tableName, $"^({FileType}_)", "", RegexOptions.IgnoreCase);
         }
 
+        private PropertyInfo[] InstanceProperties()
+        {
+            return GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public);
+        }
+
         private bool LoadDefaultConfig()
         {
             if (_defaultConfig == null)
@@ -811,7 +835,6 @@ namespace CollectSFData.Common
                 if (File.Exists(DefaultOptionsFile))
                 {
                     MergeConfig(DefaultOptionsFile);
-                    _defaultConfig = Clone();
                     return true;
                 }
 
@@ -823,11 +846,6 @@ namespace CollectSFData.Common
             }
 
             return true;
-        }
-
-        private PropertyInfo[] InstanceProperties()
-        {
-            return GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public);
         }
 
         private int MergeCmdLine()
@@ -898,6 +916,7 @@ namespace CollectSFData.Common
                     return 0;
                 }
 
+                SetDefaultConfig(Clone());
                 return 1;
             }
             catch (Exception e)
@@ -921,8 +940,6 @@ namespace CollectSFData.Common
                     {
                         return false;
                     }
-
-                    _defaultConfig = Clone();
                 }
 
                 return true;
