@@ -42,12 +42,11 @@ namespace CollectSFData.Common
 
         public static void Initialize(ConfigurationOptions configurationOptions=null)
         {
-            _instance.Config = new ConfigurationOptions();
-
-            if(configurationOptions != null){
-                 _instance.Config.MergeConfig(configurationOptions.Clone());
+            if(configurationOptions == null){
+                 configurationOptions = new ConfigurationOptions();
              }
 
+            _instance.Config = configurationOptions;
             _instance.Config.Version = $"{Process.GetCurrentProcess().MainModule?.FileVersionInfo.FileVersion}";
             _instance.FileMgr = new FileManager();
             _instance.Kusto = new KustoConnection();
