@@ -74,7 +74,7 @@ namespace CollectSFData.Common
 
         public string LogAnalyticsWorkspaceSku { get; set; } = "PerGB2018";
 
-        public int LogDebug { get; set; }
+        public int LogDebug { get; set; } = 4;
 
         public string LogFile { get; set; }
 

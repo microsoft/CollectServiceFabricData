@@ -22,6 +22,7 @@ namespace CollectSFData
             int retval = collector.Collect(config);
 
             // mitigation for dtr files not being csv compliant causing kusto ingest to fail
+            config = collector.Config.Clone();
             if (config.IsKustoConfigured()
                 && (collector.Instance.Kusto.IngestFileObjectsFailed.Any() | collector.Instance.Kusto.IngestFileObjectsPending.Any())
                 && config.KustoUseBlobAsSource == true
@@ -33,7 +34,7 @@ namespace CollectSFData
                 config.KustoUseBlobAsSource = false;
                 config.KustoRecreateTable = false;
 
-                retval = collector.Collect();
+                retval = collector.Collect(config);
             }
 
             return retval;
