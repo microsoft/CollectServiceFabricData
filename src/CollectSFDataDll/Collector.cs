@@ -236,6 +236,7 @@ namespace CollectSFData
 
             if (Instance.Kusto.IngestFileObjectsFailed.Any() | Instance.Kusto.IngestFileObjectsPending.Any())
             {
+                Log.Warning($"adding failed uris to FileUris. use save option to keep list of failed uris.");
                 List<string> ingestList = new List<string>();
                 Instance.Kusto.IngestFileObjectsFailed.ForEach(x => ingestList.Add(x.FileUri));
                 Instance.Kusto.IngestFileObjectsPending.ForEach(x => ingestList.Add(x.FileUri));
@@ -420,8 +421,7 @@ namespace CollectSFData
                     Log.Error($"configuration set to upload cache files from 'fileUris' count:{Config.FileUris.Length} but no files found");
                 }
             }
-
-            if (Config.IsCacheLocationPreConfigured())
+            else if (Config.IsCacheLocationPreConfigured())
             {
                 switch (Config.FileType)
                 {
