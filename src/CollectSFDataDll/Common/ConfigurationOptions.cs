@@ -61,8 +61,12 @@ namespace CollectSFData.Common
 
         public new int LogDebug
         {
-            get => Log.LogDebug = base.LogDebug;
-            set => Log.LogDebug = base.LogDebug = value;
+            get => base.LogDebug;
+            set 
+            { 
+                base.LogDebug = value;
+                Log.LogDebug = value;
+            }
         }
 
         public new string StartTimeStamp
