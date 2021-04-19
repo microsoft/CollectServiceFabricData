@@ -151,14 +151,8 @@ namespace CollectSFData
             Instance.Initialize(configurationOptions);
             Log.Info($"version: {Config.Version}");
 
-            if(Config.NeedsValidation)
+            if((Config.NeedsValidation && !Config.Validate()) | !Config.IsValid)
             {
-                Config.Validate();
-            }
-            
-            if (!Config.IsValid)
-            {
-                Config.SaveConfigFile();
                 return false;
             }
             
