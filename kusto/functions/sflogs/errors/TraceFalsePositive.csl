@@ -1,0 +1,4 @@
+.create-or-alter function with (docstring = "[T:string] where T=table name. function to create FalsePositives column by searching service fabric sflogs for false warning / error traces", folder = "sflogs/errors")
+    TraceFalsePositive(T:string) {
+            TraceFalsePositiveTabular(table(T))
+    }

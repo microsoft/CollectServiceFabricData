@@ -103,15 +103,15 @@ namespace CollectSFDataTest.Utilities
         public TestUtilities()
         {
             Log.Info("enter");
-            Collector = new Collector(TempArgs);
+            Collector = new Collector();
             Directory.SetCurrentDirectory(TempDir);
 
             File.Copy(TestOptionsFile, TempOptionsFile, true);
 
-            ConfigurationOptions = new ConfigurationOptions();
+            ConfigurationOptions = new ConfigurationOptions(TempArgs);
 
             //TempArgs = new string[2] { "-config", TestOptionsFile };
-            ConfigurationOptions.PopulateConfig(TestArgs);
+            //ConfigurationOptions.ProcessArguments();
             //ConfigurationOptions.CacheLocation = "";// null;
             SaveTempOptions();
 
@@ -319,8 +319,8 @@ namespace CollectSFDataTest.Utilities
                 Log.Info("enter");
 
                 SaveTempOptions();
-                //Instance.Config = new ConfigurationOptions();
-                Collector collector = new Collector(TempArgs);
+                ConfigurationOptions config = new ConfigurationOptions(TempArgs,true);
+                Collector collector = new Collector();
                 Assert.IsNotNull(collector);
 
                 StartConsoleRedirection();

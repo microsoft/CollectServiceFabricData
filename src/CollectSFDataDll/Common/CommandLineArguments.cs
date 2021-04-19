@@ -13,6 +13,8 @@ namespace CollectSFData.Common
     {
         public CommandOption AzureClientId { get; set; }
 
+        public CommandOption AzureClientCertificate { get; set; }
+
         public CommandOption AzureClientSecret { get; set; }
 
         public CommandOption AzureResourceGroup { get; set; }
@@ -36,6 +38,8 @@ namespace CollectSFData.Common
         public CommandOption EndTimeStamp { get; set; }
 
         public CommandOption Examples { get; set; }
+
+        public CommandOption FileUris { get; set; }
 
         public CommandOption GatherType { get; set; }
 
@@ -339,6 +343,12 @@ namespace CollectSFData.Common
                     $"{newLine} and leave this blank.",
                     CommandOptionType.SingleValue);
 
+            AzureClientCertificate = CmdLineApp.Option("-cert|--azureClientCertificate",
+                    $"[string] azure application id / client id certificate for use with authentication" +
+                    $"{newLine} for non interactive to kusto. default is to use integrated AAD auth token" +
+                    $"{newLine} and leave this blank.",
+                    CommandOptionType.SingleValue);
+
             AzureClientSecret = CmdLineApp.Option("-secret|--azureClientSecret",
                     $"[string] azure application id / client id secret for use with authentication" +
                     $"{newLine} for non interactive to kusto. default is to use integrated AAD auth token" +
@@ -387,6 +397,12 @@ namespace CollectSFData.Common
             Examples = CmdLineApp.Option("-ex|--examples",
                     "[bool] show example commands",
                     CommandOptionType.SingleValue);
+
+            FileUris = CmdLineApp.Option("-uris|--fileUris",
+                    "[string[]] optional comma separated string array list of files to ingest." +
+                    $"{newLine} overrides default collection from diagnosticsStore" +
+                    $"{newLine} example: D:\\temp\\lease_trace1.dtr.zip,D:\\temp\\lease_trace2.dtr.zip",
+                    CommandOptionType.MultipleValue);
 
             GatherType = CmdLineApp.Option("-type|--gatherType",
                     $"[string] Gather data type:" +

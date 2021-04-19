@@ -4,9 +4,10 @@
     let maxTimestamp = toscalar(table(T)|top 1 by Timestamp desc|project Timestamp);
     //
     let userStart = materialize(table(T)
-    | where Type contains 'process' and Text contains 'createprocess' and Text contains 'processid=' and Text contains 'threadid='
-    | extend userProcess = extract(@".+ProcessId=(\d+?),",1,Text)
-    | project startTimestamp=Timestamp, userProcess, NodeName, Timestamp);
+    | where Type startswith 'Hosting.ApplicationService' and Text startswith 'Application Service' and Text has 'was activated with process id'
+    | extend userProcess = extract(@".+process id (\d+?),",1,Text)
+    | extend processName = extract(@".+, ExeName (.+)",1,Text)
+    | project startTimestamp=Timestamp, userProcess, processName, NodeName, Timestamp);
     //
     let userEnd = materialize(table(T)
         | where Type contains 'process' and Text contains 'createprocess' and Text contains 'processid:' and Text contains 'processHandle'
@@ -17,13 +18,13 @@
         | join kind=leftouter userEnd 
             on $left.userProcess==$right.userProcess, 
                 $left.NodeName==$right.NodeName
-        | project Timestamp, startTimestamp, endTimestamp, userProcess, NodeName);
+        | project Timestamp, startTimestamp, endTimestamp, userProcess, processName, NodeName);
     //
     let userEndJoin = materialize (userEnd
         | join kind=leftouter userStart 
             on $left.userProcess==$right.userProcess, 
                 $left.NodeName==$right.NodeName
-        | project Timestamp, startTimestamp, endTimestamp, userProcess, NodeName);
+        | project Timestamp, startTimestamp, endTimestamp, userProcess, processName, NodeName);
     //
     union userStartJoin, userEndJoin
     | order by Timestamp asc

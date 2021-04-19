@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>netcoreapp3.1;net462;net472</TargetFrameworks>
+    <TargetFrameworks>netcoreapp3.1;net462;net472;net5.0</TargetFrameworks>
     <Platforms>x64</Platforms>
     <PlatformTarget>x64</PlatformTarget>
     <RuntimeIdentifiers>win-x64;ubuntu.18.04-x64</RuntimeIdentifiers>
