@@ -28,7 +28,7 @@ The below configurations are currently supported.
 
 #### Windows
 
-.Net Framework 4.7.2+
+.Net Framework 4.6.2+
 
 ### .Net Core
 
@@ -77,11 +77,15 @@ After CollectSFData nuget package has been added to project, use the following i
 
 ### Setting Configuration
 
-Minimum configuration has to be set before calling Collector.Collect(). The main configuration is the type of data to collect with configuration option 'GatherType'. Configuration can be set by command line arguments, configuration file, or by using ConfigurationOptions class before calling Collector.Collect(). See [configuration](./configuration.md).
+Minimum configuration has to be set before calling Collector.Collect(). The main configuration is the type of data to collect with configuration option 'GatherType' and time. Configuration can be set by commandline arguments, configuration file, or by setting ConfigurationOptions class properties before calling Collector.Collect(). See [configuration](./configuration.md).
 
-ConfigurationOptions constructor can be used to pass commandline 'args'. Default option file 'collectsfdata.options.json' and 'args' if any will be added to a static base DefaultConfiguration. Use GetDefaultConfiguration() and SetDefaultConfiguration() if modification is needed.
+ConfigurationOptions constructor can be used to pass commandline 'args' and option to validate. Default option file 'collectsfdata.options.json' and 'args' if any will be added to a static base DefaultConfiguration. Use GetDefaultConfiguration() and SetDefaultConfiguration() if modification of default configuration is needed.
 
-#### Example ConfigurationOptions default Constructor
+Configuraiton validation can be performed in ConfigurationOptions constructor, or after additional configurations by using Validate(). Additionally, Collector.Collect() will perform validation of configuration if NeedsValidation is true. 
+
+#### Example ConfigurationOptions default Constructor with no commandline arguments or validation
+
+Validation will not occur until config.Validate() is called or Collector.Collect()
 
 ```c#
 ConfigurationOptions config = new ConfigurationOptions();
@@ -89,37 +93,71 @@ ConfigurationOptions config = new ConfigurationOptions();
 
 #### Example to use ConfigurationOptions constructor passing command line arguments from Main(string[] args)
 
+To use commandline arguments, pass as argument to ConfigurationOptions constructor. Command line arguments can only be parsed once. These options will be applied to the default configuration for any new instances on top of any settings specified in collectsfdata.options.json. 
+
 ```c#
 ConfigurationOptions config = new ConfigurationOptions(args);
+config.UseBlobAsSource = false;
+config.Validate();
+```
+
+To validate configuration without further configuration, set validate argument to true.
+
+```c#
+ConfigurationOptions config = new ConfigurationOptions(args,true);
 ```
 
 #### Example to reuse existing configuration after collect using Clone()
+
+To reuse or keep last configuration, Config.Clone() can be used.
 
 ```c#
 ConfigurationOptions config = collector.Config.Clone();
 ```
 
-#### Example to reuse existing configuration after collect using Clone()
+#### Example to override DefaultConfiguration
+
+Base default static configuration will contain any settings from collectsfdata.options.json. If commandline arguments are supplied to ConfigurationOptions constructor, these settings will be added to the default configuration superseding options from json file. To modify default configuration used for all instances, use SetDefaultConfiguration().
 
 ```c#
-ConfigurationOptions config = collector.Config.Clone();
+collector.Config.SetDefaultConfiguration(config);
+```
+
+#### Example to check if current configuration is valid
+
+```c#
+ConfigurationOptions config = new ConfigurationOptions(args);
+// make changes to config properties
+config.Validate();
+bool retval = config.IsValid;
+```
+
+```c#
+ConfigurationOptions config = new ConfigurationOptions(args,true);
+bool retval = config.IsValid;
+```
+
+```c#
+ConfigurationOptions config = new ConfigurationOptions(args,true);
+if(config.NeedsValidation)
+{
+    config.Validate();
+}
 ```
 
 ### Calling Collector.Collect()
 
-Once configuration options have been set, call Collector.Collect(). 
-Collect can optionally be passed ConfigurationsOptions for queueing multiple configurations to collect.
-Use Clone() to create a shallow copy of existing configuration.
-
-See examples below on how to use:
+Once configuration options have been set, call Collector.Collect().
+Collect uses Collector.Config for configuration by default and can also be passed ConfigurationsOptions with current configuration to collect.
+If configuration has not been validated, Collect() will validate configuration.
 
 #### Example
 
 ```c#
 private static int Main(string[] args)
 {
-        Collector collector = new Collector(args, true);
-        ConfigurationOptions config = new ConfigurationOptions();
+        Collector collector = new Collector(true);
+        ConfigurationOptions config = new ConfigurationOptions(args);
 
         config.GatherType = FileTypesEnum.counter.ToString();
         config.UseMemoryStream = true;
@@ -138,7 +176,7 @@ private static int Main(string[] args)
 ```c#
 private static int Main(string[] args)
 {
-        Collector collector = new Collector(args, true);
+        Collector collector = new Collector();
         ConfigurationOptions config = collector.Config;
 
         config.GatherType = "trace";
@@ -148,7 +186,7 @@ private static int Main(string[] args)
         config.KustoRecreateTable = true;
         config.LogDebug = 5;
         config.LogFile = null;
-        //config.Validate();
+        config.Validate();
 
         return collector.Collect();
 }
@@ -159,7 +197,7 @@ private static int Main(string[] args)
 ```c#
 private static int Main(string[] args)
 {
-        Collector collector = new Collector(args, true);
+        Collector collector = new Collector(true);
         ConfigurationOptions config = collector.Config.Clone();
 
         config.GatherType = FileTypesEnum.counter.ToString();
@@ -169,7 +207,6 @@ private static int Main(string[] args)
         config.KustoRecreateTable = true;
         config.LogDebug = 5;
         config.LogFile = "c:\\temp\\csfd.3.log";
-        //config.Validate();
 
         return collector.Collect(config);
 }
@@ -177,12 +214,12 @@ private static int Main(string[] args)
 
 ## Logging
 
-Externally there is logging both to console output and optionally to a log file. When using as a DLL, subscribing to event 'Log_MessageLogged' will provide the same information in 'LogMessage' object format. See examples above and below.
+Externally there is logging both to console output and optionally to a log file. When using as a DLL, subscribing to event 'Log_MessageLogged' will provide the same information in 'LogMessage' object format. 
 
 ### Example
 
-
 LogMessage Callback
+
 ```c#
 Log.MessageLogged += Log_MessageLogged;
 
@@ -193,6 +230,7 @@ private static void Log_MessageLogged(object sender, LogMessage args)
 ```
 
 LogMessage Class
+
 ```c#
 public class LogMessage : EventArgs
 {
@@ -226,26 +264,20 @@ private static int Main(string[] args)
     int retval = collector.Collect();
 
     // mitigation for dtr files not being csv compliant causing kusto ingest to fail
-    if ((collector.Instance.Kusto.IngestFileObjectsFailed.Count() > 0
-        | collector.Instance.Kusto.IngestFileObjectsPending.Count() > 0)
-        && config.IsKustoConfigured()
+    config = collector.Config.Clone();
+    if (config.IsKustoConfigured()
+        && (collector.Instance.Kusto.IngestFileObjectsFailed.Any() | collector.Instance.Kusto.IngestFileObjectsPending.Any())
         && config.KustoUseBlobAsSource == true
         && config.FileType == DataFile.FileTypesEnum.trace)
     {
-        KustoConnection kusto = collector.Instance.Kusto;
         Log.Warning("failed ingests due to csv compliance. restarting.");
 
         // change config to download files to parse and fix csv fields
         config.KustoUseBlobAsSource = false;
         config.KustoRecreateTable = false;
 
-        List<string> ingestList = kusto.IngestFileObjectsFailed.Select(x => x.FileUri).ToList();
-        ingestList.AddRange(kusto.IngestFileObjectsPending.Select(x => x.FileUri));
-        config.FileUris = ingestList.ToArray();
-
-        retval = collector.Collect();
+        retval = collector.Collect(config);
     }
-
     return retval;
 }
 ```
