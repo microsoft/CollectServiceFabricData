@@ -112,6 +112,18 @@ namespace CollectSFData.Kusto
             _tempContainerEnumerator = Endpoint.IngestionResources.TempStorageContainers.GetEnumerator();
             _ingestionQueueEnumerator = Endpoint.IngestionResources.IngestionQueues.GetEnumerator();
 
+            if (!_ingestionQueueEnumerator.MoveNext())
+            {
+                Log.Error($"problem with ingestion queues", Endpoint.IngestionResources);
+                return false;
+            }
+
+            if (!_tempContainerEnumerator.MoveNext())
+            {
+                Log.Error($"problem with temp container ", Endpoint.IngestionResources);
+                return false;
+            }
+
             if (Config.IsKustoPurgeRequested())
             {
                 Purge();
@@ -194,18 +206,26 @@ namespace CollectSFData.Kusto
         {
             string blobUriWithSas = null;
             string ingestionMapping = SetIngestionMapping(fileObject);
+            string tempContainer = null;
+            string ingestionQueue = null;
 
-            if (!_tempContainerEnumerator.MoveNext() | string.IsNullOrEmpty(_tempContainerEnumerator.Current))
+            if (!_tempContainerEnumerator.MoveNext())
             {
                 _tempContainerEnumerator.Reset();
                 _tempContainerEnumerator.MoveNext();
             }
 
-            if (!_ingestionQueueEnumerator.MoveNext() | string.IsNullOrEmpty(_ingestionQueueEnumerator.Current))
+            tempContainer = _tempContainerEnumerator.Current;
+            Log.Debug($"tempContainer.Current:{tempContainer}", Endpoint.IngestionResources);
+
+            if (!_ingestionQueueEnumerator.MoveNext())
             {
                 _ingestionQueueEnumerator.Reset();
                 _ingestionQueueEnumerator.MoveNext();
             }
+
+            ingestionQueue = _ingestionQueueEnumerator.Current;
+            Log.Debug($"ingestionQueue.Current:{ingestionQueue}", Endpoint.IngestionResources);
 
             if (Config.KustoUseBlobAsSource)
             {
@@ -214,10 +234,10 @@ namespace CollectSFData.Kusto
             else
             {
                 string blobName = Path.GetFileName(fileObject.FileUri);
-                blobUriWithSas = UploadFileToBlobContainer(fileObject, _tempContainerEnumerator.Current, fileObject.NodeName, blobName);
+                blobUriWithSas = UploadFileToBlobContainer(fileObject, tempContainer, fileObject.NodeName, blobName);
             }
 
-            PostMessageToQueue(_ingestionQueueEnumerator.Current, PrepareIngestionMessage(blobUriWithSas, fileObject.Length, ingestionMapping), fileObject);
+            PostMessageToQueue(ingestionQueue, PrepareIngestionMessage(blobUriWithSas, fileObject.Length, ingestionMapping), fileObject);
         }
 
         private void IngestStatusFailQuery()
