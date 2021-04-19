@@ -489,11 +489,15 @@ namespace CollectSFData.Common
             options.Remove("ConfigurationFile");
             options.Remove("EndTimeUtc");
             options.Remove("Examples");
+            options.Remove("ExePath");
             options.Remove("FileType");
+            options.Remove("IsValid");
+            options.Remove("NeedsValidation");
             options.Remove("SasEndpointInfo");
             options.Remove("SaveConfiguration");
             options.Remove("StartTimeUtc");
             options.Remove("VersionOption");
+            options.Remove("Version");
 
             if (IsKustoConfigured())
             {
@@ -558,6 +562,7 @@ namespace CollectSFData.Common
                     }
                 }
 
+                SaveConfigFile();
                 return IsValid = retval;
             }
             catch (Exception e)
