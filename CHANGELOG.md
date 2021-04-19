@@ -1,6 +1,69 @@
 # Change log
 
-## 03/09/2021  
+## 4/18/2021
+
+- fix potential scenario where blob could be deleted from storage by hardcoding RetainBlobOnSuccess = true
+- fix issue where uriString may be null for temporary container or ingestionqueue resources for kusto upload
+- fix nuget warnings during build for net5.0
+- split properties from ConfigurationOptions.cs into ConfigurationProperties.cs for class reuse
+- allow new ConfigurationOptions instances to be used.
+- add ConfigurationOptions argument to Collector
+- ConfigurationOptions
+- add DefaultConfiguration to ConfigurationOptions populated with default 'collectsfdata.options.json' and any commandline arguments if passed to constructor
+- update [dllConfiguration](./docs/dllConfiguration.md)
+
+## 04/08/2021
+
+- add AzureClientCertificate property for use with AzureTenantId and AzureClientId for confidentialClient authentication with certificate in LocalMachine or CurrentUser My
+- fix intermittent table name truncation after gathertype bad: trace_agilber_test good: trace_jagilber_test
+- modify NoProgressTimeout from throw exception to tasks Cancel() allowing collector.Collect() to return 1 to caller
+- modify EndTimeStamp / StartTimeStamp to ignore empty strings and better timeformat error handling, logging
+- modify Log.Last to always log regardless of LogDebug value
+- sync Sf.Tx with microsoft.Tx final changes for DateTimeKind.Unspecified. waiting for next microsoft.Tx release to remove Sf.Tx
+- update collectsfdata.schema.json with additional examples
+- fix creation of log name when directory is not specified. will create in working directory
+- expose ConfigurationOptions on collector instead of instance
+
+## 04/06/2021
+
+- add FileUris string array optional parameter (-uris|--fileUris) to pass file uri strings for upload. this will override default file collection from service fabric diagnosticsStore
+
+    ```json
+    "FileUris":[
+        "C:\\temp\\f45f24746c42cc2a6dd69da9e7797e2c_fabric_traces_7.2.457.9590_132610909762170249_865_00637532483045019565_0000000000.dtr.zip",
+        "C:\\temp\\f45f24746c42cc2a6dd69da9e7797e2c_fabric_traces_7.2.457.9590_132610909762170249_865_00637532485406085273_2147483647.dtr.zip"
+    ],
+    ```
+
+- allow download and upload options in same execution
+
+    ```c#
+    if (Config.SasEndpointInfo.IsPopulated())
+    {
+        DownloadAzureData();
+    }
+    
+    if (Config.IsCacheLocationPreConfigured() | Config.FileUris.Length > 0)
+    {
+        UploadCacheData();
+    }
+    ```
+
+- add Clone() to ConfigurationOptions to copy configuration for multiple configs when using as dll.
+- ConfigurationOptions can now be optionally passed as argument to Collect(config).
+
+    ```c#
+    // default constructor
+    Collector collector = new Collector(args, true);
+    // int retval = collector.Collect();
+
+    // use Clone() to create shallow copy for multiple configurations
+    ConfigurationOptions config = collector.Config.Clone();
+    config.LogDebug = 6;
+    int retval = collector.Collect(config);
+    ```
+
+## 03/09/2021  https://github.com/microsoft/CollectServiceFabricData/releases/tag/v2.9.2103.10923
 
 - 2.9
 - add strong name signing for binaries for jarvis integration

@@ -19,47 +19,44 @@ namespace CollectSFData
 
     public class Collector : Constants
     {
-        private string[] _args;
         private bool _checkedVersion;
-        private bool _initialized;
         private int _noProgressCounter = 0;
         private Timer _noProgressTimer;
         private ParallelOptions _parallelConfig;
         private Tuple<int, int, int, int, int, int, int> _progressTuple = new Tuple<int, int, int, int, int, int, int>(0, 0, 0, 0, 0, 0, 0);
         private CustomTaskManager _taskManager = new CustomTaskManager(true);
 
-        private ConfigurationOptions Config => Instance.Config;
+        public ConfigurationOptions Config { get => Instance.Config; }
 
         public Instance Instance { get; } = Instance.Singleton();
 
-        public Collector(string[] args, bool isConsole = false)
+        public Collector(bool isConsole = false)
         {
-            _args = args;
             Log.IsConsole = isConsole;
-            //Initialize();
         }
 
         public int Collect()
         {
-            return Collect(new List<string>());
+            return Collect(new ConfigurationOptions());
         }
 
-        public int Collect(List<string> uris = null)
+        public int Collect(ConfigurationOptions configurationOptions)
         {
             try
             {
-                if (!Initialize() || !InitializeKusto() || !InitializeLogAnalytics())
+                if (!Initialize(configurationOptions) || !InitializeKusto() || !InitializeLogAnalytics())
                 {
                     return 1;
                 }
 
                 if (Config.SasEndpointInfo.IsPopulated())
                 {
-                    DownloadAzureData(uris);
+                    DownloadAzureData();
                 }
-                else if (Config.IsCacheLocationPreConfigured())
+
+                if (Config.IsCacheLocationPreConfigured() | Config.FileUris.Any())
                 {
-                    UploadCacheData(uris);
+                    UploadCacheData();
                 }
 
                 CustomTaskManager.WaitAll();
@@ -79,7 +76,6 @@ namespace CollectSFData
                     }
                 }
 
-                Config.DisplayStatus();
                 Config.SaveConfigFile();
                 Instance.TotalErrors += Log.LogErrors;
 
@@ -93,10 +89,16 @@ namespace CollectSFData
             }
             finally
             {
-                Log.Reset();
-                CustomTaskManager.Reset();
-                _noProgressTimer?.Dispose();
+                Close();
+                CustomTaskManager.Resume();
             }
+        }
+
+        public void Close()
+        {
+            CustomTaskManager.Cancel();
+            _noProgressTimer?.Dispose();
+            Log.Close();
         }
 
         public string DetermineClusterId()
@@ -136,43 +138,37 @@ namespace CollectSFData
             return clusterId;
         }
 
-        public bool Initialize()
+        public bool Initialize(ConfigurationOptions configurationOptions)
         {
+            _noProgressCounter = 0;
             _noProgressTimer = new Timer(NoProgressCallback, null, 0, 60 * 1000);
+            
             Log.Open();
             CustomTaskManager.Resume();
+            _taskManager?.Wait();
+            _taskManager = new CustomTaskManager();
 
-            if (_initialized)
+            Instance.Initialize(configurationOptions);
+            Log.Info($"version: {Config.Version}");
+
+            if((Config.NeedsValidation && !Config.Validate()) | !Config.IsValid)
             {
-                _taskManager?.Wait();
-                _taskManager = new CustomTaskManager();
-                Instance.Initialize();
+                return false;
             }
-            else
-            {
-                if (!Config.PopulateConfig(_args))
-                {
-                    Config.SaveConfigFile();
-                    return false;
-                }
+            
+            _parallelConfig = new ParallelOptions { MaxDegreeOfParallelism = Config.Threads };
 
-                _initialized = true;
+            ServicePointManager.DefaultConnectionLimit = Config.Threads * MaxThreadMultiplier;
+            ServicePointManager.Expect100Continue = true;
+            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
 
-                Log.Info($"version: {Version}");
-                _parallelConfig = new ParallelOptions { MaxDegreeOfParallelism = Config.Threads };
-                ServicePointManager.DefaultConnectionLimit = Config.Threads * MaxThreadMultiplier;
-                ServicePointManager.Expect100Continue = true;
-                ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
-
-                ThreadPool.SetMinThreads(Config.Threads * MinThreadMultiplier, Config.Threads * MinThreadMultiplier);
-                ThreadPool.SetMaxThreads(Config.Threads * MaxThreadMultiplier, Config.Threads * MaxThreadMultiplier);
-
-            }
+            ThreadPool.SetMinThreads(Config.Threads * MinThreadMultiplier, Config.Threads * MinThreadMultiplier);
+            ThreadPool.SetMaxThreads(Config.Threads * MaxThreadMultiplier, Config.Threads * MaxThreadMultiplier);
 
             return true;
         }
 
-        private void DownloadAzureData(List<string> uris = null)
+        private void DownloadAzureData()
         {
             string containerPrefix = null;
             string tablePrefix = null;
@@ -213,9 +209,14 @@ namespace CollectSFData
 
                 if (blobMgr.Connect())
                 {
-                    if (uris?.Count > 0)
+                    string[] azureFiles = Config.FileUris.Where(x => FileTypes.MapFileUriType(x) == FileUriTypesEnum.azureUri).ToArray();
+
+                    if (azureFiles.Any())
                     {
-                        blobMgr.DownloadFiles(uris);
+                        blobMgr.DownloadFiles(azureFiles);
+                        List<string> fileUris = Config.FileUris.ToList();
+                        fileUris.RemoveAll(x => azureFiles.Contains(x));
+                        Config.FileUris = fileUris.ToArray();
                     }
                     else
                     {
@@ -234,6 +235,15 @@ namespace CollectSFData
             else if (Config.IsKustoConfigured())
             {
                 Log.Last($"{DataExplorer}/clusters/{Instance.Kusto.Endpoint.ClusterName}/databases/{Instance.Kusto.Endpoint.DatabaseName}", ConsoleColor.Cyan);
+            }
+
+            if (Instance.Kusto.IngestFileObjectsFailed.Any() | Instance.Kusto.IngestFileObjectsPending.Any())
+            {
+                Log.Warning($"adding failed uris to FileUris. use save option to keep list of failed uris.");
+                List<string> ingestList = new List<string>();
+                Instance.Kusto.IngestFileObjectsFailed.ForEach(x => ingestList.Add(x.FileUri));
+                Instance.Kusto.IngestFileObjectsPending.ForEach(x => ingestList.Add(x.FileUri));
+                Config.FileUris = ingestList.ToArray();
             }
         }
 
@@ -259,12 +269,14 @@ namespace CollectSFData
 
         private void LogSummary()
         {
+            Config.DisplayStatus();
             Log.Last($"{Instance.TotalFilesEnumerated} files enumerated.");
             Log.Last($"{Instance.TotalFilesMatched} files matched.");
             Log.Last($"{Instance.TotalFilesDownloaded} files downloaded.");
             Log.Last($"{Instance.TotalFilesSkipped} files skipped.");
             Log.Last($"{Instance.TotalFilesFormatted} files formatted.");
             Log.Last($"{Instance.TotalErrors} errors.");
+            Log.Last($"timed out: {Instance.TimedOut}.");
             Log.Last($"{Instance.TotalRecords} records.");
 
             if (Instance.TotalFilesEnumerated > 0)
@@ -311,9 +323,10 @@ namespace CollectSFData
         {
             Log.Highlight($"checking progress {_noProgressCounter} of {Config.NoProgressTimeoutMin}.");
 
-            if (Config.NoProgressTimeoutMin < 1)
+            if (Config.NoProgressTimeoutMin < 1 | _taskManager.IsCancellationRequested)
             {
-                _noProgressTimer.Dispose();
+                _noProgressTimer?.Dispose();
+                return;
             }
 
             Tuple<int, int, int, int, int, int, int> tuple = new Tuple<int, int, int, int, int, int, int>(
@@ -336,11 +349,12 @@ namespace CollectSFData
                     }
 
                     LogSummary();
-
                     string message = $"no progress timeout reached {Config.NoProgressTimeoutMin}. exiting application.";
                     Log.Error(message);
-                    Log.Reset();
-                    throw new TimeoutException(message);
+
+                    Instance.TimedOut = true;
+                    CustomTaskManager.Cancel();
+                    _noProgressTimer.Dispose();
                 }
 
                 ++_noProgressCounter;
@@ -372,29 +386,45 @@ namespace CollectSFData
             {
                 _taskManager.QueueTaskAction(() => Instance.FileMgr.ProcessFile(fileObject));
             }
+
+            Log.Debug("exit");
         }
 
-        private void UploadCacheData(List<string> uris)
+        private void UploadCacheData()
         {
             Log.Info("enter");
             List<string> files = new List<string>();
 
-            if (uris.Count > 0)
+            string[] localFiles = Config.FileUris.Where(x => FileTypes.MapFileUriType(x) == FileUriTypesEnum.fileUri).ToArray();
+
+            if (localFiles.Any())
             {
-                foreach(string file in uris)
+                List<string> fileUris = Config.FileUris.ToList();
+
+                foreach (string file in localFiles)
                 {
-                    if(File.Exists(file))
+                    if (File.Exists(file))
                     {
                         Log.Info($"adding file to list: {file}");
                         files.Add(file);
+                        fileUris.Remove(file);
                     }
                     else
                     {
                         Log.Warning($"file does not exist: {file}");
                     }
                 }
+
+                if (files.Any())
+                {
+                    Config.FileUris = fileUris.ToArray();
+                }
+                else
+                {
+                    Log.Error($"configuration set to upload cache files from 'fileUris' count:{Config.FileUris.Length} but no files found");
+                }
             }
-            else
+            else if (Config.IsCacheLocationPreConfigured())
             {
                 switch (Config.FileType)
                 {
@@ -432,11 +462,11 @@ namespace CollectSFData
                         Log.Warning($"invalid filetype for cache upload. returning {Config.FileType}");
                         return;
                 }
-            }
 
-            if (files.Count < 1)
-            {
-                Log.Error($"configuration set to upload cache files from 'cachelocation' {Config.CacheLocation} but no files found");
+                if (files.Count < 1)
+                {
+                    Log.Error($"configuration set to upload cache files from 'cachelocation' {Config.CacheLocation} but no files found");
+                }
             }
 
             foreach (string file in files)
