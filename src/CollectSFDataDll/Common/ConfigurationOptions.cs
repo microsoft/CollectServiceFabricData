@@ -10,6 +10,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -39,6 +40,8 @@ namespace CollectSFData.Common
                 base.EndTimeStamp = ConvertToUtcTimeString(value);
             }
         }
+
+        public string ExePath {get;} = $"{Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)}\\{DefaultOptionsFile}";
 
         public FileTypesEnum FileType { get; private set; }
 
@@ -89,7 +92,7 @@ namespace CollectSFData.Common
             set => base.Threads = value < 1 ? Environment.ProcessorCount : value;
         }
 
-        public string Version { get; set; }
+        public string Version { get;} = $"{Process.GetCurrentProcess().MainModule?.FileVersionInfo.FileVersion}";
 
         private bool _defaultConfigLoaded => _defaultConfig != null;
 
@@ -862,6 +865,11 @@ namespace CollectSFData.Common
                 if (File.Exists(DefaultOptionsFile))
                 {
                     MergeConfig(DefaultOptionsFile);
+                    return true;
+                }
+                else if (File.Exists(ExePath))
+                {
+                    MergeConfig(ExePath);
                     return true;
                 }
 
