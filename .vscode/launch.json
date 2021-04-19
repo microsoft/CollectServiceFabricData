@@ -5,13 +5,61 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Launch and Debug hosted blazor web assembly",
+            "request": "launch",
+            "browser": "edge",
+            "type": "blazorwasm",
+            //"program": "${workspaceFolder}src/CollectSFDataGui/Client/bin/Debug/net5.0/CollectSFData.exe",
+            "program": "${workspaceFolder}src/CollectSFDataGui/Client/bin/Debug/net5.0/CollectSFDataGui.Client.dll",
+            "cwd": "${workspaceFolder}/src/CollectSFDataGui/Client/bin/Debug/net5.0"
+        },
+        {
+            "name": "Attach to Edge",
+            "port": 5000,
+            "request": "attach",
+            "type": "pwa-msedge",
+            "webRoot": "${workspaceFolder}/src/CollectSFDataGui/bin/Debug/net5.0/wwwroot"
+        },
+        {
+            "name": ".NET Core Launch (web)",
+            "type": "coreclr",
+            "request": "launch",
+            "justMyCode": false,
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/src/CollectSFDataGui/bin/Debug/net5.0/wwwroot/_framework/CollectSFDataGui.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "stopAtEntry": false,
+            "serverReadyAction": {
+                "action": "openExternally",
+                "pattern": "\\bNow listening on:\\s+(https?://\\S+)"
+            },
+            "env": {
+                "ASPNETCORE_ENVIRONMENT": "Development"
+            },
+            "sourceFileMap": {
+                "/Views": "${workspaceFolder}/Views"
+            }
+        },
+        {
+            "name": "Launch Edge",
+            "request": "launch",
+            "type": "pwa-msedge",
+            "url": "http://localhost:5002",
+            "webRoot": "${workspaceFolder}/src/CollectSFDataGui/wwwroot"
+        },
+        {
             "name": ".NET Core 31 Launch with Args (console)",
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
             "program": "${workspaceFolder}/src/bin/Debug/netcoreapp3.1/CollectSFData.dll",
             "args": [
-                "${input:args}"
+                //"${input:args}"
+                "-type",
+                "trace",
+                "-krt",
+                "1"
             ],
             "cwd": "${workspaceFolder}/src/bin/Debug/netcoreapp3.1",
             "stopAtEntry": false,
@@ -27,19 +75,6 @@
             "cwd": "${workspaceFolder}/src/bin/Debug/net5",
             "console": "internalConsole",
             "stopAtEntry": false
-        },
-        {
-            "name": "NET 5 Launch with Args (console)",
-            "type": "coreclr",
-            "request": "launch",
-            "preLaunchTask": "build",
-            "program": "${workspaceFolder}/src/bin/Debug/net5/CollectSFData.dll",
-            "args": [
-                "${input:args}"
-            ],
-            "cwd": "${workspaceFolder}/src/bin/Debug/net5",
-            "stopAtEntry": false,
-            "console": "internalConsole",
         },
         {
             "name": ".NET Core 31 Launch (console)",

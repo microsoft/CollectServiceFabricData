@@ -12,12 +12,7 @@ namespace CollectSFData.Common
 {
     public class Instance : Constants
     {
-        public ConfigurationOptions Config;
-        public FileManager FileMgr;
-        public bool IsWindows = Environment.OSVersion.Platform.Equals(PlatformID.Win32NT);
-        public KustoConnection Kusto;
-        public LogAnalyticsConnection LogAnalytics;
-        public DateTime StartTime;
+        public bool TimedOut;
         public int TotalErrors;
         public int TotalFilesConverted;
         public int TotalFilesDownloaded;
@@ -28,27 +23,35 @@ namespace CollectSFData.Common
         public int TotalRecords;
         private static readonly Instance _instance = new Instance();
         private static object _instanceLock = new object();
+        public FileManager FileMgr { get; set; }
+        public bool IsWindows { get; } = Environment.OSVersion.Platform.Equals(PlatformID.Win32NT);
+        public KustoConnection Kusto { get; set; }
+        public LogAnalyticsConnection LogAnalytics { get; set; }
+        public DateTime StartTime { get; set; }
+        protected internal ConfigurationOptions Config { get; private set; }
 
         static Instance()
         {
-            // set instances in static ctor
-            if (_instance.Config == null)
-            {
-                _instance.Config = new ConfigurationOptions();
-                Initialize();
-            }
+            Initialize();
         }
 
         private Instance()
         {
         }
 
-        public static void Initialize()
+        public static void Initialize(ConfigurationOptions configurationOptions = null)
         {
+            if (configurationOptions == null)
+            {
+                configurationOptions = new ConfigurationOptions();
+            }
+            
+            _instance.Config = configurationOptions;
             _instance.FileMgr = new FileManager();
             _instance.Kusto = new KustoConnection();
             _instance.LogAnalytics = new LogAnalyticsConnection();
             _instance.StartTime = DateTime.Now;
+            _instance.TimedOut = false;
             _instance.TotalErrors = 0;
             _instance.TotalFilesConverted = 0;
             _instance.TotalFilesDownloaded = 0;

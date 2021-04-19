@@ -1,4 +1,4 @@
-.create-or-alter function with (docstring = "[T:string] where T=table name. function to search service fabric sflogs for false positives (noise)", folder = "sflogs")
+.create-or-alter function with (docstring = "[T:string] where T=table name. function to search service fabric sflogs for false positives (noise)", folder = "sflogs/errors")
     TraceFalsePositiveSummary(T:string) {
             TraceFalsePositive(T)
             | where FalsePositive == true

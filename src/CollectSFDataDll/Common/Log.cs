@@ -17,8 +17,7 @@ namespace CollectSFData.Common
     public static class Log
     {
         public static int LogErrors = 0;
-        private static ConsoleColor _highlightBackground = Console.ForegroundColor;
-        private static ConsoleColor _highlightForeground = Console.BackgroundColor;
+        public static bool LogFileEnabled;
         private static bool _isRunning;
         private static JsonSerializerSettings _jsonSerializerSettings;
         private static SynchronizedList<LogMessage> _lastMessageList = new SynchronizedList<LogMessage>();
@@ -26,7 +25,6 @@ namespace CollectSFData.Common
         private static SynchronizedList<LogMessage> _messageList = new SynchronizedList<LogMessage>();
         private static StreamWriter _streamWriter;
         private static Task _taskWriter;
-        private static CancellationTokenSource _taskWriterCancellationToken;
         private static int _threadSleepMs = Constants.ThreadSleepMs100;
 
         public delegate void LogMessageHandler(object sender, LogMessage args);
@@ -36,12 +34,9 @@ namespace CollectSFData.Common
         private static event EventHandler<Newtonsoft.Json.Serialization.ErrorEventArgs> JsonErrorHandler;
 
         public static bool IsConsole { get; set; }
-
         public static int LogDebug { get; set; }
-
         public static string LogFile { get => _logFile; set => _logFile = CheckLogFile(value) ? value : string.Empty; }
-
-        public static bool LogFileEnabled;
+        private static CancellationTokenSource _taskWriterCancellationToken => CustomTaskManager.CancellationTokenSource;
 
         static Log()
         {
@@ -57,22 +52,26 @@ namespace CollectSFData.Common
             Open();
         }
 
-        public static void Reset()
-        {
-            Close();
-            Open();
-        }
-
         public static void Close()
         {
             try
             {
-                _messageList.AddRange(_lastMessageList);
-                _lastMessageList.Clear();
-                _taskWriterCancellationToken.Cancel();
-                _taskWriter.Wait();
-                _taskWriter.Dispose();
-                _isRunning = false;
+                if (_isRunning)
+                {
+                    _messageList.AddRange(_lastMessageList);
+                    _lastMessageList.Clear();
+
+                    if (_taskWriterCancellationToken.IsCancellationRequested)
+                    {
+                        _taskWriter.Wait();
+                    }
+                    else if (_messageList.Any())
+                    {
+                        _taskWriter.Wait(Constants.ThreadSleepMs1000);
+                    }
+
+                    _isRunning = false;
+                }
             }
             catch (TaskCanceledException) { }
             catch (AggregateException e)
@@ -159,10 +158,7 @@ namespace CollectSFData.Common
                                 object jsonSerializer = null,
                                 [CallerMemberName] string callerName = "")
         {
-            if (LogDebug >= LoggingLevel.Warning)
-            {
-                Process(message, foregroundColor, backgroundColor, jsonSerializer, false, true, callerName: callerName);
-            }
+            Process(message, foregroundColor, backgroundColor, jsonSerializer, false, true, callerName: callerName);
         }
 
         public static void Min(string message,
@@ -181,7 +177,6 @@ namespace CollectSFData.Common
         {
             if (!_isRunning)
             {
-                _taskWriterCancellationToken = new CancellationTokenSource();
                 _taskWriter = new Task(TaskWriter, _taskWriterCancellationToken.Token);
                 _taskWriter.Start();
                 _isRunning = true;
@@ -213,24 +208,24 @@ namespace CollectSFData.Common
         {
             try
             {
-                if (string.IsNullOrEmpty(logFile))
+                if ((Environment.OSVersion.Platform != PlatformID.Win32NT & Environment.OSVersion.Platform != PlatformID.Unix) | string.IsNullOrEmpty(logFile))
                 {
                     LogFileEnabled = false;
-                    Close();
                     return true;
                 }
 
                 if (!LogFileEnabled)
                 {
-                    if (!Directory.Exists(Path.GetDirectoryName(logFile)))
+                    string directoryName = Path.GetDirectoryName(logFile);
+                    if (!string.IsNullOrEmpty(directoryName) && !Directory.Exists(directoryName))
                     {
-                        Directory.CreateDirectory(Path.GetDirectoryName(logFile));
+                        Directory.CreateDirectory(directoryName);
                     }
 
                     File.Create(logFile).Close();
                     LogFileEnabled = true;
                 }
-                
+
                 return true;
             }
             catch (Exception e)
@@ -243,12 +238,9 @@ namespace CollectSFData.Common
 
         private static void CloseFile()
         {
-            if (_streamWriter != null)
-            {
-                _streamWriter.Flush();
-                _streamWriter.Close();
-                _streamWriter = null;
-            }
+            _streamWriter?.Flush();
+            _streamWriter?.Close();
+            _streamWriter = null;
         }
 
         private static void Log_JsonErrorHandler(object sender, Newtonsoft.Json.Serialization.ErrorEventArgs e)
@@ -345,7 +337,7 @@ namespace CollectSFData.Common
             while (!_taskWriterCancellationToken.IsCancellationRequested
                 || (_taskWriterCancellationToken.IsCancellationRequested & _messageList.Any()))
             {
-                while (_messageList.Any())
+                while (_messageList.Any() & _isRunning)
                 {
                     foreach (LogMessage result in _messageList.DeListAll())
                     {
@@ -361,7 +353,15 @@ namespace CollectSFData.Common
                     }
                 }
 
-                Thread.Sleep(_threadSleepMs);
+                if (_isRunning)
+                {
+                    Thread.Sleep(_threadSleepMs);
+                }
+                else
+                {
+                    _messageList.Clear();
+                    break;
+                }
             }
 
             CloseFile();
