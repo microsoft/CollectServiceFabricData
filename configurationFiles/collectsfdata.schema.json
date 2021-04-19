@@ -67,11 +67,11 @@
       "$id": "#/properties/AzureSubscriptionId",
       "type": "string",
       "title": "AzureSubscriptionId",
-      "description": "azure subscription id for certain non-default azure operations",
+      "description": "azure subscription id guid for certain non-default azure operations",
       "default": null,
       "examples": [
         null,
-        "{{subscriptionId}}"
+        "123456578-1234-1234-1234-123456789012"
       ],
       "pattern": "^([a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12})$"
     },
@@ -79,11 +79,11 @@
       "$id": "#/properties/AzureTenantId",
       "type": "string",
       "title": "AzureTenantId",
-      "description": "azure tenant id for certain non-default azure operations",
+      "description": "azure tenant id guid for certain non-default azure operations",
       "default": null,
       "examples": [
         null,
-        "d2378f24-eaf6-49bc-96f6-ff46fed1391a"
+        "123456578-1234-1234-1234-123456789012"
       ],
       "pattern": "^([a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12})$"
     },
@@ -91,11 +91,11 @@
       "$id": "#/properties/CacheLocation",
       "type": "string",
       "title": "CacheLocation",
-      "description": "local device cache source / destination if UseMemoryStream = false",
+      "description": "local device cache source / destination path if UseMemoryStream = false",
       "default": null,
       "examples": [
         null,
-        "c:\\temp\\csfd.log"
+        "c:\\temp"
       ],
       "pattern": "^(.+)$"
     },
@@ -140,6 +140,26 @@
         "yyyy-M-d H:mm:ss zzz"
       ],
       "pattern": "^([0-9]{1,4}(\\/|-)[0-9]{1,2}(\\/|-)[0-9]{1,4} [0-9]{1,2}:[0-9]{1,2}(:[0-9]{1,2}|) (-|\\+)[0-9]{1,2}:[0-9]{1,2})$"
+    },
+    "FileUris": {
+      "$id": "#/properties/FileUris",
+      "type": "array",
+      "title": "FileUris",
+      "description": "optional string array parameter to configure specific files for upload",
+      "default": [],
+      "items": {
+        "type": "string",
+        "examples": [
+          "C:\\temp\\f45f24746c42cc2a6dd69da9e7797e2c_fabric_traces_7.2.457.9590_132610909762170249_865_00637532483045019565_0000000000.dtr.zip",
+          "C:\\temp\\1.dtr.zip",
+          "\\share\\temp\\2.dtr",
+          "D:/temp/1.blg",
+          "https://sflogsxxxxxxxxxxxxxx.file.core.windows.net/fabriclogs-123456578-1234-1234-1234-123456789012/_nt0_2/Fabric/bc4316ec4b0814dcc367388a46d9903e_fabric_traces_7.2.457.9590_132610909242411002_3_00637522276995522478_0000000000.dtr.zip"
+        ],
+        "pattern": "^([a-zA-Z]:|\\\\\\\\|http.:).+?\\..{3,4}$",
+        "uniqueItems": true
+      },
+      "additionalItems": false
     },
     "GatherType": {
       "$id": "#/properties/GatherType",
@@ -234,7 +254,7 @@
       "type": "boolean",
       "title": "KustoUseBlobAsSource",
       "description": "true to ingest dtr.zip logs directly from cluster storage account. available in service fabric 6.5",
-      "default": false,
+      "default": true,
       "examples": [
         false,
         true
@@ -245,7 +265,7 @@
       "type": "boolean",
       "title": "KustoUseIngestMessage",
       "description": "true to use Kusto (service bus) messaging for success and failure ingests",
-      "default": true,
+      "default": false,
       "examples": [
         false,
         true
@@ -404,7 +424,7 @@
       "description": "path and file name to log output",
       "default": "",
       "examples": [
-        "collectsfdata.log"
+        "c:\\temp\\collectsfdata.log"
       ],
       "pattern": "^(.+)$"
     },
@@ -444,7 +464,7 @@
       "default": null,
       "examples": [
         null,
-        "/subscriptions/{{subscriptionId}}}/resourceGroups/{{resourceGroup}}/Microsoft.ServiceFabric/clusters/{{clusterName}}"
+        "/subscriptions/{{subscriptionId}}/resourceGroups/{{resourceGroup}}/Microsoft.ServiceFabric/clusters/{{clusterName}}"
       ],
       "pattern": "^(/subscriptions/[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}/resourceGroups/\\w+providers/Microsoft.ServiceFabric/clusters/.+)$"
     },
@@ -510,7 +530,10 @@
       "description": "string / regex used for filtering of blob storage account uri downloads",
       "default": null,
       "examples": [
-        null
+        null,
+        ".trace",
+        "fabric_",
+        "lease_"
       ],
       "pattern": "^(.+)$"
     },

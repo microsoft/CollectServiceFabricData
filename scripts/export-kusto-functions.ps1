@@ -1,6 +1,7 @@
 <#
     script to export kusto functions in .csl format using kusto-rest.ps1 
 #>
+[cmdletbinding()]
 param(
     [Parameter(Mandatory = $true)]
     [string]$kustoCluster = '',
@@ -61,6 +62,16 @@ function export-function($function)
 
     if(!(test-path $fileDirectory)){
         mkdir $fileDirectory
+    }
+
+    if((test-path $fileName) -and !$force){
+        $currentFunction = get-content -raw $fileName
+
+        write-verbose "comparing export and current functions"
+        if([string]::Compare([regex]::replace($functionScript,"\s",""),[regex]::replace($currentFunction,"\s","")) -eq 0){
+            write-host "no change to function $functionScript. skipping" -ForegroundColor Cyan
+            return
+        }
     }
 
     if (!$test) {

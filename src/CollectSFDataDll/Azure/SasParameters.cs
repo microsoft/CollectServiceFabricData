@@ -14,6 +14,7 @@ namespace CollectSFData.Azure
 
         public bool IsServiceSas { get; set; }
 
+        public string SasToken { get; private set; }
         public string Signature { get; set; }
 
         public string SignedExpiry { get; set; }
@@ -40,13 +41,15 @@ namespace CollectSFData.Azure
 
         public string SignedVersion { get; set; }
 
-        private string _sasToken { get; set; }
+        public SasParameters()
+        {
+        }
 
         public SasParameters(string sasToken)
         {
-            _sasToken = sasToken.TrimStart('?');
+            SasToken = sasToken.TrimStart('?');
 
-            foreach (string parameter in _sasToken.Split('&'))
+            foreach (string parameter in SasToken.Split('&'))
             {
                 string paramName = parameter.ToLower().Split('=')[0];
                 string encodedParamValue = parameter.Split('=')[1];
