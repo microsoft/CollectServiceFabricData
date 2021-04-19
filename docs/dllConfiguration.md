@@ -1,24 +1,15 @@
 # CollectServiceFabricData DLL Configuration and Usage
 
-## Outline
-
-[Overview](#overview)  
-[Design](#design)  
-[Supported Configurations](#supported-configurations)  
-[Adding NuGet package to project](#adding-nuget-package-to-project)  
-[Implementing Collector](#implementing-collector)  
-[Reuse](#reuse)  
-[Logging](#logging)  
-[Troubleshooting](#troubleshooting)  
-[Current Issues](#current-issues)  
-
 ## Overview
 
-CollectSFData can be used as an exe or as a dll from Microsoft signed nuget package [Microsoft.ServiceFabric.CollectSFData](https://www.nuget.org/packages/Microsoft.ServiceFabric.CollectSFData/). To use as an exe, see [configuration](./configuration.md).
+CollectSFData can be used as an exe or as a dll from Microsoft signed nuget package [Microsoft.ServiceFabric.CollectSFData](https://www.nuget.org/packages/Microsoft.ServiceFabric.CollectSFData/).  
+To use as an exe, see [configuration](./configuration.md).  
 
 ## Design
 
-CollectSFData is a high performance multi-threaded binary with a custom task scheduler. The 'Instance' state class is a singleton. Collector is reusable by calling Collect() multiple times, but only one instance of Collector should be used concurrently.  
+CollectSFData is a high performance multi-threaded binary with a custom task scheduler.  
+The 'Instance' state class is a singleton. Collector is reusable by calling Collect() multiple times.  
+Only one instance of Collector should be used concurrently.  
 
 ## Supported Configurations
 
@@ -39,7 +30,7 @@ The below configurations are currently supported.
 
 #### Windows Container
 
-Supports GatherType 'counter' performance counter logs with beta option 'UseTx' == true.
+Supports GatherType 'counter' performance counter logs with option 'UseTx' == true.
 
 .Net Core 3.1+
 .Net 5.0+
@@ -53,37 +44,46 @@ Does not support GatherType 'counter' performance counter logs.
 
 ## Adding NuGet package to project
 
-From command line, to add Microsoft.ServiceFabric.CollectSFData nuget package, navigate to download on nuget.org and use one of the provided commands [Microsoft.ServiceFabric.CollectSFData](https://www.nuget.org/packages/Microsoft.ServiceFabric.CollectSFData/).  
+From command line, to add Microsoft.ServiceFabric.CollectSFData nuget package, navigate to download on nuget.org  
+Use one of the provided commands [Microsoft.ServiceFabric.CollectSFData](https://www.nuget.org/packages/Microsoft.ServiceFabric.CollectSFData/).  
 
-In Visual Studio, use 'NuGet Package Manager' to install package.
+In Visual Studio, use 'NuGet Package Manager' to install package.  
 
 ## Kusto Setup
 
-### Creating Kusto Cluster
+### **Creating Kusto Cluster**
 
 (todo: see scripts directory)
 
-### Headless Execution with Client Credentials
+### **Headless Execution with Client Credentials**
 
 Use these steps to optionally configure CollectSFData to run headless with client credentials and client certificate. 
 
-#### Configuration of Azure Active Directory App Registration
+#### **Configuration of Azure Active Directory App Registration**
 
-#### Configuration of Client Certificate
+#### **Configuration of Client Certificate**
 
 ## Implementing Collector
 
-After CollectSFData nuget package has been added to project, use the following information to implement. The main classes are 'Collector' for execution and 'ConfigurationOptions' for configuration.
+After CollectSFData nuget package has been added to project, use the following information to implement.  
+The main classes are 'Collector' for execution and 'ConfigurationOptions' for configuration.  
+See [program.cs](../src/CollectSFData/Program.cs) for example.  
 
-### Setting Configuration
+### **Setting Configuration**
 
-Minimum configuration has to be set before calling Collector.Collect(). The main configuration is the type of data to collect with configuration option 'GatherType' and time. Configuration can be set by commandline arguments, configuration file, or by setting ConfigurationOptions class properties before calling Collector.Collect(). See [configuration](./configuration.md).
+Minimum configuration has to be set before calling Collector.Collect().  
+The main configuration is the type of data to collect with configuration option 'GatherType' and time.  
+Configuration can be set by commandline arguments, configuration file, or by setting ConfigurationOptions class properties before calling Collector.Collect().  
+See [configuration](./configuration.md).
 
-ConfigurationOptions constructor can be used to pass commandline 'args' and option to validate. Default option file 'collectsfdata.options.json' and 'args' if any will be added to a static base DefaultConfiguration. Use GetDefaultConfiguration() and SetDefaultConfiguration() if modification of default configuration is needed.
+ConfigurationOptions constructor can be used to pass commandline 'args' and option to validate.  
+Default option file 'collectsfdata.options.json' and 'args' if any will be added to a static base DefaultConfiguration.  
+Use GetDefaultConfiguration() and SetDefaultConfiguration() if modification of default configuration is needed.
 
-Configuraiton validation can be performed in ConfigurationOptions constructor, or after additional configurations by using Validate(). Additionally, Collector.Collect() will perform validation of configuration if NeedsValidation is true. 
+Configuration validation can be performed in ConfigurationOptions constructor, or after additional configurations by using Validate().  
+Collector.Collect() will also perform validation of configuration if NeedsValidation is true.  
 
-#### Example ConfigurationOptions default Constructor with no commandline arguments or validation
+#### **Example ConfigurationOptions default Constructor with no commandline arguments or validation**
 
 Validation will not occur until config.Validate() is called or Collector.Collect()
 
@@ -91,7 +91,7 @@ Validation will not occur until config.Validate() is called or Collector.Collect
 ConfigurationOptions config = new ConfigurationOptions();
 ```
 
-#### Example to use ConfigurationOptions constructor passing command line arguments from Main(string[] args)
+#### **Example to use ConfigurationOptions constructor passing command line arguments from Main(string[] args)**
 
 To use commandline arguments, pass as argument to ConfigurationOptions constructor. Command line arguments can only be parsed once. These options will be applied to the default configuration for any new instances on top of any settings specified in collectsfdata.options.json. 
 
@@ -107,7 +107,7 @@ To validate configuration without further configuration, set validate argument t
 ConfigurationOptions config = new ConfigurationOptions(args,true);
 ```
 
-#### Example to reuse existing configuration after collect using Clone()
+#### **Example to reuse existing configuration after collect using Clone()**
 
 To reuse or keep last configuration, Config.Clone() can be used.
 
@@ -115,7 +115,7 @@ To reuse or keep last configuration, Config.Clone() can be used.
 ConfigurationOptions config = collector.Config.Clone();
 ```
 
-#### Example to override DefaultConfiguration
+#### **Example to override DefaultConfiguration**
 
 Base default static configuration will contain any settings from collectsfdata.options.json. If commandline arguments are supplied to ConfigurationOptions constructor, these settings will be added to the default configuration superseding options from json file. To modify default configuration used for all instances, use SetDefaultConfiguration().
 
@@ -123,7 +123,7 @@ Base default static configuration will contain any settings from collectsfdata.o
 collector.Config.SetDefaultConfiguration(config);
 ```
 
-#### Example to check if current configuration is valid
+#### **Example to check if current configuration is valid**
 
 ```c#
 ConfigurationOptions config = new ConfigurationOptions(args);
@@ -145,7 +145,7 @@ if(config.NeedsValidation)
 }
 ```
 
-### Calling Collector.Collect()
+### **Calling Collector.Collect()**
 
 Once configuration options have been set, call Collector.Collect().
 Collect uses Collector.Config for configuration by default and can also be passed ConfigurationsOptions with current configuration to collect.
@@ -174,6 +174,8 @@ private static int Main(string[] args)
 #### Example
 
 ```c#
+using CollectSFData.Common;
+
 private static int Main(string[] args)
 {
         Collector collector = new Collector();
@@ -195,6 +197,8 @@ private static int Main(string[] args)
 #### Example
 
 ```c#
+using CollectSFData.Common;
+
 private static int Main(string[] args)
 {
         Collector collector = new Collector(true);
@@ -256,12 +260,14 @@ When starting execution from Collect(), current configuration is first validated
 Certain events in the Service Fabric detailed diagnostic logs gathered when 'GatherType' is set to 'trace' are not CSV compliant and can fail ingestion into Kusto. Current mitigation until these traces are properly formatted is to either set 'UseKustoBlobAsSource' == false which is remarkably slow and more resource intensive. Another option is to do two collections with Collect() as shown in the following example assuming there will be a small number of failures during first collect. This is how CollectSFData currently executes when executing as an exe. See [Program.cs](..\src\CollectSFData\Program.cs).  
 
 ```c#
+using CollectSFData.Common;
+
 private static int Main(string[] args)
 {
-    Collector collector = new Collector(args, true);
-    ConfigurationOptions config = collector.Instance.Config;
+    Collector collector = new Collector(true);
+    ConfigurationOptions config = new ConfigurationOptions(args);
 
-    int retval = collector.Collect();
+    int retval = collector.Collect(config);
 
     // mitigation for dtr files not being csv compliant causing kusto ingest to fail
     config = collector.Config.Clone();
