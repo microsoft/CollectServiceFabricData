@@ -1,6 +1,6 @@
 .create-or-alter function with (docstring = "function to create Api TableView view for sftable", folder = "sftable")
-    TableViewApi(T:string) {
-        TableView(T)
+    TableViewApi(T:string, startTimeStamp:datetime=datetime(null), endTimeStamp:datetime=datetime(null)) {
+        TableView(T,startTimeStamp,endTimeStamp)
         | where RelativeUri endswith "Api"
         | project Timestamp,
             column_ifexists("serviceType",""),

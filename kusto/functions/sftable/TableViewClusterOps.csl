@@ -1,6 +1,6 @@
 .create-or-alter function with (docstring = "function to create ClusterOps TableView view for sftable", folder = "sftable")
-    TableViewClusterOps(T:string) {
-        TableView(T)
+    TableViewClusterOps(T:string, startTimeStamp:datetime=datetime(null), endTimeStamp:datetime=datetime(null)) {
+        TableView(T,startTimeStamp,endTimeStamp)
         | where RelativeUri endswith "ClusterOps"
         | project Timestamp,
             column_ifexists("EventType",""),
