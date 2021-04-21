@@ -1,6 +1,6 @@
 .create-or-alter function with (docstring = "function to create TableView view for sftable", folder = "sftable")
-    TableView(T:string) {
-        let Table = table(T);
+    TableView(T:string, startTimeStamp:datetime=datetime(null), endTimeStamp:datetime=datetime(null)) {
+        let Table = table(T) | where Timestamp between (case(isnull(startTimeStamp),datetime(2017-01-01 00:00),startTimeStamp) .. case(isnull(endTimeStamp),now(),endTimeStamp));
         let DistinctEvents = Table | distinct Timestamp, PartitionKey, RowKey;
         DistinctEvents
             | join Table on $left.Timestamp==$right.Timestamp and $left.PartitionKey==$right.PartitionKey and $left.RowKey==$right.RowKey
