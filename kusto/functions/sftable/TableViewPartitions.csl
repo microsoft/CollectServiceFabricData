@@ -1,6 +1,6 @@
 .create-or-alter function with (docstring = "function to create Partitions TableView view for sftable", folder = "sftable")
-    TableViewPartitions(T:string) {
-        TableView(T)
+    TableViewPartitions(T:string, startTimeStamp:datetime=datetime(null), endTimeStamp:datetime=datetime(null)) {
+        TableView(T,startTimeStamp,endTimeStamp)
         | where RelativeUri endswith "Partitions"
         | project Timestamp,
             column_ifexists("EventType",""),
