@@ -8,7 +8,7 @@ param(
     [string]$kustoDatabase = '',
     [switch]$test,
     [switch]$force,
-    [string]$kustoDir = "$psscriptroot\..\kusto"
+    [string]$kustoDir = "$psscriptroot\..\kusto\functions"
 )
 
 $ErrorActionPreference = 'continue'
