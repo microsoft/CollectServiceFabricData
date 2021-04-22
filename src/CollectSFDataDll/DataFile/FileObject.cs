@@ -46,8 +46,6 @@ namespace CollectSFData.DataFile
 
         public int RecordCount { get; set; }
 
-        public DateTime Started { get; set; } = DateTime.MinValue;
-
         public string RelativeUri { get => Regex.Replace(_fileUri ?? "", BaseUri ?? "", "", RegexOptions.IgnoreCase).TrimStart('/'); }
 
         public FileStatus Status
@@ -198,7 +196,7 @@ namespace CollectSFData.DataFile
 
         public int GetHashCode(object obj)
         {
-            int hashCode = (MessageId.GetHashCode() + FileUri.GetHashCode() + RelativeUri.GetHashCode() + Started.GetHashCode()) / 4;
+            int hashCode = (MessageId.GetHashCode() + FileUri.GetHashCode() + RelativeUri.GetHashCode()) / 3;
             Log.Debug($"hashCode {hashCode}");
             return hashCode;
         }
