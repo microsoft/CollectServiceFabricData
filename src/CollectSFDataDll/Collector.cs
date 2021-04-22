@@ -237,12 +237,11 @@ namespace CollectSFData
                 Log.Last($"{DataExplorer}/clusters/{Instance.Kusto.Endpoint.ClusterName}/databases/{Instance.Kusto.Endpoint.DatabaseName}", ConsoleColor.Cyan);
             }
 
-            if (Instance.Kusto.IngestFileObjectsFailed.Any() | Instance.Kusto.IngestFileObjectsPending.Any())
+            if (Instance.FileObjects.Any(FileStatus.failed | FileStatus.uploading))
             {
                 Log.Warning($"adding failed uris to FileUris. use save option to keep list of failed uris.");
                 List<string> ingestList = new List<string>();
-                Instance.Kusto.IngestFileObjectsFailed.ForEach(x => ingestList.Add(x.FileUri));
-                Instance.Kusto.IngestFileObjectsPending.ForEach(x => ingestList.Add(x.FileUri));
+                ingestList.AddRange(Instance.FileObjects.FindAll(FileStatus.failed|FileStatus.uploading).Select(x=> x.FileUri));
                 Config.FileUris = ingestList.ToArray();
             }
         }
@@ -278,6 +277,7 @@ namespace CollectSFData
             Log.Last($"{Instance.TotalErrors} errors.");
             Log.Last($"timed out: {Instance.TimedOut}.");
             Log.Last($"{Instance.TotalRecords} records.");
+            Log.Last($"{Instance.FileObjects.StatusString()}");
 
             if (Instance.TotalFilesEnumerated > 0)
             {
@@ -344,8 +344,8 @@ namespace CollectSFData
                 {
                     if (Config.IsKustoConfigured())
                     {
-                        Log.Warning($"kusto ingesting:", Instance.Kusto.IngestFileObjectsPending);
-                        Log.Warning($"kusto failed:", Instance.Kusto.IngestFileObjectsFailed);
+                        Log.Warning($"kusto ingesting:", Instance.FileObjects.FindAll(FileStatus.uploading));
+                        Log.Warning($"kusto failed:", Instance.FileObjects.FindAll(FileStatus.failed));
                     }
 
                     LogSummary();
@@ -369,7 +369,8 @@ namespace CollectSFData
         private void QueueForIngest(FileObject fileObject)
         {
             Log.Debug("enter");
-
+            fileObject.Status = FileStatus.queued;
+            
             if (Config.IsKustoConfigured() | Config.IsLogAnalyticsConfigured())
             {
                 if (Config.IsKustoConfigured())
@@ -471,7 +472,9 @@ namespace CollectSFData
 
             foreach (string file in files)
             {
-                FileObject fileObject = new FileObject(file, Config.CacheLocation);
+                FileObject fileObject = new FileObject(file, Config.CacheLocation){ Status = FileStatus.enumerated};
+                Instance.FileObjects.Add(fileObject);
+
                 Log.Info($"adding file: {fileObject.FileUri}", ConsoleColor.Green);
 
                 if (!Config.List)
