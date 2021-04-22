@@ -5,18 +5,24 @@
 
 using CollectSFData.Common;
 using System;
+using System.Collections;
 using System.IO;
 using System.Text.RegularExpressions;
 
 namespace CollectSFData.DataFile
 {
-    public class FileObject
+
+    public class FileObject : Constants, IEqualityComparer
     {
         private readonly string _fileDataTypesPattern = string.Join("|", Enum.GetNames(typeof(FileDataTypesEnum)));
-        private string _fileUri;
+        private FileStatus _fileObjectStatus = FileStatus.unknown;
+        private string _fileUri = string.Empty;
+
         private string _nodePattern = string.Empty;
 
         public string BaseUri { get; set; } = string.Empty;
+
+        public string MessageId { get; set; }
 
         public Action DownloadAction { get; set; }
 
@@ -40,9 +46,27 @@ namespace CollectSFData.DataFile
 
         public int RecordCount { get; set; }
 
+        public DateTime Started { get; set; } = DateTime.MinValue;
+
         public string RelativeUri { get => Regex.Replace(_fileUri ?? "", BaseUri ?? "", "", RegexOptions.IgnoreCase).TrimStart('/'); }
 
+        public FileStatus Status
+        {
+            get
+            {
+                Log.Debug($"fileobject:status:get:{_fileObjectStatus}:{RelativeUri}");
+                return _fileObjectStatus;
+            }
+            set
+            {
+                _fileObjectStatus = value;
+                Log.Debug($"fileobject:status:set:{_fileObjectStatus}:{RelativeUri}");
+            }
+        }
+
         public StreamManager Stream { get; set; }
+
+        public bool IsPopulated { get => !string.IsNullOrEmpty(FileUri) | !string.IsNullOrEmpty(BaseUri); }
 
         public FileObject(string fileUri = null, string baseUri = null)
         {
@@ -95,5 +119,114 @@ namespace CollectSFData.DataFile
             Log.Info($"extracted node properties:node:{NodeName} filetype:{FileDataType.ToString()}\r\n relativeUri:{RelativeUri}", ConsoleColor.Cyan);
             return fileUri;
         }
+
+        public bool Equals(FileObject fileObject)
+        {
+            return Equals(this, fileObject);
+        }
+
+        public new bool Equals(object self, object comparable)
+        {
+            if (self == null | comparable == null)
+            {
+                Log.Debug("both args null");
+                return false;
+            }
+
+            if (!(self is FileObject) | !(comparable is FileObject))
+            {
+                Log.Debug("at least one object not FileObject");
+                return false;
+            }
+
+            FileObject qSelf = self as FileObject;
+            FileObject qComparable = comparable as FileObject;
+
+            if (Compare(qSelf.MessageId, qComparable.MessageId))
+            {
+                Log.Debug("ClientRequestId match", comparable);
+                return true;
+            }
+
+            if (Compare(qSelf.FileUri, qComparable.FileUri))
+            {
+                Log.Debug("FileUri match", comparable);
+                return true;
+            }
+
+            if (Compare(qSelf.RelativeUri, qComparable.RelativeUri))
+            {
+                Log.Debug("RelativeUri match", comparable);
+                return true;
+            }
+
+            Log.ToFile("no match: self:", self);
+            Log.ToFile("no match: comparable:", comparable);
+            return false;
+        }
+
+        public bool HasKey(string searchItem)
+        {
+            return HasKey(this, searchItem);
+        }
+
+        private bool HasKey(FileObject self, string searchItem)
+        {
+            if (Compare(self.MessageId, searchItem))
+            {
+                Log.Debug("ClientRequestId match", searchItem);
+                return true;
+            }
+
+            if (Compare(self.FileUri, searchItem))
+            {
+                Log.Debug("FileUri match", searchItem);
+                return true;
+            }
+
+            if (Compare(self.RelativeUri, searchItem))
+            {
+                Log.Debug("RelativeUri match", searchItem);
+                return true;
+            }
+
+            Log.ToFile("no match: self:", self);
+            Log.ToFile("no match: comparable:", searchItem);
+            return false;
+
+        }
+
+        public int GetHashCode(object obj)
+        {
+            int hashCode = (MessageId.GetHashCode() + FileUri.GetHashCode() + RelativeUri.GetHashCode() + Started.GetHashCode()) / 4;
+            Log.Debug($"hashCode {hashCode}");
+            return hashCode;
+        }
+
+        private bool Compare(string self, string comparable)
+        {
+            if (string.IsNullOrEmpty(self) | string.IsNullOrEmpty(comparable))
+            {
+                return false;
+            }
+
+            self = self.ToLower().TrimEnd(ZipExtension.ToCharArray()).TrimEnd(CsvExtension.ToCharArray());
+            comparable = comparable.ToLower().TrimEnd(ZipExtension.ToCharArray()).TrimEnd(CsvExtension.ToCharArray());
+
+            if (self.EndsWith(comparable) | comparable.EndsWith(self))
+            {
+                Log.Debug("full match", comparable);
+                return true;
+            }
+
+            if (self.EndsWith(Path.GetFileName(comparable)) | comparable.EndsWith(Path.GetFileName(self)))
+            {
+                Log.Debug("partial (file name) match", comparable);
+                return true;
+            }
+
+            return false;
+        }
+
     }
 }

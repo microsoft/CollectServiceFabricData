@@ -437,17 +437,24 @@ namespace CollectSFData.Azure
 
                         if (ReturnSourceFileLink)
                         {
-                            IngestCallback?.Invoke(new FileObject(blob.Uri.AbsolutePath, Config.SasEndpointInfo.BlobEndpoint)
+                            FileObject fileObjectSourceLink = new FileObject(blob.Uri.AbsolutePath, Config.SasEndpointInfo.BlobEndpoint)
                             {
-                                LastModified = lastModified
-                            });
+                                LastModified = lastModified,
+                                Status = FileStatus.enumerated
+                            };
+
+                            _instance.FileObjects.Add(fileObjectSourceLink);
+                            IngestCallback?.Invoke(fileObjectSourceLink);
                             continue;
                         }
 
                         FileObject fileObject = new FileObject(blob.Uri.AbsolutePath, Config.CacheLocation)
                         {
-                            LastModified = lastModified
+                            LastModified = lastModified,
+                            Status = FileStatus.enumerated
                         };
+                        
+                        _instance.FileObjects.Add(fileObject);
 
                         Log.Info($"queueing blob with timestamp: {lastModified}\r\n file: {blob.Uri.AbsolutePath}");
                         InvokeCallback(blob, fileObject, (int)blobRef.Properties.Length);
