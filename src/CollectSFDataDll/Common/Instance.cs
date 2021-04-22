@@ -22,8 +22,8 @@ namespace CollectSFData.Common
         public int TotalFilesSkipped;
         public int TotalRecords;
         private static readonly Instance _instance = new Instance();
-        private static object _instanceLock = new object();
         public FileManager FileMgr { get; set; }
+        public FileObjectCollection FileObjects{get; set;}
         public bool IsWindows { get; } = Environment.OSVersion.Platform.Equals(PlatformID.Win32NT);
         public KustoConnection Kusto { get; set; }
         public LogAnalyticsConnection LogAnalytics { get; set; }
@@ -47,6 +47,7 @@ namespace CollectSFData.Common
             }
             
             _instance.Config = configurationOptions;
+            _instance.FileObjects = new FileObjectCollection();
             _instance.FileMgr = new FileManager();
             _instance.Kusto = new KustoConnection();
             _instance.LogAnalytics = new LogAnalyticsConnection();
