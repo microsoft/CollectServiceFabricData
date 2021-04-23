@@ -277,7 +277,7 @@ namespace CollectSFData
             Log.Last($"{Instance.TotalErrors} errors.");
             Log.Last($"timed out: {Instance.TimedOut}.");
             Log.Last($"{Instance.TotalRecords} records.");
-            Log.Last($"{Instance.FileObjects.StatusString()}");
+            Log.Last($"{Instance.FileObjects.StatusString()}", ConsoleColor.Cyan);
 
             if (Instance.TotalFilesEnumerated > 0)
             {
