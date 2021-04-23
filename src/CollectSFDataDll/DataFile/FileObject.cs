@@ -11,18 +11,14 @@ using System.Text.RegularExpressions;
 
 namespace CollectSFData.DataFile
 {
-
     public class FileObject : Constants, IEqualityComparer
     {
         private readonly string _fileDataTypesPattern = string.Join("|", Enum.GetNames(typeof(FileDataTypesEnum)));
         private FileStatus _fileObjectStatus = FileStatus.unknown;
         private string _fileUri = string.Empty;
-
         private string _nodePattern = string.Empty;
 
         public string BaseUri { get; set; } = string.Empty;
-
-        public string MessageId { get; set; }
 
         public Action DownloadAction { get; set; }
 
@@ -38,9 +34,13 @@ namespace CollectSFData.DataFile
 
         public FileUriTypesEnum FileUriType { get => FileTypes.MapFileUriType(FileUri); }
 
+        public bool IsPopulated { get => !string.IsNullOrEmpty(FileUri) | !string.IsNullOrEmpty(BaseUri); }
+
         public DateTimeOffset LastModified { get; set; }
 
         public long Length { get => (long)Stream?.Length; }
+
+        public string MessageId { get; set; }
 
         public string NodeName { get; private set; } = FileDataTypesEnum.unknown.ToString();
 
@@ -64,58 +64,11 @@ namespace CollectSFData.DataFile
 
         public StreamManager Stream { get; set; }
 
-        public bool IsPopulated { get => !string.IsNullOrEmpty(FileUri) | !string.IsNullOrEmpty(BaseUri); }
-
         public FileObject(string fileUri = null, string baseUri = null)
         {
             Stream = new StreamManager(this);
             BaseUri = baseUri;
             FileUri = fileUri;
-        }
-
-        private void ExtractNodeName(string fileUri)
-        {
-            // ARM nodename should be surrounded by / or _ or trailing $ and have _  and digit in name
-            // standalone nodename should be surrounded by /
-            _nodePattern = $@"(/|\.)(?<nodeName>[^/^\.]+?)(/|\.)({_fileDataTypesPattern}|[^/]+?\.dmp)(/|\.|_|$)";
-
-            if (Regex.IsMatch(fileUri, _nodePattern, RegexOptions.IgnoreCase))
-            {
-                Match match = Regex.Match(fileUri, _nodePattern, RegexOptions.IgnoreCase);
-                NodeName = match.Groups["nodeName"].Value;
-                Log.Debug($"node name: {NodeName}");
-            }
-        }
-
-        private string ExtractProperties(string fileUri)
-        {
-            if (!string.IsNullOrEmpty(fileUri))
-            {
-                fileUri = FileManager.NormalizePath(fileUri);
-                ExtractNodeName(fileUri);
-                FileDataType = FileTypes.MapFileDataTypeUri(fileUri);
-
-                if (string.IsNullOrEmpty(NodeName))
-                {
-                    if (FileDataType != FileDataTypesEnum.table)
-                    {
-                        Log.Error($"unable to determine nodename:{fileUri} using pattern {_nodePattern}");
-                    }
-                }
-            }
-
-            if (!string.IsNullOrEmpty(BaseUri) & Uri.IsWellFormedUriString(fileUri, UriKind.Relative))
-            {
-                if (!fileUri.ToLower().StartsWith(BaseUri.ToLower()))
-                {
-                    fileUri = BaseUri.TrimEnd('/') + "/" + fileUri.TrimStart('/');
-                    Log.Debug($"concatenated baseUri + fileUri:{fileUri}");
-                }
-            }
-
-            _fileUri = fileUri;
-            Log.Info($"extracted node properties:node:{NodeName} filetype:{FileDataType.ToString()}\r\n relativeUri:{RelativeUri}", ConsoleColor.Cyan);
-            return fileUri;
         }
 
         public bool Equals(FileObject fileObject)
@@ -163,42 +116,16 @@ namespace CollectSFData.DataFile
             return false;
         }
 
-        public bool HasKey(string searchItem)
-        {
-            return HasKey(this, searchItem);
-        }
-
-        private bool HasKey(FileObject self, string searchItem)
-        {
-            if (Compare(self.MessageId, searchItem))
-            {
-                Log.Debug("ClientRequestId match", searchItem);
-                return true;
-            }
-
-            if (Compare(self.FileUri, searchItem))
-            {
-                Log.Debug("FileUri match", searchItem);
-                return true;
-            }
-
-            if (Compare(self.RelativeUri, searchItem))
-            {
-                Log.Debug("RelativeUri match", searchItem);
-                return true;
-            }
-
-            Log.ToFile("no match: self:", self);
-            Log.ToFile("no match: comparable:", searchItem);
-            return false;
-
-        }
-
         public int GetHashCode(object obj)
         {
             int hashCode = (MessageId.GetHashCode() + FileUri.GetHashCode() + RelativeUri.GetHashCode()) / 3;
             Log.Debug($"hashCode {hashCode}");
             return hashCode;
+        }
+
+        public bool HasKey(string searchItem)
+        {
+            return HasKey(this, searchItem);
         }
 
         private bool Compare(string self, string comparable)
@@ -226,5 +153,74 @@ namespace CollectSFData.DataFile
             return false;
         }
 
+        private void ExtractNodeName(string fileUri)
+        {
+            // ARM nodename should be surrounded by / or _ or trailing $ and have _  and digit in name
+            // standalone nodename should be surrounded by /
+            _nodePattern = $@"(/|\.)(?<nodeName>[^/^\.]+?)(/|\.)({_fileDataTypesPattern}|[^/]+?\.dmp)(/|\.|_|$)";
+
+            if (Regex.IsMatch(fileUri, _nodePattern, RegexOptions.IgnoreCase))
+            {
+                Match match = Regex.Match(fileUri, _nodePattern, RegexOptions.IgnoreCase);
+                NodeName = match.Groups["nodeName"].Value;
+                Log.Debug($"node name: {NodeName}");
+            }
+        }
+
+        private string ExtractProperties(string fileUri)
+        {
+            if (!string.IsNullOrEmpty(fileUri))
+            {
+                fileUri = FileManager.NormalizePath(fileUri);
+                ExtractNodeName(fileUri);
+                FileDataType = FileTypes.MapFileDataTypeUri(fileUri);
+
+                if (string.IsNullOrEmpty(NodeName))
+                {
+                    if (FileDataType != FileDataTypesEnum.table)
+                    {
+                        Log.Error($"unable to determine nodename:{fileUri} using pattern {_nodePattern}");
+                    }
+                }
+            }
+
+            if (!string.IsNullOrEmpty(BaseUri) & Uri.IsWellFormedUriString(fileUri, UriKind.Relative))
+            {
+                if (!fileUri.ToLower().StartsWith(BaseUri.ToLower()))
+                {
+                    fileUri = BaseUri.TrimEnd('/') + "/" + fileUri.TrimStart('/');
+                    Log.Debug($"concatenated baseUri + fileUri:{fileUri}");
+                }
+            }
+
+            _fileUri = fileUri;
+            Log.Info($"extracted node properties:node:{NodeName} filetype:{FileDataType.ToString()}\r\n relativeUri:{RelativeUri}", ConsoleColor.Cyan);
+            return fileUri;
+        }
+
+        private bool HasKey(FileObject self, string searchItem)
+        {
+            if (Compare(self.MessageId, searchItem))
+            {
+                Log.Debug("ClientRequestId match", searchItem);
+                return true;
+            }
+
+            if (Compare(self.FileUri, searchItem))
+            {
+                Log.Debug("FileUri match", searchItem);
+                return true;
+            }
+
+            if (Compare(self.RelativeUri, searchItem))
+            {
+                Log.Debug("RelativeUri match", searchItem);
+                return true;
+            }
+
+            Log.ToFile("no match: self:", self);
+            Log.ToFile("no match: comparable:", searchItem);
+            return false;
+        }
     }
 }

@@ -16,9 +16,51 @@ namespace CollectSFData.DataFile
         {
         }
 
-        public bool HasFileUri(string searchItem)
+        public bool Any(FileStatus fileObjectStatus = FileStatus.all)
         {
-            return FindByUri(searchItem) == null;
+            foreach (FileStatus status in Enum.GetValues(typeof(FileStatus)))
+            {
+                if (CompareStatus(status, fileObjectStatus))
+                {
+                    if (this.Any(x => x.Status == status))
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        public new int Count(FileStatus fileObjectStatus)
+        {
+            int count = 0;
+            foreach (FileStatus status in Enum.GetValues(typeof(FileStatus)))
+            {
+                if (CompareStatus(status, fileObjectStatus))
+                {
+                    int statusCount = this.Count(x => x.Status == status);
+                    count += statusCount;
+                }
+            }
+
+            Log.Debug($"returning:count:{count}", fileObjectStatus);
+            return count;
+        }
+
+        public List<FileObject> FindAll(FileStatus fileObjectStatus = FileStatus.all)
+        {
+            List<FileObject> results = new List<FileObject>();
+            StringBuilder display = new StringBuilder();
+
+            foreach (FileStatus status in Enum.GetValues(typeof(FileStatus)))
+            {
+                if (CompareStatus(status, fileObjectStatus))
+                {
+                    results.AddRange(this.FindAll(x => x.Status == status));
+                }
+            }
+
+            return results;
         }
 
         public FileObject FindByMessageId(string searchItem)
@@ -51,62 +93,23 @@ namespace CollectSFData.DataFile
             return new FileObject();
         }
 
-        public List<FileObject> FindAll(FileStatus fileObjectStatus = FileStatus.all)
+        public bool HasFileUri(string searchItem)
         {
-            List<FileObject> results = new List<FileObject>();
-            StringBuilder display = new StringBuilder();
-
-            foreach (FileStatus status in Enum.GetValues(typeof(FileStatus)))
-            {
-                if (CompareStatus(status, fileObjectStatus))
-                {
-                    results.AddRange(this.FindAll(x => x.Status == status));
-                }
-            }
-
-            return results;
-        }
-
-        public bool Any(FileStatus fileObjectStatus = FileStatus.all)
-        {
-            foreach (FileStatus status in Enum.GetValues(typeof(FileStatus)))
-            {
-                if (CompareStatus(status, fileObjectStatus))
-                {
-                    if (this.Any(x => x.Status == status))
-                    {
-                        return true;
-                    }
-                }
-            }
-            return false;
-        }
-
-        private bool CompareStatus(FileStatus current, FileStatus filter)
-        {
-            bool retval = false;
-
-            if (filter == FileStatus.all | (current & filter) == filter)
-            {
-                retval = true;
-            }
-
-            Log.Debug($"returning:{retval} = {current} == {filter}");
-            return retval;
+            return FindByUri(searchItem) == null;
         }
 
         public string StatusString(FileStatus fileObjectStatus = FileStatus.all)
         {
             StringBuilder display = new StringBuilder();
             display.Append("FileObjects:status:");
-            
+
             foreach (FileStatus status in Enum.GetValues(typeof(FileStatus)))
             {
                 if (CompareStatus(status, fileObjectStatus))
                 {
                     // since all is not a real status, populate with total count
                     int statusCount = 0;
-                    if(status == FileStatus.all)
+                    if (status == FileStatus.all)
                     {
                         statusCount = this.Count();
                     }
@@ -123,20 +126,17 @@ namespace CollectSFData.DataFile
             return display.ToString();
         }
 
-        public new int Count(FileStatus fileObjectStatus)
+        private bool CompareStatus(FileStatus current, FileStatus filter)
         {
-            int count = 0;
-            foreach (FileStatus status in Enum.GetValues(typeof(FileStatus)))
+            bool retval = false;
+
+            if (filter == FileStatus.all | (current & filter) == filter)
             {
-                if (CompareStatus(status, fileObjectStatus))
-                {
-                    int statusCount = this.Count(x => x.Status == status);
-                    count += statusCount;
-                }
+                retval = true;
             }
 
-            Log.Debug($"returning:count:{count}", fileObjectStatus);
-            return count;
+            Log.Debug($"returning:{retval} = {current} == {filter}");
+            return retval;
         }
     }
 }
