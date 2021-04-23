@@ -21,12 +21,11 @@ namespace CollectSFData.Kusto
 {
     public class KustoConnection : Constants
     {
-
-        private bool _appendingToExistingTableUnique;
         private const int _maxMessageCount = 32;
         private readonly CustomTaskManager _kustoTasks = new CustomTaskManager(true);
         private readonly TimeSpan _messageTimeToLive = new TimeSpan(0, 1, 0, 0);
         private readonly CancellationTokenSource _tokenSource = new CancellationTokenSource();
+        private bool _appendingToExistingTableUnique;
         private DateTime _failureQueryTime;
         private string _ingestCursor = "''";
         private IEnumerator<string> _ingestionQueueEnumerator;
@@ -325,7 +324,6 @@ namespace CollectSFData.Kusto
             fileObject.MessageId = message.Id;
             Log.Debug($"fileobject uploading FileUri:{fileObject.FileUri} RelativeUri: {fileObject.RelativeUri} message id: {message.Id}");
         }
-
 
         private KustoIngestionMessage PrepareIngestionMessage(string blobUriWithSas, long blobSizeBytes, string ingestionMapping)
         {
