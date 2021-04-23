@@ -20,7 +20,7 @@
     <tags>servicefabric</tags>
     <dependencies>
       <group targetFramework=".NETFramework4.6.2">
-        <dependency id="Microsoft.Azure.KeyVault" version="3.0.4" exclude="Build,Analyzers" />
+        <dependency id="Azure.Security.KeyVault.Secrets" version="4.1.0" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Azure.KeyVault.Core" version="3.0.4" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Azure.Kusto.Data" version="7.1.1" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Azure.Kusto.Ingest" version="7.1.1" exclude="Build,Analyzers" />
@@ -41,7 +41,7 @@
         <dependency id="System.Security.Cryptography.ProtectedData" version="4.7.0" exclude="Build,Analyzers" />
       </group>
       <group targetFramework=".NETFramework4.7.2">
-        <dependency id="Microsoft.Azure.KeyVault" version="3.0.4" exclude="Build,Analyzers" />
+        <dependency id="Azure.Security.KeyVault.Secrets" version="4.1.0" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Azure.KeyVault.Core" version="3.0.4" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Azure.Kusto.Data" version="8.0.1" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Azure.Kusto.Ingest" version="8.0.1" exclude="Build,Analyzers" />
@@ -62,7 +62,7 @@
         <dependency id="System.Security.Cryptography.ProtectedData" version="4.7.0" exclude="Build,Analyzers" />
       </group>
       <group targetFramework=".NETCoreApp3.1">
-        <dependency id="Microsoft.Azure.KeyVault" version="3.0.4" exclude="Build,Analyzers" />
+        <dependency id="Azure.Security.KeyVault.Secrets" version="4.1.0" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Azure.KeyVault.Core" version="3.0.4" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Azure.Kusto.Data" version="8.0.1" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Azure.Kusto.Ingest" version="8.0.1" exclude="Build,Analyzers" />
@@ -83,7 +83,7 @@
         <dependency id="System.Security.Cryptography.ProtectedData" version="4.7.0" exclude="Build,Analyzers" />
       </group>
       <group targetFramework=".net5.0">
-        <dependency id="Microsoft.Azure.KeyVault" version="3.0.4" exclude="Build,Analyzers" />
+        <dependency id="Azure.Security.KeyVault.Secrets" version="4.1.0" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Azure.KeyVault.Core" version="3.0.4" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Azure.Kusto.Data" version="8.0.1" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Azure.Kusto.Ingest" version="8.0.1" exclude="Build,Analyzers" />
