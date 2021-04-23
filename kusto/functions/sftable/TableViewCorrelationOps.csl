@@ -1,6 +1,6 @@
 .create-or-alter function with (docstring = "function to create CorrelationOps TableView view for sftable", folder = "sftable")
-    TableViewCorrelationOps(T:string) {
-        TableView(T)
+    TableViewCorrelationOps(T:string, startTimeStamp:datetime=datetime(null), endTimeStamp:datetime=datetime(null)) {
+        TableView(T,startTimeStamp,endTimeStamp)
         | where RelativeUri endswith "CorrelationOps"
         // todo fill in fields
         | project Timestamp,

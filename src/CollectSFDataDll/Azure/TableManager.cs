@@ -221,7 +221,8 @@ namespace CollectSFData.Azure
                     }
 
                     string relativeUri = $"{Config.StartTimeUtc.Ticks}-{Config.EndTimeUtc.Ticks}-{cloudTable.Name}.{chunkCount++}{TableExtension}";
-                    FileObject fileObject = new FileObject(relativeUri, Config.CacheLocation);
+                    FileObject fileObject = new FileObject(relativeUri, Config.CacheLocation){ Status = FileStatus.enumerated};
+                    _instance.FileObjects.Add(fileObject);
                     resultsChunk.ToList().ForEach(x => x.RelativeUri = relativeUri);
 
                     fileObject.Stream.Write(resultsChunk);
