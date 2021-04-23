@@ -3,8 +3,8 @@
 
 #>
 param(
-    [ValidateSet('net472', 'netcoreapp2.2', 'netcoreapp3.1', 'net5', 'net462')]
-    [string[]]$targetFrameworks = @('net5'),
+    [ValidateSet('net472', 'netcoreapp2.2', 'netcoreapp3.1', 'net5.0', 'net462')]
+    [string[]]$targetFrameworks = @('net472', 'netcoreapp3.1', 'net5.0', 'net462'),
     [ValidateSet('all', 'debug', 'release')]
     $configuration = 'all',
     [ValidateSet('win-x64', 'ubuntu.18.04-x64')]

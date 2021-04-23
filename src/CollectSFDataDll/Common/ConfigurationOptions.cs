@@ -10,6 +10,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -22,31 +23,31 @@ namespace CollectSFData.Common
 {
     public class ConfigurationOptions : ConfigurationProperties
     {
-        private static readonly string _workDir = "csfd";
-        private static bool _cmdLineInited;
-        private readonly CommandLineArguments _cmdLineArgs = new CommandLineArguments();
-        private bool _defaultConfigLoaded;
-        private string _endTime;
-        private int _logDebug = LoggingLevel.Info;
-        private string _startTime;
+        private static readonly CommandLineArguments _cmdLineArgs = new CommandLineArguments();
+        private static string[] _commandlineArguments = new string[0];
+        private static bool _cmdLineExecuted;
+        private static ConfigurationOptions _defaultConfig;
         private string _tempPath;
-        private int _threads;
+        private readonly string _workDir = "csfd";
+
 
         public new string EndTimeStamp
         {
-            get => _endTime;
+            get => base.EndTimeStamp;
             set
             {
                 EndTimeUtc = ConvertToUtcTime(value);
-                _endTime = ConvertToUtcTimeString(value);
+                base.EndTimeStamp = ConvertToUtcTimeString(value);
             }
         }
+
+        public string ExePath {get;} = $"{Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)}\\{DefaultOptionsFile}";
 
         public FileTypesEnum FileType { get; private set; }
 
         public new string GatherType
         {
-            get => FileType.ToString();
+            get => base.GatherType;
             set
             {
                 FileTypesEnum fileType = ConvertFileType(value);
@@ -57,49 +58,73 @@ namespace CollectSFData.Common
                 }
 
                 FileType = fileType;
+                base.GatherType = FileType.ToString();
             }
         }
 
+        public bool IsValid { get; set; }
+
         public new int LogDebug
         {
-            get => Log.LogDebug = _logDebug;
-            set => Log.LogDebug = _logDebug = value;
+            get => base.LogDebug;
+            set
+            {
+                base.LogDebug = value;
+                Log.LogDebug = value;
+            }
         }
+
+        public bool NeedsValidation {get;set;} = true;
 
         public new string StartTimeStamp
         {
-            get => _startTime;
+            get => base.StartTimeStamp;
             set
             {
                 StartTimeUtc = ConvertToUtcTime(value);
-                _startTime = ConvertToUtcTimeString(value);
+                base.StartTimeStamp = ConvertToUtcTimeString(value);
             }
         }
 
         public new int Threads
         {
-            get => _threads < 1 ? Environment.ProcessorCount : _threads;
-            set => _threads = value < 1 ? Environment.ProcessorCount : value;
+            get => base.Threads < 1 ? Environment.ProcessorCount : base.Threads;
+            set => base.Threads = value < 1 ? Environment.ProcessorCount : value;
         }
 
-        public string Version { get; set; }
+        public string Version { get;} = $"{Process.GetCurrentProcess().MainModule?.FileVersionInfo.FileVersion}";
 
-        protected internal ConfigurationOptions()
+        private bool _defaultConfigLoaded => _defaultConfig != null;
+
+        static ConfigurationOptions()
         {
-            if (!_cmdLineInited)
+            _cmdLineArgs.InitFromCmdLine();
+        }
+
+        public ConfigurationOptions() : this(new string[0])
+        {
+        }
+
+        public ConfigurationOptions(string[] commandlineArguments, bool validate = false)
+        {
+            if (commandlineArguments.Any())
             {
-                _cmdLineInited = true;
-                _cmdLineArgs.CmdLineApp.OnExecute(() => MergeCmdLine());
-                _cmdLineArgs.InitFromCmdLine();
+                _commandlineArguments = commandlineArguments;
             }
 
             _tempPath = FileManager.NormalizePath(Path.GetTempPath() + _workDir);
+
             DateTimeOffset defaultOffset = DateTimeOffset.Now;
             StartTimeUtc = defaultOffset.UtcDateTime.AddHours(DefaultStartTimeHours);
-            _startTime = defaultOffset.AddHours(DefaultStartTimeHours).ToString(DefaultDatePattern);
+            StartTimeStamp = defaultOffset.AddHours(DefaultStartTimeHours).ToString(DefaultDatePattern);
             EndTimeUtc = defaultOffset.UtcDateTime;
-            _endTime = defaultOffset.ToString(DefaultDatePattern);
-            DefaultConfig();
+            EndTimeStamp = defaultOffset.ToString(DefaultDatePattern);
+            LoadDefaultConfig();
+
+            if (validate)
+            {
+                Validate();
+            }
         }
 
         public void CheckReleaseVersion()
@@ -152,7 +177,7 @@ namespace CollectSFData.Common
 
             if (DateTimeOffset.TryParse(timeString, CultureInfo.InvariantCulture, DateTimeStyles.None, out dateTimeOffset))
             {
-                Log.Info($"TimeStamp valid format:input:'{timeString}'");
+                Log.Debug($"TimeStamp valid format:input:'{timeString}'");
                 return dateTimeOffset.UtcDateTime;
             }
 
@@ -173,11 +198,11 @@ namespace CollectSFData.Common
                 dateTime = ConvertToUtcTime(timeString);
                 if (dateTime != DateTime.MinValue)
                 {
-                    timeString = dateTime.ToString("o");
+                    timeString = dateTime.ToString(DefaultDatePattern);
                 }
             }
 
-            Log.Info($"returning:time string:'{timeString}'");
+            Log.Debug($"returning:time string:'{timeString}'");
             return timeString;
         }
 
@@ -219,6 +244,13 @@ namespace CollectSFData.Common
             }
         }
 
+        public ConfigurationOptions GetDefaultConfig()
+        {
+            LoadDefaultConfig();
+            Log.Debug($"exit:", _defaultConfig);
+            return _defaultConfig;
+        }
+
         public bool IsCacheLocationPreConfigured()
         {
             // saving config file with no options will set cache location to %temp% by default
@@ -228,7 +260,7 @@ namespace CollectSFData.Common
 
         public bool IsClientIdConfigured()
         {
-            return AzureClientId?.Length > 0 & (AzureClientSecret?.Length > 0 | AzureClientCertificate?.Length > 0)  & AzureTenantId?.Length > 0;
+            return AzureClientId?.Length > 0 & (AzureClientSecret?.Length > 0 | AzureClientCertificate?.Length > 0) & AzureTenantId?.Length > 0;
         }
 
         public bool IsKustoConfigured()
@@ -310,6 +342,7 @@ namespace CollectSFData.Common
                     case JTokenType.Array:
                         instanceValue = token.Values<string>().ToArray();
                         break;
+
                     case JTokenType.Null:
                         instanceValue = null;
                         break;
@@ -354,29 +387,35 @@ namespace CollectSFData.Common
 
                 SetPropertyValue(instanceProperty, instanceValue);
             }
+
+            SetDefaultConfig(Clone());
         }
 
-        public bool PopulateConfig(string[] args)
+        private bool ProcessArguments()
         {
             try
             {
-                if (args.Length == 0 && !_defaultConfigLoaded && GatherType == FileTypesEnum.unknown.ToString())
+                if (_cmdLineExecuted)
+                {
+                    return true;
+                }
+                else if (_commandlineArguments.Length == 0 && !_defaultConfigLoaded && GatherType == FileTypesEnum.unknown.ToString())
                 {
                     Log.Last(_cmdLineArgs.CmdLineApp.GetHelpText());
                     Log.Last("error: no configuration provided");
                     return false;
                 }
 
-                if (args.Length == 1)
+                if (_commandlineArguments.Length == 1)
                 {
                     // check for help and FTA
-                    if (!args[0].StartsWith("/?") && !args[0].StartsWith("-") && args[0].EndsWith(".json") && File.Exists(args[0]))
+                    if (!_commandlineArguments[0].StartsWith("/?") && !_commandlineArguments[0].StartsWith("-") && _commandlineArguments[0].EndsWith(".json") && File.Exists(_commandlineArguments[0]))
                     {
-                        ConfigurationFile = args[0];
+                        ConfigurationFile = _commandlineArguments[0];
                         MergeConfig(ConfigurationFile);
                         Log.Info($"setting options to {DefaultOptionsFile}", ConsoleColor.Yellow);
                     }
-                    else if (args[0].StartsWith("/?") | args[0].StartsWith("-?") | args[0].StartsWith("--?"))
+                    else if (_commandlineArguments[0].StartsWith("/?") | _commandlineArguments[0].StartsWith("-?") | _commandlineArguments[0].StartsWith("--?"))
                     {
                         Log.Last(_cmdLineArgs.CmdLineApp.GetHelpText());
                         return false;
@@ -384,10 +423,10 @@ namespace CollectSFData.Common
                 }
 
                 // check for name and value pair
-                for (int i = 0; i < args.Length - 1; i++)
+                for (int i = 0; i < _commandlineArguments.Length - 1; i++)
                 {
-                    string name = args[i];
-                    string value = args[++i];
+                    string name = _commandlineArguments[i];
+                    string value = _commandlineArguments[++i];
 
                     if (!Regex.IsMatch($"{name} {value}", "-\\w+ [^-]"))
                     {
@@ -397,7 +436,7 @@ namespace CollectSFData.Common
                     }
                 }
 
-                if (!ParseCmdLine(args))
+                if (!ParseCmdLine(_commandlineArguments))
                 {
                     return false;
                 }
@@ -420,15 +459,8 @@ namespace CollectSFData.Common
                     CheckReleaseVersion();
                     return false;
                 }
-                else if (Validate())
-                {
-                    Log.Info($"options:", Clone());
-                    DisplayStatus();
-                    return true;
-                }
 
-                Log.Warning($"review console output above for errors and warnings. refer to {CodeRepository} for additional information.");
-                return false;
+                return true;
             }
             catch (Exception e)
             {
@@ -457,11 +489,15 @@ namespace CollectSFData.Common
             options.Remove("ConfigurationFile");
             options.Remove("EndTimeUtc");
             options.Remove("Examples");
+            options.Remove("ExePath");
             options.Remove("FileType");
+            options.Remove("IsValid");
+            options.Remove("NeedsValidation");
             options.Remove("SasEndpointInfo");
             options.Remove("SaveConfiguration");
             options.Remove("StartTimeUtc");
             options.Remove("VersionOption");
+            options.Remove("Version");
 
             if (IsKustoConfigured())
             {
@@ -485,27 +521,54 @@ namespace CollectSFData.Common
             return options.ToString();
         }
 
+        public void SetDefaultConfig(ConfigurationOptions configurationOptions)
+        {
+            Log.Debug($"enter:", configurationOptions);
+            _defaultConfig = configurationOptions;
+        }
+
         public bool Validate()
         {
             try
             {
                 bool retval = true;
-                CheckLogFile();
+                NeedsValidation = false;
 
-                retval &= ValidateSasKey();
-                retval &= ValidateFileType();
-                retval &= ValidateTime();
+                if (!ProcessArguments())
+                {
+                    retval = false;
+                }
+                else
+                {
+                    CheckLogFile();
 
-                CheckCache();
-                retval &= ValidateSource();
-                retval &= ValidateDestination();
-                retval &= ValidateAad();
-                return retval;
+                    retval &= ValidateSasKey();
+                    retval &= ValidateFileType();
+                    retval &= ValidateTime();
+
+                    CheckCache();
+                    retval &= ValidateSource();
+                    retval &= ValidateDestination();
+                    retval &= ValidateAad();
+
+                    if (retval)
+                    {
+                        Log.Info($"options:", Clone());
+                        DisplayStatus();
+                    }
+                    else
+                    {
+                        Log.Warning($"review console output above for errors and warnings. refer to {CodeRepository} for additional information.");
+                    }
+                }
+
+                SaveConfigFile();
+                return IsValid = retval;
             }
             catch (Exception e)
             {
                 Log.Exception($"validate:exception:{e}");
-                return false;
+                return IsValid = false;
             }
         }
 
@@ -688,15 +751,15 @@ namespace CollectSFData.Common
             Log.Info("enter");
             bool retval = true;
 
-            if (string.IsNullOrEmpty(_startTime) != string.IsNullOrEmpty(_endTime))
+            if (string.IsNullOrEmpty(StartTimeStamp) != string.IsNullOrEmpty(EndTimeStamp))
             {
                 Log.Error("supply start and end time");
                 retval = false;
             }
 
-            if (!string.IsNullOrEmpty(_startTime) & !string.IsNullOrEmpty(_endTime))
+            if (!string.IsNullOrEmpty(StartTimeStamp) & !string.IsNullOrEmpty(EndTimeStamp))
             {
-                if (ConvertToUtcTime(_startTime) == DateTime.MinValue | ConvertToUtcTime(_endTime) == DateTime.MinValue)
+                if (ConvertToUtcTime(StartTimeStamp) == DateTime.MinValue | ConvertToUtcTime(EndTimeStamp) == DateTime.MinValue)
                 {
                     retval = false;
                 }
@@ -795,21 +858,34 @@ namespace CollectSFData.Common
             return Regex.Replace(tableName, $"^({FileType}_)", "", RegexOptions.IgnoreCase);
         }
 
-        private bool DefaultConfig()
-        {
-            if (File.Exists(DefaultOptionsFile))
-            {
-                MergeConfig(DefaultOptionsFile);
-                _defaultConfigLoaded = true;
-                return true;
-            }
-
-            return false;
-        }
-
         private PropertyInfo[] InstanceProperties()
         {
             return GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public);
+        }
+
+        private bool LoadDefaultConfig()
+        {
+            if (_defaultConfig == null)
+            {
+                if (File.Exists(DefaultOptionsFile))
+                {
+                    MergeConfig(DefaultOptionsFile);
+                    return true;
+                }
+                else if (File.Exists(ExePath))
+                {
+                    MergeConfig(ExePath);
+                    return true;
+                }
+
+                return false;
+            }
+            else
+            {
+                MergeConfig(_defaultConfig);
+            }
+
+            return true;
         }
 
         private int MergeCmdLine()
@@ -880,6 +956,7 @@ namespace CollectSFData.Common
                     return 0;
                 }
 
+                SetDefaultConfig(Clone());
                 return 1;
             }
             catch (Exception e)
@@ -894,9 +971,15 @@ namespace CollectSFData.Common
             try
             {
                 // can only be called once
-                if (_cmdLineArgs.CmdLineApp.Execute(args) == 0)
+                if (!_cmdLineExecuted & args.Any())
                 {
-                    return false;
+                    _cmdLineExecuted = true;
+                    _cmdLineArgs.CmdLineApp.OnExecute(() => MergeCmdLine());
+
+                    if (_cmdLineArgs.CmdLineApp.Execute(args) == 0)
+                    {
+                        return false;
+                    }
                 }
 
                 return true;
@@ -944,7 +1027,7 @@ namespace CollectSFData.Common
                 try
                 {
                     propertyInstance.SetValue(this, instanceValue);
-                    Log.Highlight($"set:{propertyInstance.Name}:{thisValue} -> {instanceValue}");
+                    Log.Debug($"set:{propertyInstance.Name}:{thisValue} -> {instanceValue}");
                 }
                 catch (Exception e)
                 {
