@@ -1,6 +1,6 @@
 .create-or-alter function with (docstring = "function to create Applications TableView view for sftable", folder = "sftable")
-    TableViewApplications(T:string) {
-        TableView(T)
+    TableViewApplications(T:string, startTimeStamp:datetime=datetime(null), endTimeStamp:datetime=datetime(null)) {
+        TableView(T,startTimeStamp,endTimeStamp)
         | where RelativeUri endswith "Applications"
         | project Timestamp,
             column_ifexists("EventType",""),

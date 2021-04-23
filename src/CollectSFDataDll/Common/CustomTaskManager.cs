@@ -64,7 +64,7 @@ namespace CollectSFData.Common
 
                 if (_taskMonitor.Status != TaskStatus.RanToCompletion)
                 {
-                    Log.Info($"{CallerName} adding task instance. taskmonitor status: {_taskMonitor.Status}", ConsoleColor.White);
+                    Log.Debug($"{CallerName} adding task instance. taskmonitor status: {_taskMonitor.Status}", ConsoleColor.White);
                     _allInstances.Add(this);
                 }
                 else
