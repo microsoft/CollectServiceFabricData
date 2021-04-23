@@ -1,6 +1,6 @@
 .create-or-alter function with (docstring = "function to create Reconfig TableView view for sftable", folder = "sftable")
-    TableViewReconfig(T:string) {
-        TableView(T)
+    TableViewReconfig(T:string, startTimeStamp:datetime=datetime(null), endTimeStamp:datetime=datetime(null)) {
+        TableView(T,startTimeStamp,endTimeStamp)
         | where RelativeUri endswith "Reconfig"
         | project Timestamp,
             column_ifexists("EventType",""),
