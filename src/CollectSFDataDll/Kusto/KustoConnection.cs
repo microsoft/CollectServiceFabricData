@@ -86,7 +86,7 @@ namespace CollectSFData.Kusto
                 int ingestFailureCount = _instance.FileObjects.Count(FileStatus.failed);
                 _instance.TotalErrors += ingestFailureCount;
 
-                Log.Info($"return: total kusto ingests:{_instance.FileObjects.Count(FileStatus.uploading|FileStatus.succeeded)} success:{ingestFailureCount == 0} ");
+                Log.Info($"return: total kusto ingests:{_instance.FileObjects.Count(FileStatus.uploading | FileStatus.succeeded)} success:{ingestFailureCount == 0} ");
                 return ingestFailureCount == 0;
             }
             catch (Exception ex)
@@ -323,7 +323,7 @@ namespace CollectSFData.Kusto
             queue.AddMessage(queueMessage, _messageTimeToLive, null, null, context);
             fileObject.Status = FileStatus.uploading;
             fileObject.MessageId = message.Id;
-            Log.Info($"fileobject uploading FileUri:{fileObject.FileUri} RelativeUri: {fileObject.RelativeUri} message id: {message.Id}");
+            Log.Debug($"fileobject uploading FileUri:{fileObject.FileUri} RelativeUri: {fileObject.RelativeUri} message id: {message.Id}");
         }
 
 
@@ -514,7 +514,7 @@ namespace CollectSFData.Kusto
 
                     IngestStatusSuccessQuery();
                     IngestStatusFailQuery();
-                    Log.Info(_instance.FileObjects.StatusString());
+                    Log.Info(_instance.FileObjects.StatusString(), ConsoleColor.Green);
                 }
             }
 

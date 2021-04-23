@@ -103,7 +103,7 @@ namespace CollectSFData.DataFile
             {
                 if (CompareStatus(status, fileObjectStatus))
                 {
-                    // since all isnt a real status, populate with total count
+                    // since all is not a real status, populate with total count
                     int statusCount = 0;
                     if(status == FileStatus.all)
                     {
@@ -122,7 +122,7 @@ namespace CollectSFData.DataFile
             return display.ToString();
         }
 
-        public new int Count(FileStatus fileObjectStatus = FileStatus.all)
+        public new int Count(FileStatus fileObjectStatus)
         {
             int count = 0;
             foreach (FileStatus status in Enum.GetValues(typeof(FileStatus)))
