@@ -275,8 +275,8 @@ namespace CollectSFData
             Log.Last($"{Instance.TotalFilesSkipped} files skipped.");
             Log.Last($"{Instance.TotalFilesFormatted} files formatted.");
             Log.Last($"{Instance.TotalErrors} errors.");
+            Log.Last($"{Instance.TotalRecords} parsed records.");
             Log.Last($"timed out: {Instance.TimedOut}.");
-            Log.Last($"{Instance.TotalRecords} records.");
             Log.Last($"{Instance.FileObjects.StatusString()}", ConsoleColor.Cyan);
 
             if (Instance.TotalFilesEnumerated > 0)
