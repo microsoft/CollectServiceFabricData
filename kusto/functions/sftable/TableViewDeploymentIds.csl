@@ -1,6 +1,6 @@
 .create-or-alter function with (docstring = "function to create DeploymentIds TableView view for sftable", folder = "sftable")
-    TableViewDeploymentIds(T:string) {
-        TableView(T)
+    TableViewDeploymentIds(T:string, startTimeStamp:datetime=datetime(null), endTimeStamp:datetime=datetime(null)) {
+        TableView(T,startTimeStamp,endTimeStamp)
         | where RelativeUri endswith "DeploymentIds"
         // todo fill in fields
         | project Timestamp,

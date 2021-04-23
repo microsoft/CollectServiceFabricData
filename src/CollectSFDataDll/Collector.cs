@@ -19,9 +19,7 @@ namespace CollectSFData
 
     public class Collector : Constants
     {
-        private string[] _args;
         private bool _checkedVersion;
-        private bool _initialized;
         private int _noProgressCounter = 0;
         private Timer _noProgressTimer;
         private ParallelOptions _parallelConfig;
@@ -32,23 +30,21 @@ namespace CollectSFData
 
         public Instance Instance { get; } = Instance.Singleton();
 
-        public Collector(string[] args, bool isConsole = false)
+        public Collector(bool isConsole = false)
         {
-            _args = args;
             Log.IsConsole = isConsole;
-        }
-
-        public int Collect(ConfigurationOptions configurationOptions)
-        {
-            Instance.Config = configurationOptions;
-            return Collect();
         }
 
         public int Collect()
         {
+            return Collect(new ConfigurationOptions());
+        }
+
+        public int Collect(ConfigurationOptions configurationOptions)
+        {
             try
             {
-                if (!Initialize() || !InitializeKusto() || !InitializeLogAnalytics())
+                if (!Initialize(configurationOptions) || !InitializeKusto() || !InitializeLogAnalytics())
                 {
                     return 1;
                 }
@@ -93,12 +89,16 @@ namespace CollectSFData
             }
             finally
             {
-                CustomTaskManager.Cancel();
-                _noProgressTimer?.Dispose();
-                Log.Close();
-
+                Close();
                 CustomTaskManager.Resume();
             }
+        }
+
+        public void Close()
+        {
+            CustomTaskManager.Cancel();
+            _noProgressTimer?.Dispose();
+            Log.Close();
         }
 
         public string DetermineClusterId()
@@ -138,38 +138,32 @@ namespace CollectSFData
             return clusterId;
         }
 
-        public bool Initialize()
+        public bool Initialize(ConfigurationOptions configurationOptions)
         {
             _noProgressCounter = 0;
             _noProgressTimer = new Timer(NoProgressCallback, null, 0, 60 * 1000);
+            
             Log.Open();
             CustomTaskManager.Resume();
+            _taskManager?.Wait();
+            _taskManager = new CustomTaskManager();
 
-            if (_initialized)
+            Instance.Initialize(configurationOptions);
+            Log.Info($"version: {Config.Version}");
+
+            if((Config.NeedsValidation && !Config.Validate()) | !Config.IsValid)
             {
-                _taskManager?.Wait();
-                _taskManager = new CustomTaskManager();
-                Instance.Initialize();
+                return false;
             }
-            else
-            {
-                if (!Config.PopulateConfig(_args))
-                {
-                    Config.SaveConfigFile();
-                    return false;
-                }
+            
+            _parallelConfig = new ParallelOptions { MaxDegreeOfParallelism = Config.Threads };
 
-                _initialized = true;
+            ServicePointManager.DefaultConnectionLimit = Config.Threads * MaxThreadMultiplier;
+            ServicePointManager.Expect100Continue = true;
+            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
 
-                Log.Info($"version: {Config.Version}");
-                _parallelConfig = new ParallelOptions { MaxDegreeOfParallelism = Config.Threads };
-                ServicePointManager.DefaultConnectionLimit = Config.Threads * MaxThreadMultiplier;
-                ServicePointManager.Expect100Continue = true;
-                ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
-
-                ThreadPool.SetMinThreads(Config.Threads * MinThreadMultiplier, Config.Threads * MinThreadMultiplier);
-                ThreadPool.SetMaxThreads(Config.Threads * MaxThreadMultiplier, Config.Threads * MaxThreadMultiplier);
-            }
+            ThreadPool.SetMinThreads(Config.Threads * MinThreadMultiplier, Config.Threads * MinThreadMultiplier);
+            ThreadPool.SetMaxThreads(Config.Threads * MaxThreadMultiplier, Config.Threads * MaxThreadMultiplier);
 
             return true;
         }
@@ -216,7 +210,7 @@ namespace CollectSFData
                 if (blobMgr.Connect())
                 {
                     string[] azureFiles = Config.FileUris.Where(x => FileTypes.MapFileUriType(x) == FileUriTypesEnum.azureUri).ToArray();
-                    
+
                     if (azureFiles.Any())
                     {
                         blobMgr.DownloadFiles(azureFiles);
@@ -243,11 +237,11 @@ namespace CollectSFData
                 Log.Last($"{DataExplorer}/clusters/{Instance.Kusto.Endpoint.ClusterName}/databases/{Instance.Kusto.Endpoint.DatabaseName}", ConsoleColor.Cyan);
             }
 
-            if (Instance.Kusto.IngestFileObjectsFailed.Any() | Instance.Kusto.IngestFileObjectsPending.Any())
+            if (Instance.FileObjects.Any(FileStatus.failed | FileStatus.uploading))
             {
+                Log.Warning($"adding failed uris to FileUris. use save option to keep list of failed uris.");
                 List<string> ingestList = new List<string>();
-                Instance.Kusto.IngestFileObjectsFailed.ForEach(x => ingestList.Add(x.FileUri));
-                Instance.Kusto.IngestFileObjectsPending.ForEach(x => ingestList.Add(x.FileUri));
+                ingestList.AddRange(Instance.FileObjects.FindAll(FileStatus.failed|FileStatus.uploading).Select(x=> x.FileUri));
                 Config.FileUris = ingestList.ToArray();
             }
         }
@@ -281,8 +275,9 @@ namespace CollectSFData
             Log.Last($"{Instance.TotalFilesSkipped} files skipped.");
             Log.Last($"{Instance.TotalFilesFormatted} files formatted.");
             Log.Last($"{Instance.TotalErrors} errors.");
+            Log.Last($"{Instance.TotalRecords} parsed records.");
             Log.Last($"timed out: {Instance.TimedOut}.");
-            Log.Last($"{Instance.TotalRecords} records.");
+            Log.Last($"{Instance.FileObjects.StatusString()}", ConsoleColor.Cyan);
 
             if (Instance.TotalFilesEnumerated > 0)
             {
@@ -349,8 +344,8 @@ namespace CollectSFData
                 {
                     if (Config.IsKustoConfigured())
                     {
-                        Log.Warning($"kusto ingesting:", Instance.Kusto.IngestFileObjectsPending);
-                        Log.Warning($"kusto failed:", Instance.Kusto.IngestFileObjectsFailed);
+                        Log.Warning($"kusto ingesting:", Instance.FileObjects.FindAll(FileStatus.uploading));
+                        Log.Warning($"kusto failed:", Instance.FileObjects.FindAll(FileStatus.failed));
                     }
 
                     LogSummary();
@@ -374,7 +369,8 @@ namespace CollectSFData
         private void QueueForIngest(FileObject fileObject)
         {
             Log.Debug("enter");
-
+            fileObject.Status = FileStatus.queued;
+            
             if (Config.IsKustoConfigured() | Config.IsLogAnalyticsConfigured())
             {
                 if (Config.IsKustoConfigured())
@@ -429,8 +425,7 @@ namespace CollectSFData
                     Log.Error($"configuration set to upload cache files from 'fileUris' count:{Config.FileUris.Length} but no files found");
                 }
             }
-
-            if(Config.IsCacheLocationPreConfigured())
+            else if (Config.IsCacheLocationPreConfigured())
             {
                 switch (Config.FileType)
                 {
@@ -477,7 +472,9 @@ namespace CollectSFData
 
             foreach (string file in files)
             {
-                FileObject fileObject = new FileObject(file, Config.CacheLocation);
+                FileObject fileObject = new FileObject(file, Config.CacheLocation){ Status = FileStatus.enumerated};
+                Instance.FileObjects.Add(fileObject);
+
                 Log.Info($"adding file: {fileObject.FileUri}", ConsoleColor.Green);
 
                 if (!Config.List)
