@@ -327,6 +327,7 @@ namespace CollectSFData.LogAnalytics
         private bool PostData(FileObject fileObject, bool connectivityCheck = false)
         {
             Log.Debug("enter");
+            fileObject.Status = FileStatus.uploading;
             string jsonBody = Config.UseMemoryStream || connectivityCheck ? fileObject.Stream.ReadToEnd() : File.ReadAllText(fileObject.FileUri);
             fileObject.Stream.Dispose();
             byte[] jsonBytes = Encoding.UTF8.GetBytes(jsonBody);
@@ -359,14 +360,17 @@ namespace CollectSFData.LogAnalytics
 
                 if (_httpClient.Success || (connectivityCheck && _httpClient.StatusCode == HttpStatusCode.BadRequest))
                 {
+                    fileObject.Status = FileStatus.succeeded;
                     return true;
                 }
 
+                fileObject.Status = FileStatus.failed;
                 Log.Error("unsuccessful response:", _httpClient.Response);
                 return false;
             }
             catch (Exception e)
             {
+                fileObject.Status = FileStatus.failed;
                 Log.Exception($"post exception:{e}");
                 return false;
             }
