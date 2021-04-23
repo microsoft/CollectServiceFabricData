@@ -4,8 +4,7 @@
 // ------------------------------------------------------------
 
 using CollectSFData.Common;
-using Microsoft.Azure.KeyVault.Models;
-using Microsoft.Azure.KeyVault;
+using Azure.Security.KeyVault;
 using Microsoft.Azure.Services.AppAuthentication;
 using Microsoft.Identity.Client;
 using Newtonsoft.Json;
