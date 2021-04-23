@@ -98,7 +98,8 @@ namespace CollectSFData.DataFile
         public string StatusString(FileStatus fileObjectStatus = FileStatus.all)
         {
             StringBuilder display = new StringBuilder();
-
+            display.Append("FileObjects:status:");
+            
             foreach (FileStatus status in Enum.GetValues(typeof(FileStatus)))
             {
                 if (CompareStatus(status, fileObjectStatus))
