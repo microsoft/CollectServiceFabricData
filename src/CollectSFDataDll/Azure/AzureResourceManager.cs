@@ -4,8 +4,8 @@
 // ------------------------------------------------------------
 
 using CollectSFData.Common;
-using Azure.Security.KeyVault;
-using Microsoft.Azure.Services.AppAuthentication;
+using Azure.Security.KeyVault.Secrets;
+using Azure.Identity;
 using Microsoft.Identity.Client;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -302,11 +302,12 @@ namespace CollectSFData.Azure
             return true;
         }
 
-        public X509Certificate2 GetCertificateFromKeyvault(string keyvaultResourceId, string secretName /*Config.AzureClientCertificate*/)
+        public X509Certificate2 GetCertificateFromKeyvault(string keyvaultResourceId /*Config.AzureClientCertificate*/, string secretName /*Config.AzureClientSecret*/)
         {
-            AzureServiceTokenProvider azureServiceTokenProvider = new AzureServiceTokenProvider();
-            KeyVaultClient client = new KeyVaultClient(new KeyVaultClient.AuthenticationCallback(azureServiceTokenProvider.KeyVaultTokenCallback));
-            SecretBundle secret = client.GetSecretAsync(keyvaultResourceId, secretName).Result;
+            //AzureServiceTokenProvider azureServiceTokenProvider = new AzureServiceTokenProvider();
+            // get latest secret value
+            SecretClient client = new SecretClient(new Uri(keyvaultResourceId), new DefaultAzureCredential());
+            KeyVaultSecret secret = client.GetSecretAsync(secretName).Result;
 
             byte[] privateKeyBytes = Convert.FromBase64String(secret.ToString());
             X509Certificate2 certificate = new X509Certificate2(privateKeyBytes, string.Empty);
