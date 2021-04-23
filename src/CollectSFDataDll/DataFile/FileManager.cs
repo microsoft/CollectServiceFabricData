@@ -60,7 +60,6 @@ namespace CollectSFData.DataFile
         public FileObjectCollection ProcessFile(FileObject fileObject)
         {
             Log.Debug($"enter:{fileObject.FileUri}");
-            fileObject.Status = FileStatus.formatting;
             
             if (fileObject.DownloadAction != null)
             {
@@ -76,6 +75,8 @@ namespace CollectSFData.DataFile
                 Log.Error(error);
                 throw new ArgumentException(error);
             }
+            
+            fileObject.Status = FileStatus.formatting;
 
             if (!fileObject.FileType.Equals(FileTypesEnum.any))
             {
