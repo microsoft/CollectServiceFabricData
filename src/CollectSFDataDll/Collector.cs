@@ -283,8 +283,8 @@ namespace CollectSFData
             {
                 if (Config.FileType != FileTypesEnum.table)
                 {
-                    DateTime discoveredMinDateTime = new DateTime(DiscoveredMinDateTicks);
-                    DateTime discoveredMaxDateTime = new DateTime(DiscoveredMaxDateTicks);
+                    DateTime discoveredMinDateTime = new DateTime(Instance.DiscoveredMinDateTicks);
+                    DateTime discoveredMaxDateTime = new DateTime(Instance.DiscoveredMaxDateTicks);
 
                     Log.Last($"discovered time range: {discoveredMinDateTime.ToString("o")} - {discoveredMaxDateTime.ToString("o")}", ConsoleColor.Green);
 
