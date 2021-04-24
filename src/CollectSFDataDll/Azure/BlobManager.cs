@@ -352,8 +352,8 @@ namespace CollectSFData.Azure
         {
             int parentId = Thread.CurrentThread.ManagedThreadId;
             Log.Debug($"enter. current id:{parentId}. results count: {blobResults.Count()}");
-            long segmentMinDateTicks = DiscoveredMinDateTicks;
-            long segmentMaxDateTicks = DiscoveredMaxDateTicks;
+            long segmentMinDateTicks = _instance.DiscoveredMinDateTicks;
+            long segmentMaxDateTicks = _instance.DiscoveredMaxDateTicks;
 
             foreach (IListBlobItem blob in blobResults)
             {
@@ -485,7 +485,7 @@ namespace CollectSFData.Azure
                     Log.Debug($"set new discovered min time range ticks: {new DateTime(ticks).ToString("o")}");
                     lock (_dateTimeMinLock)
                     {
-                        segmentMinDateTicks = DiscoveredMinDateTicks = Math.Min(DiscoveredMinDateTicks, ticks);
+                        segmentMinDateTicks = _instance.DiscoveredMinDateTicks = Math.Min(_instance.DiscoveredMinDateTicks, ticks);
                     }
                 }
 
@@ -494,7 +494,7 @@ namespace CollectSFData.Azure
                     Log.Debug($"set new discovered max time range ticks: {new DateTime(ticks).ToString("o")}");
                     lock (_dateTimeMaxLock)
                     {
-                        segmentMaxDateTicks = DiscoveredMaxDateTicks = Math.Max(DiscoveredMaxDateTicks, ticks);
+                        segmentMaxDateTicks = _instance.DiscoveredMaxDateTicks = Math.Max(_instance.DiscoveredMaxDateTicks, ticks);
                     }
                 }
             }
