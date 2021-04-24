@@ -176,7 +176,7 @@ namespace CollectSFData
 
             if (!Config.FileType.Equals(FileTypesEnum.any) && !Config.FileType.Equals(FileTypesEnum.table))
             {
-                containerPrefix = FileTypes.MapFileTypeUriPrefix(Config.FileType);
+                containerPrefix = FileTypes.MapFileTypeRelativeUriPrefix(Config.FileType);
 
                 if (!string.IsNullOrEmpty(clusterId))
                 {
@@ -209,7 +209,7 @@ namespace CollectSFData
 
                 if (blobMgr.Connect())
                 {
-                    string[] azureFiles = Config.FileUris.Where(x => FileTypes.MapFileUriType(x) == FileUriTypesEnum.azureUri).ToArray();
+                    string[] azureFiles = Config.FileUris.Where(x => FileTypes.MapFileUriType(x) == FileUriTypesEnum.azureStorageUri).ToArray();
 
                     if (azureFiles.Any())
                     {
