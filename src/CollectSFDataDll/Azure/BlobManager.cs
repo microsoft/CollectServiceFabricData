@@ -136,7 +136,7 @@ namespace CollectSFData.Azure
             {
                 try
                 {
-                    if(FileTypes.MapFileUriType(uri) != FileUriTypesEnum.azureUri)
+                    if(FileTypes.MapFileUriType(uri) != FileUriTypesEnum.azureStorageUri)
                     {
                         Log.Warning($"not blob storage path. skipping:{uri}");
                         continue;
