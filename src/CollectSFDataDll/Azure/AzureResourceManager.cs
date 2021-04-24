@@ -5,7 +5,9 @@
 
 using CollectSFData.Common;
 using CollectSFData.DataFile;
+using Azure.Core;
 using Azure.Security.KeyVault.Secrets;
+using Azure.Security.KeyVault.Certificates;
 using Azure.Identity;
 using Microsoft.Identity.Client;
 using Newtonsoft.Json;
@@ -69,7 +71,7 @@ namespace CollectSFData.Azure
 
             if (!NeedsAuthentication())
             {
-                return false;
+                return true;
             }
 
             try
@@ -370,16 +372,63 @@ namespace CollectSFData.Azure
 
         public X509Certificate2 ReadCertificateFromKeyvault(string keyvaultResourceId /*Config.AzureClientCertificate*/, string secretName /*Config.AzureClientSecret*/)
         {
+            // connecting to kv requires system or user assigned managed identity
+            // system is best practice so try first without passing clientid
             Log.Info($"enter:{keyvaultResourceId} {secretName}");
-            // get latest secret value
-            SecretClient client = new SecretClient(new Uri(keyvaultResourceId), new DefaultAzureCredential());
-            KeyVaultSecret secret = client.GetSecretAsync(secretName).Result;
-            //CryptographyClient client = new CryptographyClient(new Uri(keyvaultResourceId), new DefaultAzureCredential());
-            //var secret = client.
-            byte[] privateKeyBytes = Convert.FromBase64String(secret.ToString());
-            X509Certificate2 certificate = new X509Certificate2(privateKeyBytes, string.Empty);
+            X509Certificate2 certificate = null;
+            string managedClientId = string.Empty;
 
-            return certificate;
+            while (true)
+            {
+                try
+                {
+                    SecretClient client = new SecretClient(new Uri(keyvaultResourceId), GetDefaultAzureCredentials(managedClientId));
+                    KeyVaultSecret secret = client.GetSecret(secretName);
+
+                    byte[] privateKeyBytes = Convert.FromBase64String(secret.Value);
+                    certificate = new X509Certificate2(privateKeyBytes, string.Empty);
+                    return certificate;
+                }
+                catch (Exception e)
+                {
+                    if (!string.IsNullOrEmpty(Config.AzureClientId) && string.IsNullOrEmpty(managedClientId))
+                    {
+                        Log.Debug($"{e}");
+                        managedClientId = Config.AzureClientId;
+                    }
+                    else
+                    {
+                        Log.Exception($"{e}");
+                        return certificate;
+                    }
+                }
+            }
+        }
+
+        private DefaultAzureCredential GetDefaultAzureCredentials(string managedClientId = null)
+        {
+            DefaultAzureCredentialOptions credentialOptions = new DefaultAzureCredentialOptions()
+            {
+                Diagnostics = {
+                        ApplicationId = ApplicationName,
+                        IsDistributedTracingEnabled = true,
+                        IsLoggingContentEnabled = true,
+                        IsLoggingEnabled = true,
+                        LoggedHeaderNames = {
+                            "x-ms-request-id"
+                        },
+                        LoggedQueryParameters = {
+                            "api-version"
+                        }
+                    }
+            };
+
+            credentialOptions.InteractiveBrowserTenantId = Config.AzureTenantId;
+            credentialOptions.ManagedIdentityClientId = managedClientId;
+            DefaultAzureCredential defaultCredential = new DefaultAzureCredential(credentialOptions);
+
+            Log.Info($"returning defaultCredential:", defaultCredential);
+            return defaultCredential;
         }
 
         public void Reauthenticate(object state = null)
