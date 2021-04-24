@@ -199,7 +199,7 @@ namespace CollectSFData.Azure
                     ClientId = Config.AzureClientId,
                     RedirectUri = resource,
                     TenantId = Config.AzureTenantId,
-                    ClientName = Config.AzureClientId
+                    ClientName = Constants.ApplicationName
                 })
                 .WithAuthority(AzureCloudInstance.AzurePublic, Config.AzureTenantId)
                 .WithLogging(MsalLoggerCallback, LogLevel.Verbose, true, true)
@@ -260,8 +260,15 @@ namespace CollectSFData.Azure
             }
             else
             {
+                IAccount hint = _publicClientApp.GetAccountsAsync().Result.FirstOrDefault();
+ 
+                if (hint == null && !TokenCacheHelper.HasTokens)
+                {
+                    throw new MsalUiRequiredException("unable to acquire token silently.", "no hint and no cached tokens.");
+                }
+
                 AuthenticationResult = _publicClientApp
-                    .AcquireTokenSilent(_defaultScope, _publicClientApp.GetAccountsAsync().Result.FirstOrDefault())
+                    .AcquireTokenSilent(_defaultScope, hint)
                     .ExecuteAsync().Result;
             }
 
