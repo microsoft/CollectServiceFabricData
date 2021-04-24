@@ -14,6 +14,8 @@ namespace CollectSFData.Azure
     public static class TokenCacheHelper
     {
         public static readonly string CacheFilePath;
+
+        public static bool HasTokens{get;set;}
         private static readonly object _fileLock = new object();
         private static string _appDataFolder;
         private static string _friendlyName;
@@ -47,6 +49,8 @@ namespace CollectSFData.Azure
                     {
                         File.WriteAllBytes(CacheFilePath,
                             ProtectedData.Protect(args.TokenCache.SerializeMsalV3(), null, DataProtectionScope.CurrentUser));
+                        HasTokens = args.HasTokens;
+                        Log.Debug($"tokencache:after:",args);
                     }
                 }
             }
@@ -65,6 +69,8 @@ namespace CollectSFData.Azure
                     args.TokenCache.DeserializeMsalV3(File.Exists(CacheFilePath)
                             ? ProtectedData.Unprotect(File.ReadAllBytes(CacheFilePath), null, DataProtectionScope.CurrentUser)
                             : null);
+                    HasTokens = args.HasTokens;
+                    Log.Debug($"tokencache:before:",args);
                 }
             }
             catch
