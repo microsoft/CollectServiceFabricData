@@ -51,64 +51,15 @@ namespace CollectSFData.DataFile
     public enum FileUriTypesEnum
     {
         unknown,
-        azureUri,
+        azureStorageUri,
         fileUri,
-        httpUri
+        httpUri,
+        azureKeyvaultUri
     }
 
     public static class FileTypes
     {
         private static readonly string[] _fileDataTypes = Enum.GetNames(typeof(FileDataTypesEnum));
-
-        public static FileDataTypesEnum MapFileDataTypeUri(string fileUri)
-        {
-            FileDataTypesEnum fileDataType = FileDataTypesEnum.unknown;
-
-            bool found = false;
-
-            foreach (string dataType in _fileDataTypes)
-            {
-                string dataTypePattern = $@"(\.|_)(?<fileType>{dataType})s?(\.|_|-)";
-
-                if (Regex.IsMatch(fileUri, dataTypePattern, RegexOptions.IgnoreCase))
-                {
-                    Match match = Regex.Match(fileUri, dataTypePattern, RegexOptions.IgnoreCase);
-                    fileDataType = (FileDataTypesEnum)Enum.Parse(typeof(FileDataTypesEnum), dataType);
-                    found = true;
-                    break;
-                }
-            }
-
-            if (!found)
-            {
-                foreach (string dataType in _fileDataTypes)
-                {
-                    string dataTypePattern = $@"(\\|/)(?<fileType>{dataType})s?(\\|/|-|_)";
-
-                    if (Regex.IsMatch(fileUri, dataTypePattern, RegexOptions.IgnoreCase))
-                    {
-                        Match match = Regex.Match(fileUri, dataTypePattern, RegexOptions.IgnoreCase);
-                        fileDataType = (FileDataTypesEnum)Enum.Parse(typeof(FileDataTypesEnum), dataType);
-                        found = true;
-                        break;
-                    }
-                }
-            }
-
-            if (!found)
-            {
-                // try by just file extension
-                fileDataType = MapFileDataTypeExtension(fileUri);
-            }
-
-            if (fileDataType == FileDataTypesEnum.unknown)
-            {
-                Log.Warning($"unable to determine datatypepattern:{fileUri} using values:{string.Join(",", _fileDataTypes)}");
-            }
-
-            Log.Debug($"returning FileDataTypesEnum.{fileDataType.ToString()}");
-            return fileDataType;
-        }
 
         public static FileDataTypesEnum MapFileDataTypeExtension(string fileUri)
         {
@@ -186,6 +137,91 @@ namespace CollectSFData.DataFile
             return extension;
         }
 
+        public static FileDataTypesEnum MapFileDataTypeUri(string fileUri)
+        {
+            FileDataTypesEnum fileDataType = FileDataTypesEnum.unknown;
+
+            bool found = false;
+
+            foreach (string dataType in _fileDataTypes)
+            {
+                string dataTypePattern = $@"(\.|_)(?<fileType>{dataType})s?(\.|_|-)";
+
+                if (Regex.IsMatch(fileUri, dataTypePattern, RegexOptions.IgnoreCase))
+                {
+                    Match match = Regex.Match(fileUri, dataTypePattern, RegexOptions.IgnoreCase);
+                    fileDataType = (FileDataTypesEnum)Enum.Parse(typeof(FileDataTypesEnum), dataType);
+                    found = true;
+                    break;
+                }
+            }
+
+            if (!found)
+            {
+                foreach (string dataType in _fileDataTypes)
+                {
+                    string dataTypePattern = $@"(\\|/)(?<fileType>{dataType})s?(\\|/|-|_)";
+
+                    if (Regex.IsMatch(fileUri, dataTypePattern, RegexOptions.IgnoreCase))
+                    {
+                        Match match = Regex.Match(fileUri, dataTypePattern, RegexOptions.IgnoreCase);
+                        fileDataType = (FileDataTypesEnum)Enum.Parse(typeof(FileDataTypesEnum), dataType);
+                        found = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!found)
+            {
+                // try by just file extension
+                fileDataType = MapFileDataTypeExtension(fileUri);
+            }
+
+            if (fileDataType == FileDataTypesEnum.unknown)
+            {
+                Log.Warning($"unable to determine datatypepattern:{fileUri} using values:{string.Join(",", _fileDataTypes)}");
+            }
+
+            Log.Debug($"returning FileDataTypesEnum.{fileDataType.ToString()}");
+            return fileDataType;
+        }
+
+        public static string MapFileTypeRelativeUriPrefix(FileTypesEnum fileType)
+        {
+            string knownPrefix = string.Empty;
+
+            switch (fileType)
+            {
+                case FileTypesEnum.any:
+                    knownPrefix = FileTypesKnownUrisPrefix.any;
+                    Log.Warning($"returning FileTypesKnownUrisPrefix.{knownPrefix}");
+                    break;
+
+                case FileTypesEnum.counter:
+                    knownPrefix = FileTypesKnownUrisPrefix.fabriccounter;
+                    break;
+
+                case FileTypesEnum.exception:
+                    knownPrefix = FileTypesKnownUrisPrefix.fabriccrashdump;
+                    break;
+
+                case FileTypesEnum.setup:
+                case FileTypesEnum.table:
+                case FileTypesEnum.trace:
+                    knownPrefix = FileTypesKnownUrisPrefix.fabriclog;
+                    break;
+
+                default:
+                    knownPrefix = FileTypesKnownUrisPrefix.unknown;
+                    Log.Warning($"returning FileTypesKnownUrisPrefix.{knownPrefix}");
+                    break;
+            }
+
+            Log.Debug($"returning FileTypesKnownUrisPrefix.{knownPrefix}");
+            return knownPrefix;
+        }
+
         public static FileTypesEnum MapFileTypeUri(string fileUri)
         {
             FileTypesEnum fileTypesEnum = FileTypesEnum.unknown;
@@ -248,51 +284,26 @@ namespace CollectSFData.DataFile
 
                 if (fileUri.ToLower().Contains(Constants.AzureStorageSuffix))
                 {
-                    fileUriTypesEnum = FileUriTypesEnum.azureUri;
+                    fileUriTypesEnum = FileUriTypesEnum.azureStorageUri;
+                }
+
+                if (fileUri.ToLower().Contains(Constants.AzureKeyvaultSuffix))
+                {
+                    fileUriTypesEnum = FileUriTypesEnum.azureKeyvaultUri;
                 }
             }
             else
             {
-                fileUriTypesEnum = FileUriTypesEnum.fileUri;
+                if (fileUri.IndexOfAny(Path.GetInvalidPathChars()) == 0
+                    && fileUri.IndexOfAny(Path.GetInvalidFileNameChars()) == 0
+                    && Path.GetPathRoot(fileUri).Length > 0 | fileUri.StartsWith("."))
+                {
+                    fileUriTypesEnum = FileUriTypesEnum.fileUri;
+                }
             }
 
             Log.Debug($"returning {fileUriTypesEnum}");
             return fileUriTypesEnum;
-        }
-
-        public static string MapFileTypeUriPrefix(FileTypesEnum fileType)
-        {
-            string knownPrefix = string.Empty;
-
-            switch (fileType)
-            {
-                case FileTypesEnum.any:
-                    knownPrefix = FileTypesKnownUrisPrefix.any;
-                    Log.Warning($"returning FileTypesKnownUrisPrefix.{knownPrefix}");
-                    break;
-
-                case FileTypesEnum.counter:
-                    knownPrefix = FileTypesKnownUrisPrefix.fabriccounter;
-                    break;
-
-                case FileTypesEnum.exception:
-                    knownPrefix = FileTypesKnownUrisPrefix.fabriccrashdump;
-                    break;
-
-                case FileTypesEnum.setup:
-                case FileTypesEnum.table:
-                case FileTypesEnum.trace:
-                    knownPrefix = FileTypesKnownUrisPrefix.fabriclog;
-                    break;
-
-                default:
-                    knownPrefix = FileTypesKnownUrisPrefix.unknown;
-                    Log.Warning($"returning FileTypesKnownUrisPrefix.{knownPrefix}");
-                    break;
-            }
-
-            Log.Debug($"returning FileTypesKnownUrisPrefix.{knownPrefix}");
-            return knownPrefix;
         }
 
         public static FileExtensionTypesEnum MapKnownFileExtension(string fileUri)

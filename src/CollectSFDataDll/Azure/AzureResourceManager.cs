@@ -4,6 +4,7 @@
 // ------------------------------------------------------------
 
 using CollectSFData.Common;
+using CollectSFData.DataFile;
 using Azure.Security.KeyVault.Secrets;
 using Azure.Identity;
 using Microsoft.Identity.Client;
@@ -16,6 +17,7 @@ using System.Net.Http;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Text;
 
 namespace CollectSFData.Azure
 {
@@ -65,18 +67,9 @@ namespace CollectSFData.Azure
             Log.Debug("azure ad:enter");
             _resource = resource;
 
-            if (_tokenExpirationHalfLife > DateTime.Now)
+            if (!NeedsAuthentication())
             {
-                Log.Debug("token still valid");
                 return false;
-            }
-            else if (!IsAuthenticated)
-            {
-                Log.Info("authenticating to azure", ConsoleColor.Green);
-            }
-            else
-            {
-                Log.Warning($"refreshing aad token. token expiration half life: {_tokenExpirationHalfLife}");
             }
 
             try
@@ -197,7 +190,7 @@ namespace CollectSFData.Azure
 
         public void CreateConfidentialClient(string resource, string clientCertificate)
         {
-            X509Certificate2 certificate = ReadCertificate(clientCertificate);
+            X509Certificate2 certificate = GetClientCertificate(clientCertificate);
             _confidentialClientApp = ConfidentialClientApplicationBuilder
                 .CreateWithApplicationOptions(new ConfidentialClientApplicationOptions
                 {
@@ -302,19 +295,6 @@ namespace CollectSFData.Azure
             return true;
         }
 
-        public X509Certificate2 GetCertificateFromKeyvault(string keyvaultResourceId /*Config.AzureClientCertificate*/, string secretName /*Config.AzureClientSecret*/)
-        {
-            //AzureServiceTokenProvider azureServiceTokenProvider = new AzureServiceTokenProvider();
-            // get latest secret value
-            SecretClient client = new SecretClient(new Uri(keyvaultResourceId), new DefaultAzureCredential());
-            KeyVaultSecret secret = client.GetSecretAsync(secretName).Result;
-
-            byte[] privateKeyBytes = Convert.FromBase64String(secret.ToString());
-            X509Certificate2 certificate = new X509Certificate2(privateKeyBytes, string.Empty);
-
-            return certificate;
-        }
-
         public Task MsalDeviceCodeCallback(DeviceCodeResult arg)
         {
             Log.Highlight($"device code info:", arg);
@@ -386,6 +366,20 @@ namespace CollectSFData.Azure
             Log.Error($"unable to provision {resourceId}");
             _httpClient.Success = false;
             return _httpClient;
+        }
+
+        public X509Certificate2 ReadCertificateFromKeyvault(string keyvaultResourceId /*Config.AzureClientCertificate*/, string secretName /*Config.AzureClientSecret*/)
+        {
+            Log.Info($"enter:{keyvaultResourceId} {secretName}");
+            // get latest secret value
+            SecretClient client = new SecretClient(new Uri(keyvaultResourceId), new DefaultAzureCredential());
+            KeyVaultSecret secret = client.GetSecretAsync(secretName).Result;
+            //CryptographyClient client = new CryptographyClient(new Uri(keyvaultResourceId), new DefaultAzureCredential());
+            //var secret = client.
+            byte[] privateKeyBytes = Convert.FromBase64String(secret.ToString());
+            X509Certificate2 certificate = new X509Certificate2(privateKeyBytes, string.Empty);
+
+            return certificate;
         }
 
         public void Reauthenticate(object state = null)
@@ -480,18 +474,116 @@ namespace CollectSFData.Azure
             }
         }
 
-        private X509Certificate2 ReadCertificate(string certificateId)
+        private X509Certificate2 GetClientCertificate(string clientCertificate)
         {
-            Log.Info("enter");
             X509Certificate2 certificate = null;
-            certificate = ReadCertificateFromStore(certificateId);
+
+            switch (FileTypes.MapFileUriType(clientCertificate))
+            {
+                case FileUriTypesEnum.azureKeyvaultUri:
+                    certificate = ReadCertificateFromKeyvault(clientCertificate, Config.AzureClientSecret);
+                    break;
+
+                case FileUriTypesEnum.fileUri:
+                    certificate = ReadCertificateFromFile(clientCertificate);
+                    break;
+
+                case FileUriTypesEnum.unknown:
+                    certificate = ReadCertificate(clientCertificate);
+                    break;
+
+                default:
+                    break;
+            }
 
             if (certificate == null)
             {
-                certificate = ReadCertificateFromStore(certificateId, StoreName.My, StoreLocation.LocalMachine);
+                Log.Error($"certificate string empty for clientcertificate:{clientCertificate}");
             }
 
-            Log.Info("exit");
+            Log.Info($"returning certificate string:{certificate} for clientcertificate:{clientCertificate}");
+            return certificate;
+        }
+
+        private bool NeedsAuthentication()
+        {
+            if (_tokenExpirationHalfLife > DateTime.Now)
+            {
+                Log.Debug("token still valid");
+                return false;
+            }
+            else if (!IsAuthenticated)
+            {
+                Log.Info("authenticating to azure", ConsoleColor.Green);
+            }
+            else
+            {
+                Log.Warning($"refreshing aad token. token expiration half life: {_tokenExpirationHalfLife}");
+            }
+
+            return true;
+        }
+
+        private X509Certificate2 ReadCertificate(string certificateValue)
+        {
+            Log.Info("enter:", certificateValue);
+            X509Certificate2 certificate = null;
+            certificate = ReadCertificateValue(certificateValue);
+
+            if (certificate == null)
+            {
+                certificate = ReadCertificateFromStore(certificateValue);
+            }
+
+            if (certificate == null)
+            {
+                certificate = ReadCertificateFromStore(certificateValue, StoreName.My, StoreLocation.LocalMachine);
+            }
+
+            Log.Info("exit", certificate);
+            return certificate;
+        }
+
+        private X509Certificate2 ReadCertificateFromFile(string certificateFile)
+        {
+            Log.Info("enter:", certificateFile);
+            X509Certificate2 certificate = null;
+
+            if (!string.IsNullOrEmpty(Config.AzureClientSecret))
+            {
+                certificate = new X509Certificate2(certificateFile, Config.AzureClientSecret);
+            }
+            else
+            {
+                certificate = new X509Certificate2(certificateFile);
+            }
+
+            Log.Info("exit", certificate);
+            return certificate;
+        }
+
+        private X509Certificate2 ReadCertificateValue(string certificateValue)
+        {
+            Log.Info("enter:", certificateValue);
+            X509Certificate2 certificate = null;
+
+            try
+            {
+                if (!string.IsNullOrEmpty(Config.AzureClientSecret))
+                {
+                    certificate = new X509Certificate2(Convert.FromBase64String(certificateValue), Config.AzureClientSecret);
+                }
+                else
+                {
+                    certificate = new X509Certificate2(Convert.FromBase64String(certificateValue));
+                }
+            }
+            catch (Exception e)
+            {
+                Log.Exception($"{e}");
+            }
+
+            Log.Info("exit", certificate);
             return certificate;
         }
     }
