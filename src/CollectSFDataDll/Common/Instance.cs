@@ -12,18 +12,20 @@ namespace CollectSFData.Common
 {
     public class Instance : Constants
     {
-        public bool TimedOut;
-        public int TotalErrors;
-        public int TotalFilesConverted;
-        public int TotalFilesDownloaded;
-        public int TotalFilesEnumerated;
-        public int TotalFilesFormatted;
-        public int TotalFilesMatched;
-        public int TotalFilesSkipped;
-        public int TotalRecords;
+        public long DiscoveredMaxDateTicks { get; set; }
+        public long DiscoveredMinDateTicks { get; set; }
+        public bool TimedOut { get; set; }
+        public int TotalErrors { get; set; }
+        public int TotalFilesConverted { get; set; }
+        public int TotalFilesDownloaded { get; set; }
+        public int TotalFilesEnumerated { get; set; }
+        public int TotalFilesFormatted { get; set; }
+        public int TotalFilesMatched { get; set; }
+        public int TotalFilesSkipped { get; set; }
+        public int TotalRecords { get; set; }
         private static readonly Instance _instance = new Instance();
         public FileManager FileMgr { get; set; }
-        public FileObjectCollection FileObjects{get; set;}
+        public FileObjectCollection FileObjects { get; set; }
         public bool IsWindows { get; } = Environment.OSVersion.Platform.Equals(PlatformID.Win32NT);
         public KustoConnection Kusto { get; set; }
         public LogAnalyticsConnection LogAnalytics { get; set; }
@@ -45,8 +47,10 @@ namespace CollectSFData.Common
             {
                 configurationOptions = new ConfigurationOptions();
             }
-            
+
             _instance.Config = configurationOptions;
+            _instance.DiscoveredMaxDateTicks = DateTime.MinValue.Ticks;
+            _instance.DiscoveredMinDateTicks = DateTime.MaxValue.Ticks;
             _instance.FileObjects = new FileObjectCollection();
             _instance.FileMgr = new FileManager();
             _instance.Kusto = new KustoConnection();

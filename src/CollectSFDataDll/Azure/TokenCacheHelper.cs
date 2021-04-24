@@ -20,7 +20,7 @@ namespace CollectSFData.Azure
 
         static TokenCacheHelper()
         {
-            _friendlyName = Path.GetFileNameWithoutExtension(AppDomain.CurrentDomain.FriendlyName);
+            _friendlyName = Path.GetFileNameWithoutExtension(Constants.ApplicationName);
             _appDataFolder = $"{Environment.GetEnvironmentVariable("LOCALAPPDATA")}\\{_friendlyName}";
             CacheFilePath = $"{_appDataFolder}\\{_friendlyName}.msalcache.bin3";
 

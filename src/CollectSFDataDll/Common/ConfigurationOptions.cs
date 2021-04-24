@@ -135,7 +135,7 @@ namespace CollectSFData.Common
             http.DisplayError = false;
 
             Dictionary<string, string> headers = new Dictionary<string, string>();
-            headers.Add("User-Agent", $"{AppDomain.CurrentDomain.FriendlyName}");
+            headers.Add("User-Agent", $"{ApplicationName}");
 
             try
             {
