@@ -7,7 +7,7 @@ param(
     [switch]$clean,
     [switch]$reset,
     [string]$configurationFile = "$env:LOCALAPPDATA\collectsfdata\collectSfDataTestProperties.json", # "$psscriptroot\..\bin\temp\collectSfDataTestProperties.json",
-    [string]$tempDir = "$psscriptroot\..\bin\temp"
+    [string]$tempDir = "$psscriptroot\..\src\bin\temp"
 )
 
 $PSModuleAutoLoadingPreference = 2
@@ -20,7 +20,7 @@ class TestSettings {
     # for file download and gather tests
     [string]$testAzStorageAccount = "collectsfdatatests"
     [string]$testAzClientId = ""
-    [string]$testAzClientSecret = ""
+    [string]$testAzClientCertificate = ""
 
     # for azure cluster deployments
     [string]$adminUserName = $null
@@ -28,7 +28,7 @@ class TestSettings {
       
     # existing collectsfdata variables
     [string]$AzureClientId = $null
-    [string]$AzureCertificate = $null
+    [string]$AzureClientCertificate = $null
     [string]$AzureResourceGroup = $null
     [string]$AzureResourceGroupLocation = $null
     [string]$AzureSubscriptionId = $null
@@ -57,7 +57,7 @@ class TestEnv {
 
     [bool] CheckAzureConfig() {
         $settings = $this.testSettings
-        if (!$settings.AzureClientId -or !$settings.AzureCertificate -or !$settings.AzureResourceGroup -or !$settings.AzureResourceGroupLocation) {
+        if (!$settings.AzureClientId -or !$settings.AzureClientCertificate -or !$settings.AzureResourceGroup -or !$settings.AzureResourceGroupLocation) {
             Write-Warning "azure settings not configured. storage tests may fail"
             return $false
         }
@@ -67,7 +67,7 @@ class TestEnv {
         $credential = new-object -typename System.Management.Automation.PSCredential `
             -argumentlist @(
             $settings.AzureClientId, 
-            ($settings.AzureCertificate | convertto-securestring -Force -AsPlainText)
+            ($settings.AzureClientCertificate | convertto-securestring -Force -AsPlainText)
         )
         #>
 
@@ -86,25 +86,19 @@ class TestEnv {
             import-module Az.Resources #-UseWindowsPowerShell
         }
 
-        # bug Could not load type 'System.Security.Cryptography.SHA256Cng' from assembly 'System.Core, Version=4.0.0.0,
-        # https://github.com/PowerShell/PowerShell/issues/10473
-        # Cng is not in .net core but the az modules havent been updated
-        # possible cause is credential
-        # need cert to use appid
-        #connect-AzAccount -TenantId $settings.AzureTenantId -Credential $credential -ServicePrincipal
-        # https://docs.microsoft.com/en-us/powershell/module/az.accounts/connect-azaccount?view=azps-4.7.0#example-7--connect-using-certificates
-        # .\azure-az-create-aad-application-spn.ps1 -aadDisplayName collectsfdatatestcert -logonType cert
+        $cert = [Security.Cryptography.X509Certificates.X509Certificate2]::new([convert]::FromBase64String($settings.testAzClientCertificate))
+
         write-host "connect-AzAccount -TenantId $($settings.AzureTenantId) `
             -ApplicationId $($settings.testAzClientId) `
             -ServicePrincipal `
-            -CertificateThumbprint $($settings.testAzClientSecret)
+            -CertificateThumbprint $($cert.thumbprint)
         "
         connect-AzAccount -TenantId $settings.AzureTenantId `
             -ApplicationId $settings.testAzClientId `
             -ServicePrincipal `
-            -CertificateThumbprint $settings.testAzClientSecret
+            -CertificateThumbprint $cert.thumbprint
         
-        get-azcontext | fl *
+        get-azcontext | Format-List *
 
         write-host "checking resource group $($settings.AzureResourceGroup)"
         if (!(get-azresourcegroup $settings.AzureResourceGroup -Location $settings.AzureResourceGroupLocation)) {
@@ -148,7 +142,7 @@ class TestEnv {
 
     [bool] CheckKustoConfig() {
         $settings = $this.testSettings
-        if (!$settings.AzureClientId -or !$settings.AzureCertificate -or !$settings.AzureResourceGroup -or !$settings.AzureResourceGroupLocation) {
+        if (!$settings.AzureClientId -or !$settings.AzureClientCertificate -or !$settings.AzureResourceGroup -or !$settings.AzureResourceGroupLocation) {
             Write-Warning "azure settings not configured. kusto tests may fail"
             return $false
         }
