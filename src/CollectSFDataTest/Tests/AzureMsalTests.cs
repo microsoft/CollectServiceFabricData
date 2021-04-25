@@ -76,7 +76,7 @@ namespace CollectSFDataTest
             ProcessOutput results = utils.ExecuteTest((config) =>
             {
                 config.AzureClientId = null;
-                config.AzureCertificate = null;
+                config.AzureClientCertificate = null;
                 config.AzureResourceGroup = null;
                 config.AzureResourceGroupLocation = null;
                 config.AzureSubscriptionId = null;
@@ -126,7 +126,7 @@ namespace CollectSFDataTest
             config.StartTimeStamp = DateTime.MinValue.ToString("o");
             config.EndTimeStamp = DateTime.Now.ToString("o");
             config.AzureClientId = TestUtilities.TestProperties.AzureClientId;
-            config.AzureCertificate = TestUtilities.TestProperties.AzureCertificate;
+            config.AzureClientCertificate = TestUtilities.TestProperties.AzureClientCertificate;
             config.AzureResourceGroup = TestUtilities.TestProperties.AzureResourceGroup;
             config.AzureResourceGroupLocation = TestUtilities.TestProperties.AzureResourceGroupLocation;
             config.AzureSubscriptionId = TestUtilities.TestProperties.AzureSubscriptionId;
