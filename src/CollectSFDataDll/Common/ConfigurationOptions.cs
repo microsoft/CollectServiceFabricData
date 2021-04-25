@@ -260,7 +260,12 @@ namespace CollectSFData.Common
 
         public bool IsClientIdConfigured()
         {
-            return AzureClientId?.Length > 0 & (AzureClientSecret?.Length > 0 | AzureClientCertificate?.Length > 0) & AzureTenantId?.Length > 0;
+            bool configured = (AzureClientId?.Length > 0 & AzureClientSecret?.Length > 0 // app registration and secret 
+                    || AzureClientId?.Length > 0 & AzureClientSecret?.Length > 0 & AzureClientCertificate?.Length > 0 // app registration with keyvault / with optional system managed identity to kv
+                    || AzureClientId?.Length == 0 & AzureClientSecret?.Length > 0 & AzureClientCertificate?.Length > 0 // system managed identity with keyvault
+                    || AzureClientId?.Length > 0 & AzureClientSecret?.Length == 0 & AzureClientCertificate?.Length == 0// user managed identity 
+                    );
+            return configured;
         }
 
         public bool IsKustoConfigured()
