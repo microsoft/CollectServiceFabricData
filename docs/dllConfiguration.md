@@ -8,8 +8,15 @@ To use as an exe, see [configuration](./configuration.md).
 ## Design
 
 CollectSFData is a high performance multi-threaded binary with a custom task scheduler.  
-The 'Instance' state class is a singleton. Collector is reusable by calling Collect() multiple times.  
-Only one instance of Collector should be used concurrently.  
+Using as a dll, Collector() is reusable but only one instance of Collector should be used concurrently.
+
+The 'Collector' class is the main class used to control collection of data.
+The 'ConfigurationOptions' class is used to configure the collection.
+The 'Instance' class is a singleton that contains information and configuration about current collection.
+
+If Collect() succeeds, 0 is returned, if fails return is > 0.
+After Collect() has been called, both Instance and ConfigurationOptions can be used to review results.
+
 
 ## Supported Configurations
 
@@ -17,29 +24,9 @@ The below configurations are currently supported.
 
 ### .Net Framework
 
-#### Windows
-
-.Net Framework 4.6.2+
-
-### .Net Core
-
-#### Windows
-
-.Net Core 3.1+
-.Net 5.0+
-
-#### Windows Container
-
-Supports GatherType 'counter' performance counter logs with option 'UseTx' == true.
-
-.Net Core 3.1+
-.Net 5.0+
-
-#### Linux
-
-Does not support GatherType 'counter' performance counter logs.
-
-.Net Core 3.1+
+.Net Framework 4.6.2
+.Net Framework 4.7.2+
+.Net Core 3.1
 .Net 5.0+
 
 ## Adding NuGet package to project
@@ -55,13 +42,27 @@ In Visual Studio, use 'NuGet Package Manager' to install package.
 
 (todo: see scripts directory)
 
-### **Headless Execution with Client Credentials**
+## Authorization
 
-Use these steps to optionally configure CollectSFData to run headless with client credentials and client certificate. 
+### **Using with Client Credentials for non-interactive execution**
+
+Use these steps to optionally configure CollectSFData to run non-interactively with client credentials and client certificate. 
 
 #### **Configuration of Azure Active Directory App Registration**
 
+#### **Configuration of System Managed Identity**
+
+#### **Configuration of User Managed Identity**
+
 #### **Configuration of Client Certificate**
+
+CollectSFData can use a certificate for authorization to Azure.
+The certificate can be stored in the following locations:
+- in local file
+- in local cert store
+- base64 string
+- keyvault
+
 
 ## Implementing Collector
 
