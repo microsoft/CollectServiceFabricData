@@ -48,7 +48,7 @@ namespace CollectSFDataTest
             utils.ConfigurationOptions.StartTimeStamp = DateTime.MinValue.ToString("o");
             utils.ConfigurationOptions.EndTimeStamp = DateTime.Now.ToString("o");
             utils.ConfigurationOptions.AzureClientId = TestUtilities.TestProperties.AzureClientId;
-            utils.ConfigurationOptions.AzureClientSecret = TestUtilities.TestProperties.AzureClientSecret;
+            utils.ConfigurationOptions.AzureClientCertificate = TestUtilities.TestProperties.AzureClientCertificate;
             utils.ConfigurationOptions.AzureResourceGroup = TestUtilities.TestProperties.AzureResourceGroup;
             utils.ConfigurationOptions.AzureResourceGroupLocation = TestUtilities.TestProperties.AzureResourceGroupLocation;
             utils.ConfigurationOptions.AzureSubscriptionId = TestUtilities.TestProperties.AzureSubscriptionId;
