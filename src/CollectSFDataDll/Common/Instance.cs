@@ -12,8 +12,15 @@ namespace CollectSFData.Common
 {
     public class Instance : Constants
     {
+        private static readonly Instance _instance = new Instance();
         public long DiscoveredMaxDateTicks { get; set; }
         public long DiscoveredMinDateTicks { get; set; }
+        public FileManager FileMgr { get; set; }
+        public FileObjectCollection FileObjects { get; set; }
+        public bool IsWindows { get; } = Environment.OSVersion.Platform.Equals(PlatformID.Win32NT);
+        public KustoConnection Kusto { get; set; }
+        public LogAnalyticsConnection LogAnalytics { get; set; }
+        public DateTime StartTime { get; set; }
         public bool TimedOut { get; set; }
         public int TotalErrors { get; set; }
         public int TotalFilesConverted { get; set; }
@@ -23,13 +30,6 @@ namespace CollectSFData.Common
         public int TotalFilesMatched { get; set; }
         public int TotalFilesSkipped { get; set; }
         public int TotalRecords { get; set; }
-        private static readonly Instance _instance = new Instance();
-        public FileManager FileMgr { get; set; }
-        public FileObjectCollection FileObjects { get; set; }
-        public bool IsWindows { get; } = Environment.OSVersion.Platform.Equals(PlatformID.Win32NT);
-        public KustoConnection Kusto { get; set; }
-        public LogAnalyticsConnection LogAnalytics { get; set; }
-        public DateTime StartTime { get; set; }
         protected internal ConfigurationOptions Config { get; private set; }
 
         static Instance()

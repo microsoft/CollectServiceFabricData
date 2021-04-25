@@ -60,7 +60,7 @@ namespace CollectSFData.DataFile
         public FileObjectCollection ProcessFile(FileObject fileObject)
         {
             Log.Debug($"enter:{fileObject.FileUri}");
-            
+
             if (fileObject.DownloadAction != null)
             {
                 Log.Info($"downloading:{fileObject.FileUri}", ConsoleColor.Cyan, ConsoleColor.DarkBlue);
@@ -75,7 +75,7 @@ namespace CollectSFData.DataFile
                 Log.Error(error);
                 throw new ArgumentException(error);
             }
-            
+
             fileObject.Status = FileStatus.formatting;
 
             if (!fileObject.FileType.Equals(FileTypesEnum.any))
@@ -460,7 +460,7 @@ namespace CollectSFData.DataFile
                     fileObject.Stream.Set(csvSerializedBytes.ToArray());
                     csvSerializedBytes.Clear();
 
-                    fileObject = new FileObject(record.RelativeUri, fileObject.BaseUri){ Status = FileStatus.formatting};
+                    fileObject = new FileObject(record.RelativeUri, fileObject.BaseUri) { Status = FileStatus.formatting };
                     _instance.FileObjects.Add(fileObject);
 
                     Log.Debug($"csv serialized size: {csvSerializedBytes.Count} file: {fileObject.FileUri}");
@@ -486,7 +486,7 @@ namespace CollectSFData.DataFile
 
             if (fileObject.Length > MaxJsonTransmitBytes)
             {
-                FileObject newFileObject = new FileObject($"{sourceFile}", fileObject.BaseUri){ Status = FileStatus.formatting};
+                FileObject newFileObject = new FileObject($"{sourceFile}", fileObject.BaseUri) { Status = FileStatus.formatting };
                 _instance.FileObjects.Add(newFileObject);
                 int counter = 0;
 
@@ -503,7 +503,7 @@ namespace CollectSFData.DataFile
                     {
                         collection.Add(newFileObject);
                         record.RelativeUri = relativeUri.TrimEnd(JsonExtension.ToCharArray()) + $".{counter}{JsonExtension}";
-                        newFileObject = new FileObject(record.RelativeUri, fileObject.BaseUri){ Status = FileStatus.formatting};
+                        newFileObject = new FileObject(record.RelativeUri, fileObject.BaseUri) { Status = FileStatus.formatting };
                         _instance.FileObjects.Add(newFileObject);
                     }
                 }
