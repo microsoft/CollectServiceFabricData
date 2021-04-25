@@ -9,9 +9,8 @@ namespace CollectSFData.Common
 {
     public class Constants
     {
-        public static readonly string ApplicationName = AppDomain.CurrentDomain.FriendlyName;
         public const string ArmApiVersion = "api-version=2018-05-01";
-        public const string AzureKeyvaultSuffix = "vault.azure.net";
+        public const string AzureKeyVaultSuffix = "vault.azure.net";
         public const string AzureStorageSuffix = "core.windows.net";
         public const string CodeLatestRelease = "https://api.github.com/repos/microsoft/CollectServiceFabricData/releases/latest";
         public const string CodeRepository = "https://github.com/microsoft/CollectServiceFabricData";
@@ -52,5 +51,6 @@ namespace CollectSFData.Common
         public const int WarningTimeSpanHours = 4;
         public const double WarningTimeSpanMinHours = .5F;
         public const string ZipExtension = ".zip";
+        public static readonly string ApplicationName = AppDomain.CurrentDomain.FriendlyName;
     }
 }
