@@ -15,10 +15,10 @@ namespace CollectSFData.Azure
     {
         public static readonly string CacheFilePath;
 
-        public static bool HasTokens{get;set;}
         private static readonly object _fileLock = new object();
         private static string _appDataFolder;
         private static string _friendlyName;
+        public static bool HasTokens { get; set; }
 
         static TokenCacheHelper()
         {
@@ -50,7 +50,7 @@ namespace CollectSFData.Azure
                         File.WriteAllBytes(CacheFilePath,
                             ProtectedData.Protect(args.TokenCache.SerializeMsalV3(), null, DataProtectionScope.CurrentUser));
                         HasTokens = args.HasTokens;
-                        Log.Debug($"tokencache:after:",args);
+                        Log.Debug($"tokencache:after:", args);
                     }
                 }
             }
@@ -70,7 +70,7 @@ namespace CollectSFData.Azure
                             ? ProtectedData.Unprotect(File.ReadAllBytes(CacheFilePath), null, DataProtectionScope.CurrentUser)
                             : null);
                     HasTokens = args.HasTokens;
-                    Log.Debug($"tokencache:before:",args);
+                    Log.Debug($"tokencache:before:", args);
                 }
             }
             catch
