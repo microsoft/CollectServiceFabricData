@@ -133,7 +133,7 @@ the following script will create an app registration using certificate logon for
 
 - .\scripts\azure-az-create-aad-application-spn.ps1 -aadDisplayName collectsfdatatestclient -uri http://collectsfdatatestclient -logontype cert
 
-#### **collectsfdata azureclientid and azureclientsecret setup**
+#### **collectsfdata azureclientid and azureclientcertificate setup**
 
 the following script will create an app registration using certificate thumbprint logon for confidentialclient msal .net authentication
 
@@ -147,7 +147,7 @@ the following script will create an app registration using certificate thumbprin
 
 using output from .\scripts\azure-az-create-aad-application-spn.ps1, enter:
 - AzureClientId
-- AzureClientSecret
+- AzureClientCertificate
 - AzureTenantId
 
 ```json
@@ -158,7 +158,7 @@ using output from .\scripts\azure-az-create-aad-application-spn.ps1, enter:
   "adminUserName": null,
   "adminPassword": null,
   "AzureClientId": "{{azure client id}}",
-  "AzureClientSecret": "{{azure client secret}}",
+  "AzureClientCertificate": "{{azure client certificate}}",
   "AzureResourceGroup": "collectsfdataunittest",
   "AzureResourceGroupLocation": "{{azure resource group location}}",
   "AzureSubscriptionId": "{{azure subscription id}}",

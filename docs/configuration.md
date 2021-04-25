@@ -12,16 +12,22 @@ For help with command line options, type 'collectsfdata.exe -?'.
 
 ```text
 G:\github\Tools\CollectSFData\CollectSFData\bin\x64\Debug>CollectSFData.exe /?
-Usage: CollectSFData.exe [options]
+Usage: CollectSFData [options]
 
 Options:
   -?|--?                             Show help information
   -client|--azureClientId            [string] azure application id / client id for use with authentication
                                          for non interactive to kusto. default is to use integrated AAD auth token
                                          and leave this blank.
-  -secret|--azureClientSecret        [string] azure application id / client id secret for use with authentication
+  -cert|--azureClientCertificate     [string] azure application id / client id certificate for use with authentication
                                          for non interactive to kusto. default is to use integrated AAD auth token
                                          and leave this blank.
+  -vault|--AzureKeyVault             [string] azure base key vault fqdn for use with authentication
+                                         for non interactive to kusto. default is to use integrated AAD auth token
+                                         and leave this blank.
+                                         example: https://clusterkeyvault.vault.azure.net/
+  -vault|--AzureManagedIdentity      [bool] to use managed identity for authorization if configured.
+                                         managed identity can be used to connect just to key vault or for authorization to azure.
   -rg|--azureResourceGroup           [string] azure resource group name / used for log analytics actions.
   -loc|--azureResourceGroupLocation  [string] azure resource group location / used for log analytics actions.
   -sub|--azureSubscriptionId         [string] azure subscription id / used for log analytics actions.
@@ -33,7 +39,7 @@ Options:
   -cf|--containerFilter              [string] string / regex to filter container names
   -dc|--deleteCache                  [bool] delete downloaded blobs from local disk at end of execution.
   -to|--stop                         [DateTime] end time range to collect data to. default is now.
-                                         example: "04/21/2020 09:03:49 -04:00"
+                                         example: "04/25/2021 07:34:52 -04:00"
   -ex|--examples                     [bool] show example commands
   -uris|--fileUris                   [string[]] optional comma separated string array list of files to ingest.
                                          overrides default collection from diagnosticsStore
@@ -87,7 +93,7 @@ Options:
                                          specify file name 'collectsfdata.options.json' to create default configuration file.
   -from|--start                      [DateTime] start time range to collect data from.
                                          default is -2 hours.
-                                         example: "04/21/2020 07:03:49 -04:00"
+                                         example: "04/25/2021 05:34:52 -04:00"
   -t|--threads                       [int] override default number of threads equal to processor count.
   -u|--unique                        [bool] default true to query for fileuri before ingestion to prevent duplicates
   -uf|--uriFilter                    [string] string / regex filter for storage account blob uri.
@@ -138,8 +144,20 @@ To use a default configuration file without having to specify on the command lin
 #### collectsfdata azure arguments (optional)
 
 - **AzureClientId** - optional. guid.
-- **AzureClientSecret** - required if AzureClientId is specified. string.
-- **AzureResourceGroup** - required if using Log Analytics and creating a workspace. string. if populated, value is used for creation of Log Analytics workspace if Log Analytics configuration is set to create.
+- **AzureClientCertificate** - optional. string. used for non-interactive authorization. can be in the following forms:
+  - thumbprint if using local store 'D60F1AA6632B4C2A385879C227387359535B77DE'
+  - path to file name if using local file system 'cluster.pfx'
+  - subject name if using local store 'sfcluster.com'
+  - secret name if using azure key vault 'star-sfcluster-com'
+  - base64 string if adding cert directly into configuration 'MIIV3AIBAzCCF...Jsc='  
+    You can use the following PowerShell script to obtain a Base64-encoded representation of a certificate:
+    ```powershell
+    [convert]::ToBase64String([io.file]::ReadAllBytes("C:\path\to\certificate.pfx"))
+    ```
+- **AzureKeyVault** - optional. can be used to store AzureClientCertificate if being used.
+  - 'https://{{key vault name}}.vault.azure.net/'
+- **AzureResourceGroup** - required if using Log Analytics and creating a workspace. string. if populated, value is used for creation of Log Analytics workspace.
+- **AzureResourceGroupLocation** - required if using Log Analytics and creating a workspace. string. if populated, value is used for location of resource group for creation of Log Analytics workspace.
 - **AzureSubscriptionId** - required if tenant contains multiple subscriptions and using AzureClientId.
 - **AzureTenantId** - optional. guid. used in confidential and public client authentication if *not* using 'common'.
 
@@ -327,7 +345,7 @@ NOTE: for standalone clusters a central diagnostic store must be configured
 {
   "$schema": "https://raw.githubusercontent.com/microsoft/CollectServiceFabricData/master/configurationFiles/collectsfdata.schema.json",
   "AzureClientId": null,
-  "AzureClientSecret": null,
+  "AzureClientCertificate": null,
   "AzureResourceGroup": null,
   "AzureResourceGroupLocation": null,
   "AzureSubscriptionId": null,
