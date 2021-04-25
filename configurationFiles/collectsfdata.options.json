@@ -3,7 +3,7 @@
   "AzureClientId": null,
   "AzureClientCertificate": null,
   "AzureKeyVault": null,
-  "AzureManagedIdentity": null,
+  "AzureManagedIdentity": false,
   "AzureResourceGroup": null,
   "AzureResourceGroupLocation": null,
   "AzureSubscriptionId": null,

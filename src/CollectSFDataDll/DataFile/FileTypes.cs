@@ -54,7 +54,7 @@ namespace CollectSFData.DataFile
         azureStorageUri,
         fileUri,
         httpUri,
-        azureKeyvaultUri
+        azureKeyVaultUri
     }
 
     public static class FileTypes
@@ -287,9 +287,9 @@ namespace CollectSFData.DataFile
                     fileUriTypesEnum = FileUriTypesEnum.azureStorageUri;
                 }
 
-                if (fileUri.ToLower().Contains(Constants.AzureKeyvaultSuffix))
+                if (fileUri.ToLower().Contains(Constants.AzureKeyVaultSuffix))
                 {
-                    fileUriTypesEnum = FileUriTypesEnum.azureKeyvaultUri;
+                    fileUriTypesEnum = FileUriTypesEnum.azureKeyVaultUri;
                 }
             }
             else
