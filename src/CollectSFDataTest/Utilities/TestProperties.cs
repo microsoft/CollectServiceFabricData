@@ -9,8 +9,8 @@ namespace CollectSFDataTest.Utilities
     {
         public string adminPassword;
         public string adminUserName;
-        public string AzureClientId;
         public string AzureClientCertificate;
+        public string AzureClientId;
         public string AzureResourceGroup;
         public string AzureResourceGroupLocation;
         public string AzureSubscriptionId;

@@ -93,6 +93,34 @@ namespace CollectSFData.Azure
             QueueBlobSegmentDownload(blobItems);
         }
 
+        public void DownloadFiles(string[] uris)
+        {
+            List<IListBlobItem> blobItems = new List<IListBlobItem>();
+
+            foreach (string uri in uris)
+            {
+                try
+                {
+                    if (FileTypes.MapFileUriType(uri) != FileUriTypesEnum.azureStorageUri)
+                    {
+                        Log.Warning($"not blob storage path. skipping:{uri}");
+                        continue;
+                    }
+                    else
+                    {
+                        blobItems.Add(_blobClient.GetBlobReferenceFromServer(new Uri(uri)));
+                    }
+                }
+                catch (Exception e)
+                {
+                    Log.Exception($"{e}");
+                }
+            }
+
+            QueueBlobSegmentDownload(blobItems);
+            uris = blobItems.Select(x => x.Uri.ToString()).ToArray();
+        }
+
         private void AddContainerToList(CloudBlobContainer container)
         {
             if (!ContainerList.Any(x => x.Name.Equals(container.Name)))
@@ -126,34 +154,6 @@ namespace CollectSFData.Azure
         {
             Log.Info($"enter:{container.Name}");
             DownloadBlobsFromContainer(container);
-        }
-
-        public void DownloadFiles(string[] uris)
-        {
-            List<IListBlobItem> blobItems = new List<IListBlobItem>();
-
-            foreach (string uri in uris)
-            {
-                try
-                {
-                    if(FileTypes.MapFileUriType(uri) != FileUriTypesEnum.azureStorageUri)
-                    {
-                        Log.Warning($"not blob storage path. skipping:{uri}");
-                        continue;
-                    }
-                    else
-                    {
-                        blobItems.Add(_blobClient.GetBlobReferenceFromServer(new Uri(uri)));
-                    }
-                }
-                catch (Exception e)
-                {
-                    Log.Exception($"{e}");
-                }
-            }
-
-            QueueBlobSegmentDownload(blobItems);
-            uris = blobItems.Select(x => x.Uri.ToString()).ToArray();
         }
 
         private IEnumerable<BlobResultSegment> EnumerateContainerBlobs(CloudBlobContainer cloudBlobContainer)
@@ -453,7 +453,7 @@ namespace CollectSFData.Azure
                             LastModified = lastModified,
                             Status = FileStatus.enumerated
                         };
-                        
+
                         _instance.FileObjects.Add(fileObject);
 
                         Log.Info($"queueing blob with timestamp: {lastModified}\r\n file: {blob.Uri.AbsolutePath}");
