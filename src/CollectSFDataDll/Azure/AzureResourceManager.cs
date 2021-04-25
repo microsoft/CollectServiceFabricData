@@ -3,12 +3,11 @@
 // Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
+using Azure.Core;
+using Azure.Identity;
+using Azure.Security.KeyVault.Secrets;
 using CollectSFData.Common;
 using CollectSFData.DataFile;
-using Azure.Core;
-using Azure.Security.KeyVault.Secrets;
-using Azure.Security.KeyVault.Certificates;
-using Azure.Identity;
 using Microsoft.Identity.Client;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -19,23 +18,19 @@ using System.Net.Http;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Text;
 
 namespace CollectSFData.Azure
 {
     public class AzureResourceManager : Constants
     {
+        private string _baseLogonUri = "https://management.azure.com/";
+        private X509Certificate2 _certificate;
         private string _commonTenantId = "common";
         private IConfidentialClientApplication _confidentialClientApp;
         private List<string> _defaultScope = new List<string>() { ".default" };
-        private string _baseLogonUri = "https://management.azure.com/";
         private string _getSubscriptionRestUri = "https://management.azure.com/subscriptions/{subscriptionId}?api-version=2016-06-01";
         private Http _httpClient = Http.ClientFactory();
         private Instance _instance = Instance.Singleton();
-        private bool _isUserManagedIdentity = false;
-        private bool _isAppRegistration = false;
-        private bool _isSystemManagedIdentity = false;
-
         private string _listSubscriptionsRestUri = "https://management.azure.com/subscriptions?api-version=2016-06-01";
         private IPublicClientApplication _publicClientApp;
         private string _resource;
@@ -51,13 +46,21 @@ namespace CollectSFData.Azure
 
         public static event MsalHandler MsalMessage;
 
-        public AuthenticationResult AuthenticationResult { get; private set; }
+        public AccessToken AuthenticationResultToken { get; private set; } = new AccessToken();
 
         public string BearerToken { get; private set; }
 
         private ConfigurationOptions Config => _instance.Config;
 
+        public bool IsAppRegistration { get; private set; } = false;
+
         public bool IsAuthenticated { get; private set; }
+
+        public bool IsSystemManagedIdentity { get; private set; } = false;
+
+        public bool IsUserManagedIdentity { get; private set; } = false;
+
+        public AccessToken ManagedIdentityToken { get; private set; }
 
         public List<string> Scopes { get; set; } = new List<string>();
 
@@ -66,6 +69,8 @@ namespace CollectSFData.Azure
         public AzureResourceManager()
         {
             Log.Info($"enter: token cache path: {TokenCacheHelper.CacheFilePath}");
+            _certificate = Config.ClientCertificate;
+            SetClientIdentityInfo();
         }
 
         public bool Authenticate(bool throwOnError = false, string resource = ManagementAzureCom)
@@ -178,15 +183,13 @@ namespace CollectSFData.Azure
             }
             else if (Config.IsClientIdConfigured() & !prompt)
             {
-                SetClientIdentityInfo();
-
-                if (!string.IsNullOrEmpty(Config.AzureClientCertificate))
+                if (!string.IsNullOrEmpty(Config.AzureClientCertificate) & !IsUserManagedIdentity)
                 {
                     CreateConfidentialClient(resource, Config.AzureClientCertificate);
                 }
                 else
                 {
-                    CreateConfidentialClient(resource);
+                    ManagedIdentityUserConfidentialClient(resource);
                 }
                 return true;
             }
@@ -215,29 +218,10 @@ namespace CollectSFData.Azure
             AddClientScopes();
         }
 
-        public void CreateConfidentialClient(string resource)
-        {
-            Log.Info($"enter: {resource}");
-            // no prompt with clientid and secret
-            _confidentialClientApp = ConfidentialClientApplicationBuilder
-               .CreateWithApplicationOptions(new ConfidentialClientApplicationOptions
-               {
-                   ClientId = Config.AzureClientId,
-                   RedirectUri = resource,
-                   ClientSecret = Config.AzureClientSecret,
-                   TenantId = Config.AzureTenantId,
-                   ClientName = Config.AzureClientId
-               })
-               .WithAuthority(AzureCloudInstance.AzurePublic, Config.AzureTenantId)
-               .WithLogging(MsalLoggerCallback, LogLevel.Verbose, true, true)
-               .Build();
-
-            AddClientScopes();
-        }
-
         public bool CreatePublicClient(bool prompt, bool deviceLogin = false)
         {
             Log.Info($"enter: {prompt} {deviceLogin}");
+            AuthenticationResult result = null;
             _publicClientApp = PublicClientApplicationBuilder
                 .Create(_wellKnownClientId)
                 .WithAuthority(AzureCloudInstance.AzurePublic, Config.AzureTenantId)
@@ -254,15 +238,11 @@ namespace CollectSFData.Azure
             {
                 if (deviceLogin)
                 {
-                    AuthenticationResult = _publicClientApp
-                         .AcquireTokenWithDeviceCode(_defaultScope, MsalDeviceCodeCallback)
-                         .ExecuteAsync().Result;
+                    result = _publicClientApp.AcquireTokenWithDeviceCode(_defaultScope, MsalDeviceCodeCallback).ExecuteAsync().Result;
                 }
                 else
                 {
-                    AuthenticationResult = _publicClientApp
-                        .AcquireTokenInteractive(_defaultScope)
-                        .ExecuteAsync().Result;
+                    result = _publicClientApp.AcquireTokenInteractive(_defaultScope).ExecuteAsync().Result;
                 }
             }
             else
@@ -274,19 +254,16 @@ namespace CollectSFData.Azure
                     throw new MsalUiRequiredException("unable to acquire token silently.", "no hint and no cached tokens.");
                 }
 
-                AuthenticationResult = _publicClientApp
-                    .AcquireTokenSilent(_defaultScope, hint)
-                    .ExecuteAsync().Result;
+                result = _publicClientApp.AcquireTokenSilent(_defaultScope, hint).ExecuteAsync().Result;
             }
 
             if (Scopes.Count > 0)
             {
                 Log.Info($"adding scopes {Scopes.Count}");
-                AuthenticationResult = _publicClientApp
-                    .AcquireTokenSilent(Scopes, _publicClientApp.GetAccountsAsync().Result.FirstOrDefault())
-                    .ExecuteAsync().Result;
+                result = _publicClientApp.AcquireTokenSilent(Scopes, _publicClientApp.GetAccountsAsync().Result.FirstOrDefault()).ExecuteAsync().Result;
             }
 
+            AuthenticationResultToken = new AccessToken(result.AccessToken, result.ExpiresOn);
             return true;
         }
 
@@ -309,6 +286,28 @@ namespace CollectSFData.Azure
 
             Log.Info($"resourcegroup exists {resourceId}");
             return true;
+        }
+
+        public void ManagedIdentityUserConfidentialClient(string resource)
+        {
+            Log.Info($"enter: {resource}");
+            // no prompt with clientid and secret
+            AuthenticationResultToken = new AccessToken(ManagedIdentityToken.Token, ManagedIdentityToken.ExpiresOn);
+            SetToken();
+            // _confidentialClientApp = ConfidentialClientApplicationBuilder
+            //    .CreateWithApplicationOptions(new ConfidentialClientApplicationOptions
+            //    {
+            //        ClientId = Config.AzureClientId,
+            //        RedirectUri = resource,
+            //        //ClientSecret = Config.AzureKeyVault,
+            //        TenantId = Config.AzureTenantId,
+            //        ClientName = Config.AzureClientId
+            //    })
+            //    .WithAuthority(AzureCloudInstance.AzurePublic, Config.AzureTenantId)
+            //    .WithLogging(MsalLoggerCallback, LogLevel.Verbose, true, true)
+            //    .Build();
+
+            // AddClientScopes();
         }
 
         public Task MsalDeviceCodeCallback(DeviceCodeResult arg)
@@ -384,7 +383,7 @@ namespace CollectSFData.Azure
             return _httpClient;
         }
 
-        public X509Certificate2 ReadCertificateFromKeyvault(string keyvaultResourceId /*Config.AzureClientCertificate*/, string secretName /*Config.AzureClientSecret*/)
+        public X509Certificate2 ReadCertificateFromKeyvault(string keyvaultResourceId /*Config.AzureClientCertificate*/, string secretName /*Config.AzureKeyVault*/)
         {
             // connecting to kv requires app registration, system, or user assigned managed identity
             // system is best practice so try first without passing clientid
@@ -392,7 +391,7 @@ namespace CollectSFData.Azure
             X509Certificate2 certificate = null;
             string clientId = null;
 
-            if (_isUserManagedIdentity | _isAppRegistration)
+            if (IsUserManagedIdentity | IsAppRegistration)
             {
                 clientId = Config.AzureClientId;
             }
@@ -413,86 +412,6 @@ namespace CollectSFData.Azure
             }
         }
 
-        private bool SetClientIdentityInfo()
-        {
-            if (!string.IsNullOrEmpty(Config.AzureClientId))
-            {
-                _isUserManagedIdentity = IsManagedIdentity(Config.AzureClientId);
-                return true;
-            }
-
-            if (!_isUserManagedIdentity && string.IsNullOrEmpty(Config.AzureClientId))
-            {
-                _isSystemManagedIdentity = IsManagedIdentity();
-            }
-            if (!_isUserManagedIdentity && !string.IsNullOrEmpty(Config.AzureClientId))
-            {
-                _isAppRegistration = true;
-                return true;
-            }
-
-            return false;
-        }
-
-        private DefaultAzureCredential GetDefaultAzureCredentials(string clientId = null)
-        {
-            DefaultAzureCredentialOptions credentialOptions = new DefaultAzureCredentialOptions()
-            {
-                Diagnostics = {
-                        ApplicationId = ApplicationName,
-                        IsDistributedTracingEnabled = true,
-                        IsLoggingContentEnabled = true,
-                        IsLoggingEnabled = true,
-                        LoggedHeaderNames = {
-                            "x-ms-request-id"
-                        },
-                        LoggedQueryParameters = {
-                            "api-version"
-                        }
-                    }
-            };
-
-            credentialOptions.InteractiveBrowserTenantId = Config.AzureTenantId;
-            credentialOptions.ManagedIdentityClientId = clientId;
-            DefaultAzureCredential defaultCredential = new DefaultAzureCredential(credentialOptions);
-
-            Log.Info($"returning defaultCredential:", defaultCredential);
-            return defaultCredential;
-        }
-
-        private bool IsManagedIdentity(string managedClientId = null)
-        {
-            bool retval = false;
-            try
-            {
-                ManagedIdentityCredential managedCredential = new ManagedIdentityCredential(managedClientId, new TokenCredentialOptions
-                {
-                    Diagnostics = {
-                        ApplicationId = ApplicationName,
-                        IsDistributedTracingEnabled = true,
-                        IsLoggingContentEnabled = true,
-                        IsLoggingEnabled = true,
-                        LoggedHeaderNames = {
-                            "x-ms-request-id"
-                        },
-                        LoggedQueryParameters = {
-                            "api-version"
-                        }
-                    }
-                });
-
-                AccessToken managedResult = managedCredential.GetTokenAsync(new TokenRequestContext(new string[1] { $"{_baseLogonUri}/.default" })).Result;
-                retval = true;
-            }
-            catch (Exception e)
-            {
-                Log.Info($"exception:{e}");
-            }
-
-            Log.Info($"returning{retval}");
-            return retval;
-        }
-
         public void Reauthenticate(object state = null)
         {
             Log.Highlight("azure ad reauthenticate");
@@ -506,16 +425,41 @@ namespace CollectSFData.Azure
             return _httpClient;
         }
 
+        public void SetClientIdentityInfo()
+        {
+            if (!string.IsNullOrEmpty(Config.AzureClientId))
+            {
+                IsAppRegistration = true;
+            }
+
+            if (!Config.AzureManagedIdentity)
+            {
+                return;
+            }
+
+            if (!string.IsNullOrEmpty(Config.AzureClientId))
+            {
+                IsUserManagedIdentity = IsManagedIdentity(Config.AzureClientId);
+            }
+
+            if (!IsUserManagedIdentity && string.IsNullOrEmpty(Config.AzureClientId))
+            {
+                IsSystemManagedIdentity = IsManagedIdentity();
+            }
+
+            IsAppRegistration = !(IsUserManagedIdentity | IsSystemManagedIdentity);
+        }
+
         public bool SetToken()
         {
-            if (AuthenticationResult?.AccessToken != null)
+            if (!string.IsNullOrEmpty(AuthenticationResultToken.Token))
             {
-                BearerToken = AuthenticationResult.AccessToken;
-                long tickDiff = ((AuthenticationResult.ExpiresOn.ToLocalTime().Ticks - DateTime.Now.Ticks) / 2) + DateTime.Now.Ticks;
+                BearerToken = AuthenticationResultToken.Token;
+                long tickDiff = ((AuthenticationResultToken.ExpiresOn.ToLocalTime().Ticks - DateTime.Now.Ticks) / 2) + DateTime.Now.Ticks;
                 _tokenExpirationHalfLife = new DateTimeOffset(new DateTime(tickDiff));
 
-                Log.Debug($"authentication result:", AuthenticationResult);
-                Log.Highlight($"aad token expiration: {AuthenticationResult.ExpiresOn.ToLocalTime()}");
+                Log.Info($"authentication result:", ConsoleColor.Green, null, AuthenticationResultToken);
+                Log.Highlight($"aad token expiration: {AuthenticationResultToken.ExpiresOn.ToLocalTime()}");
                 Log.Highlight($"aad token half life expiration: {_tokenExpirationHalfLife}");
 
                 _timer = new Timer(Reauthenticate, null, Convert.ToInt32((_tokenExpirationHalfLife - DateTime.Now).TotalMilliseconds), Timeout.Infinite);
@@ -525,7 +469,8 @@ namespace CollectSFData.Azure
             }
             else
             {
-                Log.Info($"authentication result:", ConsoleColor.Green, null, AuthenticationResult);
+                Log.Warning($"authentication result:", AuthenticationResultToken);
+                IsAuthenticated = false;
                 return false;
             }
         }
@@ -578,42 +523,105 @@ namespace CollectSFData.Azure
 
             foreach (string scope in Scopes)
             {
-                AuthenticationResult = _confidentialClientApp
+                AuthenticationResult result = _confidentialClientApp
                     .AcquireTokenForClient(new List<string>() { scope })
                     .ExecuteAsync().Result;
-                Log.Debug($"scope authentication result:", AuthenticationResult);
+                Log.Debug($"scope authentication result:", AuthenticationResultToken);
+                AuthenticationResultToken = new AccessToken(result.AccessToken, result.ExpiresOn);
             }
         }
 
         private X509Certificate2 GetClientCertificate(string clientCertificate)
         {
-            X509Certificate2 certificate = null;
-
-            switch (FileTypes.MapFileUriType(clientCertificate))
+            if (string.IsNullOrEmpty(clientCertificate))
             {
-                case FileUriTypesEnum.azureKeyvaultUri:
-                    certificate = ReadCertificateFromKeyvault(clientCertificate, Config.AzureClientSecret);
-                    break;
-
-                case FileUriTypesEnum.fileUri:
-                    certificate = ReadCertificateFromFile(clientCertificate);
-                    break;
-
-                case FileUriTypesEnum.unknown:
-                    certificate = ReadCertificate(clientCertificate);
-                    break;
-
-                default:
-                    break;
+            }
+            else if(string.Compare(_certificate?.FriendlyName, clientCertificate, StringComparison.CurrentCultureIgnoreCase) == 0
+                || string.Compare(_certificate?.Subject, clientCertificate, StringComparison.CurrentCultureIgnoreCase) == 0 
+                || string.Compare(_certificate?.Thumbprint, clientCertificate, StringComparison.CurrentCultureIgnoreCase) == 0)
+            {
+                Log.Info($"matched clientCertificate:{clientCertificate}",_certificate);
+            }
+            else if (!string.IsNullOrEmpty(Config.AzureKeyVault))
+            {
+                _certificate = ReadCertificateFromKeyvault(Config.AzureKeyVault, clientCertificate);
+            }
+            else if (FileTypes.MapFileUriType(clientCertificate) == FileUriTypesEnum.fileUri)
+            {
+                _certificate = ReadCertificateFromFile(clientCertificate);
+            }
+            else
+            {
+                _certificate = ReadCertificate(clientCertificate);
             }
 
-            if (certificate == null)
+            if (_certificate == null)
             {
                 Log.Error($"certificate string empty for clientcertificate:{clientCertificate}");
             }
 
-            Log.Info($"returning certificate string:{certificate} for clientcertificate:{clientCertificate}");
-            return certificate;
+            Log.Info($"returning certificate string:{_certificate} for clientcertificate:{clientCertificate}");
+            return _certificate;
+        }
+
+        private DefaultAzureCredential GetDefaultAzureCredentials(string clientId = null)
+        {
+            DefaultAzureCredentialOptions credentialOptions = new DefaultAzureCredentialOptions()
+            {
+                Diagnostics = {
+                        ApplicationId = ApplicationName,
+                        IsDistributedTracingEnabled = true,
+                        IsLoggingContentEnabled = true,
+                        IsLoggingEnabled = true,
+                        LoggedHeaderNames = {
+                            "x-ms-request-id"
+                        },
+                        LoggedQueryParameters = {
+                            "api-version"
+                        }
+                    }
+            };
+
+            credentialOptions.InteractiveBrowserTenantId = Config.AzureTenantId;
+            credentialOptions.ManagedIdentityClientId = clientId;
+            DefaultAzureCredential defaultCredential = new DefaultAzureCredential(credentialOptions);
+
+            Log.Info($"returning defaultCredential:", defaultCredential);
+            return defaultCredential;
+        }
+
+        private bool IsManagedIdentity(string managedClientId = null)
+        {
+            bool retval = false;
+            try
+            {
+                ManagedIdentityCredential managedCredential = new ManagedIdentityCredential(managedClientId, new TokenCredentialOptions
+                {
+                    Diagnostics = {
+                        ApplicationId = ApplicationName,
+                        IsDistributedTracingEnabled = true,
+                        IsLoggingContentEnabled = true,
+                        IsLoggingEnabled = true,
+                        LoggedHeaderNames = {
+                            "x-ms-request-id"
+                        },
+                        LoggedQueryParameters = {
+                            "api-version"
+                        }
+                    }
+                });
+
+                ManagedIdentityToken = managedCredential.GetTokenAsync(new TokenRequestContext(new string[1] { $"{_baseLogonUri}/.default" })).Result;
+
+                retval = true;
+            }
+            catch (Exception e)
+            {
+                Log.Info($"exception:{e}");
+            }
+
+            Log.Info($"returning{retval}");
+            return retval;
         }
 
         private bool NeedsAuthentication()
@@ -660,9 +668,9 @@ namespace CollectSFData.Azure
             Log.Info("enter:", certificateFile);
             X509Certificate2 certificate = null;
 
-            if (!string.IsNullOrEmpty(Config.AzureClientSecret))
+            if (!string.IsNullOrEmpty(Config.AzureKeyVault))
             {
-                certificate = new X509Certificate2(certificateFile, Config.AzureClientSecret);
+                certificate = new X509Certificate2(certificateFile, Config.AzureKeyVault);
             }
             else
             {
@@ -680,9 +688,9 @@ namespace CollectSFData.Azure
 
             try
             {
-                if (!string.IsNullOrEmpty(Config.AzureClientSecret))
+                if (!string.IsNullOrEmpty(Config.AzureKeyVault))
                 {
-                    certificate = new X509Certificate2(Convert.FromBase64String(certificateValue), Config.AzureClientSecret);
+                    certificate = new X509Certificate2(Convert.FromBase64String(certificateValue), Config.AzureKeyVault);
                 }
                 else
                 {
