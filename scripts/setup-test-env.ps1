@@ -28,7 +28,7 @@ class TestSettings {
       
     # existing collectsfdata variables
     [string]$AzureClientId = $null
-    [string]$AzureClientSecret = $null
+    [string]$AzureCertificate = $null
     [string]$AzureResourceGroup = $null
     [string]$AzureResourceGroupLocation = $null
     [string]$AzureSubscriptionId = $null
@@ -57,7 +57,7 @@ class TestEnv {
 
     [bool] CheckAzureConfig() {
         $settings = $this.testSettings
-        if (!$settings.AzureClientId -or !$settings.AzureClientSecret -or !$settings.AzureResourceGroup -or !$settings.AzureResourceGroupLocation) {
+        if (!$settings.AzureClientId -or !$settings.AzureCertificate -or !$settings.AzureResourceGroup -or !$settings.AzureResourceGroupLocation) {
             Write-Warning "azure settings not configured. storage tests may fail"
             return $false
         }
@@ -67,7 +67,7 @@ class TestEnv {
         $credential = new-object -typename System.Management.Automation.PSCredential `
             -argumentlist @(
             $settings.AzureClientId, 
-            ($settings.AzureClientSecret | convertto-securestring -Force -AsPlainText)
+            ($settings.AzureCertificate | convertto-securestring -Force -AsPlainText)
         )
         #>
 
@@ -148,7 +148,7 @@ class TestEnv {
 
     [bool] CheckKustoConfig() {
         $settings = $this.testSettings
-        if (!$settings.AzureClientId -or !$settings.AzureClientSecret -or !$settings.AzureResourceGroup -or !$settings.AzureResourceGroupLocation) {
+        if (!$settings.AzureClientId -or !$settings.AzureCertificate -or !$settings.AzureResourceGroup -or !$settings.AzureResourceGroupLocation) {
             Write-Warning "azure settings not configured. kusto tests may fail"
             return $false
         }
