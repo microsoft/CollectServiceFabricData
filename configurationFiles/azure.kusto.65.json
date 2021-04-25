@@ -1,7 +1,7 @@
 {
-  "$schema": "./collectsfdata.schema.json",
+  "$schema": "https://raw.githubusercontent.com/microsoft/CollectServiceFabricData/master/configurationFiles/collectsfdata.schema.json",
   "AzureClientId": null,
-  "AzureClientSecret": null,
+  "AzureClientCertificate": null,
   "AzureTenantId": null,
   "CacheLocation": null,
   "ContainerFilter": null,
