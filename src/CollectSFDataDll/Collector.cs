@@ -35,6 +35,13 @@ namespace CollectSFData
             Log.IsConsole = isConsole;
         }
 
+        public void Close()
+        {
+            CustomTaskManager.Cancel();
+            _noProgressTimer?.Dispose();
+            Log.Close();
+        }
+
         public int Collect()
         {
             return Collect(new ConfigurationOptions());
@@ -94,13 +101,6 @@ namespace CollectSFData
             }
         }
 
-        public void Close()
-        {
-            CustomTaskManager.Cancel();
-            _noProgressTimer?.Dispose();
-            Log.Close();
-        }
-
         public string DetermineClusterId()
         {
             string clusterId = string.Empty;
@@ -142,7 +142,7 @@ namespace CollectSFData
         {
             _noProgressCounter = 0;
             _noProgressTimer = new Timer(NoProgressCallback, null, 0, 60 * 1000);
-            
+
             Log.Open();
             CustomTaskManager.Resume();
             _taskManager?.Wait();
@@ -151,11 +151,11 @@ namespace CollectSFData
             Instance.Initialize(configurationOptions);
             Log.Info($"version: {Config.Version}");
 
-            if((Config.NeedsValidation && !Config.Validate()) | !Config.IsValid)
+            if ((Config.NeedsValidation && !Config.Validate()) | !Config.IsValid)
             {
                 return false;
             }
-            
+
             _parallelConfig = new ParallelOptions { MaxDegreeOfParallelism = Config.Threads };
 
             ServicePointManager.DefaultConnectionLimit = Config.Threads * MaxThreadMultiplier;
@@ -241,7 +241,7 @@ namespace CollectSFData
             {
                 Log.Warning($"adding failed uris to FileUris. use save option to keep list of failed uris.");
                 List<string> ingestList = new List<string>();
-                ingestList.AddRange(Instance.FileObjects.FindAll(FileStatus.failed|FileStatus.uploading).Select(x=> x.FileUri));
+                ingestList.AddRange(Instance.FileObjects.FindAll(FileStatus.failed | FileStatus.uploading).Select(x => x.FileUri));
                 Config.FileUris = ingestList.ToArray();
             }
         }
@@ -370,7 +370,7 @@ namespace CollectSFData
         {
             Log.Debug("enter");
             fileObject.Status = FileStatus.queued;
-            
+
             if (Config.IsKustoConfigured() | Config.IsLogAnalyticsConfigured())
             {
                 if (Config.IsKustoConfigured())
@@ -472,7 +472,7 @@ namespace CollectSFData
 
             foreach (string file in files)
             {
-                FileObject fileObject = new FileObject(file, Config.CacheLocation){ Status = FileStatus.enumerated};
+                FileObject fileObject = new FileObject(file, Config.CacheLocation) { Status = FileStatus.enumerated };
                 Instance.FileObjects.Add(fileObject);
 
                 Log.Info($"adding file: {fileObject.FileUri}", ConsoleColor.Green);

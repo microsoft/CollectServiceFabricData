@@ -319,7 +319,7 @@ namespace CollectSFDataTest.Utilities
                 Log.Info("enter");
 
                 SaveTempOptions();
-                ConfigurationOptions config = new ConfigurationOptions(TempArgs,true);
+                ConfigurationOptions config = new ConfigurationOptions(TempArgs, true);
                 Collector collector = new Collector();
                 Assert.IsNotNull(collector);
 
