@@ -36,12 +36,6 @@ Use one of the provided commands [Microsoft.ServiceFabric.CollectSFData](https:/
 
 In Visual Studio, use 'NuGet Package Manager' to install package.  
 
-## Kusto Setup
-
-### **Creating Kusto Cluster**
-
-(todo: see scripts directory)
-
 ## Authorization
 
 ### **Using with Client Credentials for non-interactive execution**
@@ -58,11 +52,10 @@ Use these steps to optionally configure CollectSFData to run non-interactively w
 
 CollectSFData can use a certificate for authorization to Azure.
 The certificate can be stored in the following locations:
-- in local file
-- in local cert store
+- local file
+- local cert store
 - base64 string
 - keyvault
-
 
 ## Implementing Collector
 
@@ -217,6 +210,41 @@ private static int Main(string[] args)
 }
 ```
 
+## Instance Results
+
+After Collect() is called, all instance information is in Collector.Instance class.
+Instance.FileObjects contains all files processed and their current state.
+After Collect() has returned, final state can be checked.
+
+example:
+
+```c#
+int retval = collector.Collect(config);
+FileObjectCollection fileObjects = collector.Instance.FileObjects.Any(FileStatus.failed | FileStatus.uploading)
+```
+
+Each fileObject will have one of the following flag enum states:
+
+```c#
+[Flags]
+public enum FileStatus : int
+   {
+       unknown = 0,
+       enumerated = 1, // found in blob storage or locally
+       existing = 2, // already ingested into table
+       queued = 4, // queued for download
+       downloading = 8, // downloading from blob storage
+       formatting = 16, // formatting into csv
+       uploading = 32, // uploading to kusto table
+       failed = 64, // ingest into kusto failed
+       succeeded = 128, // ingest into kusto succeeded
+       all = 256
+   }
+```
+
+On exit, the following states will be checked.
+if existing + succeeded == total then collection was successful.
+
 ## Logging
 
 Externally there is logging both to console output and optionally to a log file. When using as a DLL, subscribing to event 'Log_MessageLogged' will provide the same information in 'LogMessage' object format. 
@@ -258,7 +286,7 @@ When starting execution from Collect(), current configuration is first validated
 
 ### CSV log file compliance for GatherType trace
 
-Certain events in the Service Fabric detailed diagnostic logs gathered when 'GatherType' is set to 'trace' are not CSV compliant and can fail ingestion into Kusto. Current mitigation until these traces are properly formatted is to either set 'UseKustoBlobAsSource' == false which is remarkably slow and more resource intensive. Another option is to do two collections with Collect() as shown in the following example assuming there will be a small number of failures during first collect. This is how CollectSFData currently executes when executing as an exe. See [Program.cs](..\src\CollectSFData\Program.cs).  
+Certain events in the Service Fabric detailed diagnostic logs gathered when 'GatherType' is set to 'trace' are not CSV compliant and can fail ingestion into Kusto. Current mitigation until these traces are properly formatted is to either set 'UseKustoBlobAsSource' == false which is remarkably slow and more resource intensive. Another option is to do two collections with Collect() as shown in the following example assuming there will be a small number of failures during first collect. This is how CollectSFData currently executes when executing as an exe. See [Program.cs](../src/CollectSFData/Program.cs).  
 
 ```c#
 using CollectSFData.Common;
