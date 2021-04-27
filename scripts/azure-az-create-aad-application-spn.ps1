@@ -127,7 +127,9 @@ function main() {
                     -Subject "CN=$($aadDisplayName)" `
                     -KeyExportPolicy Exportable `
                     -Provider "Microsoft Enhanced RSA and AES Cryptographic Provider" `
-                    -KeySpec KeyExchange
+                    -KeySpec KeyExchange `
+                    -KeyLength 2048 `
+                    -KeyAlgorithm RSA
             }
             
             if (!$credentials -and !$password) {
@@ -145,6 +147,7 @@ function main() {
             #$cert509 = New-Object System.Security.Cryptography.X509Certificates.X509Certificate($pfxPath, $securePassword)
             #$thumbprint = $cert509.thumbprint
             #$keyValue = [convert]::ToBase64String($cert509.GetCertHash())
+            $keyValue = [convert]::ToBase64String([io.file]::ReadAllBytes($pfxPath))
             $certValue = [convert]::ToBase64String($cert.GetRawCertData())
 
             if ($oldAdApp = Get-azADApplication -DisplayName $aadDisplayName) {
@@ -190,7 +193,7 @@ function main() {
             $appCredential | convertto-json
 
             $thumbprint = $cert.thumbprint
-            $clientSecret = $certValue # [convert]::ToBase64String($cert.GetCertHash())
+            #$clientSecret = $certValue # [convert]::ToBase64String($cert.GetCertHash())
             $app | convertto-json
         }
         elseif ($logontype -ieq 'certthumb') {
@@ -335,12 +338,19 @@ function main() {
     write-host "tenant id: $($tenantId)" -ForegroundColor Cyan
     write-host "application identifier Uri: $($uri)" -ForegroundColor Cyan
     write-host "clientsecret: $($clientSecret)" -ForegroundColor Cyan
+    write-host
+    write-host "cert base64: $($certValue)" -ForegroundColor Cyan
+    write-host
+    write-host "cert and key base64: $($keyValue)" -ForegroundColor Cyan
+    write-host
     write-host "thumbprint: $($thumbprint)" -ForegroundColor Cyan
     write-host "pfx path: $($pfxPath)" -ForegroundColor Cyan
     $global:thumbprint = $thumbprint
     $global:applicationId = $app.Applicationid
     $global:tenantId = $tenantId
     $global:clientSecret = $clientSecret
+    $global:certValue = $certValue
+    $global:keyValue = $keyvalue
     write-host "clientid / applicationid saved in `$global:applicationId" -ForegroundColor Yellow
     write-host "clientsecret / base64 thumb saved in `$global:clientSecret" -ForegroundColor Yellow
 
