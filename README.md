@@ -119,6 +119,9 @@ Options:
   -cert|--azureClientCertificate     [string] azure application id / client id certificate for use with authentication
                                          for non interactive to kusto. default is to use integrated AAD auth token
                                          and leave this blank.
+  -secret|--azureClientSecret        [string] azure application id / client id secret for use with authentication
+                                         for non interactive to kusto. default is to use integrated AAD auth token
+                                         and leave this blank.
   -vault|--AzureKeyVault             [string] azure base key vault fqdn for use with authentication
                                          for non interactive to kusto. default is to use integrated AAD auth token
                                          and leave this blank.
