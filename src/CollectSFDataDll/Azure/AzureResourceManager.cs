@@ -187,10 +187,20 @@ namespace CollectSFData.Azure
                 {
                     CreateConfidentialClient(resource, Config.AzureClientCertificate);
                 }
-                else
+                else if (IsUserManagedIdentity)
                 {
                     ManagedIdentityUserConfidentialClient(resource);
                 }
+                else if (!string.IsNullOrEmpty(Config.AzureClientSecret))
+                {
+                    CreateConfidentialClient(resource);
+                }
+                else
+                {
+                    Log.Error("unknown configuration");
+                    return false;
+                }
+
                 return true;
             }
             else
@@ -215,6 +225,26 @@ namespace CollectSFData.Azure
                 .WithLogging(MsalLoggerCallback, LogLevel.Verbose, true, true)
                 .WithCertificate(certificate)
                 .Build();
+            AddClientScopes();
+        }
+
+        public void CreateConfidentialClient(string resource)
+        {
+            Log.Info($"enter: {resource}");
+            // no prompt with clientid and secret
+            _confidentialClientApp = ConfidentialClientApplicationBuilder
+               .CreateWithApplicationOptions(new ConfidentialClientApplicationOptions
+               {
+                   ClientId = Config.AzureClientId,
+                   RedirectUri = resource,
+                   ClientSecret = Config.AzureClientSecret,
+                   TenantId = Config.AzureTenantId,
+                   ClientName = Config.AzureClientId
+               })
+               .WithAuthority(AzureCloudInstance.AzurePublic, Config.AzureTenantId)
+               .WithLogging(MsalLoggerCallback, LogLevel.Verbose, true, true)
+               .Build();
+
             AddClientScopes();
         }
 
@@ -536,11 +566,11 @@ namespace CollectSFData.Azure
             if (string.IsNullOrEmpty(clientCertificate))
             {
             }
-            else if(string.Compare(_certificate?.FriendlyName, clientCertificate, StringComparison.CurrentCultureIgnoreCase) == 0
-                || string.Compare(_certificate?.Subject, clientCertificate, StringComparison.CurrentCultureIgnoreCase) == 0 
+            else if (string.Compare(_certificate?.FriendlyName, clientCertificate, StringComparison.CurrentCultureIgnoreCase) == 0
+                || string.Compare(_certificate?.Subject, clientCertificate, StringComparison.CurrentCultureIgnoreCase) == 0
                 || string.Compare(_certificate?.Thumbprint, clientCertificate, StringComparison.CurrentCultureIgnoreCase) == 0)
             {
-                Log.Info($"matched clientCertificate:{clientCertificate}",_certificate);
+                Log.Info($"matched clientCertificate:{clientCertificate}", _certificate);
             }
             else if (!string.IsNullOrEmpty(Config.AzureKeyVault))
             {
@@ -668,9 +698,9 @@ namespace CollectSFData.Azure
             Log.Info("enter:", certificateFile);
             X509Certificate2 certificate = null;
 
-            if (!string.IsNullOrEmpty(Config.AzureKeyVault))
+            if (!string.IsNullOrEmpty(Config.AzureClientSecret))
             {
-                certificate = new X509Certificate2(certificateFile, Config.AzureKeyVault);
+                certificate = new X509Certificate2(certificateFile, Config.AzureClientSecret);
             }
             else
             {
@@ -688,9 +718,9 @@ namespace CollectSFData.Azure
 
             try
             {
-                if (!string.IsNullOrEmpty(Config.AzureKeyVault))
+                if (!string.IsNullOrEmpty(Config.AzureClientSecret))
                 {
-                    certificate = new X509Certificate2(Convert.FromBase64String(certificateValue), Config.AzureKeyVault);
+                    certificate = new X509Certificate2(Convert.FromBase64String(certificateValue), Config.AzureClientSecret);
                 }
                 else
                 {

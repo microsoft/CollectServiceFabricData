@@ -12,7 +12,11 @@ namespace CollectSFData.Common
     public class CommandLineArguments : Constants
     {
         public CommandOption AzureClientCertificate { get; set; }
+
         public CommandOption AzureClientId { get; set; }
+
+        public CommandOption AzureClientSecret { get; set; }
+
         public CommandOption AzureKeyVault { get; set; }
 
         public CommandOption AzureManagedIdentity { get; set; }
@@ -345,6 +349,12 @@ namespace CollectSFData.Common
 
             AzureClientCertificate = CmdLineApp.Option("-cert|--azureClientCertificate",
                     $"[string] azure application id / client id certificate for use with authentication" +
+                    $"{newLine} for non interactive to kusto. default is to use integrated AAD auth token" +
+                    $"{newLine} and leave this blank.",
+                    CommandOptionType.SingleValue);
+
+            AzureClientSecret = CmdLineApp.Option("-secret|--azureClientSecret",
+                    $"[string] azure application id / client id secret for use with authentication" +
                     $"{newLine} for non interactive to kusto. default is to use integrated AAD auth token" +
                     $"{newLine} and leave this blank.",
                     CommandOptionType.SingleValue);

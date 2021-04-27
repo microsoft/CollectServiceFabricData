@@ -29,18 +29,8 @@ namespace CollectSFData.Common
         private static string[] _commandlineArguments = new string[0];
         private static ConfigurationOptions _defaultConfig;
         private readonly string _workDir = "csfd";
-        private string _tempPath;
         private X509Certificate2 _clientCertificate;
-
-        public new string EndTimeStamp
-        {
-            get => base.EndTimeStamp;
-            set
-            {
-                EndTimeUtc = ConvertToUtcTime(value);
-                base.EndTimeStamp = ConvertToUtcTimeString(value);
-            }
-        }
+        private string _tempPath;
 
         public X509Certificate2 ClientCertificate
         {
@@ -49,6 +39,16 @@ namespace CollectSFData.Common
             {
                 _clientCertificate = value;
                 AzureClientCertificate = _clientCertificate.Subject;
+            }
+        }
+
+        public new string EndTimeStamp
+        {
+            get => base.EndTimeStamp;
+            set
+            {
+                EndTimeUtc = ConvertToUtcTime(value);
+                base.EndTimeStamp = ConvertToUtcTimeString(value);
             }
         }
 
@@ -262,6 +262,21 @@ namespace CollectSFData.Common
             return _defaultConfig;
         }
 
+        public bool HasValue(object property = null)
+        {
+            if (property != null)
+            {
+                if (property is string && string.IsNullOrEmpty(property.ToString()))
+                {
+                    return false;
+                }
+
+                return true;
+            }
+
+            return false;
+        }
+
         public bool IsCacheLocationPreConfigured()
         {
             // saving config file with no options will set cache location to %temp% by default
@@ -271,12 +286,13 @@ namespace CollectSFData.Common
 
         public bool IsClientIdConfigured()
         {
-            bool configured = (AzureClientId?.Length > 0 & AzureKeyVault?.Length > 0 & AzureClientCertificate?.Length > 0 & AzureManagedIdentity == false // app registration with kv
-                    || AzureClientId?.Length > 0 & AzureKeyVault?.Length == 0 & AzureClientCertificate?.Length > 0 & AzureManagedIdentity == false // app registration
-                    || AzureClientId?.Length > 0 & AzureKeyVault?.Length > 0 & AzureClientCertificate?.Length > 0 & AzureManagedIdentity == true // app registration with keyvault and system managed identity to kv
-                    || AzureClientId?.Length == 0 & AzureKeyVault?.Length > 0 & AzureClientCertificate?.Length > 0 & AzureManagedIdentity == true // system managed identity with keyvault
-                    || AzureClientId?.Length > 0 & AzureKeyVault?.Length == 0 & AzureClientCertificate?.Length == 0 & AzureManagedIdentity == true // user managed identity
-                    );
+            bool configured = ((HasValue(AzureClientId) & !HasValue(AzureKeyVault) & HasValue(AzureClientSecret) & AzureManagedIdentity == false) // app registration with clientsecret
+                | (HasValue(AzureClientId) & HasValue(AzureKeyVault) & HasValue(AzureClientCertificate) & AzureManagedIdentity == false) // app registration with kv
+                | (HasValue(AzureClientId) & !HasValue(AzureKeyVault) & HasValue(AzureClientCertificate) & AzureManagedIdentity == false) // app registration
+                | (HasValue(AzureClientId) & HasValue(AzureKeyVault) & HasValue(AzureClientCertificate) & AzureManagedIdentity == true) // app registration with keyvault and system managed identity to kv
+                | (!HasValue(AzureClientId) & HasValue(AzureKeyVault) & HasValue(AzureClientCertificate) & AzureManagedIdentity == true) // system managed identity with keyvault
+                | (HasValue(AzureClientId) & !HasValue(AzureKeyVault) & !HasValue(AzureClientCertificate) & AzureManagedIdentity == true) // user managed identity
+            );
 
             return configured;
         }
