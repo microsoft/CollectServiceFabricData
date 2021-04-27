@@ -22,6 +22,9 @@ Options:
   -cert|--azureClientCertificate     [string] azure application id / client id certificate for use with authentication
                                          for non interactive to kusto. default is to use integrated AAD auth token
                                          and leave this blank.
+  -secret|--azureClientSecret        [string] azure application id / client id secret for use with authentication
+                                        for non interactive to kusto. default is to use integrated AAD auth token
+                                        and leave this blank.
   -vault|--AzureKeyVault             [string] azure base key vault fqdn for use with authentication
                                          for non interactive to kusto. default is to use integrated AAD auth token
                                          and leave this blank.
@@ -151,9 +154,11 @@ To use a default configuration file without having to specify on the command lin
   - secret name if using azure key vault 'star-sfcluster-com'
   - base64 string if adding cert directly into configuration 'MIIV3AIBAzCCF...Jsc='  
     You can use the following PowerShell script to obtain a Base64-encoded representation of a certificate:
+
     ```powershell
     [convert]::ToBase64String([io.file]::ReadAllBytes("C:\path\to\certificate.pfx"))
     ```
+- **AzureClientSecret** - required if AzureClientId is specified and not using AzureClientCertificate. string.
 - **AzureKeyVault** - optional. can be used to store AzureClientCertificate if being used.
   - 'https://{{key vault name}}.vault.azure.net/'
 - **AzureResourceGroup** - required if using Log Analytics and creating a workspace. string. if populated, value is used for creation of Log Analytics workspace.
