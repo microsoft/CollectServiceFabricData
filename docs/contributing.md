@@ -96,7 +96,7 @@ This client is used for creating resources in azure for testing collectsfdata.
 application id: 59c41f0c-fb6c-43e7-a070-480e2af83838
 tenant id: 1a4b5850-4150-4da6-9d0e-4cfcc078292b
 application identifier Uri: http://collectsfdatatestclient
-clientsecret: MIIDHjCCAgagAwIBAgIQFgKT81w9vapAjxN...
+cert and key base64: MIIDHjCCAgagAwIBAgIQFgKT81w9vapAjxN...
 thumbprint: C124CE6208B0547CB576019104FDDF97B01A37A8
 pfx path: C:\Users\user\AppData\Local\Temp\collectsfdatatestclient.pfx
 clientid / applicationid saved in $global:applicationId
@@ -120,7 +120,7 @@ this client is used for testing azure client authentication in collectsfdata.
 application id: 14b3dd02-66ec-46b4-b7aa-b65abc9bbb4d
 tenant id: 1a4b5850-4150-4da6-9d0e-4cfcc078292b
 application identifier Uri: http://collectsfdata
-clientsecret: MIIDEjCCAfqgAwIBAgIQPnmXz4qmKIpHlu...
+cert and key base64: MIIDEjCCAfqgAwIBAgIQPnmXz4qmKIpHlu...
 thumbprint: 8C1AD1A0DBA04F78F7EE86FBDBC6E9CF06DB79E3
 pfx path: C:\Users\user\AppData\Local\Temp\collectsfdata.pfx
 clientid / applicationid saved in $global:applicationId
@@ -152,6 +152,7 @@ example using values from above:
   "adminPassword": null,
   "AzureClientId": "14b3dd02-66ec-46b4-b7aa-b65abc9bbb4d",
   "AzureClientCertificate": "MIIDEjCCAfqgAwIBAgIQPnmXz4qmKIpHlu...",
+  "AzureClientSecret": "{{private key}}",
   "AzureResourceGroup": "collectsfdataunittest",
   "AzureResourceGroupLocation": "eastus",
   "AzureSubscriptionId": "a79c1c37-7eba-4378-8000-abd3a23e66d8",
@@ -172,6 +173,7 @@ clean example:
   "adminPassword": null,
   "AzureClientId": "{{collectsfdata app registration}}",
   "AzureClientCertificate": "{{collectsfdata client base64 certificate}}",
+  "AzureClientSecret": "{{private key}}",
   "AzureResourceGroup": "{{azure resource group name}}",
   "AzureResourceGroupLocation": "{{azure resource group location}}",
   "AzureSubscriptionId": "{{azure subscription id}}",
