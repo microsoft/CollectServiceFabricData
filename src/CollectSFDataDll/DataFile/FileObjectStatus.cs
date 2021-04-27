@@ -8,7 +8,7 @@ using System;
 namespace CollectSFData.DataFile
 {
     [Flags]
-    public enum FileStatus : int
+    public enum FileStatus
     {
         unknown = 0,
         enumerated = 1,
@@ -17,8 +17,8 @@ namespace CollectSFData.DataFile
         downloading = 8,
         formatting = 16,
         uploading = 32,
-        succeeded = 64,
-        failed = 128,
-        all = 256,
+        failed = 64,
+        succeeded = 128,
+        all = 256
     }
 }

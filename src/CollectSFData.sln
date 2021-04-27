@@ -28,6 +28,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CollectSFDataGui.Client", "
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CollectSFDataGui.Shared", "CollectSFDataGui\Shared\CollectSFDataGui.Shared.csproj", "{162B3A3C-6A4A-4954-84F8-748893945515}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CollectSFDataDllTest", "CollectSFDataDllTest\CollectSFDataDllTest.csproj", "{867CAC2F-4CA8-4688-B2B1-082F30697EDA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -99,6 +101,14 @@ Global
 		{162B3A3C-6A4A-4954-84F8-748893945515}.Release|Any CPU.Build.0 = Release|Any CPU
 		{162B3A3C-6A4A-4954-84F8-748893945515}.Release|x64.ActiveCfg = Release|Any CPU
 		{162B3A3C-6A4A-4954-84F8-748893945515}.Release|x64.Build.0 = Release|Any CPU
+		{867CAC2F-4CA8-4688-B2B1-082F30697EDA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{867CAC2F-4CA8-4688-B2B1-082F30697EDA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{867CAC2F-4CA8-4688-B2B1-082F30697EDA}.Debug|x64.ActiveCfg = Debug|x64
+		{867CAC2F-4CA8-4688-B2B1-082F30697EDA}.Debug|x64.Build.0 = Debug|x64
+		{867CAC2F-4CA8-4688-B2B1-082F30697EDA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{867CAC2F-4CA8-4688-B2B1-082F30697EDA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{867CAC2F-4CA8-4688-B2B1-082F30697EDA}.Release|x64.ActiveCfg = Release|Any CPU
+		{867CAC2F-4CA8-4688-B2B1-082F30697EDA}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

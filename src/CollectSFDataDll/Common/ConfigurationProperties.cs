@@ -11,9 +11,9 @@ namespace CollectSFData.Common
     public class ConfigurationProperties : Constants
     {
         public string AzureClientCertificate { get; set; }
-        
+
         public string AzureClientId { get; set; }
-        
+        public string AzureClientSecret { get; set; }
         public string AzureKeyVault { get; set; }
 
         public bool AzureManagedIdentity { get; set; } = false;

@@ -1,16 +1,9 @@
-﻿// ------------------------------------------------------------
-// Copyright (c) Microsoft Corporation.  All rights reserved.
-// Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
-// ------------------------------------------------------------
-
-//https://www.automatetheplanet.com/nunit-cheat-sheet/
-//https://github.com/nunit/docs/wiki/Tips-And-Tricks
-//https://github.com/nunit/nunit-csharp-samples
-
 using CollectSFData;
 using CollectSFData.Azure;
 using CollectSFData.Common;
-using Moq;
+using CollectSFDataTest.Utilities;
+
+//using Moq;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using System;
@@ -24,42 +17,25 @@ using System.Management.Automation.Runspaces;
 using System.Text;
 using System.Threading;
 
-namespace CollectSFDataTest.Utilities
+namespace CollectSFDataDllTest.Utilities
 {
     [TestFixture]
     public class TestUtilities
     {
         public Collector Collector;
-        public StringBuilder consoleErrBuilder = new StringBuilder();
-        public StringBuilder consoleOutBuilder = new StringBuilder();
         public List<string> LogMessageQueue = new List<string>();
         public string[] TempArgs;
         private static object _executing = new object();
         private bool _logMessageQueueEnabled;
-        private bool hasExited = false;
-
         public static TestContext Context { get; set; }
-
         public static string DefaultOptionsFile => $"{WorkingDir}\\..\\..\\..\\..\\..\\..\\configurationFiles\\collectsfdata.options.json";
-
         public static string ScriptsDir => $"{WorkingDir}\\..\\..\\..\\..\\..\\..\\scripts";
-
         public static string TempDir => $"{WorkingDir}\\..\\..\\Temp";
-
-        public static string[] TestArgs => new string[2] { "-config", TestOptionsFile };
-
         public static string TestConfigurationsDir => $"{WorkingDir}\\..\\..\\..\\..\\TestConfigurations";
-
         public static TestProperties TestProperties { get; set; }
-
         public static string TestPropertiesFile => $"{Environment.GetEnvironmentVariable("LOCALAPPDATA")}\\collectsfdata\\collectSfDataTestProperties.json";
-
         public static string TestPropertiesSetupScript => $"{ScriptsDir}\\setup-test-env.ps1";
-
-        public static string TestUtilitiesDir => $"{WorkingDir}\\..\\..\\..\\..\\TestUtilities";
-
         public static string WorkingDir { get; set; } = string.Empty;
-
         public ConfigurationOptions ConfigurationOptions { get; set; }
 
         public bool LogMessageQueueEnabled
@@ -88,12 +64,7 @@ namespace CollectSFDataTest.Utilities
         }
 
         public string TempOptionsFile { get; private set; } = $"{TempDir}\\collectsfdata.options.json";
-
         private static string TestOptionsFile => $"{TestConfigurationsDir}\\collectsfdata.options.json";
-
-        private StringWriter ConsoleErr { get; set; } = new StringWriter();
-
-        private StringWriter ConsoleOut { get; set; } = new StringWriter();
 
         static TestUtilities()
         {
@@ -110,9 +81,6 @@ namespace CollectSFDataTest.Utilities
 
             ConfigurationOptions = new ConfigurationOptions();
 
-            //TempArgs = new string[2] { "-config", TestOptionsFile };
-            //ConfigurationOptions.ProcessArguments();
-            //ConfigurationOptions.CacheLocation = "";// null;
             SaveTempOptions();
 
             TempArgs = new string[2] { "-config", TempOptionsFile };
@@ -174,92 +142,39 @@ namespace CollectSFDataTest.Utilities
             Log.Close();
         }
 
-        public ProcessOutput ExecuteCollectSfData(string arguments = null, bool wait = true)
+        public ProcessOutput AfterTest()
         {
-            Log.Info("enter");
-
-            return ExecuteProcess($"{Context.WorkDirectory}\\collectsfdata.exe", arguments, wait);
-        }
-
-        public ProcessOutput ExecuteMoqTest(ConfigurationOptions options = null)
-        {
-            lock (_executing)
+            Log.Info("after test");
+            // give time for logging to finish
+            Thread.Sleep(1000);
+            Log.Close();
+            //FlushConsoleOutput();
+            ProcessOutput output = new ProcessOutput
             {
-                Log.Info("enter");
+                //    StandardError = ConsoleErr.ToString(),
+                //    StandardOutput = ConsoleOut.ToString()
+            };
 
-                SaveTempOptions();
-                //Program.Config = new ConfigurationOptions();
-                //Program program = new Program();
-                var program = new Mock<Collector>(TempArgs);
-                //Moq.Language.Flow.ISetup<Program, int> result = program.Setup(p => p.Execute(TempArgs));
-                program.Setup(p => p.Collect());
+            //ConsoleErr = new StringWriter();
+            //ConsoleOut = new StringWriter();
 
-                Assert.IsNotNull(program);
+            //Console.SetOut(Console.Out);
+            //Console.SetError(Console.Error);
 
-                StartConsoleRedirection();
-                Log.Info(">>>>Starting test<<<<\r\n", ConfigurationOptions);
-                //int result = program.Execute(TempArgs);
-                //Log.Info(">>>>test result<<<<", result);
-                ProcessOutput output = StopConsoleRedirection();
+            //consoleOutBuilder.Append(output.StandardOutput);
+            //consoleErrBuilder.Append(output.StandardError);
 
-                Assert.IsNotNull(output);
-                /*
-                if (result. != 0)
-                {
-                    Log.Error($"result {result}");
-                    output.ExitCode = result;
-                }
-                */
-                //Log.Info(">>>>test result<<<<", output);
-                return output;
-            }
-        }
-
-        public ProcessOutput ExecuteProcess(string imageFile, string arguments = null, bool wait = true)
-        {
-            hasExited = false;
-            Log.Info($"ExecuteProcess: current dir: {Directory.GetCurrentDirectory()} image: {imageFile} args: {arguments}");
-            Assert.IsTrue(File.Exists(imageFile));
-
-            Process process = new Process();
-            process.Exited += new EventHandler(ProcessExited);
-            process.EnableRaisingEvents = true;
-
-            //ProcessStartInfo startInfo = new ProcessStartInfo($"cmd.exe", $" /c {imageFile} {arguments}");
-            ProcessStartInfo startInfo = new ProcessStartInfo(imageFile, arguments);
-            startInfo.CreateNoWindow = true;
-            startInfo.UseShellExecute = !wait;
-            startInfo.RedirectStandardOutput = wait;
-            startInfo.RedirectStandardError = wait;
-            startInfo.LoadUserProfile = false;
-            startInfo.ErrorDialog = false;
-
-            process.StartInfo = startInfo;
-            bool reference = process.Start();
-            ProcessOutput output = new ProcessOutput();
-
-            while (!hasExited && wait && reference) // && !process.HasExited)
-            {
-                Thread.Sleep(100);
-                //while (wait && reference && !process.HasExited)
-                //process.WaitForExit();
-                while (process.StandardOutput.Peek() > -1)
-                {
-                    string line = process.StandardOutput.ReadToEnd();//.ReadLine();
-                    TestContext.WriteLine(line);
-                    output.StandardOutput += line;
-                }
-
-                while (process.StandardError.Peek() > -1)
-                {
-                    string errorLine = $"error:{process.StandardError.ReadToEnd()}";//.ReadLine()}";
-                    Console.Error.WriteLine(errorLine);
-                    output.StandardError += errorLine;
-                }
-            }
-
-            output.ExitCode = process.ExitCode;
             return output;
+        }
+
+        public void BeforeTest()
+        {
+            Log.Open();
+            Log.LogErrors = 0;
+            Log.Info("starting redirection");
+            //FlushConsoleOutput();
+            //Console.SetOut(ConsoleOut);
+            //Console.SetError(ConsoleErr);
         }
 
         public ProcessOutput ExecuteTest(Func<bool> func)
@@ -267,9 +182,9 @@ namespace CollectSFDataTest.Utilities
             return ExecuteTest((a) =>
             {
                 Func<Func<bool>, bool> newFunc = (nf) =>
-                 {
-                     return nf();
-                 };
+                {
+                    return nf();
+                };
                 return newFunc(a);
             }, func);
         }
@@ -283,7 +198,7 @@ namespace CollectSFDataTest.Utilities
             LogMessageQueueEnabled = true;
             Log.Info("enter");
 
-            StartConsoleRedirection();
+            BeforeTest();
             Log.Info(">>>>Starting test<<<<\r\n", ConfigurationOptions);
 
             var result = func(input);
@@ -292,7 +207,7 @@ namespace CollectSFDataTest.Utilities
             LogMessageQueueEnabled = false;
 
             Log.Info(">>>>test result<<<<", result);
-            ProcessOutput output = StopConsoleRedirection();
+            ProcessOutput output = AfterTest();
             output.LogMessages = LogMessageQueue.ToList();
             LogMessageQueue.Clear();
             Assert.IsNotNull(output);
@@ -323,7 +238,7 @@ namespace CollectSFDataTest.Utilities
                 Collector collector = new Collector();
                 Assert.IsNotNull(collector);
 
-                StartConsoleRedirection();
+                BeforeTest();
                 Log.Info(">>>>Starting test<<<<\r\n", ConfigurationOptions);
                 // cant call with args
                 //
@@ -332,7 +247,7 @@ namespace CollectSFDataTest.Utilities
                 //int result = program.Collect(new string[] { });
 
                 Log.Info(">>>>test result<<<<", result);
-                ProcessOutput output = StopConsoleRedirection();
+                ProcessOutput output = AfterTest();
 
                 Assert.IsNotNull(output);
 
@@ -347,23 +262,6 @@ namespace CollectSFDataTest.Utilities
             }
         }
 
-        public void FlushConsoleOutput()
-        {
-            Console.Out.Flush();
-            Console.Error.Flush();
-            ConsoleOut.Flush();
-            ConsoleErr.Flush();
-        }
-
-        public ProcessOutput GetConsoleOutput()
-        {
-            ProcessOutput output = StopConsoleRedirection();
-            WriteConsole(ConsoleOut.ToString());
-            Console.Error.WriteLine(ConsoleErr.ToString());
-            StartConsoleRedirection();
-            return output;
-        }
-
         public void SaveTempOptions()
         {
             ConfigurationOptions.SaveConfiguration = TempOptionsFile;
@@ -373,58 +271,11 @@ namespace CollectSFDataTest.Utilities
         [SetUp]
         public void Setup()
         {
-            //Instance.Config = new ConfigurationOptions();
-            //Instance.FileMgr = new FileManager();
-            //Collector = new Collector();
-            // Log.MessageLogged += Log_MessageLogged;
-            WriteConsole("TestContext", Context);
-            TestContext.WriteLine($"starting test: {Context?.Test.Name}");
-            consoleOutBuilder = new StringBuilder();
-            consoleErrBuilder = new StringBuilder();
-        }
-
-        public void StartConsoleRedirection()
-        {
-            Log.Open();
-            Log.LogErrors = 0;
-            Log.Info("starting redirection");
-            FlushConsoleOutput();
-            Console.SetOut(ConsoleOut);
-            Console.SetError(ConsoleErr);
-        }
-
-        public ProcessOutput StopConsoleRedirection()
-        {
-            Log.Info("stopping redirection");
-            // give time for logging to finish
-            Thread.Sleep(1000);
-            Log.Close();
-            FlushConsoleOutput();
-            ProcessOutput output = new ProcessOutput
-            {
-                StandardError = ConsoleErr.ToString(),
-                StandardOutput = ConsoleOut.ToString()
-            };
-
-            ConsoleErr = new StringWriter();
-            ConsoleOut = new StringWriter();
-
-            Console.SetOut(Console.Out);
-            Console.SetError(Console.Error);
-
-            consoleOutBuilder.Append(output.StandardOutput);
-            consoleErrBuilder.Append(output.StandardError);
-
-            return output;
-        }
-
-        [TearDown]
-        public void TearDown()
-        {
-            //Log.MessageLogged -= Log_MessageLogged;
-            WriteConsole($"standard out:\r\n{consoleOutBuilder}");
-            WriteConsole($"standard err:\r\n{consoleErrBuilder}");
-            WriteConsole($"finished test: {Context?.Test.Name}", Context);
+            Log.Info("enter");
+            //WriteConsole("TestContext", Context);
+            //TestContext.WriteLine($"starting test: {Context?.Test.Name}");
+            //consoleOutBuilder = new StringBuilder();
+            //consoleErrBuilder = new StringBuilder();
         }
 
         public void WriteConsole(string data, object json = null)
@@ -488,13 +339,6 @@ namespace CollectSFDataTest.Utilities
             }
 
             WriteConsole(args.Message);
-        }
-
-        private void ProcessExited(object sender, EventArgs e)
-        {
-            //Log.Info($"sender", sender);
-            //Log.Info($"args", e);
-            hasExited = true;
         }
     }
 }
