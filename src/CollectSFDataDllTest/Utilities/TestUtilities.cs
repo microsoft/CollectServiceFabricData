@@ -201,7 +201,7 @@ namespace CollectSFDataDllTest.Utilities
             BeforeTest();
             Log.Info(">>>>Starting test<<<<\r\n", ConfigurationOptions);
 
-            var result = func(input);
+            bool result = func(input);
 
             Log.Close();
             LogMessageQueueEnabled = false;

@@ -12,6 +12,7 @@ namespace CollectSFDataDllTest.Utilities
         public string AzureClientCertificate;
         public string AzureClientId;
         public string AzureClientSecret;
+        public string AzureKeyVault;
         public string AzureResourceGroup;
         public string AzureResourceGroupLocation;
         public string AzureSubscriptionId;

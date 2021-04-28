@@ -13,9 +13,11 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Security.Cryptography.X509Certificates;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -413,26 +415,70 @@ namespace CollectSFData.Azure
             return _httpClient;
         }
 
-        public X509Certificate2 ReadCertificateFromKeyvault(string keyvaultResourceId /*Config.AzureClientCertificate*/, string secretName /*Config.AzureKeyVault*/)
+        public X509Certificate2 ReadCertificate(string certificateValue)
         {
-            // connecting to kv requires app registration, system, or user assigned managed identity
-            // system is best practice so try first without passing clientid
+            Log.Info("enter:", certificateValue);
+            X509Certificate2 certificate = null;
+            certificate = ReadCertificateValue(certificateValue);
+
+            if (certificate == null)
+            {
+                certificate = ReadCertificateFromStore(certificateValue);
+            }
+
+            if (certificate == null)
+            {
+                certificate = ReadCertificateFromStore(certificateValue, StoreName.My, StoreLocation.LocalMachine);
+            }
+
+            Log.Info("exit", certificate);
+            return certificate;
+        }
+
+        public X509Certificate2 ReadCertificateFromFile(string certificateFile)
+        {
+            Log.Info("enter:", certificateFile);
+            X509Certificate2 certificate = null;
+            //certificate = new X509Certificate2(certificateFile, Config.AzureClientSecret ?? string.Empty, X509KeyStorageFlags.Exportable);
+            certificate = new X509Certificate2(certificateFile, string.Empty, X509KeyStorageFlags.Exportable);
+
+            Log.Info("exit", certificate);
+            return certificate;
+        }
+
+        public X509Certificate2 ReadCertificateFromKeyvault(string keyvaultResourceId /*Config.AzureKeyVault*/, string secretName /*Config.AzureClientSecret*/)
+        {
             Log.Info($"enter:{keyvaultResourceId} {secretName}");
             X509Certificate2 certificate = null;
-            string clientId = null;
+            TokenCredential credential = null;
+            string clientId = Config.AzureClientId;
 
-            if (IsUserManagedIdentity | IsAppRegistration)
+            if (IsAppRegistration)
             {
-                clientId = Config.AzureClientId;
+                credential = new ClientCertificateCredential(Config.AzureTenantId, Config.AzureClientId, ReadCertificate(Config.AzureClientCertificate));
+            }
+            else if (IsUserManagedIdentity)
+            {
+                credential = GetDefaultAzureCredentials(clientId);
+            }
+            else if (IsSystemManagedIdentity)
+            {
+                clientId = "";
+                credential = GetDefaultAzureCredentials(clientId);
+            }
+            else
+            {
+                Log.Error("unknown configuration");
             }
 
             try
             {
-                SecretClient client = new SecretClient(new Uri(keyvaultResourceId), GetDefaultAzureCredentials(clientId));
+                SecretClient client = new SecretClient(new Uri(keyvaultResourceId), credential);
                 KeyVaultSecret secret = client.GetSecret(secretName);
 
                 byte[] privateKeyBytes = Convert.FromBase64String(secret.Value);
-                certificate = new X509Certificate2(privateKeyBytes, string.Empty);
+                //certificate = new X509Certificate2(privateKeyBytes, Config.AzureClientSecret ?? string.Empty, X509KeyStorageFlags.Exportable);
+                certificate = new X509Certificate2(privateKeyBytes, string.Empty, X509KeyStorageFlags.Exportable);
                 return certificate;
             }
             catch (Exception e)
@@ -446,6 +492,17 @@ namespace CollectSFData.Azure
         {
             Log.Highlight("azure ad reauthenticate");
             Authenticate(true, _resource);
+        }
+
+        public bool SaveCertificateToFile(X509Certificate2 certificate, string fileName = null)
+        {
+            Log.Info("enter:", certificate);
+
+            byte[] bytes = certificate.Export(X509ContentType.Pkcs12);
+            File.WriteAllBytes(fileName, bytes);
+
+            Log.Info("exit", certificate);
+            return true;
         }
 
         public Http SendRequest(string uri, HttpMethod method = null, string body = "")
@@ -519,11 +576,12 @@ namespace CollectSFData.Azure
                 X509Certificate2Collection currentCerts = certCollection.Find(X509FindType.FindByTimeValid, DateTime.Now, false);
 
                 // From the collection of unexpired certificates, find the ones with the correct name.
-                X509Certificate2Collection signingCert = currentCerts.Find(X509FindType.FindBySubjectName, certificateId, false);
+                X509Certificate2Collection signingCert = currentCerts.Find(X509FindType.FindBySubjectName, certificateId.ToLower().Replace("cn=", "").Trim(), false);
+                signingCert.AddRange(currentCerts.Find(X509FindType.FindByThumbprint, certificateId, false));
                 Log.Debug("active:", signingCert);
 
                 // Return the first certificate in the collection, has the right name and is current.
-                certificate = signingCert.OfType<X509Certificate2>().OrderByDescending(c => c.NotBefore).FirstOrDefault();
+                certificate = signingCert?.OfType<X509Certificate2>().OrderByDescending(c => c.NotBefore).FirstOrDefault();
             }
 
             if (certificate != null)
@@ -565,16 +623,25 @@ namespace CollectSFData.Azure
         {
             if (string.IsNullOrEmpty(clientCertificate))
             {
+                Log.Error("clientcertificate string empty");
+                return _certificate;
             }
-            else if (string.Compare(_certificate?.FriendlyName, clientCertificate, StringComparison.CurrentCultureIgnoreCase) == 0
-                || string.Compare(_certificate?.Subject, clientCertificate, StringComparison.CurrentCultureIgnoreCase) == 0
-                || string.Compare(_certificate?.Thumbprint, clientCertificate, StringComparison.CurrentCultureIgnoreCase) == 0)
+            else if (_certificate != null)
             {
-                Log.Info($"matched clientCertificate:{clientCertificate}", _certificate);
+                string clientCert = clientCertificate.ToLower().Replace("cn=", "").Trim();
+                string certificateSubject = _certificate.Subject.ToLower().Replace("cn=", "").Trim();
+
+                if (Regex.IsMatch(clientCert, _certificate.Thumbprint, RegexOptions.IgnoreCase)
+                    | Regex.IsMatch(clientCert, certificateSubject, RegexOptions.IgnoreCase))
+                {
+                    Log.Info($"matched current clientCertificate:{clientCertificate}", _certificate);
+                    return _certificate;
+                }
             }
-            else if (!string.IsNullOrEmpty(Config.AzureKeyVault))
+
+            if (!string.IsNullOrEmpty(Config.AzureKeyVault) & !string.IsNullOrEmpty(Config.AzureClientSecret))
             {
-                _certificate = ReadCertificateFromKeyvault(Config.AzureKeyVault, clientCertificate);
+                _certificate = ReadCertificateFromKeyvault(Config.AzureKeyVault, Config.AzureClientSecret);
             }
             else if (FileTypes.MapFileUriType(clientCertificate) == FileUriTypesEnum.fileUri)
             {
@@ -583,11 +650,6 @@ namespace CollectSFData.Azure
             else
             {
                 _certificate = ReadCertificate(clientCertificate);
-            }
-
-            if (_certificate == null)
-            {
-                Log.Error($"certificate string empty for clientcertificate:{clientCertificate}");
             }
 
             Log.Info($"returning certificate string:{_certificate} for clientcertificate:{clientCertificate}");
@@ -673,44 +735,6 @@ namespace CollectSFData.Azure
             return true;
         }
 
-        private X509Certificate2 ReadCertificate(string certificateValue)
-        {
-            Log.Info("enter:", certificateValue);
-            X509Certificate2 certificate = null;
-            certificate = ReadCertificateValue(certificateValue);
-
-            if (certificate == null)
-            {
-                certificate = ReadCertificateFromStore(certificateValue);
-            }
-
-            if (certificate == null)
-            {
-                certificate = ReadCertificateFromStore(certificateValue, StoreName.My, StoreLocation.LocalMachine);
-            }
-
-            Log.Info("exit", certificate);
-            return certificate;
-        }
-
-        private X509Certificate2 ReadCertificateFromFile(string certificateFile)
-        {
-            Log.Info("enter:", certificateFile);
-            X509Certificate2 certificate = null;
-
-            if (!string.IsNullOrEmpty(Config.AzureClientSecret))
-            {
-                certificate = new X509Certificate2(certificateFile, Config.AzureClientSecret);
-            }
-            else
-            {
-                certificate = new X509Certificate2(certificateFile);
-            }
-
-            Log.Info("exit", certificate);
-            return certificate;
-        }
-
         private X509Certificate2 ReadCertificateValue(string certificateValue)
         {
             Log.Info("enter:", certificateValue);
@@ -718,14 +742,8 @@ namespace CollectSFData.Azure
 
             try
             {
-                if (!string.IsNullOrEmpty(Config.AzureClientSecret))
-                {
-                    certificate = new X509Certificate2(Convert.FromBase64String(certificateValue), Config.AzureClientSecret);
-                }
-                else
-                {
-                    certificate = new X509Certificate2(Convert.FromBase64String(certificateValue));
-                }
+                //certificate = new X509Certificate2(Convert.FromBase64String(certificateValue), Config.AzureClientSecret ?? string.Empty, X509KeyStorageFlags.Exportable);
+                certificate = new X509Certificate2(Convert.FromBase64String(certificateValue), string.Empty, X509KeyStorageFlags.Exportable);
             }
             catch (Exception e)
             {
