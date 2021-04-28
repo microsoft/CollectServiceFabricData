@@ -38,7 +38,7 @@ namespace CollectSFData.Common
             set
             {
                 _clientCertificate = value;
-                AzureClientCertificate = _clientCertificate.Subject;
+                AzureClientCertificate = _clientCertificate?.Thumbprint;
             }
         }
 

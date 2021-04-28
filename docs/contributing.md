@@ -111,8 +111,8 @@ this client is used for testing azure client authentication in collectsfdata.
 
 ```powershell
 .\scripts\azure-az-create-aad-application-spn.ps1 `
-  -aadDisplayName collectsfdata `
-  -uri http://collectsfdata `
+  -aadDisplayName collectsfdataapp `
+  -uri http://collectsfdataapp `
   -logontype cert `
   -password {{cert password}}
 
@@ -122,7 +122,7 @@ tenant id: 1a4b5850-4150-4da6-9d0e-4cfcc078292b
 application identifier Uri: http://collectsfdata
 cert and key base64: MIIDEjCCAfqgAwIBAgIQPnmXz4qmKIpHlu...
 thumbprint: 8C1AD1A0DBA04F78F7EE86FBDBC6E9CF06DB79E3
-pfx path: C:\Users\user\AppData\Local\Temp\collectsfdata.pfx
+pfx path: C:\Users\user\AppData\Local\Temp\collectsfdataapp.pfx
 clientid / applicationid saved in $global:applicationId
 clientsecret / base64 thumb saved in $global:clientSecret
 
