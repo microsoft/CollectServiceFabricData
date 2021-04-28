@@ -294,9 +294,9 @@ namespace CollectSFData.DataFile
             }
             else
             {
-                if (fileUri.IndexOfAny(Path.GetInvalidPathChars()) == 0
-                    && fileUri.IndexOfAny(Path.GetInvalidFileNameChars()) == 0
-                    && Path.GetPathRoot(fileUri).Length > 0 | fileUri.StartsWith("."))
+                if (fileUri.IndexOfAny(Path.GetInvalidPathChars()) < 0
+                    && Path.GetPathRoot(fileUri).Length > 0 | fileUri.StartsWith(".")
+                    && Path.GetFileName(fileUri).IndexOfAny(Path.GetInvalidFileNameChars()) < 0)
                 {
                     fileUriTypesEnum = FileUriTypesEnum.fileUri;
                 }
