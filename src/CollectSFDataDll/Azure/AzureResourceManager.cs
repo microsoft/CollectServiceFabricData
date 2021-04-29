@@ -4,26 +4,21 @@
 // ------------------------------------------------------------
 
 using Azure.Core;
-using Azure.Identity;
-using Azure.Security.KeyVault.Secrets;
 using CollectSFData.Common;
-using CollectSFData.DataFile;
 using Microsoft.Identity.Client;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Security.Cryptography.X509Certificates;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace CollectSFData.Azure
 {
-    public class AzureResourceManager 
+    public class AzureResourceManager
     {
         private string _commonTenantId = "common";
         private IConfidentialClientApplication _confidentialClientApp;

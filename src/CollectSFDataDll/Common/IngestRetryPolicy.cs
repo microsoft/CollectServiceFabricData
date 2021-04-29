@@ -9,7 +9,7 @@ using System;
 
 namespace CollectSFData.Common
 {
-    public class IngestRetryPolicy: IRetryPolicy
+    public class IngestRetryPolicy : IRetryPolicy
     {
         IRetryPolicy IRetryPolicy.CreateInstance()
         {
