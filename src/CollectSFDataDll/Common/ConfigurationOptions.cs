@@ -545,6 +545,7 @@ namespace CollectSFData.Common
             bool needsAad = IsKustoConfigured() | IsKustoPurgeRequested() | IsLogAnalyticsConfigured();
             needsAad |= LogAnalyticsCreate | LogAnalyticsRecreate | IsLogAnalyticsPurgeRequested();
             bool clientIdConfigured = IsClientIdConfigured();
+            needsAad |= clientIdConfigured;
 
             if (!IsGuidIfPopulated(AzureClientId))
             {
@@ -570,12 +571,12 @@ namespace CollectSFData.Common
                 retval = false;
             }
 
-            if (needsAad | clientIdConfigured)
+            if (needsAad)
             {
                 AzureResourceManager arm = new AzureResourceManager();
                 retval = arm.Authenticate();
 
-                if (clientIdConfigured & AzureManagedIdentity & !(arm.IsSystemManagedIdentity | arm.IsUserManagedIdentity))
+                if (clientIdConfigured & AzureManagedIdentity & !(arm.ClientIdentity.IsSystemManagedIdentity | arm.ClientIdentity.IsUserManagedIdentity))
                 {
                     Log.Warning($"unable to detect managed identity. verify azure client configuration settings and set AzureManagedIdentity to false if not using.");
                 }
