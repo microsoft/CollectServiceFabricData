@@ -1,13 +1,11 @@
-﻿using NUnit.Framework;
+﻿using CollectSFData.Azure;
 using CollectSFData.Common;
-using System;
-using System.Collections.Generic;
-using System.Text;
-using CollectSFDataDllTest.Utilities;
 using CollectSFData.DataFile;
-using System.IO;
-using CollectSFData.Azure;
+using CollectSFDataDllTest.Utilities;
 using CollectSFDataTest.Utilities;
+using NUnit.Framework;
+using System;
+using System.IO;
 using System.Security.Cryptography.X509Certificates;
 
 namespace CollectSFDataDll.ConfigurationTests

@@ -19,7 +19,7 @@ using System.Threading.Tasks;
 
 namespace CollectSFData.Kusto
 {
-    public class KustoConnection 
+    public class KustoConnection
     {
         private const int _maxMessageCount = 32;
         private readonly CustomTaskManager _kustoTasks = new CustomTaskManager(true);

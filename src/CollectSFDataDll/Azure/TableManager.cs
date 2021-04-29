@@ -15,7 +15,7 @@ using System.Threading.Tasks;
 
 namespace CollectSFData.Azure
 {
-    public class TableManager 
+    public class TableManager
     {
         private readonly CustomTaskManager _tableTasks = new CustomTaskManager(true);
         private Instance _instance = Instance.Singleton();

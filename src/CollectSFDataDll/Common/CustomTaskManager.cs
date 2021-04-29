@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace CollectSFData.Common
 {
-    public class CustomTaskManager 
+    public class CustomTaskManager
     {
         private static SynchronizedList<CustomTaskManager> _allInstances = new SynchronizedList<CustomTaskManager>();
         private static CustomTaskScheduler _customScheduler;

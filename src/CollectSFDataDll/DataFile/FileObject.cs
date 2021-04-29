@@ -11,7 +11,7 @@ using System.Text.RegularExpressions;
 
 namespace CollectSFData.DataFile
 {
-    public class FileObject: IEqualityComparer
+    public class FileObject : IEqualityComparer
     {
         private readonly string _fileDataTypesPattern = string.Join("|", Enum.GetNames(typeof(FileDataTypesEnum)));
         private FileStatus _fileObjectStatus = FileStatus.unknown;
