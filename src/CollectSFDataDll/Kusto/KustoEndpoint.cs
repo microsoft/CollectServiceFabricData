@@ -23,7 +23,7 @@ using System.Threading;
 
 namespace CollectSFData.Kusto
 {
-    public class KustoEndpoint 
+    public class KustoEndpoint
     {
         public string Cursor;
         private static ICslAdminProvider _kustoAdminClient;

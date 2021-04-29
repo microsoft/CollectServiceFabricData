@@ -15,7 +15,7 @@ using System.Text.RegularExpressions;
 
 namespace CollectSFData.DataFile
 {
-    public class StreamManager 
+    public class StreamManager
     {
         private FileObject _fileObject;
         private MemoryStream _memoryStream = new MemoryStream();

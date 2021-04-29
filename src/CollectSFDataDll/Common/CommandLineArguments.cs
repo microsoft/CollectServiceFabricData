@@ -9,7 +9,7 @@ using System.Text;
 
 namespace CollectSFData.Common
 {
-    public class CommandLineArguments 
+    public class CommandLineArguments
     {
         public CommandOption AzureClientCertificate { get; set; }
 

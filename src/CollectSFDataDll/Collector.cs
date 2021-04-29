@@ -17,7 +17,7 @@ namespace CollectSFData
     using System.Threading;
     using System.Threading.Tasks;
 
-    public class Collector 
+    public class Collector
     {
         private bool _checkedVersion;
         private int _noProgressCounter = 0;
