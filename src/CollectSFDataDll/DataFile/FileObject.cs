@@ -11,7 +11,7 @@ using System.Text.RegularExpressions;
 
 namespace CollectSFData.DataFile
 {
-    public class FileObject : Constants, IEqualityComparer
+    public class FileObject: IEqualityComparer
     {
         private readonly string _fileDataTypesPattern = string.Join("|", Enum.GetNames(typeof(FileDataTypesEnum)));
         private FileStatus _fileObjectStatus = FileStatus.unknown;
@@ -135,8 +135,8 @@ namespace CollectSFData.DataFile
                 return false;
             }
 
-            self = self.ToLower().TrimEnd(ZipExtension.ToCharArray()).TrimEnd(CsvExtension.ToCharArray());
-            comparable = comparable.ToLower().TrimEnd(ZipExtension.ToCharArray()).TrimEnd(CsvExtension.ToCharArray());
+            self = self.ToLower().TrimEnd(Constants.ZipExtension.ToCharArray()).TrimEnd(Constants.CsvExtension.ToCharArray());
+            comparable = comparable.ToLower().TrimEnd(Constants.ZipExtension.ToCharArray()).TrimEnd(Constants.CsvExtension.ToCharArray());
 
             if (self.EndsWith(comparable) | comparable.EndsWith(self))
             {

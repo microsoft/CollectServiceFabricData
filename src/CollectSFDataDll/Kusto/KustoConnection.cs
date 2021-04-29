@@ -19,7 +19,7 @@ using System.Threading.Tasks;
 
 namespace CollectSFData.Kusto
 {
-    public class KustoConnection : Constants
+    public class KustoConnection 
     {
         private const int _maxMessageCount = 32;
         private readonly CustomTaskManager _kustoTasks = new CustomTaskManager(true);
@@ -155,7 +155,7 @@ namespace CollectSFData.Kusto
                 return true;
             }
 
-            string cleanUri = Regex.Replace(relativeUri, $"\\.?\\d*?({ZipExtension}|{TableExtension})", "");
+            string cleanUri = Regex.Replace(relativeUri, $"\\.?\\d*?({Constants.ZipExtension}|{Constants.TableExtension})", "");
             return !_instance.FileObjects.HasFileUri(cleanUri);
         }
 
@@ -498,12 +498,12 @@ namespace CollectSFData.Kusto
         {
             while ((!_tokenSource.IsCancellationRequested | _instance.FileObjects.Count(FileStatus.uploading) > 0) & !_kustoTasks.IsCancellationRequested)
             {
-                Thread.Sleep(ThreadSleepMs100);
+                Thread.Sleep(Constants.ThreadSleepMs100);
                 QueueMessageMonitor();
 
                 if (!Config.KustoUseIngestMessage)
                 {
-                    Thread.Sleep(ThreadSleepMs10000);
+                    Thread.Sleep(Constants.ThreadSleepMs10000);
 
                     if (!Endpoint.HasTable(Endpoint.TableName))
                     {
