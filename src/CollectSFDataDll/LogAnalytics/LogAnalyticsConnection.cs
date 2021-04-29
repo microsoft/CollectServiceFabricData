@@ -20,7 +20,7 @@ using System.Threading;
 
 namespace CollectSFData.LogAnalytics
 {
-    public class LogAnalyticsConnection : Constants
+    public class LogAnalyticsConnection 
     {
         private readonly AzureResourceManager _arm = new AzureResourceManager();
         private readonly AzureResourceManager _laArm = new AzureResourceManager();
@@ -124,9 +124,9 @@ namespace CollectSFData.LogAnalytics
 
         private string BuildSignature(string datestring, byte[] jsonBytes)
         {
-            if (jsonBytes.Length > MaxJsonTransmitBytes | jsonBytes.Length == 0)
+            if (jsonBytes.Length > Constants.MaxJsonTransmitBytes | jsonBytes.Length == 0)
             {
-                string errMessage = $"json size too large to send or 0 bytes. max bytes that can be sent: {MaxJsonTransmitBytes} current json bytes: {jsonBytes.Length}";
+                string errMessage = $"json size too large to send or 0 bytes. max bytes that can be sent: {Constants.MaxJsonTransmitBytes} current json bytes: {jsonBytes.Length}";
                 Log.Exception(errMessage);
                 throw new ArgumentOutOfRangeException(errMessage);
             }
@@ -153,7 +153,7 @@ namespace CollectSFData.LogAnalytics
                 return true;
             }
 
-            string cleanUri = Regex.Replace(relativeUri, $"\\.?\\d*?({ZipExtension}|{TableExtension})", "");
+            string cleanUri = Regex.Replace(relativeUri, $"\\.?\\d*?({Constants.ZipExtension}|{Constants.TableExtension})", "");
             return !_ingestedUris.Any(x => x.Contains(cleanUri));
         }
 
@@ -209,17 +209,17 @@ namespace CollectSFData.LogAnalytics
             Log.Info("enter");
             Log.Warning($"deleting workspaceModel {CurrentWorkspace.id}");
             Log.Warning("Ctrl-C now if this is incorrect!");
-            Thread.Sleep(ThreadSleepMsWarning);
+            Thread.Sleep(Constants.ThreadSleepMsWarning);
 
             // delete workspaceModel
-            string url = $"{ManagementAzureCom}{CurrentWorkspace.id}?{_logAnalyticsApiVer}";
+            string url = $"{Constants.ManagementAzureCom}{CurrentWorkspace.id}?{_logAnalyticsApiVer}";
             return _arm.SendRequest(url, HttpMethod.Delete).Success;
         }
 
         private bool GetCurrentWorkspace(string workspaceId = null)
         {
             Log.Info("enter");
-            string url = $"{ManagementAzureCom}/subscriptions/{Config.AzureSubscriptionId}/providers/Microsoft.OperationalInsights/workspaces?{_logAnalyticsApiVer}";
+            string url = $"{Constants.ManagementAzureCom}/subscriptions/{Config.AzureSubscriptionId}/providers/Microsoft.OperationalInsights/workspaces?{_logAnalyticsApiVer}";
             Http http = _arm.SendRequest(url);
             workspaceId = workspaceId ?? Config.LogAnalyticsId;
 
@@ -264,7 +264,7 @@ namespace CollectSFData.LogAnalytics
 
         private string GetWorkspacePrimaryKey()
         {
-            string url = $"{ManagementAzureCom}{CurrentWorkspace.id}/sharedKeys?{_logAnalyticsApiVer}";
+            string url = $"{Constants.ManagementAzureCom}{CurrentWorkspace.id}/sharedKeys?{_logAnalyticsApiVer}";
             Http http = _arm.SendRequest(url, HttpMethod.Post);
 
             if (http.Success)
@@ -284,13 +284,13 @@ namespace CollectSFData.LogAnalytics
         {
             int retry = 0;
 
-            if (fileObject.Stream.Length < 1 && (!fileObject.FileUri.ToLower().EndsWith(JsonExtension) | !fileObject.Exists))
+            if (fileObject.Stream.Length < 1 && (!fileObject.FileUri.ToLower().EndsWith(Constants.JsonExtension) | !fileObject.Exists))
             {
                 Log.Warning($"no json data to send: {fileObject.FileUri}");
                 return;
             }
 
-            while (!PostData(fileObject) & retry++ < RetryCount)
+            while (!PostData(fileObject) & retry++ < Constants.RetryCount)
             {
                 Log.Error($"error importing: {fileObject.FileUri} retry:{retry}");
 
@@ -455,11 +455,11 @@ namespace CollectSFData.LogAnalytics
 
             if (Config.LogAnalyticsPurge.ToLower() == "true")
             {
-                string purgeUrl = $"{ManagementAzureCom}{CurrentWorkspace.id}/purge?{_logAnalyticsApiVer}"; //api-version=2015-03-20";
+                string purgeUrl = $"{Constants.ManagementAzureCom}{CurrentWorkspace.id}/purge?{_logAnalyticsApiVer}"; //api-version=2015-03-20";
 
                 Log.Warning($"deleting data for 'LogAnalyticsName':{Config.LogAnalyticsName}");
                 Log.Warning("Ctrl-C now if this is incorrect!");
-                Thread.Sleep(ThreadSleepMsWarning);
+                Thread.Sleep(Constants.ThreadSleepMsWarning);
 
                 LogAnalyticsPurge logAnalyticsPurge = new LogAnalyticsPurge()
                 {
@@ -481,7 +481,7 @@ namespace CollectSFData.LogAnalytics
 
                 if (!string.IsNullOrEmpty(purgeStatusUrl))
                 {
-                    while (count < RetryCount)
+                    while (count < Constants.RetryCount)
                     {
                         http = _arm.SendRequest(purgeStatusUrl);
                         if (http.ResponseStreamJson.GetValue("status").ToString() == "completed")
@@ -492,7 +492,7 @@ namespace CollectSFData.LogAnalytics
 
                         count++;
                         Log.Info($"iteration: {count}");
-                        Thread.Sleep(ThreadSleepMs10000);
+                        Thread.Sleep(Constants.ThreadSleepMs10000);
                     }
                 }
 

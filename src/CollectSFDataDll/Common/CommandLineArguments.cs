@@ -9,7 +9,7 @@ using System.Text;
 
 namespace CollectSFData.Common
 {
-    public class CommandLineArguments : Constants
+    public class CommandLineArguments 
     {
         public CommandOption AzureClientCertificate { get; set; }
 
@@ -122,16 +122,16 @@ namespace CollectSFData.Common
             Log.Min("Example Usage #1 to download performance counter .blg files", ConsoleColor.Yellow, ConsoleColor.Black);
             sb.AppendLine("");
             sb.AppendLine("CollectSFData.exe"
-                      + $" -from \"{exampleDate.ToString(DefaultDatePattern)}\""
-                      + $" -to \"{exampleDate.AddHours(2).ToString(DefaultDatePattern)}\""
+                      + $" -from \"{exampleDate.ToString(Constants.DefaultDatePattern)}\""
+                      + $" -to \"{exampleDate.AddHours(2).ToString(Constants.DefaultDatePattern)}\""
                       + " -cache \"C:\\Cases\\123245\\perfcounters\""
                       + " -s \"https://sflgaccountname.blob.core.windows.net/fabriclogs-6b...E%3D\"");
             sb.AppendLine("");
             sb.AppendLine($"\t    Gathering: counter");
-            sb.AppendLine($"\t   Start Time: {exampleDate.ToString(DefaultDatePattern)}");
-            sb.AppendLine($"\t          UTC: {exampleDate.ToUniversalTime().ToString(DefaultDatePattern)}");
-            sb.AppendLine($"\t     End Time: {exampleDate.AddHours(2).ToString(DefaultDatePattern)}");
-            sb.AppendLine($"\t          UTC: {exampleDate.AddHours(2).ToUniversalTime().ToString(DefaultDatePattern)}");
+            sb.AppendLine($"\t   Start Time: {exampleDate.ToString(Constants.DefaultDatePattern)}");
+            sb.AppendLine($"\t          UTC: {exampleDate.ToUniversalTime().ToString(Constants.DefaultDatePattern)}");
+            sb.AppendLine($"\t     End Time: {exampleDate.AddHours(2).ToString(Constants.DefaultDatePattern)}");
+            sb.AppendLine($"\t          UTC: {exampleDate.AddHours(2).ToUniversalTime().ToString(Constants.DefaultDatePattern)}");
             sb.AppendLine("\t   AccountName: sflgaccountname");
             sb.AppendLine("\t       SAS key: https://sflgaccountname.blob.core.windows.net/fabriclogs-6b...E%3D\"");
             sb.AppendLine($"\t      Threads: 8");
@@ -147,17 +147,17 @@ namespace CollectSFData.Common
             Log.Min("Example Usage #2 to download service fabric trace dtr.zip (.csv) files", ConsoleColor.Yellow, ConsoleColor.Black);
             sb.AppendLine("");
             sb.AppendLine("CollectSFData.exe"
-                      + $" -from \"{exampleDate.ToString(DefaultDatePattern)}\""
-                      + $" -to \"{exampleDate.AddHours(2).ToString(DefaultDatePattern)}\""
+                      + $" -from \"{exampleDate.ToString(Constants.DefaultDatePattern)}\""
+                      + $" -to \"{exampleDate.AddHours(2).ToString(Constants.DefaultDatePattern)}\""
                       + " --cacheLocation \"C:\\Cases\\123245\\traceLogs\""
                       + " --gatherType trace"
                       + " --sasKey \"https://sflgaccountname.blob.core.windows.net/fabriclogs-6b...E%3D\"");
             sb.AppendLine("");
             sb.AppendLine($"\t    Gathering: trace");
-            sb.AppendLine($"\t   Start Time: {exampleDate.ToString(DefaultDatePattern)}");
-            sb.AppendLine($"\t          UTC: {exampleDate.ToUniversalTime().ToString(DefaultDatePattern)}");
-            sb.AppendLine($"\t     End Time: {exampleDate.AddHours(2).ToString(DefaultDatePattern)}");
-            sb.AppendLine($"\t          UTC: {exampleDate.AddHours(2).ToUniversalTime().ToString(DefaultDatePattern)}");
+            sb.AppendLine($"\t   Start Time: {exampleDate.ToString(Constants.DefaultDatePattern)}");
+            sb.AppendLine($"\t          UTC: {exampleDate.ToUniversalTime().ToString(Constants.DefaultDatePattern)}");
+            sb.AppendLine($"\t     End Time: {exampleDate.AddHours(2).ToString(Constants.DefaultDatePattern)}");
+            sb.AppendLine($"\t          UTC: {exampleDate.AddHours(2).ToUniversalTime().ToString(Constants.DefaultDatePattern)}");
             sb.AppendLine("\t   AccountName: sflgaccountname");
             sb.AppendLine("\t       SAS key: https://sflgaccountname.blob.core.windows.net/fabriclogs-6b...E%3D\"");
             sb.AppendLine($"\t      Threads: 8");
@@ -180,10 +180,10 @@ namespace CollectSFData.Common
                       + " -csv --sasKey \"https://sflgaccountname.blob.core.windows.net/fabriclogs-6b...E%3D\"");
             sb.AppendLine("");
             sb.AppendLine($"\t    Gathering: trace");
-            sb.AppendLine($"\t  Start Time: {exampleDate.ToString(DefaultDatePattern)}");
-            sb.AppendLine($"\t          UTC: {exampleDate.ToUniversalTime().ToString(DefaultDatePattern)}");
-            sb.AppendLine($"\t    End Time: {exampleDate.AddHours(2).ToString(DefaultDatePattern)}");
-            sb.AppendLine($"\t          UTC: {exampleDate.AddHours(2).ToUniversalTime().ToString(DefaultDatePattern)}");
+            sb.AppendLine($"\t  Start Time: {exampleDate.ToString(Constants.DefaultDatePattern)}");
+            sb.AppendLine($"\t          UTC: {exampleDate.ToUniversalTime().ToString(Constants.DefaultDatePattern)}");
+            sb.AppendLine($"\t    End Time: {exampleDate.AddHours(2).ToString(Constants.DefaultDatePattern)}");
+            sb.AppendLine($"\t          UTC: {exampleDate.AddHours(2).ToUniversalTime().ToString(Constants.DefaultDatePattern)}");
             sb.AppendLine("\t   AccountName: sflgaccountname");
             sb.AppendLine("\t       SAS key: https://sflgaccountname.blob.core.windows.net/fabriclogs-6b...E%3D\"");
             sb.AppendLine($"\t      Threads: 8");
@@ -199,17 +199,17 @@ namespace CollectSFData.Common
             Log.Min("Example Usage #4 download service fabric trace files, unzip, and format .csv output files", ConsoleColor.Yellow, ConsoleColor.Black);
             sb.AppendLine("");
             sb.AppendLine("CollectSFData.exe"
-                      + $" -from \"{exampleDate.ToString(DefaultDatePattern)}\""
-                      + $" -to \"{exampleDate.AddHours(2).ToString(DefaultDatePattern)}\""
+                      + $" -from \"{exampleDate.ToString(Constants.DefaultDatePattern)}\""
+                      + $" -to \"{exampleDate.AddHours(2).ToString(Constants.DefaultDatePattern)}\""
                       + " --cacheLocation \"C:\\Cases\\123245\\traceLogs\""
                       + " --gatherType trace"
                       + " --sasKey \"https://sflgaccountname.blob.core.windows.net/fabriclogs-6b...E%3D\"");
             sb.AppendLine("");
             sb.AppendLine($"\t     Gathering: trace");
-            sb.AppendLine($"\t    Start Time: {exampleDate.ToString(DefaultDatePattern)}");
-            sb.AppendLine($"\t           UTC: {exampleDate.ToUniversalTime().ToString(DefaultDatePattern)}");
-            sb.AppendLine($"\t      End Time: {exampleDate.AddHours(2).ToString(DefaultDatePattern)}");
-            sb.AppendLine($"\t           UTC: {exampleDate.AddHours(2).ToUniversalTime().ToString(DefaultDatePattern)}");
+            sb.AppendLine($"\t    Start Time: {exampleDate.ToString(Constants.DefaultDatePattern)}");
+            sb.AppendLine($"\t           UTC: {exampleDate.ToUniversalTime().ToString(Constants.DefaultDatePattern)}");
+            sb.AppendLine($"\t      End Time: {exampleDate.AddHours(2).ToString(Constants.DefaultDatePattern)}");
+            sb.AppendLine($"\t           UTC: {exampleDate.AddHours(2).ToUniversalTime().ToString(Constants.DefaultDatePattern)}");
             sb.AppendLine("\t    AccountName: sflgaccountname");
             sb.AppendLine("\t        SAS key: https://sflgaccountname.blob.core.windows.net/fabriclogs-6b...E%3D\"");
             sb.AppendLine($"\t       Threads: 8");
@@ -225,17 +225,17 @@ namespace CollectSFData.Common
             Log.Min("Example Usage #5 download performance counter .blg files and convert to csv files", ConsoleColor.Yellow, ConsoleColor.Black);
             sb.AppendLine("");
             sb.AppendLine("CollectSFData.exe"
-                      + $" -from \"{exampleDate.ToString(DefaultDatePattern)}\""
-                      + $" -to \"{exampleDate.AddHours(2).ToString(DefaultDatePattern)}\""
+                      + $" -from \"{exampleDate.ToString(Constants.DefaultDatePattern)}\""
+                      + $" -to \"{exampleDate.AddHours(2).ToString(Constants.DefaultDatePattern)}\""
                       + " --cacheLocation \"C:\\Cases\\123245\\perfcounters\""
                       + " --gatherType counter"
                       + " --csv --sasKey \"https://sflgaccountname.blob.core.windows.net/fabriclogs-6b...E%3D\"");
             sb.AppendLine("");
             sb.AppendLine($"\t     Gathering: counter");
-            sb.AppendLine($"\t    Start Time: {exampleDate.ToString(DefaultDatePattern)}");
-            sb.AppendLine($"\t           UTC: {exampleDate.ToUniversalTime().ToString(DefaultDatePattern)}");
-            sb.AppendLine($"\t      End Time: {exampleDate.AddHours(2).ToString(DefaultDatePattern)}");
-            sb.AppendLine($"\t           UTC: {exampleDate.AddHours(2).ToUniversalTime().ToString(DefaultDatePattern)}");
+            sb.AppendLine($"\t    Start Time: {exampleDate.ToString(Constants.DefaultDatePattern)}");
+            sb.AppendLine($"\t           UTC: {exampleDate.ToUniversalTime().ToString(Constants.DefaultDatePattern)}");
+            sb.AppendLine($"\t      End Time: {exampleDate.AddHours(2).ToString(Constants.DefaultDatePattern)}");
+            sb.AppendLine($"\t           UTC: {exampleDate.AddHours(2).ToUniversalTime().ToString(Constants.DefaultDatePattern)}");
             sb.AppendLine("\t    AccountName: sflgaccountname");
             sb.AppendLine("\t        SAS key: https://sflgaccountname.blob.core.windows.net/fabriclogs-6b...E%3D\"");
             sb.AppendLine($"\t       Threads: 8");
@@ -253,10 +253,10 @@ namespace CollectSFData.Common
                       + " --gatherType trace");
             sb.AppendLine("");
             sb.AppendLine($"\t  Gathering: trace");
-            sb.AppendLine($"\t Start Time: {exampleDate.ToString(DefaultDatePattern)}");
-            sb.AppendLine($"\t        UTC: {exampleDate.ToUniversalTime().ToString(DefaultDatePattern)}");
-            sb.AppendLine($"\t   End Time: {exampleDate.AddHours(2).ToString(DefaultDatePattern)}");
-            sb.AppendLine($"\t        UTC: {exampleDate.AddHours(2).ToUniversalTime().ToString(DefaultDatePattern)}");
+            sb.AppendLine($"\t Start Time: {exampleDate.ToString(Constants.DefaultDatePattern)}");
+            sb.AppendLine($"\t        UTC: {exampleDate.ToUniversalTime().ToString(Constants.DefaultDatePattern)}");
+            sb.AppendLine($"\t   End Time: {exampleDate.AddHours(2).ToString(Constants.DefaultDatePattern)}");
+            sb.AppendLine($"\t        UTC: {exampleDate.AddHours(2).ToUniversalTime().ToString(Constants.DefaultDatePattern)}");
             sb.AppendLine("\tAccountName: ");
             sb.AppendLine("\t    SAS key: ");
             sb.AppendLine("\tParse 2 Csv: False");
@@ -273,8 +273,8 @@ namespace CollectSFData.Common
             Log.Min("Example Usage #7 kusto: download service fabric trace files, unzip, format for kusto, queue for kusto ingest.", ConsoleColor.Yellow, ConsoleColor.Black);
             sb.AppendLine("");
             sb.AppendLine("CollectSFData.exe"
-                      + $" -from \"{exampleDate.ToString(DefaultDatePattern)}\""
-                      + $" -to \"{exampleDate.AddHours(2).ToString(DefaultDatePattern)}\""
+                      + $" -from \"{exampleDate.ToString(Constants.DefaultDatePattern)}\""
+                      + $" -to \"{exampleDate.AddHours(2).ToString(Constants.DefaultDatePattern)}\""
                       + " -cache \"C:\\Cases\\123245\\traceLogs\""
                       + " -type trace"
                       + " -s \"https://sflgaccountname.blob.core.windows.net/fabriclogs-6b...E%3D\""
@@ -283,10 +283,10 @@ namespace CollectSFData.Common
                       + " -kt \"kustoTable-trace\"");
             sb.AppendLine("");
             sb.AppendLine($"\t     Gathering: trace");
-            sb.AppendLine($"\t    Start Time: {exampleDate.ToString(DefaultDatePattern)}");
-            sb.AppendLine($"\t           UTC: {exampleDate.ToUniversalTime().ToString(DefaultDatePattern)}");
-            sb.AppendLine($"\t      End Time: {exampleDate.AddHours(2).ToString(DefaultDatePattern)}");
-            sb.AppendLine($"\t           UTC: {exampleDate.AddHours(2).ToUniversalTime().ToString(DefaultDatePattern)}");
+            sb.AppendLine($"\t    Start Time: {exampleDate.ToString(Constants.DefaultDatePattern)}");
+            sb.AppendLine($"\t           UTC: {exampleDate.ToUniversalTime().ToString(Constants.DefaultDatePattern)}");
+            sb.AppendLine($"\t      End Time: {exampleDate.AddHours(2).ToString(Constants.DefaultDatePattern)}");
+            sb.AppendLine($"\t           UTC: {exampleDate.AddHours(2).ToUniversalTime().ToString(Constants.DefaultDatePattern)}");
             sb.AppendLine("\t    AccountName: sflgaccountname");
             sb.AppendLine("\t        SAS key: https://sflgaccountname.blob.core.windows.net/fabriclogs-6b...E%3D\"");
             sb.AppendLine($"\t       Threads: 8");
@@ -303,8 +303,8 @@ namespace CollectSFData.Common
                 ConsoleColor.Yellow, ConsoleColor.Black);
             sb.AppendLine("");
             sb.AppendLine("CollectSFData.exe"
-                      + $" -from \"{exampleDate.ToString(DefaultDatePattern)}\""
-                      + $" -to \"{exampleDate.AddHours(2).ToString(DefaultDatePattern)}\""
+                      + $" -from \"{exampleDate.ToString(Constants.DefaultDatePattern)}\""
+                      + $" -to \"{exampleDate.AddHours(2).ToString(Constants.DefaultDatePattern)}\""
                       + " -cache \"C:\\Cases\\123245\\traceLogs\""
                       + " -c"
                       + " -type counter"
@@ -314,10 +314,10 @@ namespace CollectSFData.Common
                       + " -kt \"kustoTable-perf\"");
             sb.AppendLine("");
             sb.AppendLine($"\t     Gathering: counter");
-            sb.AppendLine($"\t    Start Time: {exampleDate.ToString(DefaultDatePattern)}");
-            sb.AppendLine($"\t           UTC: {exampleDate.ToUniversalTime().ToString(DefaultDatePattern)}");
-            sb.AppendLine($"\t      End Time: {exampleDate.AddHours(2).ToString(DefaultDatePattern)}");
-            sb.AppendLine($"\t           UTC: {exampleDate.AddHours(2).ToUniversalTime().ToString(DefaultDatePattern)}");
+            sb.AppendLine($"\t    Start Time: {exampleDate.ToString(Constants.DefaultDatePattern)}");
+            sb.AppendLine($"\t           UTC: {exampleDate.ToUniversalTime().ToString(Constants.DefaultDatePattern)}");
+            sb.AppendLine($"\t      End Time: {exampleDate.AddHours(2).ToString(Constants.DefaultDatePattern)}");
+            sb.AppendLine($"\t           UTC: {exampleDate.AddHours(2).ToUniversalTime().ToString(Constants.DefaultDatePattern)}");
             sb.AppendLine("\t    AccountName: sflgaccountname");
             sb.AppendLine("\t        SAS key: https://sflgaccountname.blob.core.windows.net/fabriclogs-6b...E%3D\"");
             sb.AppendLine($"\t       Threads: 8");
@@ -338,8 +338,8 @@ namespace CollectSFData.Common
             CmdLineApp.HelpOption("-?|--?");
 
             CmdLineApp.ExtendedHelpText = $"\r\nargument names on command line *are* case sensitive." +
-                $"\r\nbool argument values on command line should either be {TrueStringPattern} or {FalseStringPattern}." +
-                $"\r\n{CodeRepository}";
+                $"\r\nbool argument values on command line should either be {Constants.TrueStringPattern} or {Constants.FalseStringPattern}." +
+                $"\r\n{Constants.CodeRepository}";
 
             AzureClientId = CmdLineApp.Option("-client|--azureClientId",
                     $"[string] azure application id / client id for use with authentication" +
@@ -394,7 +394,7 @@ namespace CollectSFData.Common
             ConfigurationFile = CmdLineApp.Option("-config|--configurationFile",
                     $"[string] json file containing configuration options." +
                     $"{newLine} type collectsfdata.exe -save default.json to create a default file." +
-                    $"{newLine} if {DefaultOptionsFile} exists, it will be used for configuration.",
+                    $"{newLine} if {Constants.DefaultOptionsFile} exists, it will be used for configuration.",
                     CommandOptionType.SingleValue);
 
             ContainerFilter = CmdLineApp.Option("-cf|--containerFilter",
@@ -541,8 +541,8 @@ namespace CollectSFData.Common
 
             StartTimeStamp = CmdLineApp.Option("-from|--start",
                     $"[DateTime] start time range to collect data from." +
-                    $"{newLine} default is {DefaultStartTimeHours} hours." +
-                    $"{newLine} example: \"{DateTime.Now.AddHours(DefaultStartTimeHours).ToString(exampleDateFormat)}\"",
+                    $"{newLine} default is {Constants.DefaultStartTimeHours} hours." +
+                    $"{newLine} example: \"{DateTime.Now.AddHours(Constants.DefaultStartTimeHours).ToString(exampleDateFormat)}\"",
                     CommandOptionType.SingleValue);
 
             Threads = CmdLineApp.Option("-t|--threads",

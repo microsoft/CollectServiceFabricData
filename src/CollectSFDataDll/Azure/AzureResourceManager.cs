@@ -23,15 +23,15 @@ using System.Threading.Tasks;
 
 namespace CollectSFData.Azure
 {
-    public class AzureResourceManager : Constants
+    public class AzureResourceManager 
     {
         private string _commonTenantId = "common";
         private IConfidentialClientApplication _confidentialClientApp;
         private List<string> _defaultScope = new List<string>() { ".default" };
-        private string _getSubscriptionRestUri = ManagementAzureCom + "/subscriptions/{subscriptionId}?api-version=2016-06-01";
+        private string _getSubscriptionRestUri = Constants.ManagementAzureCom + "/subscriptions/{subscriptionId}?api-version=2016-06-01";
         private Http _httpClient = Http.ClientFactory();
         private Instance _instance = Instance.Singleton();
-        private string _listSubscriptionsRestUri = ManagementAzureCom + "/subscriptions?api-version=2016-06-01";
+        private string _listSubscriptionsRestUri = Constants.ManagementAzureCom + "/subscriptions?api-version=2016-06-01";
         private IPublicClientApplication _publicClientApp;
         private string _resource;
         private Timer _timer;
@@ -66,7 +66,7 @@ namespace CollectSFData.Azure
             ClientCertificate = new ClientCertificate(ClientIdentity);
         }
 
-        public bool Authenticate(bool throwOnError = false, string resource = ManagementAzureCom)
+        public bool Authenticate(bool throwOnError = false, string resource = Constants.ManagementAzureCom)
         {
             Exception ex = new Exception();
             Log.Debug("azure ad:enter");
@@ -158,7 +158,7 @@ namespace CollectSFData.Azure
 
         public bool CheckResource(string resourceId)
         {
-            string uri = $"{ManagementAzureCom}{resourceId}?{ArmApiVersion}";
+            string uri = $"{Constants.ManagementAzureCom}{resourceId}?{Constants.ArmApiVersion}";
 
             if (_httpClient.SendRequest(uri: uri, authToken: BearerToken, httpMethod: HttpMethod.Head))
             {
@@ -297,7 +297,7 @@ namespace CollectSFData.Azure
             if (!CheckResource(resourceId))
             {
                 Log.Warning($"creating resourcegroup {resourceId}");
-                string uri = $"{ManagementAzureCom}{resourceId}?{ArmApiVersion}";
+                string uri = $"{Constants.ManagementAzureCom}{resourceId}?{Constants.ArmApiVersion}";
                 JObject jBody = new JObject()
                 {
                    new JProperty("location", location)
@@ -360,17 +360,17 @@ namespace CollectSFData.Azure
             return response;
         }
 
-        public Http ProvisionResource(string resourceId, string body = "", string apiVersion = ArmApiVersion)
+        public Http ProvisionResource(string resourceId, string body = "", string apiVersion = Constants.ArmApiVersion)
         {
             Log.Info("enter");
-            string uri = $"{ManagementAzureCom}{resourceId}?{apiVersion}";
+            string uri = $"{Constants.ManagementAzureCom}{resourceId}?{apiVersion}";
 
             if (_httpClient.SendRequest(uri: uri, authToken: BearerToken, jsonBody: body, httpMethod: HttpMethod.Put))
             {
                 int count = 0;
 
                 // wait for state
-                while (count < RetryCount)
+                while (count < Constants.RetryCount)
                 {
                     bool response = _httpClient.SendRequest(uri: uri, authToken: BearerToken);
                     GenericResourceResult result = JsonConvert.DeserializeObject<GenericResourceResult>(_httpClient.ResponseStreamString);
@@ -382,8 +382,8 @@ namespace CollectSFData.Azure
                     }
 
                     count++;
-                    Log.Info($"requery count: {count} of {RetryCount} response: {response}");
-                    Thread.Sleep(ThreadSleepMs10000);
+                    Log.Info($"requery count: {count} of {Constants.RetryCount} response: {response}");
+                    Thread.Sleep(Constants.ThreadSleepMs10000);
                 }
             }
 
