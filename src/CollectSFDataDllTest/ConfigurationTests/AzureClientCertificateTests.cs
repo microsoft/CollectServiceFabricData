@@ -73,7 +73,7 @@ namespace CollectSFDataDll.ConfigurationTests
                 Assert.IsTrue(config.IsClientIdConfigured(), "test configuration invalid");
                 AzureResourceManager arm = new AzureResourceManager();
 
-                Assert.IsTrue(arm.IsSystemManagedIdentity, "arm.IsSystemManagedIdentity not detected. test from azure vm with system managed identity enabled.");
+                Assert.IsTrue(arm.ClientIdentity.IsSystemManagedIdentity, "arm.IsSystemManagedIdentity not detected. test from azure vm with system managed identity enabled.");
                 return config.ValidateAad();
             }, utils.Collector.Config);
 
@@ -96,7 +96,7 @@ namespace CollectSFDataDll.ConfigurationTests
                 Assert.IsTrue(config.IsClientIdConfigured(), "test configuration invalid");
                 AzureResourceManager arm = new AzureResourceManager();
 
-                Assert.IsTrue(arm.IsUserManagedIdentity, "arm.IsUserManagedIdentity not detected. test from azure vm with user managed identity enabled.");
+                Assert.IsTrue(arm.ClientIdentity.IsUserManagedIdentity, "arm.IsUserManagedIdentity not detected. test from azure vm with user managed identity enabled.");
                 return config.ValidateAad();
             }, utils.Collector.Config);
 
@@ -116,7 +116,7 @@ namespace CollectSFDataDll.ConfigurationTests
             {
                 AzureResourceManager arm = new AzureResourceManager();
                 string certFile = $"{TestUtilities.TempDir}\\{config.AzureClientSecret}.pfx";
-                arm.SaveCertificateToFile(_appCertificate, certFile);
+                arm.ClientCertificate.SaveCertificateToFile(_appCertificate, certFile);
 
                 //config.AzureClientId = "";
                 config.AzureClientCertificate = certFile;
@@ -172,7 +172,29 @@ namespace CollectSFDataDll.ConfigurationTests
         }
 
         [Test()]
-        public void AzureClientCertificateLocalStoreX509()
+        public void AzureClientCertificateX509()
+        {
+            TestUtilities utils = DefaultUtilities();
+            ConfigurationOptions config = utils.ConfigurationOptions;
+            utils.ConfigurationOptions.Validate();
+            DeleteTokenCache();
+
+            ProcessOutput results = utils.ExecuteTest((config) =>
+            {
+                //config.AzureClientId = "";
+                config.AzureClientCertificate = "";
+                config.ClientCertificate = _appCertificate;
+                config.AzureKeyVault = "";
+                Assert.IsTrue(config.IsClientIdConfigured(), "test configuration invalid");
+                return config.ValidateAad();
+            }, utils.Collector.Config);
+
+            Assert.IsTrue(results.ExitBool);
+            Assert.IsTrue(!results.HasErrors(), results.ToString());
+        }
+
+        [Test()]
+        public void AzureClientCertificateX509withPassword()
         {
             TestUtilities utils = DefaultUtilities();
             ConfigurationOptions config = utils.ConfigurationOptions;
@@ -207,13 +229,13 @@ namespace CollectSFDataDll.ConfigurationTests
             ConfigurationOptions config = utils.Collector.Config;
             // verify test credentials work
             AzureResourceManager arm = new AzureResourceManager();
-            _appCertificate = arm.ReadCertificate(TestUtilities.TestProperties.AzureClientCertificate);
+            _appCertificate = arm.ClientCertificate.ReadCertificate(TestUtilities.TestProperties.AzureClientCertificate);
             //_appCertificate = new X509Certificate2(Convert.FromBase64String(TestUtilities.TestProperties.AzureClientCertificate),
             //    TestUtilities.TestProperties.adminPassword,
             //    X509KeyStorageFlags.Exportable);
             Assert.IsNotNull(_appCertificate);
 
-            _clientCertificate = arm.ReadCertificate(TestUtilities.TestProperties.testAzClientCertificate);
+            _clientCertificate = arm.ClientCertificate.ReadCertificate(TestUtilities.TestProperties.testAzClientCertificate);
             //_clientCertificate = new X509Certificate2(Convert.FromBase64String(TestUtilities.TestProperties.testAzClientCertificate),
             //    TestUtilities.TestProperties.adminPassword,
             //    X509KeyStorageFlags.Exportable);
