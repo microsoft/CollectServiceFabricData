@@ -76,22 +76,22 @@ class TestEnv {
         #>
 
         if (!(get-module -ListAvailable -Name az.accounts)) {
-            install-module Az.Accounts #-UseWindowsPowerShell
+            install-module Az.Accounts -Force -scope CurrentUser #-UseWindowsPowerShell
         }
         import-module Az.Accounts #-UseWindowsPowerShell
 
         if (!(get-module -ListAvailable -Name az.storage)) {
-            install-module Az.Storage #-UseWindowsPowerShell
+            install-module Az.Storage -Force -scope CurrentUser #-UseWindowsPowerShell
         }
         import-module Az.Storage #-UseWindowsPowerShell
 
         if (!(get-module -ListAvailable -Name Az.Resources)) {
-            install-module Az.Resources #-UseWindowsPowerShell
+            install-module Az.Resources -Force -scope CurrentUser #-UseWindowsPowerShell
         }
         import-module Az.Resources #-UseWindowsPowerShell
 
         if (!(get-module -ListAvailable -Name az.keyvault)) {
-            install-module Az.KeyVault #-UseWindowsPowerShell
+            install-module Az.KeyVault -Force -scope CurrentUser #-UseWindowsPowerShell
         }
         import-module Az.KeyVault #-UseWindowsPowerShell
 
