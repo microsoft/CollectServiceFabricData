@@ -17,7 +17,7 @@ using Tx.Windows;
 
 namespace CollectSFData.DataFile
 {
-    public class FileManager : Constants
+    public class FileManager 
     {
         private readonly CustomTaskManager _fileTasks = new CustomTaskManager(true);
         private Instance _instance = Instance.Singleton();
@@ -236,7 +236,7 @@ namespace CollectSFData.DataFile
         private FileObjectCollection FormatCounterFile(FileObject fileObject)
         {
             Log.Debug($"enter:{fileObject.FileUri}");
-            string outputFile = fileObject.FileUri + PerfCsvExtension;
+            string outputFile = fileObject.FileUri + Constants.PerfCsvExtension;
             bool result;
 
             fileObject.Stream.SaveToFile();
@@ -442,19 +442,19 @@ namespace CollectSFData.DataFile
             FileObjectCollection collection = new FileObjectCollection() { fileObject };
             int counter = 0;
 
-            string sourceFile = fileObject.FileUri.ToLower().TrimEnd(CsvExtension.ToCharArray());
-            fileObject.FileUri = $"{sourceFile}{CsvExtension}";
+            string sourceFile = fileObject.FileUri.ToLower().TrimEnd(Constants.CsvExtension.ToCharArray());
+            fileObject.FileUri = $"{sourceFile}{Constants.CsvExtension}";
             List<byte> csvSerializedBytes = new List<byte>();
-            string relativeUri = fileObject.RelativeUri.TrimEnd(CsvExtension.ToCharArray()) + CsvExtension;
+            string relativeUri = fileObject.RelativeUri.TrimEnd(Constants.CsvExtension.ToCharArray()) + Constants.CsvExtension;
 
             foreach (T record in fileObject.Stream.Read<T>())
             {
                 record.RelativeUri = relativeUri;
                 byte[] recordBytes = Encoding.UTF8.GetBytes(record.ToString());
 
-                if (csvSerializedBytes.Count + recordBytes.Length > MaxCsvTransmitBytes)
+                if (csvSerializedBytes.Count + recordBytes.Length > Constants.MaxCsvTransmitBytes)
                 {
-                    record.RelativeUri = relativeUri.TrimEnd(CsvExtension.ToCharArray()) + $".{counter}{CsvExtension}";
+                    record.RelativeUri = relativeUri.TrimEnd(Constants.CsvExtension.ToCharArray()) + $".{counter}{Constants.CsvExtension}";
                     recordBytes = Encoding.UTF8.GetBytes(record.ToString());
 
                     fileObject.Stream.Set(csvSerializedBytes.ToArray());
@@ -479,12 +479,12 @@ namespace CollectSFData.DataFile
         private FileObjectCollection SerializeJson<T>(FileObject fileObject) where T : IRecord
         {
             Log.Debug("enter");
-            string sourceFile = fileObject.FileUri.ToLower().TrimEnd(JsonExtension.ToCharArray());
-            fileObject.FileUri = $"{sourceFile}{JsonExtension}";
+            string sourceFile = fileObject.FileUri.ToLower().TrimEnd(Constants.JsonExtension.ToCharArray());
+            fileObject.FileUri = $"{sourceFile}{Constants.JsonExtension}";
             FileObjectCollection collection = new FileObjectCollection();
-            string relativeUri = fileObject.RelativeUri.TrimEnd(JsonExtension.ToCharArray()) + JsonExtension;
+            string relativeUri = fileObject.RelativeUri.TrimEnd(Constants.JsonExtension.ToCharArray()) + Constants.JsonExtension;
 
-            if (fileObject.Length > MaxJsonTransmitBytes)
+            if (fileObject.Length > Constants.MaxJsonTransmitBytes)
             {
                 FileObject newFileObject = new FileObject($"{sourceFile}", fileObject.BaseUri) { Status = FileStatus.formatting };
                 _instance.FileObjects.Add(newFileObject);
@@ -495,20 +495,20 @@ namespace CollectSFData.DataFile
                     record.RelativeUri = relativeUri;
                     counter++;
 
-                    if (newFileObject.Length < WarningJsonTransmitBytes)
+                    if (newFileObject.Length < Constants.WarningJsonTransmitBytes)
                     {
                         newFileObject.Stream.Write<T>(new List<T> { record }, true);
                     }
                     else
                     {
                         collection.Add(newFileObject);
-                        record.RelativeUri = relativeUri.TrimEnd(JsonExtension.ToCharArray()) + $".{counter}{JsonExtension}";
+                        record.RelativeUri = relativeUri.TrimEnd(Constants.JsonExtension.ToCharArray()) + $".{counter}{Constants.JsonExtension}";
                         newFileObject = new FileObject(record.RelativeUri, fileObject.BaseUri) { Status = FileStatus.formatting };
                         _instance.FileObjects.Add(newFileObject);
                     }
                 }
 
-                newFileObject.FileUri = $"{sourceFile}.{counter}{JsonExtension}";
+                newFileObject.FileUri = $"{sourceFile}.{counter}{Constants.JsonExtension}";
                 collection.Add(newFileObject);
             }
             else

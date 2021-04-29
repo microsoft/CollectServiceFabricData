@@ -17,7 +17,7 @@ namespace CollectSFData
     using System.Threading;
     using System.Threading.Tasks;
 
-    public class Collector : Constants
+    public class Collector 
     {
         private bool _checkedVersion;
         private int _noProgressCounter = 0;
@@ -158,12 +158,12 @@ namespace CollectSFData
 
             _parallelConfig = new ParallelOptions { MaxDegreeOfParallelism = Config.Threads };
 
-            ServicePointManager.DefaultConnectionLimit = Config.Threads * MaxThreadMultiplier;
+            ServicePointManager.DefaultConnectionLimit = Config.Threads * Constants.MaxThreadMultiplier;
             ServicePointManager.Expect100Continue = true;
             ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
 
-            ThreadPool.SetMinThreads(Config.Threads * MinThreadMultiplier, Config.Threads * MinThreadMultiplier);
-            ThreadPool.SetMaxThreads(Config.Threads * MaxThreadMultiplier, Config.Threads * MaxThreadMultiplier);
+            ThreadPool.SetMinThreads(Config.Threads * Constants.MinThreadMultiplier, Config.Threads * Constants.MinThreadMultiplier);
+            ThreadPool.SetMaxThreads(Config.Threads * Constants.MaxThreadMultiplier, Config.Threads * Constants.MaxThreadMultiplier);
 
             return true;
         }
@@ -234,7 +234,7 @@ namespace CollectSFData
             }
             else if (Config.IsKustoConfigured())
             {
-                Log.Last($"{DataExplorer}/clusters/{Instance.Kusto.Endpoint.ClusterName}/databases/{Instance.Kusto.Endpoint.DatabaseName}", ConsoleColor.Cyan);
+                Log.Last($"{Constants.DataExplorer}/clusters/{Instance.Kusto.Endpoint.ClusterName}/databases/{Instance.Kusto.Endpoint.DatabaseName}", ConsoleColor.Cyan);
             }
 
             if (Instance.FileObjects.Any(FileStatus.failed | FileStatus.uploading))
@@ -430,31 +430,31 @@ namespace CollectSFData
                 switch (Config.FileType)
                 {
                     case FileTypesEnum.counter:
-                        files = Directory.GetFiles(Config.CacheLocation, $"*{PerfCtrExtension}", SearchOption.AllDirectories).ToList();
+                        files = Directory.GetFiles(Config.CacheLocation, $"*{Constants.PerfCtrExtension}", SearchOption.AllDirectories).ToList();
 
                         if (files.Count < 1)
                         {
-                            files = Directory.GetFiles(Config.CacheLocation, $"*{PerfCsvExtension}", SearchOption.AllDirectories).ToList();
+                            files = Directory.GetFiles(Config.CacheLocation, $"*{Constants.PerfCsvExtension}", SearchOption.AllDirectories).ToList();
                         }
 
                         break;
 
                     case FileTypesEnum.setup:
-                        files = Directory.GetFiles(Config.CacheLocation, $"*{SetupExtension}", SearchOption.AllDirectories).ToList();
+                        files = Directory.GetFiles(Config.CacheLocation, $"*{Constants.SetupExtension}", SearchOption.AllDirectories).ToList();
 
                         break;
 
                     case FileTypesEnum.table:
-                        files = Directory.GetFiles(Config.CacheLocation, $"*{TableExtension}", SearchOption.AllDirectories).ToList();
+                        files = Directory.GetFiles(Config.CacheLocation, $"*{Constants.TableExtension}", SearchOption.AllDirectories).ToList();
 
                         break;
 
                     case FileTypesEnum.trace:
-                        files = Directory.GetFiles(Config.CacheLocation, $"*{TraceFileExtension}{ZipExtension}", SearchOption.AllDirectories).ToList();
+                        files = Directory.GetFiles(Config.CacheLocation, $"*{Constants.TraceFileExtension}{Constants.ZipExtension}", SearchOption.AllDirectories).ToList();
 
                         if (files.Count < 1)
                         {
-                            files = Directory.GetFiles(Config.CacheLocation, $"*{TraceFileExtension}", SearchOption.AllDirectories).ToList();
+                            files = Directory.GetFiles(Config.CacheLocation, $"*{Constants.TraceFileExtension}", SearchOption.AllDirectories).ToList();
                         }
 
                         break;
