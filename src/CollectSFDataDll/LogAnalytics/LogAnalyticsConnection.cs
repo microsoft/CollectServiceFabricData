@@ -20,7 +20,7 @@ using System.Threading;
 
 namespace CollectSFData.LogAnalytics
 {
-    public class LogAnalyticsConnection 
+    public class LogAnalyticsConnection
     {
         private readonly AzureResourceManager _arm = new AzureResourceManager();
         private readonly AzureResourceManager _laArm = new AzureResourceManager();

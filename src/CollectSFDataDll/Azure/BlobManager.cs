@@ -17,7 +17,7 @@ using System.Threading.Tasks;
 
 namespace CollectSFData.Azure
 {
-    public class BlobManager 
+    public class BlobManager
     {
         private readonly CustomTaskManager _blobChildTasks = new CustomTaskManager(true) { CreationOptions = TaskCreationOptions.AttachedToParent };
         private readonly CustomTaskManager _blobTasks = new CustomTaskManager(true);
