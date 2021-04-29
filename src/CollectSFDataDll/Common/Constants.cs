@@ -7,7 +7,7 @@ using System;
 
 namespace CollectSFData.Common
 {
-    public class Constants
+    public static class Constants
     {
         public const string ArmApiVersion = "api-version=2018-05-01";
         public const string AzureKeyVaultSuffix = "vault.azure.net";

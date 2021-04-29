@@ -14,7 +14,7 @@ using System.Threading;
 
 namespace CollectSFData.Common
 {
-    public class Http : Constants
+    public class Http 
     {
         private readonly HttpClient _httpClient;
 
