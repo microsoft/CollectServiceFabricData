@@ -17,7 +17,7 @@ using Tx.Windows;
 
 namespace CollectSFData.DataFile
 {
-    public class FileManager 
+    public class FileManager
     {
         private readonly CustomTaskManager _fileTasks = new CustomTaskManager(true);
         private Instance _instance = Instance.Singleton();

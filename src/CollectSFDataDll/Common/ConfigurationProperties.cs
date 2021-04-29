@@ -8,7 +8,7 @@ using System;
 
 namespace CollectSFData.Common
 {
-    public class ConfigurationProperties 
+    public class ConfigurationProperties
     {
         public string AzureClientCertificate { get; set; }
 

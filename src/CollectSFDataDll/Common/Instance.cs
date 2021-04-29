@@ -10,7 +10,7 @@ using System;
 
 namespace CollectSFData.Common
 {
-    public class Instance 
+    public class Instance
     {
         private static readonly Instance _instance = new Instance();
         public long DiscoveredMaxDateTicks { get; set; }
