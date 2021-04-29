@@ -17,7 +17,7 @@ using System.Threading.Tasks;
 
 namespace CollectSFData.Azure
 {
-    public class BlobManager : Constants
+    public class BlobManager 
     {
         private readonly CustomTaskManager _blobChildTasks = new CustomTaskManager(true) { CreationOptions = TaskCreationOptions.AttachedToParent };
         private readonly CustomTaskManager _blobTasks = new CustomTaskManager(true);
@@ -169,7 +169,7 @@ namespace CollectSFData.Azure
                     null,
                     false,
                     BlobListingDetails.None,
-                    MaxResults,
+                    Constants.MaxResults,
                     blobToken,
                     null,
                     null).Result as BlobResultSegment).Result as BlobResultSegment;
@@ -291,7 +291,7 @@ namespace CollectSFData.Azure
                 cloudBlobDirectory.ListBlobsSegmentedAsync(
                     false,
                     BlobListingDetails.None,
-                    MaxResults,
+                    Constants.MaxResults,
                     blobToken,
                     null,
                     null).Result as BlobResultSegment).Result as BlobResultSegment;
@@ -318,7 +318,7 @@ namespace CollectSFData.Azure
                     ParallelOperationThreadCount = Config.Threads
                 };
 
-                if (sourceLength > MaxStreamTransmitBytes)
+                if (sourceLength > Constants.MaxStreamTransmitBytes)
                 {
                     fileObject.DownloadAction = () =>
                     {

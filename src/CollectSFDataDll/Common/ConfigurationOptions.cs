@@ -52,7 +52,7 @@ namespace CollectSFData.Common
             }
         }
 
-        public string ExePath { get; } = $"{Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)}\\{DefaultOptionsFile}";
+        public string ExePath { get; } = $"{Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)}\\{Constants.DefaultOptionsFile}";
 
         public FileTypesEnum FileType { get; private set; }
 
@@ -126,10 +126,10 @@ namespace CollectSFData.Common
             _tempPath = FileManager.NormalizePath(Path.GetTempPath() + _workDir);
 
             DateTimeOffset defaultOffset = DateTimeOffset.Now;
-            StartTimeUtc = defaultOffset.UtcDateTime.AddHours(DefaultStartTimeHours);
-            StartTimeStamp = defaultOffset.AddHours(DefaultStartTimeHours).ToString(DefaultDatePattern);
+            StartTimeUtc = defaultOffset.UtcDateTime.AddHours(Constants.DefaultStartTimeHours);
+            StartTimeStamp = defaultOffset.AddHours(Constants.DefaultStartTimeHours).ToString(Constants.DefaultDatePattern);
             EndTimeUtc = defaultOffset.UtcDateTime;
-            EndTimeStamp = defaultOffset.ToString(DefaultDatePattern);
+            EndTimeStamp = defaultOffset.ToString(Constants.DefaultDatePattern);
             LoadDefaultConfig();
 
             if (validate)
@@ -146,12 +146,12 @@ namespace CollectSFData.Common
             http.DisplayError = false;
 
             Dictionary<string, string> headers = new Dictionary<string, string>();
-            headers.Add("User-Agent", $"{ApplicationName}");
+            headers.Add("User-Agent", $"{Constants.ApplicationName}");
 
             try
             {
-                if (http.SendRequest(uri: CodeLatestRelease, headers: headers, httpMethod: HttpMethod.Head)
-                     && http.SendRequest(uri: CodeLatestRelease, headers: headers))
+                if (http.SendRequest(uri: Constants.CodeLatestRelease, headers: headers, httpMethod: HttpMethod.Head)
+                     && http.SendRequest(uri: Constants.CodeLatestRelease, headers: headers))
                 {
                     JToken downloadUrl = http.ResponseStreamJson.SelectToken("assets[0].browser_download_url");
                     JToken downloadVersion = http.ResponseStreamJson.SelectToken("tag_name");
@@ -192,7 +192,7 @@ namespace CollectSFData.Common
                 return dateTimeOffset.UtcDateTime;
             }
 
-            Log.Error($"TimeStamp invalid format:input:'{timeString}' but expecting pattern:'{DefaultDatePattern}' example:'{DateTime.Now.ToString(DefaultDatePattern)}'");
+            Log.Error($"TimeStamp invalid format:input:'{timeString}' but expecting pattern:'{Constants.DefaultDatePattern}' example:'{DateTime.Now.ToString(Constants.DefaultDatePattern)}'");
             return DateTime.MinValue;
         }
 
@@ -209,7 +209,7 @@ namespace CollectSFData.Common
                 dateTime = ConvertToUtcTime(timeString);
                 if (dateTime != DateTime.MinValue)
                 {
-                    timeString = dateTime.ToString(DefaultDatePattern);
+                    timeString = dateTime.ToString(Constants.DefaultDatePattern);
                 }
             }
 
@@ -222,11 +222,11 @@ namespace CollectSFData.Common
             Log.Min($"      Gathering: {FileType.ToString()}", ConsoleColor.White);
             Log.Min($"         Source: {(SasEndpointInfo?.StorageAccountName ?? CacheLocation)}", ConsoleColor.White);
             Log.Min($"     Start Time: {StartTimeStamp}", ConsoleColor.White);
-            Log.Min($"            UTC: {StartTimeUtc.ToString(DefaultDatePattern)}", ConsoleColor.White);
-            Log.Min($"          Local: {StartTimeUtc.ToLocalTime().ToString(DefaultDatePattern)}", ConsoleColor.White);
+            Log.Min($"            UTC: {StartTimeUtc.ToString(Constants.DefaultDatePattern)}", ConsoleColor.White);
+            Log.Min($"          Local: {StartTimeUtc.ToLocalTime().ToString(Constants.DefaultDatePattern)}", ConsoleColor.White);
             Log.Min($"       End Time: {EndTimeStamp}", ConsoleColor.White);
-            Log.Min($"            UTC: {EndTimeUtc.ToString(DefaultDatePattern)}", ConsoleColor.White);
-            Log.Min($"          Local: {EndTimeUtc.ToLocalTime().ToString(DefaultDatePattern)}", ConsoleColor.White);
+            Log.Min($"            UTC: {EndTimeUtc.ToString(Constants.DefaultDatePattern)}", ConsoleColor.White);
+            Log.Min($"          Local: {EndTimeUtc.ToLocalTime().ToString(Constants.DefaultDatePattern)}", ConsoleColor.White);
             Log.Min($"        Threads: {Threads}", ConsoleColor.White);
             Log.Min($"  CacheLocation: {CacheLocation}", ConsoleColor.White);
             Log.Min($"     NodeFilter: {NodeFilter}", ConsoleColor.White);
@@ -450,7 +450,7 @@ namespace CollectSFData.Common
 
             // remove options that should not be saved in configuration file
             JObject options = JObject.FromObject(this);
-            options.AddFirst(new JProperty("$schema", SchemaFile));
+            options.AddFirst(new JProperty("$schema", Constants.SchemaFile));
             options.Remove("Schema");
             options.Remove("ClientCertificate");
             options.Remove("ConfigurationFile");
@@ -525,7 +525,7 @@ namespace CollectSFData.Common
                     }
                     else
                     {
-                        Log.Warning($"review console output above for errors and warnings. refer to {CodeRepository} for additional information.");
+                        Log.Warning($"review console output above for errors and warnings. refer to {Constants.CodeRepository} for additional information.");
                     }
                 }
 
@@ -614,9 +614,9 @@ namespace CollectSFData.Common
                     retval = IsKustoConfigured();
                 }
 
-                if (!Regex.IsMatch(KustoCluster, KustoUrlPattern))
+                if (!Regex.IsMatch(KustoCluster, Constants.KustoUrlPattern))
                 {
-                    string errMessage = $"invalid kusto url. should match pattern {KustoUrlPattern}\r\nexample: https://ingest-{{kustocluster}}.{{optional location}}.kusto.windows.net/{{kustodatabase}}";
+                    string errMessage = $"invalid kusto url. should match pattern {Constants.KustoUrlPattern}\r\nexample: https://ingest-{{kustocluster}}.{{optional location}}.kusto.windows.net/{{kustodatabase}}";
                     Log.Error(errMessage);
                     retval = false;
                 }
@@ -766,13 +766,13 @@ namespace CollectSFData.Common
                     Log.Error("supply start time less than end time");
                     retval = false;
                 }
-                else if ((EndTimeUtc - StartTimeUtc).TotalHours > WarningTimeSpanHours)
+                else if ((EndTimeUtc - StartTimeUtc).TotalHours > Constants.WarningTimeSpanHours)
                 {
-                    Log.Warning($"current time range hours ({(EndTimeUtc - StartTimeUtc).TotalHours}) over maximum recommended time range hours ({WarningTimeSpanHours})");
+                    Log.Warning($"current time range hours ({(EndTimeUtc - StartTimeUtc).TotalHours}) over maximum recommended time range hours ({Constants.WarningTimeSpanHours})");
                 }
-                else if ((EndTimeUtc - StartTimeUtc).TotalHours < WarningTimeSpanMinHours)
+                else if ((EndTimeUtc - StartTimeUtc).TotalHours < Constants.WarningTimeSpanMinHours)
                 {
-                    Log.Warning($"current time range hours ({(EndTimeUtc - StartTimeUtc).TotalHours}) below minimum recommended time range hours ({WarningTimeSpanMinHours})");
+                    Log.Warning($"current time range hours ({(EndTimeUtc - StartTimeUtc).TotalHours}) below minimum recommended time range hours ({Constants.WarningTimeSpanMinHours})");
                 }
             }
 
@@ -833,7 +833,7 @@ namespace CollectSFData.Common
             if (DeleteCache & !SasEndpointInfo.IsPopulated())
             {
                 Log.Warning($"setting 'DeleteCache' is set to true but no sas information provided.\r\nfiles will be deleted at exit!\r\nctrl-c now if this incorrect.");
-                Thread.Sleep(ThreadSleepMsWarning);
+                Thread.Sleep(Constants.ThreadSleepMsWarning);
             }
         }
 
@@ -865,9 +865,9 @@ namespace CollectSFData.Common
         {
             if (_defaultConfig == null)
             {
-                if (File.Exists(DefaultOptionsFile))
+                if (File.Exists(Constants.DefaultOptionsFile))
                 {
-                    MergeConfig(DefaultOptionsFile);
+                    MergeConfig(Constants.DefaultOptionsFile);
                     return true;
                 }
                 else if (File.Exists(ExePath))
@@ -929,13 +929,13 @@ namespace CollectSFData.Common
                     {
                         bool value = false;
 
-                        if (Regex.IsMatch(instanceValue.ToString(), TrueStringPattern, RegexOptions.IgnoreCase))
+                        if (Regex.IsMatch(instanceValue.ToString(), Constants.TrueStringPattern, RegexOptions.IgnoreCase))
                         {
                             value = true;
                         }
-                        else if (!Regex.IsMatch(instanceValue.ToString(), FalseStringPattern, RegexOptions.IgnoreCase))
+                        else if (!Regex.IsMatch(instanceValue.ToString(), Constants.FalseStringPattern, RegexOptions.IgnoreCase))
                         {
-                            string error = $"{instanceProperty.Name} bool argument values on command line should either be {TrueStringPattern} or {FalseStringPattern}";
+                            string error = $"{instanceProperty.Name} bool argument values on command line should either be {Constants.TrueStringPattern} or {Constants.FalseStringPattern}";
                             throw new ArgumentException(error);
                         }
 
@@ -1012,7 +1012,7 @@ namespace CollectSFData.Common
                     {
                         ConfigurationFile = _commandlineArguments[0];
                         MergeConfig(ConfigurationFile);
-                        Log.Info($"setting options to {DefaultOptionsFile}", ConsoleColor.Yellow);
+                        Log.Info($"setting options to {Constants.DefaultOptionsFile}", ConsoleColor.Yellow);
                     }
                     else if (_commandlineArguments[0].StartsWith("/?") | _commandlineArguments[0].StartsWith("-?") | _commandlineArguments[0].StartsWith("--?"))
                     {
@@ -1050,8 +1050,8 @@ namespace CollectSFData.Common
                     MergeCmdLine();
                 }
 
-                EndTimeUtc = EndTimeUtc.AddHours(WarningTimeSpanMinHours);
-                Log.Highlight($"adding {WarningTimeSpanMinHours * 60} minutes to EndTimeUtc to compensate for sf file upload timer. New EndTimeUtc: ({EndTimeUtc.ToString("o")})");
+                EndTimeUtc = EndTimeUtc.AddHours(Constants.WarningTimeSpanMinHours);
+                Log.Highlight($"adding {Constants.WarningTimeSpanMinHours * 60} minutes to EndTimeUtc to compensate for sf file upload timer. New EndTimeUtc: ({EndTimeUtc.ToString("o")})");
 
                 if (VersionOption)
                 {
