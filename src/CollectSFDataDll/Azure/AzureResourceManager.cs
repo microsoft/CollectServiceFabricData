@@ -4,6 +4,8 @@
 // ------------------------------------------------------------
 
 using Azure.Core;
+using Azure.Identity;
+using Azure.Security.KeyVault.Secrets;
 using CollectSFData.Common;
 using Microsoft.Identity.Client;
 using Newtonsoft.Json;
@@ -42,9 +44,11 @@ namespace CollectSFData.Azure
         public static event MsalHandler MsalMessage;
 
         public AccessToken AuthenticationResultToken { get; private set; } = new AccessToken();
+
         public string BearerToken { get; private set; }
-        public ClientCertificate ClientCertificate { get; private set; }
+
         public ClientIdentity ClientIdentity { get; private set; }
+
         private ConfigurationOptions Config => _instance.Config;
 
         public bool IsAuthenticated { get; private set; }
@@ -56,9 +60,7 @@ namespace CollectSFData.Azure
         public AzureResourceManager()
         {
             Log.Info($"enter: token cache path: {TokenCacheHelper.CacheFilePath}");
-
             ClientIdentity = new ClientIdentity();
-            ClientCertificate = new ClientCertificate(ClientIdentity);
         }
 
         public bool Authenticate(bool throwOnError = false, string resource = Constants.ManagementAzureCom)
@@ -171,17 +173,25 @@ namespace CollectSFData.Azure
             }
             else if (Config.IsClientIdConfigured() & !prompt)
             {
-                if (!string.IsNullOrEmpty(Config.AzureClientCertificate) & !ClientIdentity.IsUserManagedIdentity)
+                if (Config.ClientCertificate != null)
                 {
-                    CreateConfidentialClient(resource, Config.AzureClientCertificate);
+                    CreateConfidentialCertificateClient(resource, Config.ClientCertificate);
                 }
-                else if (ClientIdentity.IsUserManagedIdentity)
+                else if (!string.IsNullOrEmpty(Config.AzureKeyVault))
                 {
-                    ManagedIdentityUserConfidentialClient(resource);
+                    CreateConfidentialCertificateClient(resource, ReadCertificateFromKeyvault(Config.AzureKeyVault, Config.AzureClientSecret));
+                }
+                else if (ClientIdentity.IsTypeManagedIdentity)
+                {
+                    CreateConfidentialManagedIdentityClient(resource);
+                }
+                else if (!string.IsNullOrEmpty(Config.AzureClientCertificate))
+                {
+                    CreateConfidentialCertificateClient(resource, new CertificateUtilities().GetClientCertificate(Config.AzureClientCertificate));
                 }
                 else if (!string.IsNullOrEmpty(Config.AzureClientSecret))
                 {
-                    CreateConfidentialClient(resource);
+                    CreateConfidentialClient(resource, Config.AzureClientSecret);
                 }
                 else
                 {
@@ -198,9 +208,8 @@ namespace CollectSFData.Azure
             }
         }
 
-        public void CreateConfidentialClient(string resource, string clientCertificate)
+        public void CreateConfidentialCertificateClient(string resource, X509Certificate2 clientCertificate)
         {
-            X509Certificate2 certificate = ClientCertificate.GetClientCertificate(clientCertificate);
             _confidentialClientApp = ConfidentialClientApplicationBuilder
                 .CreateWithApplicationOptions(new ConfidentialClientApplicationOptions
                 {
@@ -211,12 +220,12 @@ namespace CollectSFData.Azure
                 })
                 .WithAuthority(AzureCloudInstance.AzurePublic, Config.AzureTenantId)
                 .WithLogging(MsalLoggerCallback, LogLevel.Verbose, true, true)
-                .WithCertificate(certificate)
+                .WithCertificate(clientCertificate)
                 .Build();
             AddClientScopes();
         }
 
-        public void CreateConfidentialClient(string resource)
+        public void CreateConfidentialClient(string resource, string secret)
         {
             Log.Info($"enter: {resource}");
             // no prompt with clientid and secret
@@ -225,7 +234,7 @@ namespace CollectSFData.Azure
                {
                    ClientId = Config.AzureClientId,
                    RedirectUri = resource,
-                   ClientSecret = Config.AzureClientSecret,
+                   ClientSecret = secret,
                    TenantId = Config.AzureTenantId,
                    ClientName = Config.AzureClientId
                })
@@ -234,6 +243,14 @@ namespace CollectSFData.Azure
                .Build();
 
             AddClientScopes();
+        }
+
+        public void CreateConfidentialManagedIdentityClient(string resource)
+        {
+            Log.Info($"enter: {resource}");
+            // no prompt with clientid and secret
+            AuthenticationResultToken = new AccessToken(ClientIdentity.ManagedIdentityToken.Token, ClientIdentity.ManagedIdentityToken.ExpiresOn);
+            SetToken();
         }
 
         public bool CreatePublicClient(bool prompt, bool deviceLogin = false)
@@ -304,14 +321,6 @@ namespace CollectSFData.Azure
 
             Log.Info($"resourcegroup exists {resourceId}");
             return true;
-        }
-
-        public void ManagedIdentityUserConfidentialClient(string resource)
-        {
-            Log.Info($"enter: {resource}");
-            // no prompt with clientid and secret
-            AuthenticationResultToken = new AccessToken(ClientIdentity.ManagedIdentityToken.Token, ClientIdentity.ManagedIdentityToken.ExpiresOn);
-            SetToken();
         }
 
         public Task MsalDeviceCodeCallback(DeviceCodeResult arg)
@@ -385,6 +394,50 @@ namespace CollectSFData.Azure
             Log.Error($"unable to provision {resourceId}");
             _httpClient.Success = false;
             return _httpClient;
+        }
+
+        public X509Certificate2 ReadCertificateFromKeyvault(string keyvaultResourceId, string secretName)
+        {
+            Log.Info($"enter:{keyvaultResourceId} {secretName}");
+            X509Certificate2 certificate = null;
+            TokenCredential credential = null;
+            string clientId = Config.AzureClientId;
+
+            if (ClientIdentity.IsAppRegistration)
+            {
+                X509Certificate2 credentialCert = new CertificateUtilities().GetClientCertificate(Config.AzureClientCertificate);
+                credential = new ClientCertificateCredential(Config.AzureTenantId, Config.AzureClientId, credentialCert);
+            }
+            else if (ClientIdentity.IsUserManagedIdentity)
+            {
+                credential = ClientIdentity.GetDefaultAzureCredentials(clientId);
+            }
+            else if (ClientIdentity.IsSystemManagedIdentity)
+            {
+                clientId = "";
+                credential = ClientIdentity.GetDefaultAzureCredentials(clientId);
+            }
+            else
+            {
+                Log.Error("unknown configuration");
+            }
+
+            try
+            {
+                SecretClient client = new SecretClient(new Uri(keyvaultResourceId), credential);
+                KeyVaultSecret secret = client.GetSecret(secretName);
+
+                //certificate = new X509Certificate2(Convert.FromBase64String(secret.Value), GetPassword(), X509KeyStorageFlags.Exportable);
+                certificate = new X509Certificate2(Convert.FromBase64String(secret.Value), string.Empty, X509KeyStorageFlags.Exportable);
+                return certificate;
+            }
+            catch (Exception e)
+            {
+                Log.Exception($"{e}");
+                certificate = null;
+            }
+
+            return certificate;
         }
 
         public void Reauthenticate(object state = null)
