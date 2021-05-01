@@ -10,6 +10,7 @@ namespace CollectSFData.Azure
         private Instance _instance = Instance.Singleton();
         public bool IsAppRegistration { get; private set; } = false;
         public bool IsSystemManagedIdentity { get; private set; } = false;
+        public bool IsTypeManagedIdentity => (IsSystemManagedIdentity | IsUserManagedIdentity);
         public bool IsUserManagedIdentity { get; private set; } = false;
         public AccessToken ManagedIdentityToken { get; private set; }
         private ConfigurationOptions _config => _instance.Config;
