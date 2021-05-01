@@ -114,7 +114,7 @@ namespace CollectSFDataDll.ConfigurationTests
             {
                 AzureResourceManager arm = new AzureResourceManager();
                 string certFile = $"{TestUtilities.TempDir}\\{config.AzureClientSecret}.pfx";
-                arm.ClientCertificate.SaveCertificateToFile(_appCertificate, certFile);
+                new CertificateUtilities().SaveCertificateToFile(_appCertificate, certFile);
 
                 //config.AzureClientId = "";
                 config.AzureClientCertificate = certFile;
@@ -201,9 +201,10 @@ namespace CollectSFDataDll.ConfigurationTests
 
             ProcessOutput results = utils.ExecuteTest((config) =>
             {
-                //config.AzureClientId = "";
-                config.AzureClientCertificate = "";
-                config.ClientCertificate = _appCertificate;
+                CertificateUtilities certificateUtilities = new CertificateUtilities();
+                certificateUtilities.Password = TestUtilities.TestProperties.adminPassword;
+
+                config.ClientCertificate = certificateUtilities.GetClientCertificate(config.AzureClientCertificate);// _appCertificate;
                 config.AzureKeyVault = "";
                 Assert.IsTrue(config.IsClientIdConfigured(), "test configuration invalid");
                 return config.ValidateAad();
@@ -224,16 +225,17 @@ namespace CollectSFDataDll.ConfigurationTests
         private TestUtilities DefaultUtilities()
         {
             TestUtilities utils = new TestUtilities();
+            CertificateUtilities certificateUtilities = new CertificateUtilities();
             ConfigurationOptions config = utils.Collector.Config;
             // verify test credentials work
             AzureResourceManager arm = new AzureResourceManager();
-            _appCertificate = arm.ClientCertificate.ReadCertificate(TestUtilities.TestProperties.AzureClientCertificate);
+            _appCertificate = certificateUtilities.GetClientCertificate(TestUtilities.TestProperties.AzureClientCertificate);
             //_appCertificate = new X509Certificate2(Convert.FromBase64String(TestUtilities.TestProperties.AzureClientCertificate),
             //    TestUtilities.TestProperties.adminPassword,
             //    X509KeyStorageFlags.Exportable);
             Assert.IsNotNull(_appCertificate);
 
-            _clientCertificate = arm.ClientCertificate.ReadCertificate(TestUtilities.TestProperties.testAzClientCertificate);
+            _clientCertificate = certificateUtilities.GetClientCertificate(TestUtilities.TestProperties.testAzClientCertificate);
             //_clientCertificate = new X509Certificate2(Convert.FromBase64String(TestUtilities.TestProperties.testAzClientCertificate),
             //    TestUtilities.TestProperties.adminPassword,
             //    X509KeyStorageFlags.Exportable);
