@@ -6,7 +6,7 @@ using System;
 namespace CollectSFData.Azure
 {
     public class ClientIdentity
-    {
+    {   
         private Instance _instance = Instance.Singleton();
         public bool IsAppRegistration { get; private set; } = false;
         public bool IsSystemManagedIdentity { get; private set; } = false;
@@ -15,7 +15,7 @@ namespace CollectSFData.Azure
         public AccessToken ManagedIdentityToken { get; private set; }
         private ConfigurationOptions _config => _instance.Config;
 
-        public ClientIdentity()
+        public void SetIdentityType()
         {
             if (!string.IsNullOrEmpty(_config.AzureClientId))
             {
@@ -29,15 +29,18 @@ namespace CollectSFData.Azure
 
             if (!string.IsNullOrEmpty(_config.AzureClientId))
             {
-                IsUserManagedIdentity = IsManagedIdentity(_config.AzureClientId);
+                IsAppRegistration = !(IsUserManagedIdentity = IsManagedIdentity(_config.AzureClientId));
             }
 
             if (!IsUserManagedIdentity && string.IsNullOrEmpty(_config.AzureClientId))
             {
                 IsSystemManagedIdentity = IsManagedIdentity();
             }
+        }
 
-            IsAppRegistration = !(IsUserManagedIdentity | IsSystemManagedIdentity);
+        public ClientIdentity()
+        {
+            SetIdentityType();
         }
 
         public DefaultAzureCredential GetDefaultAzureCredentials(string clientId = null)
