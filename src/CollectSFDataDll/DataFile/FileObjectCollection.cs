@@ -95,7 +95,7 @@ namespace CollectSFData.DataFile
 
         public bool HasFileUri(string searchItem)
         {
-            return FindByUri(searchItem) == null;
+            return FindByUri(searchItem).IsPopulated;
         }
 
         public string StatusString(FileStatus fileObjectStatus = FileStatus.all)
