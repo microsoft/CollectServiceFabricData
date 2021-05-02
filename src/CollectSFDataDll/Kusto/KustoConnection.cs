@@ -156,7 +156,7 @@ namespace CollectSFData.Kusto
             }
 
             string cleanUri = Regex.Replace(relativeUri, $"\\.?\\d*?({Constants.ZipExtension}|{Constants.TableExtension})", "");
-            FileObject fileObject = _instance.FileObjects.FindByUri(cleanUri);
+            FileObject fileObject = _instance.FileObjects.FindByUriFirstOrDefault(cleanUri);
             return fileObject.Status != FileStatus.existing;
         }
 
@@ -250,7 +250,7 @@ namespace CollectSFData.Kusto
             {
                 string uriFile = record["IngestionSourcePath"].ToString();
                 Log.ToFile($"checking failed ingested for failed relativeuri: {uriFile}");
-                FileObject fileObject = _instance.FileObjects.FindByUri(uriFile);
+                FileObject fileObject = _instance.FileObjects.FindByUriFirstOrDefault(uriFile);
 
                 fileObject.Status = FileStatus.failed;
 
@@ -282,7 +282,7 @@ namespace CollectSFData.Kusto
             foreach (string uriFile in successUris)
             {
                 Log.ToFile($"checking ingested uri for success relativeuri: {uriFile}");
-                FileObject fileObject = _instance.FileObjects.FindByUri(uriFile);
+                FileObject fileObject = _instance.FileObjects.FindByUriFirstOrDefault(uriFile);
                 fileObject.Status = FileStatus.succeeded;
 
                 if (fileObject.IsPopulated)
