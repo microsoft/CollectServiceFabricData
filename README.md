@@ -126,8 +126,6 @@ Options:
                                          for non interactive to kusto. default is to use integrated AAD auth token
                                          and leave this blank.
                                          example: https://clusterkeyvault.vault.azure.net/
-  -vault|--AzureManagedIdentity      [bool] to use managed identity for authorization if configured.
-                                         managed identity can be used to connect just to key vault or for authorization to azure.
   -rg|--azureResourceGroup           [string] azure resource group name / used for log analytics actions.
   -loc|--azureResourceGroupLocation  [string] azure resource group location / used for log analytics actions.
   -sub|--azureSubscriptionId         [string] azure subscription id / used for log analytics actions.

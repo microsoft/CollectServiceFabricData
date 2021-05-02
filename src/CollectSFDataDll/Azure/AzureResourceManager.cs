@@ -177,7 +177,7 @@ namespace CollectSFData.Azure
                 {
                     CreateConfidentialCertificateClient(resource, Config.ClientCertificate);
                 }
-                else if (!string.IsNullOrEmpty(Config.AzureKeyVault))
+                else if (!string.IsNullOrEmpty(Config.AzureKeyVault) & ClientIdentity.IsTypeManagedIdentity)
                 {
                     CreateConfidentialCertificateClient(resource, ReadCertificateFromKeyvault(Config.AzureKeyVault, Config.AzureClientSecret));
                 }
@@ -403,27 +403,14 @@ namespace CollectSFData.Azure
             TokenCredential credential = null;
             string clientId = Config.AzureClientId;
 
-            if (ClientIdentity.IsAppRegistration)
-            {
-                X509Certificate2 credentialCert = new CertificateUtilities().GetClientCertificate(Config.AzureClientCertificate);
-                credential = new ClientCertificateCredential(Config.AzureTenantId, Config.AzureClientId, credentialCert);
-            }
-            else if (ClientIdentity.IsUserManagedIdentity)
-            {
-                credential = ClientIdentity.GetDefaultAzureCredentials(clientId);
-            }
-            else if (ClientIdentity.IsSystemManagedIdentity)
+            if (ClientIdentity.IsSystemManagedIdentity)
             {
                 clientId = "";
-                credential = ClientIdentity.GetDefaultAzureCredentials(clientId);
             }
-            else
-            {
-                Log.Error("unknown configuration");
-            }
-
+            
             try
             {
+                credential = ClientIdentity.GetDefaultAzureCredentials(clientId);
                 SecretClient client = new SecretClient(new Uri(keyvaultResourceId), credential);
                 KeyVaultSecret secret = client.GetSecret(secretName);
 
