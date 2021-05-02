@@ -210,6 +210,7 @@ namespace CollectSFData.Azure
 
         public void CreateConfidentialCertificateClient(string resource, X509Certificate2 clientCertificate)
         {
+            Log.Info($"enter: {resource}");
             _confidentialClientApp = ConfidentialClientApplicationBuilder
                 .CreateWithApplicationOptions(new ConfidentialClientApplicationOptions
                 {
@@ -407,7 +408,7 @@ namespace CollectSFData.Azure
             {
                 clientId = "";
             }
-            
+
             try
             {
                 credential = ClientIdentity.GetDefaultAzureCredentials(clientId);
