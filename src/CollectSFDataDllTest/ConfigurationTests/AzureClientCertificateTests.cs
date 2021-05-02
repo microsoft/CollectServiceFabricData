@@ -202,9 +202,9 @@ namespace CollectSFDataDll.ConfigurationTests
             ProcessOutput results = utils.ExecuteTest((config) =>
             {
                 CertificateUtilities certificateUtilities = new CertificateUtilities();
-                certificateUtilities.Password = TestUtilities.TestProperties.adminPassword;
+                certificateUtilities.Password = TestUtilities.TestProperties.testAdminPassword;
 
-                config.ClientCertificate = certificateUtilities.GetClientCertificate(config.AzureClientCertificate);// _appCertificate;
+                config.ClientCertificate = certificateUtilities.GetClientCertificate(TestUtilities.TestProperties.AzureClientCertificate);// _appCertificate;
                 config.AzureKeyVault = "";
                 Assert.IsTrue(config.IsClientIdConfigured(), "test configuration invalid");
                 return config.ValidateAad();

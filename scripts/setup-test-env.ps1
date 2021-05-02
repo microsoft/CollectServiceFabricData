@@ -22,10 +22,15 @@ class TestSettings {
     [string]$testAzStorageAccount = "collectsfdatatests"
     [string]$testAzClientId = ""
     [string]$testAzClientCertificate = ""
+    [string]$testAzClientName = 'collectsfdataapp';
+    [string]$testCertificateNoPasswordBase64 = "";
+    [string]$testCertificateWithPasswordBase64 = "";
+    [string]$testCertificatePassword = "";
+    
 
     # for azure cluster deployments
-    [string]$adminUserName = $null
-    [string]$adminPassword = $null
+    [string]$testAdminUserName = "testadmin"
+    [string]$testAdminPassword = ""
       
     # existing collectsfdata variables
     [string]$AzureClientId = $null
@@ -59,9 +64,91 @@ class TestEnv {
         
     }
 
+    [bool] AddAppRegistrationCertificate([X509Certificate2]$certificate) {
+        $error.Clear()
+        $settings = $this.testSettings
+        [bool]$retval = $true;
+        $appRegistration = $this.GetAzAdApplication($settings.testAzClientName)
+        $keyid = $appRegistration.ObjectId
+        write-host "New-AzADAppCredential -ObjectId $keyid `
+            -CustomKeyIdentifier $certificate.Thumbprint `
+            -Type AsymmetricX509Cert `
+            -Usage Verify `
+            -Value $($certificate.GetRawCertData()) `
+            -StartDate $($certificate.GetEffectiveDateString()) `
+            -EndDate $($certificate.GetExpirationDateString())
+        "
+
+        $keyCredential = New-AzADAppCredential -ObjectId $keyid `
+            -CustomKeyIdentifier $certificate.Thumbprint `
+            -Type AsymmetricX509Cert `
+            -Usage Verify `
+            -Value $certificate.GetRawCertData() `
+            -StartDate $certificate.GetEffectiveDateString() `
+            -EndDate $certificate.GetExpirationDateString()
+
+        
+
+        return $retval
+    }
+
+    [bool] CheckAppRegistration() {
+        $error.Clear()
+        $settings = $this.testSettings
+
+        $appRegistration = $this.GetAzAdApplication($settings.testAzClientName)
+        write-host "appregistration:$($appRegistration)"
+        if ($appRegistration) {
+            return $true
+        }
+        [bool]$retval = $this.CreateAppRegistration($settings.testAzClientName)
+        $retval = $retval -band $this.AddAppRegistrationCertificate($this.LoadCertificate($settings.testCertificateNoPasswordBase64, "")) 
+        $retval = $retval -band $this.AddAppRegistrationCertificate($this.LoadCertificate($settings.testCertificateWithPasswordBase64, $settings.testCertificatePassword)) 
+        return $retval
+    }
+
+    [bool] CheckAppRegistrationCertificate([X509Certificate2]$certificate) {
+        $error.Clear()
+        $settings = $this.testSettings
+        [bool]$retval = $true;
+        $appRegistration = $this.GetAzAdApplication($settings.testAzClientName)
+
+        return $retval
+    }
+
+    [bool] CheckAppRegistrationCertificates() {
+        $error.Clear()
+        $settings = $this.testSettings
+        [bool]$retval = $true;
+        [X509Certificate2]$cert = $null
+
+        write-host "CheckAppRegistrationCertificates():checking testCertificateNoPasswordBase64"
+        if ($settings.testCertificateNoPasswordBase64) {
+            $cert = $this.LoadCertificate($settings.AzureClientCertificate, "")
+            $retval = $retval -band ($this.CheckAppRegistrationCertificate($cert))
+        }
+
+        write-host "CheckAppRegistrationCertificates():checking testCertificateWithPasswordBase64"
+        if ($settings.testCertificateWithPasswordBase64) {
+            $cert = $this.LoadCertificate($settings.AzureClientCertificate, $settings.testCertificatePassword)
+            $retval = $retval -band ($this.CheckAppRegistrationCertificate($cert))
+        }
+
+        if ($settings.AzureClientCertificate) {
+            write-host "CheckAppRegistrationCertificates():loading collectsfdata cert $($settings.AzureClientCertificate)"
+            #$retval = $retval -band ($this.CheckKeyVaultCertificate($settings.AzureClientCertificate, $this.testAzClientName,""))
+            $retval = $retval -band ($this.CheckAppRegistrationCertificate($cert))
+        }
+
+        if ($error) { return $false }
+        $this.SaveConfig()
+        return $true
+    }
+
     [bool] CheckAzureConfig() {
         $settings = $this.testSettings
-        if (!$settings.AzureClientId -or !$settings.AzureClientCertificate -or !$settings.AzureResourceGroup -or !$settings.AzureResourceGroupLocation) {
+        #if (!$settings.AzureClientId -or !$settings.AzureClientCertificate -or !$settings.AzureResourceGroup -or !$settings.AzureResourceGroupLocation) {
+        if (!$settings.testAzClientId -or !$settings.testAzClientCertificate -or !$settings.AzureResourceGroup -or !$settings.AzureResourceGroupLocation) {
             Write-Warning "azure settings not configured. storage tests may fail"
             return $false
         }
@@ -95,46 +182,59 @@ class TestEnv {
         }
         import-module Az.KeyVault #-UseWindowsPowerShell
 
-        $error.Clear()
-        write-host "loading test client cert $($settings.testAzClientCertificate)"
-        $cert = $this.LoadCertificate([convert]::FromBase64String($settings.testAzClientCertificate))
-        if($error) { return $false}
+        if ($settings.testAzClientId -and $settings.testAzClientCertificate) {
 
-        write-host "connect-AzAccount -TenantId $($settings.AzureTenantId) `
-            -ApplicationId $($settings.testAzClientId) `
-            -ServicePrincipal `
-            -CertificateThumbprint $($cert.thumbprint)
-        "
-        connect-AzAccount -TenantId $settings.AzureTenantId `
-            -ApplicationId $settings.testAzClientId `
-            -ServicePrincipal `
-            -CertificateThumbprint $cert.thumbprint
-        
-        if(!(get-azcontext)){ return $false}
+            $error.Clear()
+            write-host "loading test client cert $($settings.testAzClientCertificate)"
+            $cert = $this.LoadCertificate($settings.testAzClientCertificate, $null)
+            if ($error) { return $false }
+
+            write-host "connect-AzAccount -TenantId $($settings.AzureTenantId) `
+                -ApplicationId $($settings.testAzClientId) `
+                -ServicePrincipal `
+                -CertificateThumbprint $($cert.thumbprint)
+            "
+            connect-AzAccount -TenantId $settings.AzureTenantId `
+                -ApplicationId $settings.testAzClientId `
+                -ServicePrincipal `
+                -CertificateThumbprint $cert.thumbprint
+        }
+        else {
+            # first time setup needs interactive logon
+            write-host "connect-AzAccount -TenantId $($settings.AzureTenantId) " #`
+            connect-AzAccount -TenantId $settings.AzureTenantId #`
+        }
+
+        if (!(get-azcontext)) { return $false }
 
         get-azcontext | Format-List *
 
-        if(!$this.CheckResourceGroup()) { return $false }
-        if(!$this.CheckStorageAccount()) { return $false }
+        if (!$this.CheckResourceGroup()) { return $false }
+        if (!$this.CheckStorageAccount()) { return $false }
         
-        if($this.CheckKeyVault()){
-            $this.CheckKeyVaultCert()
+        if ($this.CheckKeyVault()) {
+            $this.CheckKeyVaultCertificates()
+        }
+
+        if ($this.CheckAppRegistration()) {
+            $this.CheckAppRegistrationCertificates()
+            $this.CheckAppRegistrationSecrets()
         }
 
         return $true
     }
 
-    [bool] CheckKeyVault(){
+    [bool] CheckKeyVault() {
         $error.Clear()
         $settings = $this.testSettings
         $keyvaultname = $null
 
-        if($settings.AzureKeyVault){
-            if($this.GetAzureKeyVault($settings.AzureKeyVault)) {
+        if ($settings.AzureKeyVault) {
+            if ($this.GetAzureKeyVault()) {
                 return $true
             }
         }
-        else{
+        else {
             $keyvaultname = "$($settings.AzureResourceGroup)$([math]::Abs($settings.AzureResourceGroup.GetHashCode()))".Substring(0, 24)
         }
 
@@ -145,52 +245,64 @@ class TestEnv {
         write-host "setting key vault $($settings.AzureKeyVault)"
         $this.SaveConfig()
 
-        if(!$settings.AzureKeyVault){
+        if (!$settings.AzureKeyVault) {
             return $false;
         }
         return $true;
     }
 
-    [X509Certificate2] LoadCertificate([string]$base64String){
+    [bool] CheckKeyVaultCertificate([string]$base64String, [string]$secretName, [string]$password) {
         $error.Clear()
         $settings = $this.testSettings
-        write-host "loading collectsfdata cert $($settings.AzureClientCertificate)"
-        [X509Certificate2]$cert = $null
-        [byte[]] $bytes = $null
-
-        if($settings.adminPassword){
-            $cert = [Security.Cryptography.X509Certificates.X509Certificate2]::new([convert]::FromBase64String($settings.AzureClientCertificate),$settings.adminPassword,[X509KeyStorageFlags]::Exportable)
-            $bytes = $cert.Export([X509ContentType]::pkcs12,$settings.adminPassword)
-        }
-        else{
-            $cert = [Security.Cryptography.X509Certificates.X509Certificate2]::new([convert]::FromBase64String($settings.AzureClientCertificate),[string]::empty,[X509KeyStorageFlags]::Exportable)
-            $bytes = $cert.Export([X509ContentType]::pkcs12)
-        }
-
-        if($bytes){
-            $this.certFile = "$($this.tempdir)\$($cert.thumbprint).pfx"
-            write-host "saving cert to temp dir $($this.certFile)"
-            [io.File]::WriteAllBytes($this.certFile,$bytes)
-        }
-
-        return $cert
-    }
-
-    [bool] CheckKeyVaultCert(){
-        $error.Clear()
-        $settings = $this.testSettings
-        write-host "loading collectsfdata cert $($settings.AzureClientCertificate)"
-        $cert = $this.LoadCertificate([convert]::FromBase64String($settings.AzureClientCertificate))
-        if($error) { return $false}
-        
-        $keyVault = $this.GetAzureKeyVault($settings.AzureKeyVault)
-        if(!$keyVault){ return $false}
+        $keyVault = $this.GetAzureKeyVault()
+        if (!$keyVault) { return $false }
         
         $keyvaultname = [uri]::new($settings.AzureKeyVault).Host.Split('.')[0]
-        
-        write-host "import-azkeyvaultcertificate -vaultname $keyvaultname -name $($cert.thumbprint) -filepath $($this.certFile)"
-        import-azkeyvaultcertificate -vaultname $keyvaultname -name ($cert.thumbprint) -filepath $this.certFile
+        write-host "checking certificate $($base64String)"
 
+        if ((Get-AzKeyVaultCertificate -VaultName $keyvaultname -Name $secretName)) {
+            if ($base64String -eq $this.GetAzureKeyVaultCertificateBase64String($secretName, $password)) {
+                return $true
+            }
+        }
+
+        $cert = $this.LoadCertificate($base64String, $password)
+        if ($error) { return $false }
+        
+        
+        if (!(Get-AzKeyVaultCertificate -VaultName $keyvaultname -Name $secretName)) {
+            write-host "import-azkeyvaultcertificate -vaultname $keyvaultname -name $($cert.thumbprint) -filepath $($this.certFile) -password $password"
+            import-azkeyvaultcertificate -vaultname $keyvaultname -name ($cert.thumbprint) -filepath $this.certFile -Password $this.CreateSecureString($password)
+        }
+        
+        return $true
+    }
+
+    [bool] CheckKeyVaultCertificates() {
+        $error.Clear()
+        $settings = $this.testSettings
+        [bool]$retval = $true;
+
+        write-host "checking testCertificateNoPasswordBase64"
+        if (!$settings.testCertificateNoPasswordBase64) {
+            $settings.testCertificateNoPasswordBase64 = $this.CreateKeyVaultCertificate('testCertificateNoPassword', $null)
+        }
+        $retval = $retval -band ($this.CheckKeyVaultCertificate($settings.testCertificateNoPasswordBase64, 'testCertificateNoPassword', ""))
+
+        write-host "checking testCertificateWithPasswordBase64"
+        if (!$settings.testCertificateWithPasswordBase64) {
+            $settings.testCertificateWithPasswordBase64 = $this.CreateKeyVaultCertificate('testCertificateWithPassword', $settings.testCertificatePassword)
+        }
+        $retval = $retval -band ($this.CheckKeyVaultCertificate($settings.testCertificateWithPasswordBase64, 'testCertificateWithPassword', $settings.testCertificatePassword))
+
+        if ($settings.AzureClientCertificate) {
+            write-host "loading collectsfdata cert $($settings.AzureClientCertificate)"
+            $retval = $retval -band ($this.CheckKeyVaultCertificate($settings.AzureClientCertificate, $settings.testAzClientName, ""))
+            #$cert = $this.LoadCertificate([convert]::FromBase64String($settings.AzureClientCertificate))
+        }
+
+        if ($error) { return $false }
+        $this.SaveConfig()
         return $true
     }
 
@@ -273,7 +385,7 @@ class TestEnv {
         return $true
     }
 
-    [bool] CheckResourceGroup(){
+    [bool] CheckResourceGroup() {
         $settings = $this.testSettings
         write-host "checking resource group $($settings.AzureResourceGroup)"
         if (!(get-azresourcegroup $settings.AzureResourceGroup -Location $settings.AzureResourceGroupLocation)) {
@@ -285,9 +397,9 @@ class TestEnv {
         return $true;
     }
 
-    [bool] CheckStorageAccount(){
+    [bool] CheckStorageAccount() {
         $settings = $this.testSettings
-        if(!$settings.testAzStorageAccount){
+        if (!$settings.testAzStorageAccount) {
             $settings.testAzStorageAccount = "$($settings.testAzStorageAccount)$([math]::Abs($settings.AzureResourceGroup.GetHashCode()))".Substring(0, 24)
         }
         write-host "setting unique storage account $($settings.testAzStorageAccount)"
@@ -339,18 +451,115 @@ class TestEnv {
             $this.SaveConfig()
             write-host "edit file directly and save: $this.configurationFile" -foregroundcolor green
             write-host "create azure app id / spn for azure storage / gather tests. .\azure-az-create-aad-application-spn.ps1 can be used to create one progammatically."
-            write-host ".\azure-az-create-aad-application-spn.ps1 -aadDisplayName collectsfdatatestcert -logonType cert"
-            write-host ".\azure-az-create-aad-application-spn.ps1 -aadDisplayName collectsfdatatest -uri http://collectsfdatatest -logontype certthumb"
+            write-host ".\azure-az-create-aad-application-spn.ps1 -aadDisplayName collectsfdatatestclient -logonType cert"
+            write-host ".\azure-az-create-aad-application-spn.ps1 -aadDisplayName $($this.testAzClientName) -uri http://$($this.testAzClientName) -logontype cert"
             . $this.configurationFile
         }
     }
 
-    [object] GetAzureKeyVault([string]$vaultUri){
+    [bool] CreateAppRegistration([string]$displayName) {
         $error.Clear()
+        $settings = $this.testSettings
+        #$appRegistration = New-AzADApplication -DisplayName $displayName -CertValue ([convert]::tobase64string($certificate.GetRawCertData()))
+        $appRegistration = New-AzADApplication -DisplayName $displayName -IdentifierUris @("http://$displayName") #-CertValue ([convert]::tobase64string($certificate.GetRawCertData()))
+        if($error){
+            write-error "error:createappregistration $($error |out-string)"
+            return $false
+        }
+        write-host "appregistration:$($appRegistration)"
+        if ($appRegistration) {
+            return $true
+        }
+        return $null
+    }
+
+    [string] CreateKeyVaultCertificate([string]$secretName, [string]$password) {
+        $keyVault = $this.GetAzureKeyVault()
+        $error.Clear()
+        $policy = new-azKeyVaultCertificatePolicy -SecretContentType "application/x-pkcs12" `
+            -SubjectName "CN=$secretName" `
+            -IssuerName 'self' `
+            -ValidityInMonths 6 `
+            -ReuseKeyOnRenewal
+        Add-AzKeyVaultCertificate -VaultName $keyVault.VaultName -Name $secretName -CertificatePolicy $policy
+        if ($error) {
+            write-error "error adding cert to keyvault $($error | out-string)"
+            return $null
+        }
+
+        return $this.GetAzureKeyVaultCertificateBase64String($secretName, $password)
+    }
+
+    [securestring] CreateSecureString([string]$inputString) {
+        [securestring]$returnString = [securestring]::new()
+        foreach ($element in $inputString.ToCharArray()) {
+            $returnString.AppendChar($element)
+        }
+        return $returnString
+    }
+
+    [object] GetAzAdApplication([string]$displayName) {
+        $settings = $this.testSettings
+        # if ($settings.AzureClientId) {
+        #     return Get-AzADApplication -ApplicationId $settings.AzureClientId
+        # }
+        # elseif ($settings.AzureClientSecret) {
+        #     return Get-AzADApplication -DisplayName $settings.AzureClientSecret
+        # }
+        # return $null
+        return Get-AzADApplication -DisplayName $displayName
+    }
+
+    [object] GetAzureKeyVault() {
+        $error.Clear()
+        $settings = $this.testSettings
+        [string]$vaultUri = $settings.AzureKeyVault
         $settings = $this.testsettings
         $keyvaultname = [uri]::new($vaultUri).Host.Split('.')[0]
         write-host "checking keyvault:name:$keyvaultname"
         return (Get-AzKeyVault -ResourceGroupName $settings.AzureResourceGroup -VaultName $keyvaultname)
+    }
+
+    [string] GetAzureKeyVaultCertificateBase64String([string]$secretName, [string]$password) {
+        $keyvault = $this.GetAzureKeyVault()
+        $cert = $null
+        while ($true) {
+            $cert = Get-AzKeyVaultCertificate -VaultName $keyVault.VaultName -name $secretName
+            if ($cert) {
+                break
+            }
+            start-sleep -seconds 1
+        }
+
+        #$secret = Get-AzKeyVaultSecret -VaultName $keyVault.VaultName -Name $cert.Name -AsPlainText
+        # if ($password) {
+        #    $secretByte = [Convert]::FromBase64String($secret)
+        #    $x509Cert = [security.cryptography.x509Certificates.x509Certificate2]::new($secretByte, $password, "Exportable,PersistKeySet")
+        $type = [System.Security.Cryptography.X509Certificates.X509ContentType]::Pfx
+        [byte[]]$pfxFileByte = $cert.Certificate.Export($type, $password)#,"Exportable,PersistKeySet")
+        # $secret = $pfxFileByte
+        # }
+
+        return [convert]::ToBase64String($pfxFileByte)
+    }
+
+    [X509Certificate2] LoadCertificate([string]$base64String, [string]$password) {
+        $error.Clear()
+        $settings = $this.testSettings
+        write-host "loading collectsfdata cert $($settings.AzureClientCertificate)"
+        [X509Certificate2]$cert = $null
+        [byte[]] $bytes = $null
+
+        $cert = [Security.Cryptography.X509Certificates.X509Certificate2]::new([convert]::FromBase64String($base64String), $password, [X509KeyStorageFlags]::Exportable)
+        $bytes = $cert.Export([X509ContentType]::pkcs12, $password)
+
+        # if ($bytes) {
+        #     $this.certFile = "$($this.tempdir)\$($cert.thumbprint).pfx"
+        #     write-host "saving cert to temp dir $($this.certFile)"
+        #     [io.File]::WriteAllBytes($this.certFile, $bytes)
+        # }
+
+        return $cert
     }
 
     [TestSettings] ReadConfig() {
