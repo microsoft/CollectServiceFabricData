@@ -276,14 +276,16 @@ namespace CollectSFData.Common
 
         public bool IsClientIdConfigured()
         {
-            bool configured = ((HasValue(AzureClientId) & !HasValue(AzureKeyVault) & HasValue(AzureClientSecret) & AzureManagedIdentity == false) // app registration with clientsecret
-                | (HasValue(AzureClientId) & HasValue(AzureKeyVault) & HasValue(AzureClientCertificate) & AzureManagedIdentity == false) // app registration with kv
-                | (HasValue(AzureClientId) & !HasValue(AzureKeyVault) & HasValue(AzureClientCertificate) & AzureManagedIdentity == false) // app registration
-                | (HasValue(AzureClientId) & HasValue(AzureKeyVault) & HasValue(AzureClientCertificate) & AzureManagedIdentity == true) // app registration with keyvault and system managed identity to kv
-                | (!HasValue(AzureClientId) & HasValue(AzureKeyVault) & HasValue(AzureClientCertificate) & AzureManagedIdentity == true) // system managed identity with keyvault
-                | (HasValue(AzureClientId) & !HasValue(AzureKeyVault) & !HasValue(AzureClientCertificate) & AzureManagedIdentity == true) // user managed identity
+            bool configured = ((HasValue(AzureClientId) & HasValue(ClientCertificate)) // app registration
+                || (HasValue(AzureClientId) & !HasValue(AzureKeyVault) & HasValue(AzureClientSecret) & AzureManagedIdentity == false) // app registration with clientsecret
+                || (HasValue(AzureClientId) & HasValue(AzureKeyVault) & HasValue(AzureClientSecret) & AzureManagedIdentity == false) // app registration with kv
+                || (HasValue(AzureClientId) & !HasValue(AzureKeyVault) & HasValue(AzureClientCertificate) & AzureManagedIdentity == false) // app registration
+                || (HasValue(AzureClientId) & HasValue(AzureKeyVault) & HasValue(AzureClientSecret) & AzureManagedIdentity == true) // app registration with keyvault and system managed identity to kv
+                || (!HasValue(AzureClientId) & HasValue(AzureKeyVault) & HasValue(AzureClientSecret) & AzureManagedIdentity == true) // system managed identity with keyvault
+                || (HasValue(AzureClientId) & !HasValue(AzureKeyVault) & !HasValue(AzureClientCertificate) & AzureManagedIdentity == true) // user managed identity
             );
 
+            Log.Debug($"exit:configured:{configured} azureClientId:{AzureClientId} clientCertificate:{CientCertificate} azureKeyVault:{AzureKeyVault} azureClientSecret:{AzureClientSecret} managedIdentity:{AzureManagedIdentity}");
             return configured;
         }
 
