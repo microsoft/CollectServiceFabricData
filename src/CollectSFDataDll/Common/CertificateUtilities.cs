@@ -14,8 +14,7 @@ namespace CollectSFData.Common
 {
     public class CertificateUtilities
     {
-        public string Password { private get; set; }
-        public SecureString SecurePassword { private get; set; }
+        public SecureString SecurePassword { private get; set; } = new SecureString();
 
         public CertificateUtilities()
         {
@@ -45,6 +44,16 @@ namespace CollectSFData.Common
             return true;
         }
 
+        public void SetSecurePassword(string stringPassword)
+        {
+            SecurePassword = new SecureString();
+
+            foreach (char character in stringPassword.ToCharArray())
+            {
+                SecurePassword.AppendChar(character);
+            }
+        }
+
         public X509Certificate2 GetClientCertificate(string clientCertificate)
         {
             X509Certificate2 certificate = null;
@@ -72,7 +81,6 @@ namespace CollectSFData.Common
                 }
             }
 
-            //CheckCertificate(certificate);
             Log.Info($"returning certificate for clientcertificate:{clientCertificate}", certificate);
             return certificate;
         }
@@ -84,7 +92,7 @@ namespace CollectSFData.Common
 
             try
             {
-                certificate = new X509Certificate2(Convert.FromBase64String(certificateValue), GetPassword(), X509KeyStorageFlags.Exportable);
+                certificate = new X509Certificate2(Convert.FromBase64String(certificateValue), SecurePassword, X509KeyStorageFlags.Exportable);
             }
             catch (Exception e)
             {
@@ -98,7 +106,7 @@ namespace CollectSFData.Common
         public X509Certificate2 ReadCertificateFromFile(string certificateFile)
         {
             Log.Info("enter:", certificateFile);
-            X509Certificate2 certificate = new X509Certificate2(certificateFile, GetPassword(), X509KeyStorageFlags.Exportable);
+            X509Certificate2 certificate = new X509Certificate2(certificateFile, SecurePassword, X509KeyStorageFlags.Exportable);
 
             Log.Info("exit", certificate);
             return certificate;
@@ -138,7 +146,7 @@ namespace CollectSFData.Common
         {
             Log.Info("enter:", certificate);
 
-            byte[] bytes = certificate.Export(X509ContentType.Pkcs12, GetPassword());
+            byte[] bytes = certificate.Export(X509ContentType.Pkcs12, SecurePassword);
             File.WriteAllBytes(fileName, bytes);
 
             Log.Info("exit", certificate);
@@ -149,24 +157,10 @@ namespace CollectSFData.Common
         {
             Log.Info("enter:");
 
-            string base64String = Convert.ToBase64String(certificate.Export(X509ContentType.Pkcs12, GetPassword()));
+            string base64String = Convert.ToBase64String(certificate.Export(X509ContentType.Pkcs12, SecurePassword));
 
             Log.Debug("exit", base64String);
             return base64String;
-        }
-
-        private SecureString GetPassword()
-        {
-            if (SecurePassword == null)
-            {
-                SecurePassword = new SecureString();
-                foreach (char character in (Password ?? string.Empty).ToCharArray())
-                {
-                    SecurePassword.AppendChar(character);
-                }
-            }
-
-            return SecurePassword;
         }
 
         private string RemoveCn(string nameWithCn)
