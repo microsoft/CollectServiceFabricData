@@ -156,7 +156,8 @@ namespace CollectSFData.Kusto
             }
 
             string cleanUri = Regex.Replace(relativeUri, $"\\.?\\d*?({Constants.ZipExtension}|{Constants.TableExtension})", "");
-            return !_instance.FileObjects.HasFileUri(cleanUri);
+            FileObject fileObject = _instance.FileObjects.FindByUri(cleanUri);
+            return fileObject.Status != FileStatus.existing;
         }
 
         private void IngestMultipleFiles(FileObjectCollection fileObjectCollection)
@@ -322,7 +323,7 @@ namespace CollectSFData.Kusto
             queue.AddMessage(queueMessage, _messageTimeToLive, null, null, context);
             fileObject.Status = FileStatus.uploading;
             fileObject.MessageId = message.Id;
-            Log.Debug($"fileobject uploading FileUri:{fileObject.FileUri} RelativeUri: {fileObject.RelativeUri} message id: {message.Id}");
+            Log.Info($"fileobject uploading FileUri:{fileObject.FileUri} RelativeUri: {fileObject.RelativeUri} message id: {message.Id}",ConsoleColor.Cyan);
         }
 
         private KustoIngestionMessage PrepareIngestionMessage(string blobUriWithSas, long blobSizeBytes, string ingestionMapping)
