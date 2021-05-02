@@ -19,8 +19,6 @@ namespace CollectSFData.Common
 
         public CommandOption AzureKeyVault { get; set; }
 
-        public CommandOption AzureManagedIdentity { get; set; }
-
         public CommandOption AzureResourceGroup { get; set; }
 
         public CommandOption AzureResourceGroupLocation { get; set; }
@@ -364,11 +362,6 @@ namespace CollectSFData.Common
                     $"{newLine} for non interactive to kusto. default is to use integrated AAD auth token" +
                     $"{newLine} and leave this blank." +
                     $"{newLine} example: https://clusterkeyvault.vault.azure.net/",
-                    CommandOptionType.SingleValue);
-
-            AzureManagedIdentity = CmdLineApp.Option("-managed|--AzureManagedIdentity",
-                    $"[bool] to use managed identity for authorization if configured." +
-                    $"{newLine} managed identity can be used to connect just to key vault or for authorization to azure.",
                     CommandOptionType.SingleValue);
 
             AzureResourceGroup = CmdLineApp.Option("-rg|--azureResourceGroup",

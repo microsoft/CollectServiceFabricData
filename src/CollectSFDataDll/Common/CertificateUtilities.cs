@@ -88,7 +88,7 @@ namespace CollectSFData.Common
             }
             catch (Exception e)
             {
-                Log.Exception($"{e}");
+                Log.Warning($"{e.Message}");
             }
 
             Log.Debug("exit", certificate);

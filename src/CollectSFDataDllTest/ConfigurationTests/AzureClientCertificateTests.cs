@@ -28,7 +28,6 @@ namespace CollectSFDataDll.ConfigurationTests
             {
                 config.AzureClientCertificate = GetCertBase64String();
                 config.AzureKeyVault = "";
-                config.AzureManagedIdentity = false;
                 Assert.IsTrue(config.IsClientIdConfigured(), "test configuration invalid");
                 return config.ValidateAad();
             }, utils.Collector.Config);
@@ -47,7 +46,6 @@ namespace CollectSFDataDll.ConfigurationTests
 
             ProcessOutput results = utils.ExecuteTest((config) =>
             {
-                config.AzureManagedIdentity = false;
                 Assert.IsTrue(config.IsClientIdConfigured(), "test configuration invalid");
                 return config.ValidateAad();
             }, utils.Collector.Config);
@@ -67,7 +65,6 @@ namespace CollectSFDataDll.ConfigurationTests
             ProcessOutput results = utils.ExecuteTest((config) =>
             {
                 config.AzureClientId = "";
-                config.AzureManagedIdentity = true;
                 Assert.IsTrue(config.IsClientIdConfigured(), "test configuration invalid");
                 AzureResourceManager arm = new AzureResourceManager();
 
@@ -90,7 +87,6 @@ namespace CollectSFDataDll.ConfigurationTests
             ProcessOutput results = utils.ExecuteTest((config) =>
             {
                 //config.AzureClientId = "";
-                config.AzureManagedIdentity = true;
                 Assert.IsTrue(config.IsClientIdConfigured(), "test configuration invalid");
                 AzureResourceManager arm = new AzureResourceManager();
 
