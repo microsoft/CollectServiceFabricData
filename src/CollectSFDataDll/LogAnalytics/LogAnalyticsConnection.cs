@@ -27,7 +27,6 @@ namespace CollectSFData.LogAnalytics
         private string _armAuthResource = "https://management.core.windows.net";
         private LogAnalyticsWorkspaceModel _currentWorkspaceModelModel = new LogAnalyticsWorkspaceModel();
         private Http _httpClient = Http.ClientFactory();
-        private SynchronizedList<string> _ingestedUris = new SynchronizedList<string>();
         private Instance _instance = Instance.Singleton();
         private string _logAnalyticsApiVer = "api-version=2020-08-01";
         private string _logAnalyticsAuthResource = "https://api.loganalytics.io";
@@ -69,9 +68,12 @@ namespace CollectSFData.LogAnalytics
 
                 if (Config.Unique)
                 {
-                    _ingestedUris.AddRange(PostQueryList($"['{Config.LogAnalyticsName}_CL']|distinct RelativeUri_s", false)
-                        .Select(x => x = Path.GetFileNameWithoutExtension(x)));
-                    Log.Info($"listResults:", _ingestedUris);
+                    List<string> existingUploads = PostQueryList($"['{Config.LogAnalyticsName}_CL']|distinct RelativeUri_s", false).Select(x => x = Path.GetFileNameWithoutExtension(x)).ToList();
+                    Log.Info($"listResults:", existingUploads);
+                    foreach (string existingUpload in existingUploads)
+                    {
+                        _instance.FileObjects.Add(new FileObject(existingUpload) { Status = FileStatus.existing });
+                    }
                 }
             }
 
@@ -154,7 +156,8 @@ namespace CollectSFData.LogAnalytics
             }
 
             string cleanUri = Regex.Replace(relativeUri, $"\\.?\\d*?({Constants.ZipExtension}|{Constants.TableExtension})", "");
-            return !_ingestedUris.Any(x => x.Contains(cleanUri));
+            FileObject fileObject = _instance.FileObjects.FindByUriFirstOrDefault(cleanUri);
+            return fileObject.Status != FileStatus.existing;
         }
 
         private bool CreateWorkspace(LogAnalyticsWorkspaceModel workspaceModel = null)
