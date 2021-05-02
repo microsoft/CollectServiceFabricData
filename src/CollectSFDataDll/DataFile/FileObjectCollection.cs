@@ -51,7 +51,7 @@ namespace CollectSFData.DataFile
             }
             else
             {
-                Log.Info($"{fileObjects.Length} fileobject(s) added");
+                Log.Debug($"{fileObjects.Length} fileobject(s) added");
             }
 
             return exists == 0;
