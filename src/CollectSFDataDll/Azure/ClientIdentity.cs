@@ -25,8 +25,7 @@ namespace CollectSFData.Azure
             {
                 IsUserManagedIdentity = IsManagedIdentity(_config.AzureClientId);
             }
-
-            if (!IsUserManagedIdentity && string.IsNullOrEmpty(_config.AzureClientId))
+            else if (string.IsNullOrEmpty(_config.AzureClientId))
             {
                 IsSystemManagedIdentity = IsManagedIdentity();
             }
@@ -66,6 +65,7 @@ namespace CollectSFData.Azure
         public bool IsManagedIdentity(string managedClientId = null)
         {
             bool retval = false;
+        
             try
             {
                 ManagedIdentityCredential managedCredential = new ManagedIdentityCredential(managedClientId, new TokenCredentialOptions
@@ -90,7 +90,7 @@ namespace CollectSFData.Azure
             }
             catch (Exception e)
             {
-                Log.Info($"exception:{e}");
+                Log.Info($"exception:{e.Message}");
             }
 
             Log.Info($"returning{retval}");
