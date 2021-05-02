@@ -7,8 +7,6 @@ namespace CollectSFDataDllTest.Utilities
 {
     public class TestProperties
     {
-        public string adminPassword;
-        public string adminUserName;
         public string AzureClientCertificate;
         public string AzureClientId;
         public string AzureClientSecret;
@@ -19,9 +17,14 @@ namespace CollectSFDataDllTest.Utilities
         public string AzureTenantId;
         public string KustoCluster;
         public string SasKey;
+        public string testCertificateNoPasswordBase64 = "";
+        public string testCertificatePassword = "";
+        public string testCertificateWithPasswordBase64 = "";
+        public string testAdminPassword;
+        public string testAdminUserName;
         public string testAzClientCertificate;
         public string testAzClientId;
+        public string testAzClientName;
         public string testAzStorageAccount;
-        // thumbprint for .net core test project
     }
 }
