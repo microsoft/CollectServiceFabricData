@@ -12,8 +12,49 @@ namespace CollectSFData.DataFile
 {
     public class FileObjectCollection : SynchronizedList<FileObject>
     {
+        private object _collectionLock = new object();
         public FileObjectCollection() : base(new List<FileObject>())
         {
+        }
+
+        public new bool Add(FileObject fileObject)
+        {
+            return AddRange(new FileObject[] { fileObject });
+        }
+
+        public bool AddRange(FileObject[] fileObjects)
+        {
+            int exists = 0;
+
+            lock (_collectionLock)
+            {
+                foreach (FileObject fileObject in fileObjects)
+                {
+                    FileObject existingFileObject = FindByUriFirstOrDefault(fileObject.RelativeUri);
+                    if (!existingFileObject.IsPopulated)
+                    {
+                        base.Add(fileObject);
+                        continue;
+                    }
+                    else if (existingFileObject.Status != fileObject.Status)
+                    {
+                        existingFileObject.Status = fileObject.Status;
+                    }
+
+                    exists++;
+                }
+            }
+
+            if (exists > 0)
+            {
+                Log.Warning($"{exists} fileobject(s) already exist");
+            }
+            else
+            {
+                Log.Info($"{fileObjects.Length} fileobject(s) added");
+            }
+
+            return exists == 0;
         }
 
         public bool Any(FileStatus fileObjectStatus = FileStatus.all)
@@ -78,7 +119,7 @@ namespace CollectSFData.DataFile
             return new FileObject();
         }
 
-        public FileObject FindByUri(string searchItem)
+        public FileObject FindByUriFirstOrDefault(string searchItem)
         {
             foreach (FileObject queuedObject in this.Take())
             {
@@ -89,13 +130,13 @@ namespace CollectSFData.DataFile
                 }
             }
 
-            Log.Error($"unable to find fileObject by key searchItem:{searchItem}");
+            Log.Debug($"unable to find fileObject by key searchItem:{searchItem}");
             return new FileObject();
         }
 
         public bool HasFileUri(string searchItem)
         {
-            return FindByUri(searchItem).IsPopulated;
+            return FindByUriFirstOrDefault(searchItem).IsPopulated;
         }
 
         public string StatusString(FileStatus fileObjectStatus = FileStatus.all)
