@@ -18,8 +18,6 @@ namespace CollectSFData.Common
 
         public string AzureKeyVault { get; set; }
 
-        public bool AzureManagedIdentity { get; set; } = false;
-
         public string AzureResourceGroup { get; set; }
 
         public string AzureResourceGroupLocation { get; set; }

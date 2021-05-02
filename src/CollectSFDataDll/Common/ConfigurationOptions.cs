@@ -276,16 +276,15 @@ namespace CollectSFData.Common
 
         public bool IsClientIdConfigured()
         {
-            bool configured = ((HasValue(AzureClientId) & HasValue(ClientCertificate)) // app registration
-                || (HasValue(AzureClientId) & !HasValue(AzureKeyVault) & HasValue(AzureClientSecret) & AzureManagedIdentity == false) // app registration with clientsecret
-                || (HasValue(AzureClientId) & HasValue(AzureKeyVault) & HasValue(AzureClientSecret) & AzureManagedIdentity == false) // app registration with kv
-                || (HasValue(AzureClientId) & !HasValue(AzureKeyVault) & HasValue(AzureClientCertificate) & AzureManagedIdentity == false) // app registration
-                || (HasValue(AzureClientId) & HasValue(AzureKeyVault) & HasValue(AzureClientSecret) & AzureManagedIdentity == true) // app registration with keyvault and system managed identity to kv
-                || (!HasValue(AzureClientId) & HasValue(AzureKeyVault) & HasValue(AzureClientSecret) & AzureManagedIdentity == true) // system managed identity with keyvault
-                || (HasValue(AzureClientId) & !HasValue(AzureKeyVault) & !HasValue(AzureClientCertificate) & AzureManagedIdentity == true) // user managed identity
+            bool configured = ((HasValue(AzureClientId) & HasValue(ClientCertificate)) // app registration configured
+                || (HasValue(AzureClientId) & !HasValue(AzureKeyVault) & HasValue(AzureClientCertificate) & !HasValue(AzureClientSecret)) // app registration
+                || (HasValue(AzureClientId) & !HasValue(AzureKeyVault) & !HasValue(AzureClientCertificate) & HasValue(AzureClientSecret)) // app registration with clientsecret
+                || (HasValue(AzureClientId) & HasValue(AzureKeyVault)  & !HasValue(AzureClientCertificate) & HasValue(AzureClientSecret)) // app registration with kv user managed
+                || (!HasValue(AzureClientId) & HasValue(AzureKeyVault) & !HasValue(AzureClientCertificate) & HasValue(AzureClientSecret)) // app registration with keyvault and system managed identity to kv
+                || (HasValue(AzureClientId) & !HasValue(AzureKeyVault) & !HasValue(AzureClientCertificate) & !HasValue(AzureClientSecret)) // user managed identity
             );
 
-            Log.Debug($"exit:configured:{configured} azureClientId:{AzureClientId} clientCertificate:{ClientCertificate} azureKeyVault:{AzureKeyVault} azureClientSecret:{AzureClientSecret} managedIdentity:{AzureManagedIdentity}");
+            Log.Debug($"exit:configured:{configured} azureClientId:{AzureClientId} clientCertificate:{ClientCertificate} azureKeyVault:{AzureKeyVault} azureClientSecret:{AzureClientSecret}");
             return configured;
         }
 
@@ -570,7 +569,7 @@ namespace CollectSFData.Common
                     ClientCertificate = certificateUtilities.GetClientCertificate(AzureClientCertificate);
                     if (!HasValue(ClientCertificate))
                     {
-                        Log.Error("Failed certificate to find certificate");
+                        Log.Error("Failed to find certificate");
                         retval &= false;
                     }
                 }
@@ -583,17 +582,17 @@ namespace CollectSFData.Common
                         retval &= false;
                     }
                 }
-                else
-                {
-                    Log.Error("Failed certificate to find certificate");
-                    retval &= false;
-                }
+                // else
+                // {
+                //     Log.Error("Failed certificate to find certificate");
+                //     retval &= false;
+                // }
 
                 retval &= arm.Authenticate();
 
-                if (clientIdConfigured & AzureManagedIdentity & !(arm.ClientIdentity.IsSystemManagedIdentity | arm.ClientIdentity.IsUserManagedIdentity))
+                if (clientIdConfigured & !arm.ClientIdentity.IsTypeManagedIdentity & !arm.ClientIdentity.IsAppRegistration)
                 {
-                    Log.Warning($"unable to detect managed identity. verify azure client configuration settings and set AzureManagedIdentity to false if not using.");
+                    Log.Warning($"unable to detect managed identity. verify azure client configuration settings and set both AzureClientId and AzureClientSecret.");
                 }
 
                 // LA workspace commands require subscription id. if not specified and tenant has more than one, fail
