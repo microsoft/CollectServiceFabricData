@@ -222,9 +222,15 @@ namespace CollectSFData.Azure
 
                     string relativeUri = $"{Config.StartTimeUtc.Ticks}-{Config.EndTimeUtc.Ticks}-{cloudTable.Name}.{chunkCount++}{Constants.TableExtension}";
                     FileObject fileObject = new FileObject(relativeUri, Config.CacheLocation) { Status = FileStatus.enumerated };
+                    
+                    if(_instance.FileObjects.FindByUriFirstOrDefault(relativeUri).Status == FileStatus.existing)
+                    {
+                        Log.Info($"{relativeUri} already exists. skipping",ConsoleColor.DarkYellow);
+                        continue;
+                    }
+
                     _instance.FileObjects.Add(fileObject);
                     resultsChunk.ToList().ForEach(x => x.RelativeUri = relativeUri);
-
                     fileObject.Stream.Write(resultsChunk);
 
                     _instance.TotalFilesDownloaded++;
