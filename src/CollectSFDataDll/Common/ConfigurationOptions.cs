@@ -285,7 +285,7 @@ namespace CollectSFData.Common
                 || (HasValue(AzureClientId) & !HasValue(AzureKeyVault) & !HasValue(AzureClientCertificate) & AzureManagedIdentity == true) // user managed identity
             );
 
-            Log.Debug($"exit:configured:{configured} azureClientId:{AzureClientId} clientCertificate:{CientCertificate} azureKeyVault:{AzureKeyVault} azureClientSecret:{AzureClientSecret} managedIdentity:{AzureManagedIdentity}");
+            Log.Debug($"exit:configured:{configured} azureClientId:{AzureClientId} clientCertificate:{ClientCertificate} azureKeyVault:{AzureKeyVault} azureClientSecret:{AzureClientSecret} managedIdentity:{AzureManagedIdentity}");
             return configured;
         }
 
