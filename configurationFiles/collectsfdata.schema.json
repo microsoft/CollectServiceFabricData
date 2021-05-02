@@ -59,17 +59,6 @@
       ],
       "pattern": "^(.+)$"
     },
-    "AzureManagedIdentity": {
-      "$id": "#/properties/AzureManagedIdentity",
-      "type": "boolean",
-      "title": "AzureManagedIdentity",
-      "description": "true to use azure managed identity if configured for key vault and or authorization into azure.",
-      "default": false,
-      "examples": [
-        false,
-        true
-      ]
-    },
     "AzureResourceGroup": {
       "$id": "#/properties/AzureResourceGroup",
       "type": "string",

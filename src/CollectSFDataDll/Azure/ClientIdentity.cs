@@ -17,19 +17,13 @@ namespace CollectSFData.Azure
 
         public void SetIdentityType()
         {
-            if (!string.IsNullOrEmpty(_config.AzureClientId))
+            if (!string.IsNullOrEmpty(_config.AzureClientId) & !string.IsNullOrEmpty(_config.AzureClientCertificate))
             {
                 IsAppRegistration = true;
             }
-
-            if (!_config.AzureManagedIdentity)
+            else if (!string.IsNullOrEmpty(_config.AzureClientId))
             {
-                return;
-            }
-
-            if (!string.IsNullOrEmpty(_config.AzureClientId))
-            {
-                IsAppRegistration = !(IsUserManagedIdentity = IsManagedIdentity(_config.AzureClientId));
+                IsUserManagedIdentity = IsManagedIdentity(_config.AzureClientId);
             }
 
             if (!IsUserManagedIdentity && string.IsNullOrEmpty(_config.AzureClientId))
