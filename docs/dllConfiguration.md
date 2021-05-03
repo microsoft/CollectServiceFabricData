@@ -17,12 +17,9 @@ The 'Instance' class is a singleton that contains information and configuration 
 If Collect() succeeds, 0 is returned, if fails return is > 0.
 After Collect() has been called, both Instance and ConfigurationOptions can be used to review results.
 
-
 ## Supported Configurations
 
 The below configurations are currently supported.
-
-### .Net Framework
 
 .Net Framework 4.6.2
 .Net Framework 4.7.2+
@@ -40,22 +37,146 @@ In Visual Studio, use 'NuGet Package Manager' to install package.
 
 ### **Using with Client Credentials for non-interactive execution**
 
-Use these steps to optionally configure CollectSFData to run non-interactively with client credentials and client certificate. 
+#### **Configuration of Client Certificate**
 
-#### **Configuration of Azure Active Directory App Registration**
+CollectSFData can use a certificate for authorization to Azure.  
+The certificate can be stored in the following locations:  
+- local file  
+    "AzureClientCertificate": "c:\\temp\\collectsfdata.pfx",  
+- local cert store  
+    "AzureClientCertificate": "*.sfcluster.com",  
+- base64 string  
+    "AzureClientCertificate": "MIIXDAIBAzCCFsgGCSqGSIb3D...",  
+- keyvault  
+    "AzureClientSecret": "cluster-key-vault-secret",  
+    "AzureKeyVault": "https://clusterkeyvault.vault.azure.net/",  
 
-#### **Configuration of System Managed Identity**
+### Use these steps to optionally configure CollectSFData to run non-interactively with client credentials and client certificate.  
+
+example variables:  
+app registration id: f4289be6-a77a-4554-b5d7-13a5d0ef66c7  
+app registration secret name: app-registration-secret  
+certificate base64 partial string: MIIXDAIBAzCCFsgGCSqGSIb3D...  
+key vault url: https://clusterkeyvault.vault.azure.net/  
+key vault secret name: cluster-key-vault-secret  
+subscription id: 3ddc104f-35a1-4e5a-8122-b18c15a486bf  
+tenant id: b4be3bd5-1e7f-4c0c-a9b4-97d1d1bb0290  
+user managed identity: 3080722d-0cf6-4552-8e45-c5ccbc3d091f  
+
+#### **Configuration of App Registration and client certificate**
+
+```json
+{
+  "AzureClientId": "f4289be6-a77a-4554-b5d7-13a5d0ef66c7",
+  "AzureClientCertificate": "MIIXDAIBAzCCFsgGCSqGSIb3D...",
+  "AzureClientSecret": null,
+  "AzureKeyVault": null,
+  "AzureSubscriptionId": "3ddc104f-35a1-4e5a-8122-b18c15a486bf",
+  "AzureTenantId": "b4be3bd5-1e7f-4c0c-a9b4-97d1d1bb0290",
+}
+```
+
+#### **Configuration of App Registration and client secret**
+
+```json
+{
+  "AzureClientId": "f4289be6-a77a-4554-b5d7-13a5d0ef66c7",
+  "AzureClientCertificate": null,
+  "AzureClientSecret": "app-registration-secret",
+  "AzureKeyVault": null,
+  "AzureSubscriptionId": "3ddc104f-35a1-4e5a-8122-b18c15a486bf",
+  "AzureTenantId": "b4be3bd5-1e7f-4c0c-a9b4-97d1d1bb0290",
+}
+```
+
+#### **Configuration of App Registration with user managed identity to key vault**
+
+```json
+{
+  "AzureClientId": "f4289be6-a77a-4554-b5d7-13a5d0ef66c7",
+  "AzureClientCertificate": null,
+  "AzureClientSecret": "cluster-key-vault-secret",
+  "AzureKeyVault": "https://clusterkeyvault.vault.azure.net/",
+  "AzureSubscriptionId": null,
+  "AzureTenantId": null,
+}
+```
+
+#### **Configuration of App registration with System Managed Identity to key vault**
+
+```json
+{
+  "AzureClientId": "f4289be6-a77a-4554-b5d7-13a5d0ef66c7",
+  "AzureClientCertificate": null,
+  "AzureClientSecret": "cluster-key-vault-secret",
+  "AzureKeyVault": "https://clusterkeyvault.vault.azure.net/",
+  "AzureSubscriptionId": null,
+  "AzureTenantId": null,
+}
+```
 
 #### **Configuration of User Managed Identity**
 
-#### **Configuration of Client Certificate**
+```json
+{
+  "AzureClientId": "3080722d-0cf6-4552-8e45-c5ccbc3d091f",
+  "AzureClientCertificate": null,
+  "AzureClientSecret": null,
+  "AzureKeyVault": null,
+  "AzureSubscriptionId": null,
+  "AzureTenantId": null,
+}
+```
 
-CollectSFData can use a certificate for authorization to Azure.
-The certificate can be stored in the following locations:
-- local file
-- local cert store
-- base64 string
-- keyvault
+#### **Configuration of X509Certificate2 directly**
+
+example setting ConfigurationOptions.ClientCertificate with private key password using CertificateUtilities.  
+
+```c#
+private static int Main(string[] args)
+{
+    string unsafePassword = args[0];
+    string base64String = args[1];
+
+    Collector collector = new Collector(true);
+    ConfigurationOptions config = new ConfigurationOptions();
+    CertificateUtilities utils = new CertificateUtilities();
+    utils.SetSecurePassword(unsafePassword);
+    config.ClientCertificate = utils.GetClientCertificate(base64String);
+
+    if (!config.Validate())
+    {
+        collector.Close();
+        return 1;
+    }
+
+    int retval = collector.Collect(config);
+    return retval;
+}
+```
+
+example setting ConfigurationOptions.ClientCertificate with private key password using X509Certificate.  
+
+```c#
+private static int Main(string[] args)
+{
+    string unsafePassword = args[0];
+    string fileName = args[1];
+
+    Collector collector = new Collector(true);
+    ConfigurationOptions config = new ConfigurationOptions();
+    config.ClientCertificate = new X509Certificate2(fileName, unsafePassword);
+
+    if (!config.Validate())
+    {
+        collector.Close();
+        return 1;
+    }
+
+    int retval = collector.Collect(config);
+    return retval;
+}
+```
 
 ## Implementing Collector
 
@@ -122,21 +243,12 @@ collector.Config.SetDefaultConfiguration(config);
 ```c#
 ConfigurationOptions config = new ConfigurationOptions(args);
 // make changes to config properties
-config.Validate();
-bool retval = config.IsValid;
+bool retval = config.Validate();
 ```
 
 ```c#
 ConfigurationOptions config = new ConfigurationOptions(args,true);
 bool retval = config.IsValid;
-```
-
-```c#
-ConfigurationOptions config = new ConfigurationOptions(args,true);
-if(config.NeedsValidation)
-{
-    config.Validate();
-}
 ```
 
 ### **Calling Collector.Collect()**
@@ -150,18 +262,18 @@ If configuration has not been validated, Collect() will validate configuration.
 ```c#
 private static int Main(string[] args)
 {
-        Collector collector = new Collector(true);
-        ConfigurationOptions config = new ConfigurationOptions(args);
+    Collector collector = new Collector(true);
+    ConfigurationOptions config = new ConfigurationOptions(args);
 
-        config.GatherType = FileTypesEnum.counter.ToString();
-        config.UseMemoryStream = true;
-        config.KustoCluster = "https://ingest-sfcluster.kusto.windows.net/sfdatabase";
-        config.KustoTable = "sfclusterlogs";
-        config.KustoRecreateTable = true;
-        config.LogDebug = 5;
-        config.LogFile = "c:\\temp\\csfd.3.log";
+    config.GatherType = FileTypesEnum.counter.ToString();
+    config.UseMemoryStream = true;
+    config.KustoCluster = "https://ingest-sfcluster.kusto.windows.net/sfdatabase";
+    config.KustoTable = "sfclusterlogs";
+    config.KustoRecreateTable = true;
+    config.LogDebug = 5;
+    config.LogFile = "c:\\temp\\csfd.3.log";
 
-        return collector.Collect(config);
+    return collector.Collect(config);
 }
 ```
 
@@ -172,19 +284,19 @@ using CollectSFData.Common;
 
 private static int Main(string[] args)
 {
-        Collector collector = new Collector();
-        ConfigurationOptions config = collector.Config;
+    Collector collector = new Collector();
+    ConfigurationOptions config = collector.Config;
 
-        config.GatherType = "trace";
-        config.UseMemoryStream = true;
-        config.KustoCluster = "https://ingest-sfcluster.kusto.windows.net/sfdatabase";
-        config.KustoTable = "sfclusterlogs";
-        config.KustoRecreateTable = true;
-        config.LogDebug = 5;
-        config.LogFile = null;
-        config.Validate();
+    config.GatherType = "trace";
+    config.UseMemoryStream = true;
+    config.KustoCluster = "https://ingest-sfcluster.kusto.windows.net/sfdatabase";
+    config.KustoTable = "sfclusterlogs";
+    config.KustoRecreateTable = true;
+    config.LogDebug = 5;
+    config.LogFile = null;
+    config.Validate();
 
-        return collector.Collect();
+    return collector.Collect();
 }
 ```
 
@@ -195,18 +307,18 @@ using CollectSFData.Common;
 
 private static int Main(string[] args)
 {
-        Collector collector = new Collector(true);
-        ConfigurationOptions config = collector.Config.Clone();
+    Collector collector = new Collector(true);
+    ConfigurationOptions config = collector.Config.Clone();
 
-        config.GatherType = FileTypesEnum.counter.ToString();
-        config.UseMemoryStream = true;
-        config.KustoCluster = "https://ingest-sfcluster.kusto.windows.net/sfdatabase";
-        config.KustoTable = "sfclusterlogs";
-        config.KustoRecreateTable = true;
-        config.LogDebug = 5;
-        config.LogFile = "c:\\temp\\csfd.3.log";
+    config.GatherType = FileTypesEnum.counter.ToString();
+    config.UseMemoryStream = true;
+    config.KustoCluster = "https://ingest-sfcluster.kusto.windows.net/sfdatabase";
+    config.KustoTable = "sfclusterlogs";
+    config.KustoRecreateTable = true;
+    config.LogDebug = 5;
+    config.LogFile = "c:\\temp\\csfd.3.log";
 
-        return collector.Collect(config);
+    return collector.Collect(config);
 }
 ```
 
@@ -228,26 +340,23 @@ Each fileObject will have one of the following flag enum states:
 ```c#
 [Flags]
 public enum FileStatus : int
-   {
-       unknown = 0,
-       enumerated = 1, // found in blob storage or locally
-       existing = 2, // already ingested into table
-       queued = 4, // queued for download
-       downloading = 8, // downloading from blob storage
-       formatting = 16, // formatting into csv
-       uploading = 32, // uploading to kusto table
-       failed = 64, // ingest into kusto failed
-       succeeded = 128, // ingest into kusto succeeded
-       all = 256
-   }
+{
+    unknown = 0,
+    enumerated = 1, // found in blob storage or locally
+    existing = 2, // already ingested into table
+    queued = 4, // queued for download
+    downloading = 8, // downloading from blob storage
+    formatting = 16, // formatting into csv
+    uploading = 32, // uploading to kusto table
+    failed = 64, // ingest into kusto failed
+    succeeded = 128, // ingest into kusto succeeded
+    all = 256
+}
 ```
-
-On exit, the following states will be checked.
-if existing + succeeded == total then collection was successful.
 
 ## Logging
 
-Externally there is logging both to console output and optionally to a log file. When using as a DLL, subscribing to event 'Log_MessageLogged' will provide the same information in 'LogMessage' object format. 
+Externally there is logging both to console output and optionally to a log file. When using as a DLL, subscribing to event 'Log_MessageLogged' will provide the same information in 'LogMessage' object format.  
 
 ### Example
 
