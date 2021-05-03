@@ -230,6 +230,7 @@ class TestEnv {
         $keyvaultname = $null
 
         if ($settings.AzureKeyVault) {
+            $keyvaultname = $settings.AzureKeyVault
             if ($this.GetAzureKeyVault()) {
                 return $true
             }
