@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace CollectSFData.Common
 {
-    public class CustomTaskManager : Constants
+    public class CustomTaskManager
     {
         private static SynchronizedList<CustomTaskManager> _allInstances = new SynchronizedList<CustomTaskManager>();
         private static CustomTaskScheduler _customScheduler;
@@ -124,7 +124,7 @@ namespace CollectSFData.Common
 
             while (QueuedTaskObjects.Any())
             {
-                Thread.Sleep(ThreadSleepMs100);
+                Thread.Sleep(Constants.ThreadSleepMs100);
             }
 
             Task.WaitAll(AllTasks.ToArray());
@@ -199,7 +199,7 @@ namespace CollectSFData.Common
                     Log.Debug("cancel requested, but there are incomplete tasks");
                 }
 
-                Thread.Sleep(ThreadSleepMs10);
+                Thread.Sleep(Constants.ThreadSleepMs10);
             }
         }
 
@@ -214,10 +214,10 @@ namespace CollectSFData.Common
                 return taskObject.Task;
             }
 
-            while (taskWait && workerThreads < (Config.Threads * MinThreadMultiplier))
+            while (taskWait && workerThreads < (Config.Threads * Constants.MinThreadMultiplier))
             {
                 ThreadPool.GetAvailableThreads(out workerThreads, out completionPortThreads);
-                Thread.Sleep(ThreadSleepMs10);
+                Thread.Sleep(Constants.ThreadSleepMs10);
                 count++;
             }
 
