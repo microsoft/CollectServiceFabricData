@@ -10,13 +10,35 @@
     "StartTimeStamp"
   ],
   "properties": {
+    "AzureClientCertificate": {
+      "$id": "#/properties/AzureClientCertificate",
+      "type": "string",
+      "title": "AzureClientCertificate",
+      "description": "client certificate used in authorization to azure.",
+      "required": [
+      ],
+      "default": null,
+      "examples": [
+        null,
+        "{{secret name in key vault}}",
+        "star-sfcluster-com",
+        "{{thumb print}}",
+        "D60F1AA6632B4C2A385879C227387359535B77DE",
+        "{{subject name}}",
+        "sfcluster.com",
+        "{{file name}}",
+        "star-sfcluster.pfx",
+        "{{base64 string}}",
+        "MIIV3AIBAzCCF...Jsc="
+      ],
+      "pattern": "^([a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12})$"
+    },
     "AzureClientId": {
       "$id": "#/properties/AzureClientId",
       "type": "string",
       "title": "AzureClientId",
-      "description": "azure application id used for headless / silent execution",
+      "description": "azure application id or user managed id for non-interactive execution",
       "required": [
-        "AzureClientSecret"
       ],
       "default": null,
       "examples": [
@@ -25,14 +47,15 @@
       ],
       "pattern": "^([a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12})$"
     },
-    "AzureClientSecret": {
-      "$id": "#/properties/AzureClientSecret",
+    "AzureKeyVault": {
+      "$id": "#/properties/AzureKeyVault",
       "type": "string",
-      "title": "AzureClientSecret",
-      "description": "azure application id secret used for headless / silent execution.",
+      "title": "AzureKeyVault",
+      "description": "azure keyvault base uri if downloading client certificate from key vault.",
       "default": null,
       "examples": [
-        null
+        null,
+        "https://{{key vault name}}.vault.azure.net/"
       ],
       "pattern": "^(.+)$"
     },

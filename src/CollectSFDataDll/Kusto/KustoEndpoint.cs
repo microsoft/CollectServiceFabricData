@@ -23,7 +23,7 @@ using System.Threading;
 
 namespace CollectSFData.Kusto
 {
-    public class KustoEndpoint : Constants
+    public class KustoEndpoint
     {
         public string Cursor;
         private static ICslAdminProvider _kustoAdminClient;
@@ -89,9 +89,9 @@ namespace CollectSFData.Kusto
 
             DeleteSourceOnSuccess = !Config.KustoUseBlobAsSource;
 
-            if (Regex.IsMatch(Config.KustoCluster, KustoUrlPattern))
+            if (Regex.IsMatch(Config.KustoCluster, Constants.KustoUrlPattern))
             {
-                Match matches = Regex.Match(Config.KustoCluster, KustoUrlPattern);
+                Match matches = Regex.Match(Config.KustoCluster, Constants.KustoUrlPattern);
                 string domainName = matches.Groups["domainName"].Value;
                 DatabaseName = matches.Groups["databaseName"].Value;
                 TableName = Config.KustoTable;

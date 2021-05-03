@@ -108,7 +108,7 @@ namespace CollectSFDataTest.Utilities
 
             File.Copy(TestOptionsFile, TempOptionsFile, true);
 
-            ConfigurationOptions = new ConfigurationOptions(TempArgs);
+            ConfigurationOptions = new ConfigurationOptions();
 
             //TempArgs = new string[2] { "-config", TestOptionsFile };
             //ConfigurationOptions.ProcessArguments();
@@ -319,7 +319,7 @@ namespace CollectSFDataTest.Utilities
                 Log.Info("enter");
 
                 SaveTempOptions();
-                ConfigurationOptions config = new ConfigurationOptions(TempArgs,true);
+                ConfigurationOptions config = new ConfigurationOptions(TempArgs, true);
                 Collector collector = new Collector();
                 Assert.IsNotNull(collector);
 

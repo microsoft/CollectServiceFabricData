@@ -27,6 +27,10 @@ $ignoreCase = [text.regularExpressions.regexOptions]::IgnoreCase
 $nuspecFile = "$projectDir/CollectSFData/CollectSFData.nuspec"
 $xmlns = "http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd"
 
+$globalNugetFiles = @{
+    '../FabricSupport.png'                                         = 'images/'
+}
+
 $commonNugetFiles = @{
     '../bin/$configuration$/$targetFramework/*.exe'                = 'tools/$targetFramework'
     '../bin/$configuration$/$targetFramework/*.dll'                = 'tools/$targetFramework'
@@ -35,7 +39,6 @@ $commonNugetFiles = @{
     '../bin/$configuration$/$targetFramework/Sf.Tx.Windows.dll'    = 'lib/$targetFramework'
     '../../configurationFiles/collectsfdata.options.json'          = 'tools/$targetFramework'
     '../bin/$configuration$/$targetFramework/*.config'             = 'tools/$targetFramework'
-    '../FabricSupport.png'                                         = 'images/'
 }
 
 $netCoreNugetFiles = @{
@@ -123,6 +126,22 @@ function create-nuspec($targetFrameworks) {
 
     $nuspecXml.package.files.RemoveAll()
     $filesElement = $nuspecxml.package.GetElementsByTagName("files")
+
+    foreach ($globalNugetFile in $globalNugetFiles.GetEnumerator()) {
+        $srcPath = $globalNugetFile.Key.Replace("`$targetFramework", $targetFramework)
+        $targetPath = $globalNugetFile.Value.Replace("`$targetFramework", $targetFramework)
+
+        $element = $nuspecXml.CreateElement("file", $xmlns)
+        $src = $nuspecXml.CreateAttribute("src")
+        $src.Value = $srcPath
+        $element.Attributes.Append($src)
+
+        $target = $nuspecXml.CreateAttribute("target")
+        $target.Value = $targetPath
+        $element.Attributes.Append($target)
+
+        $filesElement.AppendChild($element)
+    }
 
     foreach ($targetFramework in $targetFrameworks) {
         foreach ($commonNugetFile in $commonNugetFiles.GetEnumerator()) {
