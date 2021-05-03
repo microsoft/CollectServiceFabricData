@@ -1,6 +1,6 @@
 .create-or-alter function with (docstring = "function to create GlobalTime TableView view for sftable", folder = "sftable")
-    TableViewGlobalTime(T:string) {
-        TableViewTask(T,'FabricNode')
+    TableViewGlobalTime(T:string, startTimeStamp:datetime=datetime(null), endTimeStamp:datetime=datetime(null)) {
+        TableViewTask(T,'FabricNode',startTimeStamp,endTimeStamp)
         | where RelativeUri endswith 'time'
         | project-reorder Timestamp, localTime, epoch, lowerBound, upperBound, TaskName, PartitionKey, RowKey, * asc
         | order by Timestamp asc

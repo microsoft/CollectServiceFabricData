@@ -8,13 +8,15 @@ using System;
 
 namespace CollectSFData.Common
 {
-    public class ConfigurationProperties : Constants
+    public class ConfigurationProperties
     {
-        public string AzureClientId { get; set; }
-
         public string AzureClientCertificate { get; set; }
 
+        public string AzureClientId { get; set; }
+
         public string AzureClientSecret { get; set; }
+
+        public string AzureKeyVault { get; set; }
 
         public string AzureResourceGroup { get; set; }
 
@@ -33,15 +35,15 @@ namespace CollectSFData.Common
         public bool DeleteCache { get; set; }
 
         public string EndTimeStamp { get; set; }
-        
+
         public DateTimeOffset EndTimeUtc { get; set; }
 
         public bool Examples { get; private set; }
 
-        public string[] FileUris {get; set;} = new string[0];
+        public string[] FileUris { get; set; } = new string[0];
 
-        public string GatherType { get; set; }
-        
+        public string GatherType { get; set; } = "unknown";
+
         public string KustoCluster { get; set; }
 
         public bool KustoCompressed { get; set; } = true;
@@ -54,11 +56,11 @@ namespace CollectSFData.Common
 
         public bool KustoUseBlobAsSource { get; set; } = true;
 
-        public bool KustoUseIngestMessage { get; set; }
+        public bool KustoUseIngestMessage { get; set; } = false;
 
-        public bool List { get; set; }
+        public bool List { get; set; } = false;
 
-        public bool LogAnalyticsCreate { get; set; }
+        public bool LogAnalyticsCreate { get; set; } = false;
 
         public string LogAnalyticsId { get; set; }
 
@@ -68,7 +70,7 @@ namespace CollectSFData.Common
 
         public string LogAnalyticsPurge { get; set; }
 
-        public bool LogAnalyticsRecreate { get; set; }
+        public bool LogAnalyticsRecreate { get; set; } = false;
 
         public string LogAnalyticsWorkspaceName { get; set; }
 
@@ -104,9 +106,9 @@ namespace CollectSFData.Common
 
         public bool UseMemoryStream { get; set; } = true;
 
-        public bool UseTx { get; set; }
+        public bool UseTx { get; set; } = true;
 
-        public bool VersionOption { get; set; }
+        public bool VersionOption { get; set; } = false;
 
         public ConfigurationProperties()
         {

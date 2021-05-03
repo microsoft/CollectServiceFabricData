@@ -15,5 +15,6 @@ import-module $module
 [CollectSFData.Common.ConfigurationOptions]$global:config = [CollectSFData.Common.ConfigurationOptions]::new($collectsfdataArgs)
 $global:csfd
 
-write-host use "`$global:csfd"
+
 $csfd.Collect($config)
+write-host use "`$global:csfd"

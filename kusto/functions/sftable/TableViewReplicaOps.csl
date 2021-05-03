@@ -1,6 +1,6 @@
 .create-or-alter function with (docstring = "function to create ReplicaOps TableView view for sftable", folder = "sftable")
-    TableViewReplicaOps(T:string) {
-        TableView(T)
+    TableViewReplicaOps(T:string, startTimeStamp:datetime=datetime(null), endTimeStamp:datetime=datetime(null)) {
+        TableView(T,startTimeStamp,endTimeStamp)
         | where RelativeUri endswith "ReplicaOps"
         | project Timestamp,
             column_ifexists("EventType",""),
