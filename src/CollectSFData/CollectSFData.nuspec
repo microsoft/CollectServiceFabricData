@@ -160,8 +160,8 @@
     <file src="..\bin\$configuration$\net5.0\CollectSFDataDll.dll" target="lib\net5.0" />
     <file src="..\bin\$configuration$\net5.0\Sf.Tx.Core.dll" target="lib\net5.0" />
     <file src="..\bin\$configuration$\net5.0\Sf.Tx.Windows.dll" target="lib\net5.0" />
-    <file src="..\..\configurationFiles\collectsfdata.options.json" target="net5.0" />
-    <file src="..\bin\$configuration$\net5.0\*.config" target="net5.0" />
+    <file src="..\..\configurationFiles\collectsfdata.options.json" target="tools\net5.0" />
+    <file src="..\bin\$configuration$\net5.0\*.config" target="tools\net5.0" />
     <file src="..\FabricSupport.png" target="images\" />
   </files>
 </package>
