@@ -9,7 +9,7 @@ using System;
 
 namespace CollectSFData.Common
 {
-    public class IngestRetryPolicy : Constants, IRetryPolicy
+    public class IngestRetryPolicy : IRetryPolicy
     {
         IRetryPolicy IRetryPolicy.CreateInstance()
         {
@@ -21,7 +21,7 @@ namespace CollectSFData.Common
             Log.Exception($"ingest retry policy retry count: {currentRetryCount} exception: {lastException}");
             retryInterval = new TimeSpan(0, 0, 1);
 
-            if (currentRetryCount < RetryCount)
+            if (currentRetryCount < Constants.RetryCount)
             {
                 return true;
             }

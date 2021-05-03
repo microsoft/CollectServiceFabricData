@@ -9,6 +9,7 @@ namespace CollectSFDataTest.Utilities
     {
         public string adminPassword;
         public string adminUserName;
+        public string AzureClientCertificate;
         public string AzureClientId;
         public string AzureClientSecret;
         public string AzureResourceGroup;
@@ -17,8 +18,8 @@ namespace CollectSFDataTest.Utilities
         public string AzureTenantId;
         public string KustoCluster;
         public string SasKey;
+        public string testAzClientCertificate;
         public string testAzClientId;
-        public string testAzClientSecret;
         public string testAzStorageAccount;
         // thumbprint for .net core test project
     }
