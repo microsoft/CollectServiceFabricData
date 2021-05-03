@@ -143,27 +143,6 @@ To use a default configuration file without having to specify on the command lin
 - **Unique** - optional. bool. default true. if enabled, option ensures duplicate records are not ingested into same table.
 
 #### collectsfdata azure arguments (optional)
-
-- **AzureClientId** - optional. guid.
-- **AzureClientCertificate** - optional. string. used for non-interactive authorization. can be in the following forms:
-  - thumbprint if using local store 'D60F1AA6632B4C2A385879C227387359535B77DE'
-  - path to file name if using local file system 'cluster.pfx'
-  - subject name if using local store 'sfcluster.com'
-  - secret name if using azure key vault 'star-sfcluster-com'
-  - base64 string if adding cert directly into configuration 'MIIV3AIBAzCCF...Jsc='  
-    You can use the following PowerShell script to obtain a Base64-encoded representation of a certificate:
-
-    ```powershell
-    [convert]::ToBase64String([io.file]::ReadAllBytes("C:\path\to\certificate.pfx"))
-    ```
-- **AzureClientSecret** - required if AzureClientId is specified and not using AzureClientCertificate. string.
-- **AzureKeyVault** - optional. can be used to store AzureClientCertificate if being used.
-  - 'https://{{key vault name}}.vault.azure.net/'
-- **AzureResourceGroup** - required if using Log Analytics and creating a workspace. string. if populated, value is used for creation of Log Analytics workspace.
-- **AzureResourceGroupLocation** - required if using Log Analytics and creating a workspace. string. if populated, value is used for location of resource group for creation of Log Analytics workspace.
-- **AzureSubscriptionId** - required if tenant contains multiple subscriptions and using AzureClientId.
-- **AzureTenantId** - optional. guid. used in confidential and public client authentication if *not* using 'common'.
-
 #### collectsfdata kusto arguments
 
 - **KustoCluster** - required. uri. kusto cluster ingest url found in properties in azure portal. example: https://ingest-{{cluster}}[.{{location}}].kusto.windows.net/{{database}}
@@ -180,9 +159,127 @@ To use a default configuration file without having to specify on the command lin
 - **LogAnalyticsKey** - required. base64 key. primary / secondary key located in workspace advanced settings.
 - **LogAnalyticsName** - string. name / tag for custom log ingest. requires first character to be alpha.
 
-### Example JSON configuration files
+## Authorization
 
-#### **example clean configuration without Kusto**
+- **AzureClientId** - optional. guid.
+- **AzureClientCertificate** - optional. string. used for non-interactive authorization. can be in the following forms:
+  - thumbprint if using local store 'D60F1AA6632B4C2A385879C227387359535B77DE'
+  - path to file name if using local file system 'cluster.pfx'
+  - subject name if using local store 'sfcluster.com'
+  - secret name if using azure key vault 'star-sfcluster-com'
+  - base64 string if adding cert directly into configuration 'MIIV3AIBAzCCF...Jsc='  
+    You can use the following PowerShell command to obtain a Base64-encoded representation of a certificate:
+
+    ```powershell
+    [convert]::ToBase64String([io.file]::ReadAllBytes("C:\path\to\certificate.pfx"))
+    ```
+
+- **AzureClientSecret** - required if AzureClientId is specified and not using AzureClientCertificate. string.
+- **AzureKeyVault** - optional. can be used to store AzureClientCertificate if being used.
+  - 'https://{{key vault name}}.vault.azure.net/'
+- **AzureResourceGroup** - required if using Log Analytics and creating a workspace. string. if populated, value is used for creation of Log Analytics workspace.
+- **AzureResourceGroupLocation** - required if using Log Analytics and creating a workspace. string. if populated, value is used for location of resource group for creation of Log Analytics workspace.
+- **AzureSubscriptionId** - required if tenant contains multiple subscriptions and using AzureClientId.
+- **AzureTenantId** - optional. guid. used in confidential and public client authentication if *not* using 'common'.
+
+### **Using with Client Credentials for non-interactive execution**
+
+#### **Configuration of Client Certificate**
+
+CollectSFData can use a certificate for authorization to Azure.  
+The certificate can be stored in the following locations:  
+- local file  
+    "AzureClientCertificate": "c:\\temp\\collectsfdata.pfx",  
+- local cert store  
+    "AzureClientCertificate": "*.sfcluster.com",  
+- base64 string  
+    "AzureClientCertificate": "MIIXDAIBAzCCFsgGCSqGSIb3D...",  
+- keyvault  
+    "AzureClientSecret": "cluster-key-vault-secret",  
+    "AzureKeyVault": "https://clusterkeyvault.vault.azure.net/",  
+
+### Example Authorization configurations  
+
+Use these examples to configure CollectSFData to run non-interactively with client credentials and client certificate.  
+
+example variables:  
+app registration id: f4289be6-a77a-4554-b5d7-13a5d0ef66c7  
+app registration secret name: app-registration-secret  
+certificate base64 partial string: MIIXDAIBAzCCFsgGCSqGSIb3D...  
+key vault url: https://clusterkeyvault.vault.azure.net/  
+key vault secret name: cluster-key-vault-secret  
+subscription id: 3ddc104f-35a1-4e5a-8122-b18c15a486bf  
+tenant id: b4be3bd5-1e7f-4c0c-a9b4-97d1d1bb0290  
+user managed identity: 3080722d-0cf6-4552-8e45-c5ccbc3d091f  
+
+#### **app registration and client certificate**
+
+```json
+{
+  "AzureClientId": "f4289be6-a77a-4554-b5d7-13a5d0ef66c7",
+  "AzureClientCertificate": "MIIXDAIBAzCCFsgGCSqGSIb3D...",
+  "AzureClientSecret": null,
+  "AzureKeyVault": null,
+  "AzureSubscriptionId": "3ddc104f-35a1-4e5a-8122-b18c15a486bf",
+  "AzureTenantId": "b4be3bd5-1e7f-4c0c-a9b4-97d1d1bb0290",
+}
+```
+
+#### **app registration and client secret**
+
+```json
+{
+  "AzureClientId": "f4289be6-a77a-4554-b5d7-13a5d0ef66c7",
+  "AzureClientCertificate": null,
+  "AzureClientSecret": "app-registration-secret",
+  "AzureKeyVault": null,
+  "AzureSubscriptionId": "3ddc104f-35a1-4e5a-8122-b18c15a486bf",
+  "AzureTenantId": "b4be3bd5-1e7f-4c0c-a9b4-97d1d1bb0290",
+}
+```
+
+#### **app registration with user managed identity to key vault**
+
+```json
+{
+  "AzureClientId": "f4289be6-a77a-4554-b5d7-13a5d0ef66c7",
+  "AzureClientCertificate": null,
+  "AzureClientSecret": "cluster-key-vault-secret",
+  "AzureKeyVault": "https://clusterkeyvault.vault.azure.net/",
+  "AzureSubscriptionId": null,
+  "AzureTenantId": null,
+}
+```
+
+#### **app registration with system managed identity to key vault**
+
+```json
+{
+  "AzureClientId": "f4289be6-a77a-4554-b5d7-13a5d0ef66c7",
+  "AzureClientCertificate": null,
+  "AzureClientSecret": "cluster-key-vault-secret",
+  "AzureKeyVault": "https://clusterkeyvault.vault.azure.net/",
+  "AzureSubscriptionId": null,
+  "AzureTenantId": null,
+}
+```
+
+#### **user managed identity**
+
+```json
+{
+  "AzureClientId": "3080722d-0cf6-4552-8e45-c5ccbc3d091f",
+  "AzureClientCertificate": null,
+  "AzureClientSecret": null,
+  "AzureKeyVault": null,
+  "AzureSubscriptionId": null,
+  "AzureTenantId": null,
+}
+```
+
+### Example JSON configurations
+
+#### **clean configuration without Kusto**
 
 ```json
 {
@@ -200,7 +297,7 @@ To use a default configuration file without having to specify on the command lin
 }
 ```
 
-#### **example clean configuration with Kusto**
+#### **clean configuration with Kusto**
 
 ```json
 {
@@ -221,7 +318,7 @@ To use a default configuration file without having to specify on the command lin
 }
 ```
 
-#### **example clean configuration with Log Analytics**
+#### **clean configuration with Log Analytics**
 
 ```json
 {
@@ -242,7 +339,7 @@ To use a default configuration file without having to specify on the command lin
 }
 ```
 
-#### **example configuration for downloading service fabric diagnostic trace logs**
+#### **configuration for downloading service fabric diagnostic trace logs**
 
 for download only:
 
@@ -268,7 +365,7 @@ NOTE: for standalone clusters a central diagnostic store must be configured
 }
 ```
 
-#### **example configuration for uploading downloaded service fabric diagnostic trace logs from above**
+#### **configuration for uploading downloaded service fabric diagnostic trace logs from above**
 
 for upload only:
 
@@ -298,7 +395,7 @@ NOTE: for standalone clusters a central diagnostic store must be configured
 }
 ```
 
-#### **example configuration for downloading service fabric diagnostic trace logs and uploading to kusto**
+#### **configuration for downloading service fabric diagnostic trace logs and uploading to kusto**
 
 ```json
 {
@@ -320,7 +417,7 @@ NOTE: for standalone clusters a central diagnostic store must be configured
 }
 ```
 
-#### **example configuration for ingesting adhoc / custom service fabric diagnostic trace logs into kusto**
+#### **configuration for ingesting adhoc / custom service fabric diagnostic trace logs into kusto**
 
 ```json
 {
