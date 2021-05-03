@@ -15,7 +15,7 @@ using System.Threading.Tasks;
 
 namespace CollectSFData.Azure
 {
-    public class TableManager : Constants
+    public class TableManager
     {
         private readonly CustomTaskManager _tableTasks = new CustomTaskManager(true);
         private Instance _instance = Instance.Singleton();
@@ -42,7 +42,7 @@ namespace CollectSFData.Azure
 
                 TableResultSegment tables = _tableClient.ListTablesSegmentedAsync(
                     null,
-                    MaxResults,
+                    Constants.MaxResults,
                     tableToken,
                     new TableRequestOptions(),
                     null,
@@ -69,7 +69,7 @@ namespace CollectSFData.Azure
             {
                 try
                 {
-                    Task<TableResultSegment> tableSegment = _tableClient.ListTablesSegmentedAsync(tablePrefix, MaxResults, token, null, null);
+                    Task<TableResultSegment> tableSegment = _tableClient.ListTablesSegmentedAsync(tablePrefix, Constants.MaxResults, token, null, null);
                     Task<TableResultSegment> task = DownloadTablesSegment(tableSegment, Config.ContainerFilter);
 
                     token = task.Result.ContinuationToken;
@@ -133,7 +133,7 @@ namespace CollectSFData.Azure
                     {
                         Log.Warning("there is more than one blob table (service fabric deployment) containing records in configured time range. not setting container prefix:", tableGuids.Distinct());
                         Log.Warning("for quicker enumeration, ctrl-c to quit and use --containerFilter argument to specify correct blob.");
-                        Thread.Sleep(ThreadSleepMsWarning);
+                        Thread.Sleep(Constants.ThreadSleepMsWarning);
                         clusterId = null;
                     }
                 }
@@ -157,7 +157,7 @@ namespace CollectSFData.Azure
             return tableSegment;
         }
 
-        private IEnumerable<List<CsvTableRecord>> EnumerateTable(CloudTable cloudTable, int maxResults = TableMaxResults, bool limitResults = false)
+        private IEnumerable<List<CsvTableRecord>> EnumerateTable(CloudTable cloudTable, int maxResults = Constants.TableMaxResults, bool limitResults = false)
         {
             Log.Info($"enumerating table: {cloudTable.Name}", ConsoleColor.Yellow);
             TableContinuationToken token = new TableContinuationToken();
@@ -207,7 +207,7 @@ namespace CollectSFData.Azure
             {
                 int chunkCount = 0;
 
-                foreach (IList<CsvTableRecord> resultsChunk in EnumerateTable(cloudTable, TableMaxResults))
+                foreach (IList<CsvTableRecord> resultsChunk in EnumerateTable(cloudTable, Constants.TableMaxResults))
                 {
                     if (resultsChunk.Count < 1)
                     {
@@ -220,10 +220,17 @@ namespace CollectSFData.Azure
                         continue;
                     }
 
-                    string relativeUri = $"{Config.StartTimeUtc.Ticks}-{Config.EndTimeUtc.Ticks}-{cloudTable.Name}.{chunkCount++}{TableExtension}";
-                    FileObject fileObject = new FileObject(relativeUri, Config.CacheLocation);
-                    resultsChunk.ToList().ForEach(x => x.RelativeUri = relativeUri);
+                    string relativeUri = $"{Config.StartTimeUtc.Ticks}-{Config.EndTimeUtc.Ticks}-{cloudTable.Name}.{chunkCount++}{Constants.TableExtension}";
+                    FileObject fileObject = new FileObject(relativeUri, Config.CacheLocation) { Status = FileStatus.enumerated };
+                    
+                    if(_instance.FileObjects.FindByUriFirstOrDefault(relativeUri).Status == FileStatus.existing)
+                    {
+                        Log.Info($"{relativeUri} already exists. skipping",ConsoleColor.DarkYellow);
+                        continue;
+                    }
 
+                    _instance.FileObjects.Add(fileObject);
+                    resultsChunk.ToList().ForEach(x => x.RelativeUri = relativeUri);
                     fileObject.Stream.Write(resultsChunk);
 
                     _instance.TotalFilesDownloaded++;
@@ -256,7 +263,7 @@ namespace CollectSFData.Azure
                         try
                         {
                             // subtract rowkey prefix (ticks) from ticks maxvalue to get actual time
-                            actualTimeStamp = new DateTime(DateTime.MaxValue.Ticks - Convert.ToInt64(result.RowKey.Substring(0, result.RowKey.IndexOf("_")))).ToString(DateTimeFormat);
+                            actualTimeStamp = new DateTime(DateTime.MaxValue.Ticks - Convert.ToInt64(result.RowKey.Substring(0, result.RowKey.IndexOf("_")))).ToString(Constants.DateTimeFormat);
                         }
                         catch (Exception e)
                         {
@@ -282,14 +289,14 @@ namespace CollectSFData.Azure
             return results;
         }
 
-        private TableQuery GenerateTimeQuery(int maxResults = TableMaxResults)
+        private TableQuery GenerateTimeQuery(int maxResults = Constants.TableMaxResults)
         {
             TableQuery query = new TableQuery();
             string startDate = TableQuery.GenerateFilterConditionForDate("Timestamp", QueryComparisons.GreaterThanOrEqual, Config.StartTimeUtc);
             string endDate = TableQuery.GenerateFilterConditionForDate("Timestamp", QueryComparisons.LessThanOrEqual, Config.EndTimeUtc);
 
             query.FilterString = TableQuery.CombineFilters(startDate, TableOperators.And, endDate);
-            query.TakeCount = Math.Min(maxResults, MaxResults);
+            query.TakeCount = Math.Min(maxResults, Constants.MaxResults);
             Log.Info("query string:", ConsoleColor.Cyan, null, query);
 
             return query;
@@ -319,7 +326,7 @@ namespace CollectSFData.Azure
 
                     case EdmType.DateTime:
                         entity = prop.Value.DateTime;
-                        entityString = Convert.ToDateTime(entity).ToString(DateTimeFormat);
+                        entityString = Convert.ToDateTime(entity).ToString(Constants.DateTimeFormat);
                         break;
 
                     case EdmType.Double:

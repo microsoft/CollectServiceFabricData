@@ -15,7 +15,7 @@ using System.Text.RegularExpressions;
 
 namespace CollectSFData.DataFile
 {
-    public class StreamManager : Constants
+    public class StreamManager
     {
         private FileObject _fileObject;
         private MemoryStream _memoryStream = new MemoryStream();
@@ -57,7 +57,7 @@ namespace CollectSFData.DataFile
             }
 
             compressedStream.Position = 0;
-            _fileObject.FileUri += ZipExtension;
+            _fileObject.FileUri += Constants.ZipExtension;
             _fileObject.Stream.Set(compressedStream);
 
             Log.Debug($"compressing memoryStream complete. size: {compressedStream.Length} position: {compressedStream.Position}");
@@ -75,7 +75,7 @@ namespace CollectSFData.DataFile
                 throw new ArgumentException();
             }
 
-            fileObject.FileUri = Regex.Replace(fileObject.FileUri, ZipExtension, "", RegexOptions.IgnoreCase);
+            fileObject.FileUri = Regex.Replace(fileObject.FileUri, Constants.ZipExtension, "", RegexOptions.IgnoreCase);
             Open();
 
             Log.Debug($"decompressing memoryStream start. start size: {_memoryStream.Length} position: {_memoryStream.Position}");

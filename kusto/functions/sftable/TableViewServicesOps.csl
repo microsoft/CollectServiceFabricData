@@ -1,6 +1,6 @@
 .create-or-alter function with (docstring = "function to create ServicesOps TableView view for sftable", folder = "sftable")
-    TableViewServicesOps(T:string) {
-        TableView(T)
+    TableViewServicesOps(T:string, startTimeStamp:datetime=datetime(null), endTimeStamp:datetime=datetime(null)) {
+        TableView(T,startTimeStamp,endTimeStamp)
         | where RelativeUri endswith "ServicesOps"
         | project Timestamp,
             column_ifexists("EventType",""),

@@ -1,6 +1,6 @@
 .create-or-alter function with (docstring = "function to create ContainerOps TableView view for sftable", folder = "sftable")
-    TableViewContainerOps(T:string) {
-        TableView(T)
+    TableViewContainerOps(T:string, startTimeStamp:datetime=datetime(null), endTimeStamp:datetime=datetime(null)) {
+        TableView(T,startTimeStamp,endTimeStamp)
         | where RelativeUri endswith "ContainerOps"
         | project Timestamp,
             column_ifexists("EventType",""),
