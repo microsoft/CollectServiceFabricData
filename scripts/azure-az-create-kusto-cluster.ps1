@@ -11,7 +11,7 @@ param(
     $appRegistrationId,
     $clusterName = 'collectsfdataunittest',
     $databaseName = 'collectsfdatadb',
-    $skuName = 'Dev(No SLA)_Standard_D11_v2', #'Dev(No SLA)_Standard_E2a_V4', # Dev(No SLA)_Standard_D11_v2
+    $skuName = 'Dev(No SLA)_Standard_E2a_V4', # Dev(No SLA)_Standard_D11_v2
     [ValidateSet('basic', 'standard')]
     $skuTier = 'basic',
     $databaseKind = 'readwrite',

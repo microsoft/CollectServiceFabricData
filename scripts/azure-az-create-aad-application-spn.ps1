@@ -19,14 +19,15 @@
 
 param(
     [pscredential]$credentials,
+    [string]$password,
     [string]$aadDisplayName = "azure-az-rest-logon--$($env:Computername)",
     [string]$certStore = "cert:\CurrentUser\My",
     [string]$uri,
     [string[]]$replyUrls = @(), #@('https://localhost'), # core uses localhost 'https://login.microsoftonline.com/common/oauth2/nativeclient', 
     [switch]$list,
     [string]$pfxPath,
-    [ValidateSet('credentials', 'key', 'cert', 'certthumb')]
-    [string]$logonType = 'certthumb'
+    [ValidateSet('key', 'cert', 'certthumb')]
+    [string]$logonType = 'cert'
 )
 
 function main() {
@@ -126,13 +127,12 @@ function main() {
                     -Subject "CN=$($aadDisplayName)" `
                     -KeyExportPolicy Exportable `
                     -Provider "Microsoft Enhanced RSA and AES Cryptographic Provider" `
-                    -KeySpec KeyExchange
+                    -KeySpec KeyExchange `
+                    -KeyLength 2048 `
+                    -KeyAlgorithm RSA
             }
             
-            if (!$credentials) {
-                $password = ''
-            }
-            else{
+            if (!$credentials -and !$password) {
                 $credentials = (get-credential)
                 $password = $credentials.Password
             }
@@ -147,6 +147,7 @@ function main() {
             #$cert509 = New-Object System.Security.Cryptography.X509Certificates.X509Certificate($pfxPath, $securePassword)
             #$thumbprint = $cert509.thumbprint
             #$keyValue = [convert]::ToBase64String($cert509.GetCertHash())
+            $keyValue = [convert]::ToBase64String([io.file]::ReadAllBytes($pfxPath))
             $certValue = [convert]::ToBase64String($cert.GetRawCertData())
 
             if ($oldAdApp = Get-azADApplication -DisplayName $aadDisplayName) {
@@ -192,8 +193,7 @@ function main() {
             $appCredential | convertto-json
 
             $thumbprint = $cert.thumbprint
-            $clientSecret = [convert]::ToBase64String($cert.GetCertHash())
-            $keyvalue = $clientSecret
+            #$clientSecret = $certValue # [convert]::ToBase64String($cert.GetCertHash())
             $app | convertto-json
         }
         elseif ($logontype -ieq 'certthumb') {
@@ -205,7 +205,6 @@ function main() {
                     -KeySpec KeyExchange
             }
 
-            $keyValue = [System.Convert]::ToBase64String($cert.GetCertHash())
             $thumbprint = $cert.Thumbprint
             $clientSecret = [System.Convert]::ToBase64String($cert.GetCertHash())
             $securePassword = ConvertTo-SecureString -String $clientSecret -Force -AsPlainText
@@ -338,16 +337,20 @@ function main() {
     write-host "application id: $($app.ApplicationId)" -ForegroundColor Cyan
     write-host "tenant id: $($tenantId)" -ForegroundColor Cyan
     write-host "application identifier Uri: $($uri)" -ForegroundColor Cyan
-    write-host "keyValue: $($keyValue)" -ForegroundColor Cyan
     write-host "clientsecret: $($clientSecret)" -ForegroundColor Cyan
-    write-host "clientsecret BASE64:$([convert]::ToBase64String([text.encoding]::Unicode.GetBytes($clientSecret)))"
+    write-host
+    write-host "cert base64: $($certValue)" -ForegroundColor Cyan
+    write-host
+    write-host "cert and key base64: $($keyValue)" -ForegroundColor Cyan
+    write-host
     write-host "thumbprint: $($thumbprint)" -ForegroundColor Cyan
     write-host "pfx path: $($pfxPath)" -ForegroundColor Cyan
     $global:thumbprint = $thumbprint
     $global:applicationId = $app.Applicationid
     $global:tenantId = $tenantId
     $global:clientSecret = $clientSecret
-    $global:keyValue = $keyValue
+    $global:certValue = $certValue
+    $global:keyValue = $keyvalue
     write-host "clientid / applicationid saved in `$global:applicationId" -ForegroundColor Yellow
     write-host "clientsecret / base64 thumb saved in `$global:clientSecret" -ForegroundColor Yellow
 

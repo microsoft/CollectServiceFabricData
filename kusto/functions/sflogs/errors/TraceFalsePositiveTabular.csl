@@ -117,4 +117,7 @@
             | invoke TypeAndTextContains("normal cert check trace", "Common.CryptoUtility", "All tries to get private key filename failed")
             | invoke TypeAndTextContains("not an error", "HttpGateway.HttpClaimsAuthHandler" , "Authorization header not found")
             | invoke TypeAndTextContains("not an error", "NamingGateway.FabricGatewayManager", "Failed to retrieve thumbprint for httpgateway server certificate: CredentialAlreadyLoaded")
+            | invoke TypeAndTextContains("not an error if BRS not installed", "HttpGateway.BackupRestoreHandler", "PerformBackupRestoreOperation EndProcessRequest failed with FABRIC_E_SERVICE_DOES_NOT_EXIST")
+            | invoke TypeAndTextContains("not an error if BRS not installed", "HttpGateway.ApplicationsHandler", "PerformBackupRestoreOperation EndProcessRequest failed with FABRIC_E_SERVICE_DOES_NOT_EXIST")
+            | invoke TypeAndTextMatches("not an error if BRS not installed", "ReverseProxy.ProcessRequestErrorPreSend", "Error while processing request.+(/BackupRestore/BackupPolicies|GetBackupConfigurationInfo).+FABRIC_E_SERVICE_DOES_NOT_EXIST")
     }
