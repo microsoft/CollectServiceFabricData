@@ -27,6 +27,7 @@ namespace CollectSFDataDll.ConfigurationTests
             ProcessOutput results = utils.ExecuteTest((config) =>
             {
                 config.AzureClientCertificate = GetCertBase64String();
+                config.AzureClientSecret = "";
                 config.AzureKeyVault = "";
                 Assert.IsTrue(config.IsClientIdConfigured(), "test configuration invalid");
                 return config.ValidateAad();
@@ -46,6 +47,7 @@ namespace CollectSFDataDll.ConfigurationTests
 
             ProcessOutput results = utils.ExecuteTest((config) =>
             {
+                config.AzureClientCertificate = "";
                 Assert.IsTrue(config.IsClientIdConfigured(), "test configuration invalid");
                 return config.ValidateAad();
             }, utils.Collector.Config);
@@ -115,6 +117,7 @@ namespace CollectSFDataDll.ConfigurationTests
                 //config.AzureClientId = "";
                 config.AzureClientCertificate = certFile;
                 config.AzureKeyVault = "";
+                config.AzureClientSecret = "";
                 Assert.IsTrue(config.IsClientIdConfigured(), "test configuration invalid");
                 return config.ValidateAad();
             }, utils.Collector.Config);
@@ -136,6 +139,7 @@ namespace CollectSFDataDll.ConfigurationTests
                 //config.AzureClientId = "";
                 config.AzureClientCertificate = _appCertificate.Subject;
                 config.AzureKeyVault = "";
+                config.AzureClientSecret = "";
                 Assert.IsTrue(config.IsClientIdConfigured(), "test configuration invalid");
                 return config.ValidateAad();
             }, utils.Collector.Config);
@@ -157,6 +161,7 @@ namespace CollectSFDataDll.ConfigurationTests
                 //config.AzureClientId = "";
                 config.AzureClientCertificate = _appCertificate.Thumbprint;
                 config.AzureKeyVault = "";
+                config.AzureClientSecret = "";
                 Assert.IsTrue(config.IsClientIdConfigured(), "test configuration invalid");
                 return config.ValidateAad();
             }, utils.Collector.Config);
@@ -198,7 +203,7 @@ namespace CollectSFDataDll.ConfigurationTests
             ProcessOutput results = utils.ExecuteTest((config) =>
             {
                 CertificateUtilities certificateUtilities = new CertificateUtilities();
-                certificateUtilities.Password = TestUtilities.TestProperties.testAdminPassword;
+                certificateUtilities.SetSecurePassword(TestUtilities.TestProperties.testAdminPassword);
 
                 config.ClientCertificate = certificateUtilities.GetClientCertificate(TestUtilities.TestProperties.AzureClientCertificate);// _appCertificate;
                 config.AzureKeyVault = "";
@@ -242,7 +247,7 @@ namespace CollectSFDataDll.ConfigurationTests
             config.AzureSubscriptionId = TestUtilities.TestProperties.AzureSubscriptionId;
             config.AzureTenantId = TestUtilities.TestProperties.AzureTenantId;
 
-            config.AzureClientSecret = TestUtilities.TestProperties.AzureClientSecret;
+            // config.AzureClientSecret = TestUtilities.TestProperties.AzureClientSecret;
             config.AzureClientId = TestUtilities.TestProperties.testAzClientId;
             config.AzureClientCertificate = TestUtilities.TestProperties.testAzClientCertificate;
 

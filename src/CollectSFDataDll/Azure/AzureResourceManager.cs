@@ -177,7 +177,7 @@ namespace CollectSFData.Azure
                 {
                     CreateConfidentialCertificateClient(resource, Config.ClientCertificate);
                 }
-                else if (!string.IsNullOrEmpty(Config.AzureKeyVault) & ClientIdentity.IsTypeManagedIdentity)
+                else if (!string.IsNullOrEmpty(Config.AzureKeyVault) & !string.IsNullOrEmpty(Config.AzureClientSecret))
                 {
                     CreateConfidentialCertificateClient(resource, ReadCertificateFromKeyvault(Config.AzureKeyVault, Config.AzureClientSecret));
                 }
