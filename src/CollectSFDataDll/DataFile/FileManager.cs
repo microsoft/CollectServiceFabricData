@@ -13,6 +13,7 @@ using System.Linq;
 using System.Reactive.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using Tx.Windows;
 
 namespace CollectSFData.DataFile
@@ -132,6 +133,10 @@ namespace CollectSFData.DataFile
                         if (fileObject.FileExtensionType.Equals(FileExtensionTypesEnum.dtr))
                         {
                             return FormatDtrFile(fileObject);
+                        }
+                        else if (fileObject.FileExtensionType.Equals(FileExtensionTypesEnum.etl))
+                        {
+                            return FormatEtlFile(fileObject);
                         }
 
                         break;
@@ -282,6 +287,43 @@ namespace CollectSFData.DataFile
             return FormatTraceFile<DtrTraceRecord>(fileObject);
         }
 
+        private FileObjectCollection FormatEtlFile(FileObject fileObject)
+        {
+            Log.Debug($"enter:{fileObject.FileUri}");
+            string outputFile = fileObject.FileUri + Constants.CsvExtension;
+            bool result;
+
+            fileObject.Stream.SaveToFile();
+            DeleteFile(outputFile);
+            Log.Info($"Writing {outputFile}");
+            result = TxEtl(fileObject, outputFile);
+
+            if (result)
+            {
+                _instance.TotalFilesConverted++;
+
+                // if (!Config.UseTx)
+                // {
+                //     fileObject.Stream.ReadFromFile(outputFile);
+                //     fileObject.Stream.Write<CsvCounterRecord>(ExtractPerfRelogCsvData(fileObject));
+                // }
+            }
+            else
+            {
+                _instance.TotalErrors++;
+            }
+
+            DeleteFile(outputFile);
+
+            //todo review
+            if (Config.DeleteCache && (Config.UseMemoryStream | !Config.IsCacheLocationPreConfigured()))
+            {
+                DeleteFile(fileObject.FileUri);
+            }
+
+            return PopulateCollection<DtrTraceRecord>(fileObject);
+        }
+
         private FileObjectCollection FormatExceptionFile(FileObject fileObject)
         {
             Log.Debug($"enter:{fileObject.FileUri}");
@@ -380,11 +422,17 @@ namespace CollectSFData.DataFile
             return collection;
         }
 
-        private PerfCounterObserver<T> ReadCounterRecords<T>(IObservable<T> source)
+        private TraceObserver<T> ReadTraceRecords<T>(IObservable<T> source)
         {
-            PerfCounterObserver<T> observer = new PerfCounterObserver<T>();
+            DateTime startTime = DateTime.Now;
+            TraceObserver<T> observer = new TraceObserver<T>();
             source.Subscribe(observer);
-            Log.Info($"complete: {observer.Complete}");
+            bool waitResult = observer.Completed.Wait(-1, _fileTasks.CancellationToken);
+
+            int totalMs = (int)(DateTime.Now - startTime).TotalMilliseconds;
+            int recordsCount = observer.Records.Count;
+            double recordsPerSecond = recordsCount /(totalMs * .001);
+            Log.Info($"complete:{waitResult} total ms:{totalMs} total records:{recordsCount} records per second:{recordsPerSecond}");
             return observer;
         }
 
@@ -528,7 +576,7 @@ namespace CollectSFData.DataFile
 
             DateTime startTime = DateTime.Now;
             IObservable<PerformanceSample> observable = default(IObservable<PerformanceSample>);
-            PerfCounterObserver<PerformanceSample> counterSession = default(PerfCounterObserver<PerformanceSample>);
+            TraceObserver<PerformanceSample> counterSession = default(TraceObserver<PerformanceSample>);
             List<PerformanceSample> records = new List<PerformanceSample>();
             List<CsvCounterRecord> csvRecords = new List<CsvCounterRecord>();
 
@@ -539,7 +587,7 @@ namespace CollectSFData.DataFile
                 observable = PerfCounterObservable.FromFile(fileObject.FileUri);
 
                 Log.Debug($"observable created: {fileObject.FileUri}");
-                counterSession = ReadCounterRecords(observable);
+                counterSession = ReadTraceRecords(observable);
 
                 Log.Debug($"finished total ms: {DateTime.Now.Subtract(startTime).TotalMilliseconds} reading: {fileObject.FileUri}");
                 records = counterSession.Records;
@@ -579,6 +627,71 @@ namespace CollectSFData.DataFile
 
             fileObject.Stream.Write(csvRecords);
             Log.Info($"records: {records.Count()} {csvRecords.Count}");
+            return true;
+        }
+
+        private bool TxEtl(FileObject fileObject, string outputFile)
+        {
+            // this forces blg output timestamps to use local capture timezone which is utc for azure
+            // Tx module is not able to determine with PDH api blg source timezone
+            // todo: verify if needed for etl...
+            //TimeUtil.DateTimeKind = DateTimeKind.Unspecified;
+
+            DateTime startTime = DateTime.Now;
+            IObservable<EtwNativeEvent> observable = default(IObservable<EtwNativeEvent>);
+            TraceObserver<EtwNativeEvent> traceSession = default(TraceObserver<EtwNativeEvent>);
+            //List<EtwNativeEvent> records = new List<EtwNativeEvent>();
+            List<DtrTraceRecord> csvRecords = new List<DtrTraceRecord>();
+
+            // todo: verify if needed for etl...testing pdh found invalid data when using concurrently
+           // lock (_lockObj)
+           // {
+                Log.Debug($"observable creating: {fileObject.FileUri}");
+                observable = EtwObservable.FromFiles(fileObject.FileUri);
+
+                Log.Debug($"observable created: {fileObject.FileUri}");
+                traceSession = ReadTraceRecords(observable);
+                Log.Debug($"finished total ms: {DateTime.Now.Subtract(startTime).TotalMilliseconds} reading: {fileObject.FileUri}");
+            //    records = traceSession.Records;
+           // }
+
+            //foreach (EtwNativeEvent record in records)
+            foreach (EtwNativeEvent record in traceSession.Records)
+            {
+                //Log.Info("record", record);
+                //if (!string.IsNullOrEmpty(record.Value.ToString()))
+                //{
+                //    string counterValue = record.Value.ToString() == "NaN" ? "0" : record.Value.ToString();
+
+                //    try
+                //    {
+                //        csvRecords.Add(new CsvCounterRecord()
+                //        {
+                //            Timestamp = record.Timestamp,
+                //            CounterName = record.CounterPath.Replace("\"", "").Trim(),
+                //            CounterValue = Decimal.Parse(counterValue, NumberStyles.AllowExponent | NumberStyles.AllowDecimalPoint),
+                //            Object = record.CounterSet?.Replace("\"", "").Trim(),
+                //            Counter = record.CounterName.Replace("\"", "").Trim(),
+                //            Instance = record.Instance?.Replace("\"", "").Trim(),
+                //            NodeName = fileObject.NodeName,
+                //            FileType = fileObject.FileDataType.ToString(),
+                //            RelativeUri = fileObject.RelativeUri
+                //        });
+                //    }
+                //    catch (Exception ex)
+                //    {
+                //        Log.Exception($"stringValue:{counterValue} exception:{ex}", record);
+                //    }
+                //}
+                //else
+                //{
+                //    Log.Warning($"empty counter value:", record);
+                //}
+            }
+
+            fileObject.Stream.Write(csvRecords);
+            Log.Info($"records: {traceSession.Records.Count()} {csvRecords.Count}");
+            traceSession.Dispose();
             return true;
         }
     }
