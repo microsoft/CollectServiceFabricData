@@ -31,7 +31,7 @@ namespace CollectSFData.Common
 
         public TaskCreationOptions CreationOptions { get; set; } = TaskCreationOptions.PreferFairness;
 
-        public bool IsCancellationRequested { get => CancellationTokenSource.IsCancellationRequested; }
+        public CancellationToken CancellationToken {get => CancellationTokenSource.Token;}
 
         public SynchronizedList<TaskObject> QueuedTaskObjects { get; set; } = new SynchronizedList<TaskObject>();
 
