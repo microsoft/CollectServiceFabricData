@@ -323,7 +323,7 @@ namespace CollectSFData
         {
             Log.Highlight($"checking progress {_noProgressCounter} of {Config.NoProgressTimeoutMin}.");
 
-            if (Config.NoProgressTimeoutMin < 1 | _taskManager.IsCancellationRequested)
+            if (Config.NoProgressTimeoutMin < 1 | _taskManager.CancellationToken.IsCancellationRequested)
             {
                 _noProgressTimer?.Dispose();
                 return;
