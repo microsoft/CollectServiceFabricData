@@ -162,7 +162,7 @@ namespace CollectSFData.Azure
             BlobResultSegment resultSegment = default(BlobResultSegment);
             BlobContinuationToken blobToken = null;
 
-            while (!_blobTasks.IsCancellationRequested)
+            while (!_blobTasks.CancellationToken.IsCancellationRequested)
             {
                 resultSegment = _blobTasks.TaskFunction((blobresultsegment) =>
                 cloudBlobContainer.ListBlobsSegmentedAsync(
@@ -285,7 +285,7 @@ namespace CollectSFData.Azure
             BlobResultSegment resultSegment = default(BlobResultSegment);
             BlobContinuationToken blobToken = null;
 
-            while (!_blobChildTasks.IsCancellationRequested)
+            while (!_blobChildTasks.CancellationToken.IsCancellationRequested)
             {
                 resultSegment = _blobChildTasks.TaskFunction((blobresultsegment) =>
                 cloudBlobDirectory.ListBlobsSegmentedAsync(
@@ -443,9 +443,9 @@ namespace CollectSFData.Azure
                                 Status = FileStatus.enumerated
                             };
 
-                            if(_instance.FileObjects.FindByUriFirstOrDefault(fileObjectSourceLink.RelativeUri).Status == FileStatus.existing)
+                            if (_instance.FileObjects.FindByUriFirstOrDefault(fileObjectSourceLink.RelativeUri).Status == FileStatus.existing)
                             {
-                                Log.Info($"{fileObjectSourceLink} already exists. skipping",ConsoleColor.DarkYellow);
+                                Log.Info($"{fileObjectSourceLink} already exists. skipping", ConsoleColor.DarkYellow);
                                 continue;
                             }
 
@@ -460,12 +460,12 @@ namespace CollectSFData.Azure
                             Status = FileStatus.enumerated
                         };
 
-                        if(_instance.FileObjects.FindByUriFirstOrDefault(fileObject.RelativeUri).Status == FileStatus.existing)
+                        if (_instance.FileObjects.FindByUriFirstOrDefault(fileObject.RelativeUri).Status == FileStatus.existing)
                         {
-                            Log.Info($"{fileObject.RelativeUri} already exists. skipping",ConsoleColor.DarkYellow);
+                            Log.Info($"{fileObject.RelativeUri} already exists. skipping", ConsoleColor.DarkYellow);
                             continue;
                         }
-                        
+
                         _instance.FileObjects.Add(fileObject);
                         Log.Info($"queueing blob with timestamp: {lastModified}\r\n file: {blob.Uri.AbsolutePath}");
                         InvokeCallback(blob, fileObject, (int)blobRef.Properties.Length);

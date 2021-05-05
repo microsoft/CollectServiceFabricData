@@ -32,6 +32,7 @@ namespace CollectSFData.DataFile
         blg,
         dmp,
         dtr,
+        etl,
         json,
         trace,
         zip
@@ -330,7 +331,12 @@ namespace CollectSFData.DataFile
                         extension = FileExtensionTypesEnum.dmp;
                         break;
                     }
-
+                
+                case Constants.EtlExtension:
+                    {
+                        extension = FileExtensionTypesEnum.etl;
+                        break;
+                    }
                 case Constants.TraceFileExtension:
                     {
                         extension = FileExtensionTypesEnum.dtr;
