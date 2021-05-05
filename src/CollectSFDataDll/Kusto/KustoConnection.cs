@@ -323,7 +323,7 @@ namespace CollectSFData.Kusto
             queue.AddMessage(queueMessage, _messageTimeToLive, null, null, context);
             fileObject.Status = FileStatus.uploading;
             fileObject.MessageId = message.Id;
-            Log.Info($"fileobject uploading FileUri:{fileObject.FileUri} RelativeUri: {fileObject.RelativeUri} message id: {message.Id}",ConsoleColor.Cyan);
+            Log.Info($"fileobject uploading FileUri:{fileObject.FileUri} RelativeUri: {fileObject.RelativeUri} message id: {message.Id}", ConsoleColor.Cyan);
         }
 
         private KustoIngestionMessage PrepareIngestionMessage(string blobUriWithSas, long blobSizeBytes, string ingestionMapping)
@@ -497,7 +497,7 @@ namespace CollectSFData.Kusto
 
         private void QueueMonitor()
         {
-            while ((!_tokenSource.IsCancellationRequested | _instance.FileObjects.Count(FileStatus.uploading) > 0) & !_kustoTasks.IsCancellationRequested)
+            while ((!_tokenSource.IsCancellationRequested | _instance.FileObjects.Count(FileStatus.uploading) > 0) & !_kustoTasks.CancellationToken.IsCancellationRequested)
             {
                 Thread.Sleep(Constants.ThreadSleepMs100);
                 QueueMessageMonitor();
@@ -602,7 +602,7 @@ namespace CollectSFData.Kusto
             CloudBlobContainer blobContainer = new CloudBlobContainer(blobUri);
             CloudBlockBlob blockBlob = blobContainer.GetBlockBlobReference(blobName);
 
-            if (!_kustoTasks.IsCancellationRequested)
+            if (!_kustoTasks.CancellationToken.IsCancellationRequested)
             {
                 if (Config.UseMemoryStream)
                 {
