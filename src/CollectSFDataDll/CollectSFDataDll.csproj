@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>netcoreapp3.1;net462;net472;net5.0</TargetFrameworks>
     <Platforms>x64</Platforms>
@@ -95,5 +95,25 @@
   <ItemGroup>
     <ProjectReference Include="..\Tx\Tx.Core\Tx.Core.csproj" />
     <ProjectReference Include="..\Tx\Tx.Windows\Tx.Windows.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="EtlReader">
+      <HintPath>..\include\EtlReader.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="EtlReader.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="system.fabric.strings">
+      <HintPath>..\include\System.Fabric.Strings.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="System.Fabric.Strings.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 </Project>
