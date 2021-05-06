@@ -15,6 +15,8 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using Tx.Windows;
+using Tools.EtlReader;
+using System.Fabric.Strings;
 
 namespace CollectSFData.DataFile
 {
@@ -296,7 +298,8 @@ namespace CollectSFData.DataFile
             fileObject.Stream.SaveToFile();
             DeleteFile(outputFile);
             Log.Info($"Writing {outputFile}");
-            result = TxEtl(fileObject, outputFile);
+            //result = TxEtl(fileObject, outputFile);
+            result = ReadEtl(fileObject, outputFile);
 
             if (result)
             {
@@ -422,6 +425,31 @@ namespace CollectSFData.DataFile
             return collection;
         }
 
+        private bool ReadEtl(FileObject fileObject, string outputFile)
+        {
+            //Tools.EtlReader.LoadWindowsFabricManifest();
+            //TraceFileEventReaderFactory factory = new TraceFileEventReaderFactory();
+            //ITraceFileEventReader reader = factory.CreateTraceFileEventReader(fileObject.FileUri);
+            //TraceSessionMetadata metadata = reader.ReadTraceSessionMetadata();
+            //Log.Debug("metadata", metadata);
+
+            //reader.ReadEvents(Config.StartTimeUtc.UtcDateTime, Config.EndTimeUtc.UtcDateTime);
+            //reader.EventRead += Reader_EventRead;
+
+            List<string> testStringList = new List<string>(1000000);
+            ManifestCache cache = new ManifestCache(Config.CacheLocation);
+            Directory.GetFiles(Config.EtwManifestCache, $"*{Constants.ManifestExtension}").ToList().ForEach(x => cache.LoadManifest(x));
+
+            TraceFileParser parser = new TraceFileParser(cache, (trace) => { testStringList.Add(trace); });
+            parser.ParseTraces(fileObject.FileUri, Config.StartTimeUtc.UtcDateTime, Config.EndTimeUtc.UtcDateTime);
+            fileObject.Stream.Write(testStringList);
+
+            //test
+            fileObject.Stream.SaveToFile(outputFile);
+
+            return true;
+        }
+
         private TraceObserver<T> ReadTraceRecords<T>(IObservable<T> source)
         {
             DateTime startTime = DateTime.Now;
@@ -431,7 +459,7 @@ namespace CollectSFData.DataFile
 
             int totalMs = (int)(DateTime.Now - startTime).TotalMilliseconds;
             int recordsCount = observer.Records.Count;
-            double recordsPerSecond = recordsCount /(totalMs * .001);
+            double recordsPerSecond = recordsCount / (totalMs * .001);
             Log.Info($"complete:{waitResult} total ms:{totalMs} total records:{recordsCount} records per second:{recordsPerSecond}");
             return observer;
         }
@@ -644,16 +672,16 @@ namespace CollectSFData.DataFile
             List<DtrTraceRecord> csvRecords = new List<DtrTraceRecord>();
 
             // todo: verify if needed for etl...testing pdh found invalid data when using concurrently
-           // lock (_lockObj)
-           // {
-                Log.Debug($"observable creating: {fileObject.FileUri}");
-                observable = EtwObservable.FromFiles(fileObject.FileUri);
+            // lock (_lockObj)
+            // {
+            Log.Debug($"observable creating: {fileObject.FileUri}");
+            observable = EtwObservable.FromFiles(fileObject.FileUri);
 
-                Log.Debug($"observable created: {fileObject.FileUri}");
-                traceSession = ReadTraceRecords(observable);
-                Log.Debug($"finished total ms: {DateTime.Now.Subtract(startTime).TotalMilliseconds} reading: {fileObject.FileUri}");
+            Log.Debug($"observable created: {fileObject.FileUri}");
+            traceSession = ReadTraceRecords(observable);
+            Log.Debug($"finished total ms: {DateTime.Now.Subtract(startTime).TotalMilliseconds} reading: {fileObject.FileUri}");
             //    records = traceSession.Records;
-           // }
+            // }
 
             //foreach (EtwNativeEvent record in records)
             foreach (EtwNativeEvent record in traceSession.Records)
