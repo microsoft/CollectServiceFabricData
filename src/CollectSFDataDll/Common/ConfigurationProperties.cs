@@ -38,6 +38,8 @@ namespace CollectSFData.Common
 
         public DateTimeOffset EndTimeUtc { get; set; }
 
+        public string EtwManifestCache { get; set; }
+
         public bool Examples { get; private set; }
 
         public string[] FileUris { get; set; } = new string[0];

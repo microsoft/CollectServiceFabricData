@@ -279,7 +279,7 @@ namespace CollectSFData.Common
             bool configured = ((HasValue(AzureClientId) & HasValue(ClientCertificate)) // app registration configured
                 || (HasValue(AzureClientId) & !HasValue(AzureKeyVault) & HasValue(AzureClientCertificate) & !HasValue(AzureClientSecret)) // app registration
                 || (HasValue(AzureClientId) & !HasValue(AzureKeyVault) & !HasValue(AzureClientCertificate) & HasValue(AzureClientSecret)) // app registration with clientsecret
-                || (HasValue(AzureClientId) & HasValue(AzureKeyVault)  & !HasValue(AzureClientCertificate) & HasValue(AzureClientSecret)) // app registration with kv user managed
+                || (HasValue(AzureClientId) & HasValue(AzureKeyVault) & !HasValue(AzureClientCertificate) & HasValue(AzureClientSecret)) // app registration with kv user managed
                 || (!HasValue(AzureClientId) & HasValue(AzureKeyVault) & !HasValue(AzureClientCertificate) & HasValue(AzureClientSecret)) // system managed identity with kv
                 || (HasValue(AzureClientId) & !HasValue(AzureKeyVault) & !HasValue(AzureClientCertificate) & !HasValue(AzureClientSecret)) // user managed identity
             );
