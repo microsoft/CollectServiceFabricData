@@ -427,26 +427,21 @@ namespace CollectSFData.DataFile
 
         private bool ReadEtl(FileObject fileObject, string outputFile)
         {
-            //Tools.EtlReader.LoadWindowsFabricManifest();
-            //TraceFileEventReaderFactory factory = new TraceFileEventReaderFactory();
-            //ITraceFileEventReader reader = factory.CreateTraceFileEventReader(fileObject.FileUri);
-            //TraceSessionMetadata metadata = reader.ReadTraceSessionMetadata();
-            //Log.Debug("metadata", metadata);
+            int recordsCount = 0;
+            DateTime startTime = DateTime.Now;
+            EtlTraceFileParser<DtrTraceRecord> parser = new EtlTraceFileParser<DtrTraceRecord>((trace) =>
+            {
+                trace.FileType = fileObject.FileDataType.ToString();
+                trace.NodeName = fileObject.NodeName;
+                trace.RelativeUri = fileObject.RelativeUri;
+                fileObject.Stream.Write<DtrTraceRecord>(new List<DtrTraceRecord>() { trace }, true);
+                recordsCount++;
+            });
 
-            //reader.ReadEvents(Config.StartTimeUtc.UtcDateTime, Config.EndTimeUtc.UtcDateTime);
-            //reader.EventRead += Reader_EventRead;
-
-            List<string> testStringList = new List<string>(1000000);
-            ManifestCache cache = new ManifestCache(Config.CacheLocation);
-            Directory.GetFiles(Config.EtwManifestCache, $"*{Constants.ManifestExtension}").ToList().ForEach(x => cache.LoadManifest(x));
-
-            TraceFileParser parser = new TraceFileParser(cache, (trace) => { testStringList.Add(trace); });
             parser.ParseTraces(fileObject.FileUri, Config.StartTimeUtc.UtcDateTime, Config.EndTimeUtc.UtcDateTime);
-            fileObject.Stream.Write(testStringList);
-
-            //test
-            fileObject.Stream.SaveToFile(outputFile);
-
+            int totalMs = (int)(DateTime.Now - startTime).TotalMilliseconds;
+            double recordsPerSecond = recordsCount / (totalMs * .001);
+            Log.Info($"complete:total ms:{totalMs} total records:{recordsCount} records per second:{recordsPerSecond}");
             return true;
         }
 
