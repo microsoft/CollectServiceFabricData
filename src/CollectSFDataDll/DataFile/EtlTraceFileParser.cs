@@ -7,15 +7,16 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using Tools.EtlReader;
 
 namespace CollectSFData.DataFile
 {
     public class EtlTraceFileParser<T> where T : ITraceRecord, new()
     {
-        private ConfigurationOptions Config => Instance.Singleton().Config;
-        public static ManifestCache ManifestCache { get; set; }
         private readonly Action<T> _traceDispatcher;
+        public static ManifestCache ManifestCache { get; set; }
+        private ConfigurationOptions Config => Instance.Singleton().Config;
         public int EventsLost { get; private set; }
         public TraceSessionMetadata TraceSessionMetaData { get; private set; }
 
@@ -34,20 +35,75 @@ namespace CollectSFData.DataFile
             _traceDispatcher = traceDispatcher;
         }
 
-        public ManifestCache LoadManifests(string manifestPath, string cacheLocation)
+        public ManifestCache LoadManifests(string manifestPath, string cacheLocation, string versionString = null)
         {
+            Version version = null;
+            if(!Version.TryParse(versionString, out version))
+            {
+                Log.Debug("unknown version:{versionString}");
+                version = new Version();
+            }
+            return LoadManifests(manifestPath, cacheLocation, version);
+        }
+
+        public ManifestCache LoadManifests(string manifestPath, string cacheLocation, Version version)
+        {
+            string versionString = $"{version.Major}.{version.Minor}.{version.Build}.{version.Revision}";
+            if (ManifestCache == null)
+            {
+                ManifestCache = new ManifestCache(cacheLocation);
+            }
+
+            ManifestLoader manifest = new ManifestLoader();
+
             if (Directory.Exists(manifestPath) && Directory.Exists(cacheLocation))
             {
                 List<string> manifestFiles = Directory.GetFiles(manifestPath, $"*{Constants.ManifestExtension}").ToList();
                 Log.Info("manifest files:", manifestFiles);
-                manifestFiles.ForEach(x =>
+
+                if (version != new Version())
                 {
-                    string fileKey = FileManager.NormalizePath(x);
-                    if (!ManifestCache.Guids.ContainsKey(fileKey))
+                    manifestFiles = manifestFiles.Where(x => Regex.IsMatch(x, Regex.Escape(versionString))).ToList();
+                }
+                else
+                {
+                    Log.Info("getting latest version");
+                    string versionPattern = @"_(\d+?\.\d+?\.\d+?\.\d+?)(?:_|\.)";
+                    Version maxVersion = new Version();
+                    List<string> versionedManifestFiles = manifestFiles.Where(x => Regex.IsMatch(x, versionPattern)).ToList();
+                    List<string> unVersionedManifestFiles = manifestFiles.Where(x => !Regex.IsMatch(x, versionPattern)).ToList();
+
+                    foreach(string file in versionedManifestFiles)
                     {
-                        ManifestCache.LoadManifest(x);
+                        Version fileVersion  = new Version(Regex.Match(file,versionPattern).Groups[1].Value);
+                        if(fileVersion > maxVersion)
+                        {
+                            Log.Info($"setting maxVersion:{maxVersion} -> {fileVersion}");
+                            maxVersion = fileVersion;
+                        }
                     }
-                });
+
+                    versionedManifestFiles = manifestFiles.Where(x => Regex.IsMatch(x, $@"_{maxVersion.Major}\.{maxVersion.Minor}\.{maxVersion.Build}\.{maxVersion.Revision}(?:_|\.)")).ToList();
+                    unVersionedManifestFiles.AddRange(versionedManifestFiles);
+                    manifestFiles = unVersionedManifestFiles;
+                }
+
+                Log.Info("filtered manifest files:", manifestFiles);
+
+                foreach (string manifestFile in manifestFiles)
+                {
+                    ManifestDefinitionDescription description = manifest.LoadManifest(manifestFile);
+                    List<ProviderDefinitionDescription> manifestProviderList = description.Providers.ToList();
+
+                    if (!ManifestCache.ProviderDefinitions.Keys.Any(x => manifestProviderList.Any(y => y.Guid == x)))
+                    {
+                        ManifestCache.LoadManifest(manifestFile);
+                    }
+                    else
+                    {
+                        Log.Warning($"manifest already loaded:{manifestFile}");
+                    }
+                }
             }
             else
             {
@@ -56,7 +112,7 @@ namespace CollectSFData.DataFile
 
             return ManifestCache;
         }
-        
+
         public void ParseTraces(string fileName, DateTime startTime, DateTime endTime)
         {
             using (var reader = new TraceFileEventReader(fileName))
