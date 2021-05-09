@@ -217,7 +217,6 @@ namespace CollectSFData.Kusto
                 headers.Add("x-ms-client-request-id", requestId);
 
                 Log.Info($"query:", requestBody);
-                _httpClient.DisplayResponse = Config.LogDebug >= LoggingLevel.Verbose;
                 _httpClient.SendRequest(uri: RestQueryUri, authToken: _arm.BearerToken, jsonBody: requestBody, httpMethod: HttpMethod.Post, headers: headers);
                 ResponseDataSet = JsonConvert.DeserializeObject<KustoRestResponseV1>(_httpClient.ResponseStreamString);
 
