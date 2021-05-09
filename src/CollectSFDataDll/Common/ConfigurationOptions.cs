@@ -132,7 +132,6 @@ namespace CollectSFData.Common
         {
             string response = $"\r\n\tlocal running version: {Version}";
             Http http = Http.ClientFactory();
-            http.DisplayResponse = false;
             http.DisplayError = false;
 
             Dictionary<string, string> headers = new Dictionary<string, string>();
