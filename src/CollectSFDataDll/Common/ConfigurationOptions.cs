@@ -28,7 +28,7 @@ namespace CollectSFData.Common
         private static bool _cmdLineExecuted;
         private static string[] _commandlineArguments = new string[0];
         private static ConfigurationOptions _defaultConfig;
-        private readonly string _workDir = "csfd";
+        private readonly string _tempName = "csfd";
         private string _tempPath;
 
         public X509Certificate2 ClientCertificate { get; set; }
@@ -113,7 +113,7 @@ namespace CollectSFData.Common
                 _commandlineArguments = commandlineArguments;
             }
 
-            _tempPath = FileManager.NormalizePath(Path.GetTempPath() + _workDir);
+            _tempPath = FileManager.NormalizePath(Path.GetTempPath() + _tempName);
 
             DateTimeOffset defaultOffset = DateTimeOffset.Now;
             StartTimeUtc = defaultOffset.UtcDateTime.AddHours(Constants.DefaultStartTimeHours);
@@ -498,12 +498,12 @@ namespace CollectSFData.Common
                 }
                 else
                 {
-                    CheckLogFile();
                     retval &= ValidateSasKey();
+                    CheckCache();
+                    CheckLogFile();
+
                     retval &= ValidateFileType();
                     retval &= ValidateTime();
-
-                    CheckCache();
                     retval &= ValidateSource();
                     retval &= ValidateDestination();
                     retval &= ValidateAad();
@@ -853,6 +853,12 @@ namespace CollectSFData.Common
 
         private void CheckLogFile()
         {
+            if(LogDebug == LoggingLevel.Verbose && !HasValue(LogFile))
+            {
+                LogFile = $"{CacheLocation}/{_tempName}.log";
+                Log.Warning($"LogDebug 5 (Verbose) requires log file. setting LogFile:{LogFile}");
+            }
+
             if (HasValue(LogFile))
             {
                 Log.LogFile = FileManager.NormalizePath(LogFile);
