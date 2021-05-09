@@ -338,7 +338,6 @@ namespace CollectSFData.Azure
                     };
                 }
 
-                IngestCallback?.Invoke(fileObject);
                 _instance.TotalFilesDownloaded++;
             }
             else
@@ -346,6 +345,8 @@ namespace CollectSFData.Azure
                 Log.Warning($"destination file exists. skipping download:\r\n file: {fileObject}");
                 _instance.TotalFilesSkipped++;
             }
+
+            IngestCallback?.Invoke(fileObject);
         }
 
         private void QueueBlobSegmentDownload(IEnumerable<IListBlobItem> blobResults)
