@@ -72,7 +72,7 @@ namespace CollectSFData.Kusto
                     // only way for records from table storage to be unique since there is not a file reference
                     Log.Info("removing duplicate records", ConsoleColor.White);
                     IEnumerable<KustoCsvSchema> schema = new KustoIngestionMappings(new FileObject()).TableSchema();
-                    //schema = schema.Where(x => x.Name != "RelativeUri");
+                    schema = schema.Where(x => x.Name != "RelativeUri");
                     string names = string.Join(",", schema.Select(x => x.Name).ToList());
 
                     string command = $".set-or-replace {Config.KustoTable} <| {Config.KustoTable} | summarize min(RelativeUri) by {names}";
