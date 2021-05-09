@@ -358,7 +358,7 @@ namespace CollectSFData.Azure
             foreach (IListBlobItem blob in blobResults)
             {
                 ICloudBlob blobRef = null;
-                Log.ToFile($"parent id:{parentId} current Id:{Thread.CurrentThread.ManagedThreadId}");
+                Log.Debug($"parent id:{parentId} current Id:{Thread.CurrentThread.ManagedThreadId}");
 
                 if (blob is CloudBlobDirectory)
                 {
@@ -382,7 +382,7 @@ namespace CollectSFData.Azure
                     if (ticks < Config.StartTimeUtc.Ticks | ticks > Config.EndTimeUtc.Ticks)
                     {
                         _instance.TotalFilesSkipped++;
-                        Log.ToFile($"exclude:bloburi file ticks {new DateTime(ticks).ToString("o")} outside of time range:{blob.Uri}");
+                        Log.Debug($"exclude:bloburi file ticks {new DateTime(ticks).ToString("o")} outside of time range:{blob.Uri}");
 
                         SetMinMaxDate(ref segmentMinDateTicks, ref segmentMaxDateTicks, ticks);
                         continue;

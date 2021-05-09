@@ -111,8 +111,8 @@ namespace CollectSFData.DataFile
                 return true;
             }
 
-            Log.ToFile("no match: self:", self);
-            Log.ToFile("no match: comparable:", comparable);
+            Log.Debug("no match: self:", self);
+            Log.Debug("no match: comparable:", comparable);
             return false;
         }
 
@@ -194,7 +194,7 @@ namespace CollectSFData.DataFile
             }
 
             _fileUri = fileUri;
-            Log.Info($"extracted node properties:node:{NodeName} filetype:{FileDataType.ToString()}\r\n relativeUri:{RelativeUri}", ConsoleColor.Cyan);
+            Log.Debug($"extracted node properties:node:{NodeName} filetype:{FileDataType.ToString()}\r\n relativeUri:{RelativeUri}", ConsoleColor.Cyan);
             return fileUri;
         }
 
@@ -218,8 +218,8 @@ namespace CollectSFData.DataFile
                 return true;
             }
 
-            Log.ToFile("no match: self:", self);
-            Log.ToFile("no match: comparable:", searchItem);
+            Log.Debug("no match: self:", self);
+            Log.Debug("no match: comparable:", searchItem);
             return false;
         }
     }
