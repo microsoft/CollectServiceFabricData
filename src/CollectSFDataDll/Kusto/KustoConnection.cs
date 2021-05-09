@@ -249,7 +249,7 @@ namespace CollectSFData.Kusto
             foreach (KustoRestRecord record in failedRecords)
             {
                 string uriFile = record["IngestionSourcePath"].ToString();
-                Log.ToFile($"checking failed ingested for failed relativeuri: {uriFile}");
+                Log.Debug($"checking failed ingested for failed relativeuri: {uriFile}");
                 FileObject fileObject = _instance.FileObjects.FindByUriFirstOrDefault(uriFile);
 
                 fileObject.Status = FileStatus.failed;
@@ -281,7 +281,7 @@ namespace CollectSFData.Kusto
 
             foreach (string uriFile in successUris)
             {
-                Log.ToFile($"checking ingested uri for success relativeuri: {uriFile}");
+                Log.Debug($"checking ingested uri for success relativeuri: {uriFile}");
                 FileObject fileObject = _instance.FileObjects.FindByUriFirstOrDefault(uriFile);
                 fileObject.Status = FileStatus.succeeded;
 
