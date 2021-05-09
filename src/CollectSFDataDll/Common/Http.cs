@@ -22,8 +22,6 @@ namespace CollectSFData.Common
 
         public bool DisplayError { get; set; }
 
-        public bool DisplayResponse { get; set; }
-
         public HttpContentHeaders Headers { get; set; }
 
         public HttpMethod Method { get; set; } = HttpMethod.Get;
@@ -104,10 +102,7 @@ namespace CollectSFData.Common
                     if (!string.IsNullOrEmpty(ResponseStreamString))
                     {
                         ResponseStreamJson = JObject.Parse(ResponseStreamString);
-                        if (DisplayResponse)
-                        {
-                            Log.Info($"WebResponse stream: bytes: {Response.Content.Headers.ContentLength}\r\n{ResponseStreamJson}", ConsoleColor.DarkMagenta, ConsoleColor.Black);
-                        }
+                        Log.Debug($"WebResponse stream: bytes: {Response.Content.Headers.ContentLength}\r\n{ResponseStreamJson}", ConsoleColor.DarkMagenta, ConsoleColor.Black);
                     }
                 }
                 else
