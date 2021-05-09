@@ -102,7 +102,7 @@ namespace CollectSFData.Common
                     if (!string.IsNullOrEmpty(ResponseStreamString))
                     {
                         ResponseStreamJson = JObject.Parse(ResponseStreamString);
-                        Log.Debug($"WebResponse stream: bytes: {Response.Content.Headers.ContentLength}\r\n{ResponseStreamJson}", ConsoleColor.DarkMagenta, ConsoleColor.Black);
+                        Log.Debug($"WebResponse stream: bytes: {Response.Content.Headers.ContentLength}\r\n{ResponseStreamJson}");
                     }
                 }
                 else
