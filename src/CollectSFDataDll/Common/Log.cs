@@ -87,7 +87,12 @@ namespace CollectSFData.Common
         {
             if (LogDebug >= LoggingLevel.Verbose)
             {
-                Process("debug: " + message, ConsoleColor.Black, ConsoleColor.Gray, jsonSerializer, callerName: callerName);
+                QueueMessage(false, new LogMessage()
+                {
+                    TimeStamp = DateTime.Now.ToString("o") + "::",
+                    Message = $"{Thread.CurrentThread.ManagedThreadId}:{callerName}:debug:{message}{serializeJson(jsonSerializer)}",
+                    LogFileOnly = true
+                });
             }
         }
 
@@ -180,19 +185,6 @@ namespace CollectSFData.Common
                 _taskWriter = new Task(TaskWriter, _taskWriterCancellationToken.Token);
                 _taskWriter.Start();
                 _isRunning = true;
-            }
-        }
-
-        public static void ToFile(string message, object jsonSerializer = null, [CallerMemberName] string callerName = "")
-        {
-            if (LogDebug >= LoggingLevel.File)
-            {
-                QueueMessage(false, new LogMessage()
-                {
-                    TimeStamp = DateTime.Now.ToString("o") + "::",
-                    Message = $"{Thread.CurrentThread.ManagedThreadId}:{callerName}:trivial:{message}{serializeJson(jsonSerializer)}",
-                    LogFileOnly = true
-                });
             }
         }
 
