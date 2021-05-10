@@ -218,8 +218,7 @@ namespace CollectSFData.DataFile
                 return true;
             }
 
-            Log.Debug("no match: self:", self);
-            Log.Debug("no match: comparable:", searchItem);
+            Log.Debug("no match");
             return false;
         }
     }
