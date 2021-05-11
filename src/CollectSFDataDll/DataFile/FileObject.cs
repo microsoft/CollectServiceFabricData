@@ -218,7 +218,6 @@ namespace CollectSFData.DataFile
                 return true;
             }
 
-            Log.Debug("no match");
             return false;
         }
     }
