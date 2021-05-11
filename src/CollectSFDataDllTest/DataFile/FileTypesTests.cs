@@ -37,33 +37,15 @@ namespace CollectSFData.DataFile.Tests
         }
 
         [Test()]
-        public void MapFileDataTypeUriTest()
-        {
-            throw new NotImplementedException();
-        }
-
-        [Test()]
         public void MapFileTypeRelativeUriPrefixTest()
         {
-            throw new NotImplementedException();
-        }
-
-        [Test()]
-        public void MapFileTypeUriTest()
-        {
-            throw new NotImplementedException();
-        }
-
-        [Test()]
-        public void MapFileUriTypeTest()
-        {
-            throw new NotImplementedException();
-        }
-
-        [Test()]
-        public void MapKnownFileExtensionTest()
-        {
-            throw new NotImplementedException();
+            Assert.IsTrue(FileTypes.MapFileTypeRelativeUriPrefix(FileTypesEnum.any) == FileTypesKnownUrisPrefix.any);
+            Assert.IsTrue(FileTypes.MapFileTypeRelativeUriPrefix(FileTypesEnum.counter) == FileTypesKnownUrisPrefix.fabriccounter);
+            Assert.IsTrue(FileTypes.MapFileTypeRelativeUriPrefix(FileTypesEnum.exception) == FileTypesKnownUrisPrefix.fabriccrashdump);
+            Assert.IsTrue(FileTypes.MapFileTypeRelativeUriPrefix(FileTypesEnum.setup) == FileTypesKnownUrisPrefix.fabriclog);
+            Assert.IsTrue(FileTypes.MapFileTypeRelativeUriPrefix(FileTypesEnum.table) == FileTypesKnownUrisPrefix.fabriclog);
+            Assert.IsTrue(FileTypes.MapFileTypeRelativeUriPrefix(FileTypesEnum.trace) == FileTypesKnownUrisPrefix.fabriclog);
+            Assert.IsTrue(FileTypes.MapFileTypeRelativeUriPrefix(FileTypesEnum.unknown) == FileTypesKnownUrisPrefix.unknown);
         }
 
         private static void ExtensionTests(string extension, FileDataTypesEnum dataType)
