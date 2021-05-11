@@ -26,6 +26,7 @@ namespace CollectSFData.Kusto
         private readonly TimeSpan _messageTimeToLive = new TimeSpan(0, 1, 0, 0);
         private readonly CancellationTokenSource _tokenSource = new CancellationTokenSource();
         private bool _appendingToExistingTableUnique;
+        private object _enumeratorLock = new object();
         private DateTime _failureQueryTime;
         private string _ingestCursor = "''";
         private IEnumerator<string> _ingestionQueueEnumerator;
@@ -206,23 +207,27 @@ namespace CollectSFData.Kusto
             string tempContainer = null;
             string ingestionQueue = null;
 
-            if (!_tempContainerEnumerator.MoveNext())
+            lock (_enumeratorLock)
             {
-                _tempContainerEnumerator.Reset();
-                _tempContainerEnumerator.MoveNext();
+                if (!_tempContainerEnumerator.MoveNext())
+                {
+                    _tempContainerEnumerator.Reset();
+                    _tempContainerEnumerator.MoveNext();
+                }
+
+                tempContainer = _tempContainerEnumerator.Current;
+
+                if (!_ingestionQueueEnumerator.MoveNext())
+                {
+                    _ingestionQueueEnumerator.Reset();
+                    _ingestionQueueEnumerator.MoveNext();
+                }
+
+                ingestionQueue = _ingestionQueueEnumerator.Current;
             }
 
-            tempContainer = _tempContainerEnumerator.Current;
-            Log.Debug($"tempContainer.Current:{tempContainer}", Endpoint.IngestionResources);
-
-            if (!_ingestionQueueEnumerator.MoveNext())
-            {
-                _ingestionQueueEnumerator.Reset();
-                _ingestionQueueEnumerator.MoveNext();
-            }
-
-            ingestionQueue = _ingestionQueueEnumerator.Current;
-            Log.Debug($"ingestionQueue.Current:{ingestionQueue}", Endpoint.IngestionResources);
+            Log.Debug($"tempContainer.Current:{tempContainer}");
+            Log.Debug($"ingestionQueue.Current:{ingestionQueue}");
 
             if (Config.KustoUseBlobAsSource)
             {
@@ -315,7 +320,7 @@ namespace CollectSFData.Kusto
 
         private void PostMessageToQueue(string queueUriWithSas, KustoIngestionMessage message, FileObject fileObject)
         {
-            Log.Info($"post: {queueUriWithSas}", ConsoleColor.Magenta);
+            Log.Info($"post: {queueUriWithSas ?? "(null ingest uri)"}", ConsoleColor.Magenta);
             CloudQueue queue = new CloudQueue(new Uri(queueUriWithSas));
             CloudQueueMessage queueMessage = new CloudQueueMessage(JsonConvert.SerializeObject(message));
             OperationContext context = new OperationContext() { ClientRequestID = message.Id };
