@@ -26,6 +26,7 @@ namespace CollectSFData.Kusto
         private readonly TimeSpan _messageTimeToLive = new TimeSpan(0, 1, 0, 0);
         private readonly CancellationTokenSource _tokenSource = new CancellationTokenSource();
         private bool _appendingToExistingTableUnique;
+        private ConfigurationOptions _config;
         private object _enumeratorLock = new object();
         private DateTime _failureQueryTime;
         private string _ingestCursor = "''";
@@ -33,8 +34,13 @@ namespace CollectSFData.Kusto
         private Instance _instance = Instance.Singleton();
         private Task _monitorTask;
         private IEnumerator<string> _tempContainerEnumerator;
-        private ConfigurationOptions Config => _instance.Config;
+
         public KustoEndpoint Endpoint { get; private set; }
+
+        public KustoConnection(ConfigurationOptions config)
+        {
+            _config = config ?? throw new ArgumentNullException(nameof(config));
+        }
 
         public void AddFile(FileObject fileObject)
         {
@@ -46,7 +52,7 @@ namespace CollectSFData.Kusto
                 return;
             }
 
-            if (Config.KustoUseBlobAsSource)
+            if (_config.KustoUseBlobAsSource)
             {
                 IngestSingleFile(fileObject);
             }
@@ -67,7 +73,7 @@ namespace CollectSFData.Kusto
                 IngestResourceIdKustoTableMapping();
 
                 if (_appendingToExistingTableUnique
-                    && Config.FileType == FileTypesEnum.table
+                    && _config.FileType == FileTypesEnum.table
                     && _instance.FileObjects.Any(FileStatus.succeeded))
                 {
                     // only way for records from table storage to be unique since there is not a file reference
@@ -76,7 +82,7 @@ namespace CollectSFData.Kusto
                     schema = schema.Where(x => x.Name != "RelativeUri");
                     string names = string.Join(",", schema.Select(x => x.Name).ToList());
 
-                    string command = $".set-or-replace {Config.KustoTable} <| {Config.KustoTable} | summarize min(RelativeUri) by {names}";
+                    string command = $".set-or-replace {_config.KustoTable} <| {_config.KustoTable} | summarize min(RelativeUri) by {names}";
                     Log.Info(command);
 
                     Endpoint.Command(command);
@@ -98,7 +104,7 @@ namespace CollectSFData.Kusto
 
         public bool Connect()
         {
-            Endpoint = new KustoEndpoint();
+            Endpoint = new KustoEndpoint(_config);
             Endpoint.Authenticate();
             _failureQueryTime = _instance.StartTime.ToUniversalTime();
             _tempContainerEnumerator = Endpoint.IngestionResources.TempStorageContainers.GetEnumerator();
@@ -116,12 +122,12 @@ namespace CollectSFData.Kusto
                 return false;
             }
 
-            if (Config.IsKustoPurgeRequested())
+            if (_config.IsKustoPurgeRequested())
             {
                 Purge();
                 return false;
             }
-            else if (Config.KustoRecreateTable)
+            else if (_config.KustoRecreateTable)
             {
                 PurgeMessages(Endpoint.TableName);
 
@@ -130,7 +136,7 @@ namespace CollectSFData.Kusto
                     return false;
                 }
             }
-            else if (Config.Unique && Endpoint.HasTable(Endpoint.TableName))
+            else if (_config.Unique && Endpoint.HasTable(Endpoint.TableName))
             {
                 _appendingToExistingTableUnique = true;
                 List<string> existingUploads = Endpoint.Query($"['{Endpoint.TableName}']|distinct RelativeUri");
@@ -151,7 +157,7 @@ namespace CollectSFData.Kusto
 
         private bool CanIngest(string relativeUri)
         {
-            if (!Config.Unique)
+            if (!_config.Unique)
             {
                 return true;
             }
@@ -168,11 +174,11 @@ namespace CollectSFData.Kusto
 
         private void IngestResourceIdKustoTableMapping()
         {
-            string resourceUri = Config.ResourceUri;
+            string resourceUri = _config.ResourceUri;
 
             if (string.IsNullOrEmpty(resourceUri)
                 && _instance.FileObjects.Any(FileStatus.succeeded)
-                && Config.FileType == FileTypesEnum.trace)
+                && _config.FileType == FileTypesEnum.trace)
             {
                 // Fetch resource ID from ingested traces
                 List<string> results = Endpoint.Query($"['{Endpoint.TableName}']" +
@@ -195,7 +201,7 @@ namespace CollectSFData.Kusto
 
                 if (Endpoint.CreateTable(metaDatatableName, metaDatetableSchema))
                 {
-                    Endpoint.IngestInline(metaDatatableName, string.Format("{0},{1},{2},{3},{4},{5}", DateTime.UtcNow, Config.StartTimeUtc.UtcDateTime, Config.EndTimeUtc.UtcDateTime, resourceUri, Config.KustoTable, Config.FileType));
+                    Endpoint.IngestInline(metaDatatableName, string.Format("{0},{1},{2},{3},{4},{5}", DateTime.UtcNow, _config.StartTimeUtc.UtcDateTime, _config.EndTimeUtc.UtcDateTime, resourceUri, _config.KustoTable, _config.FileType));
                 }
             }
         }
@@ -229,9 +235,9 @@ namespace CollectSFData.Kusto
             Log.Debug($"tempContainer.Current:{tempContainer}");
             Log.Debug($"ingestionQueue.Current:{ingestionQueue}");
 
-            if (Config.KustoUseBlobAsSource)
+            if (_config.KustoUseBlobAsSource)
             {
-                blobUriWithSas = $"{fileObject.FileUri}{Config.SasEndpointInfo.SasToken}";
+                blobUriWithSas = $"{fileObject.FileUri}{_config.SasEndpointInfo.SasToken}";
             }
             else
             {
@@ -345,12 +351,12 @@ namespace CollectSFData.Kusto
                 RetainBlobOnSuccess = true,
                 Format = FileExtensionTypesEnum.csv.ToString(),
                 FlushImmediately = true,
-                ReportLevel = Config.KustoUseIngestMessage ? 2 : 1, //(int)IngestionReportLevel.FailuresAndSuccesses, // 2 FailuresAndSuccesses, 0 failures, 1 none
-                ReportMethod = Convert.ToInt32(!Config.KustoUseIngestMessage), //(int)IngestionReportMethod.Table, // 0 queue, 1 table, 2 both
+                ReportLevel = _config.KustoUseIngestMessage ? 2 : 1, //(int)IngestionReportLevel.FailuresAndSuccesses, // 2 FailuresAndSuccesses, 0 failures, 1 none
+                ReportMethod = Convert.ToInt32(!_config.KustoUseIngestMessage), //(int)IngestionReportMethod.Table, // 0 queue, 1 table, 2 both
                 AdditionalProperties = new KustoAdditionalProperties()
                 {
                     authorizationContext = Endpoint.IdentityToken,
-                    compressed = Config.KustoCompressed,
+                    compressed = _config.KustoCompressed,
                     csvMapping = ingestionMapping
                 }
             };
@@ -361,18 +367,18 @@ namespace CollectSFData.Kusto
 
         private void Purge()
         {
-            if (Config.KustoPurge.ToLower() == "true" & Endpoint.HasTable(Config.KustoTable))
+            if (_config.KustoPurge.ToLower() == "true" & Endpoint.HasTable(_config.KustoTable))
             {
                 PurgeMessages(Endpoint.TableName);
                 Endpoint.DropTable(Endpoint.TableName);
             }
-            else if (Config.KustoPurge.ToLower().StartsWith("list"))
+            else if (_config.KustoPurge.ToLower().StartsWith("list"))
             {
                 List<string> results = new List<string>();
 
-                if (Config.KustoPurge.ToLower().Split(' ').Length > 1)
+                if (_config.KustoPurge.ToLower().Split(' ').Length > 1)
                 {
-                    results = Endpoint.Query($".show tables | where TableName contains {Config.KustoPurge.ToLower().Split(' ')[1]} | project TableName");
+                    results = Endpoint.Query($".show tables | where TableName contains {_config.KustoPurge.ToLower().Split(' ')[1]} | project TableName");
                 }
                 else
                 {
@@ -381,14 +387,14 @@ namespace CollectSFData.Kusto
 
                 Log.Info($"current table list:", results);
             }
-            else if (Endpoint.HasTable(Config.KustoPurge))
+            else if (Endpoint.HasTable(_config.KustoPurge))
             {
-                PurgeMessages(Config.KustoPurge);
-                Endpoint.DropTable(Config.KustoPurge);
+                PurgeMessages(_config.KustoPurge);
+                Endpoint.DropTable(_config.KustoPurge);
             }
             else
             {
-                Log.Error($"invalid purge option:{Config.KustoPurge}. should be 'true' or 'list' or table name to drop");
+                Log.Error($"invalid purge option:{_config.KustoPurge}. should be 'true' or 'list' or table name to drop");
             }
         }
 
@@ -507,7 +513,7 @@ namespace CollectSFData.Kusto
                 Thread.Sleep(Constants.ThreadSleepMs100);
                 QueueMessageMonitor();
 
-                if (!Config.KustoUseIngestMessage)
+                if (!_config.KustoUseIngestMessage)
                 {
                     Thread.Sleep(Constants.ThreadSleepMs10000);
 
@@ -543,13 +549,13 @@ namespace CollectSFData.Kusto
         {
             string ingestionJsonString = null;
 
-            switch (Config.FileType)
+            switch (_config.FileType)
             {
                 case FileTypesEnum.counter:
                     ingestionJsonString = JsonConvert.SerializeObject(new KustoIngestionMappings(fileObject)
                     {
-                        ResourceUri = Config.ResourceUri,
-                        SetConstants = Config.KustoUseBlobAsSource,
+                        ResourceUri = _config.ResourceUri,
+                        SetConstants = _config.KustoUseBlobAsSource,
                     }.CounterSchema());
 
                     break;
@@ -557,8 +563,8 @@ namespace CollectSFData.Kusto
                 case FileTypesEnum.exception:
                     ingestionJsonString = JsonConvert.SerializeObject(new KustoIngestionMappings(fileObject)
                     {
-                        ResourceUri = Config.ResourceUri,
-                        SetConstants = Config.KustoUseBlobAsSource,
+                        ResourceUri = _config.ResourceUri,
+                        SetConstants = _config.KustoUseBlobAsSource,
                     }.ExceptionSchema());
 
                     break;
@@ -566,8 +572,8 @@ namespace CollectSFData.Kusto
                 case FileTypesEnum.setup:
                     ingestionJsonString = JsonConvert.SerializeObject(new KustoIngestionMappings(fileObject)
                     {
-                        ResourceUri = Config.ResourceUri,
-                        SetConstants = Config.KustoUseBlobAsSource,
+                        ResourceUri = _config.ResourceUri,
+                        SetConstants = _config.KustoUseBlobAsSource,
                     }.SetupSchema());
 
                     break;
@@ -575,7 +581,7 @@ namespace CollectSFData.Kusto
                 case FileTypesEnum.table:
                     ingestionJsonString = JsonConvert.SerializeObject(new KustoIngestionMappings(fileObject)
                     {
-                        ResourceUri = Config.ResourceUri
+                        ResourceUri = _config.ResourceUri
                     }.TableSchema());
 
                     break;
@@ -583,8 +589,8 @@ namespace CollectSFData.Kusto
                 case FileTypesEnum.trace:
                     ingestionJsonString = JsonConvert.SerializeObject(new KustoIngestionMappings(fileObject)
                     {
-                        ResourceUri = Config.ResourceUri,
-                        SetConstants = Config.KustoUseBlobAsSource,
+                        ResourceUri = _config.ResourceUri,
+                        SetConstants = _config.KustoUseBlobAsSource,
                     }.TraceSchema());
 
                     break;
@@ -601,7 +607,7 @@ namespace CollectSFData.Kusto
             BlobRequestOptions blobRequestOptions = new BlobRequestOptions()
             {
                 RetryPolicy = new IngestRetryPolicy(),
-                ParallelOperationThreadCount = Config.Threads,
+                ParallelOperationThreadCount = _config.Threads,
             };
 
             CloudBlobContainer blobContainer = new CloudBlobContainer(blobUri);
@@ -609,7 +615,7 @@ namespace CollectSFData.Kusto
 
             if (!_kustoTasks.CancellationToken.IsCancellationRequested)
             {
-                if (Config.UseMemoryStream)
+                if (_config.UseMemoryStream)
                 {
                     _kustoTasks.TaskAction(() => blockBlob.UploadFromStreamAsync(fileObject.Stream.Get(), null, blobRequestOptions, null).Wait()).Wait();
                     fileObject.Stream.Dispose();
