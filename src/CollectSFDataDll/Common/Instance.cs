@@ -52,9 +52,9 @@ namespace CollectSFData.Common
             _instance.DiscoveredMaxDateTicks = DateTime.MinValue.Ticks;
             _instance.DiscoveredMinDateTicks = DateTime.MaxValue.Ticks;
             _instance.FileObjects = new FileObjectCollection();
-            _instance.FileMgr = new FileManager();
-            _instance.Kusto = new KustoConnection();
-            _instance.LogAnalytics = new LogAnalyticsConnection();
+            _instance.FileMgr = new FileManager(_instance.Config);
+            _instance.Kusto = new KustoConnection(_instance.Config);
+            _instance.LogAnalytics = new LogAnalyticsConnection(_instance.Config);
             _instance.StartTime = DateTime.Now;
             _instance.TimedOut = false;
             _instance.TotalErrors = 0;

@@ -24,6 +24,7 @@ namespace CollectSFData.Azure
     {
         private string _commonTenantId = "common";
         private IConfidentialClientApplication _confidentialClientApp;
+        private ConfigurationOptions _config;
         private List<string> _defaultScope = new List<string>() { ".default" };
         private string _getSubscriptionRestUri = Constants.ManagementAzureCom + "/subscriptions/{subscriptionId}?api-version=2016-06-01";
         private Http _httpClient = Http.ClientFactory();
@@ -49,18 +50,19 @@ namespace CollectSFData.Azure
 
         public ClientIdentity ClientIdentity { get; private set; }
 
-        private ConfigurationOptions Config => _instance.Config;
-
         public bool IsAuthenticated { get; private set; }
-
         public List<string> Scopes { get; set; } = new List<string>();
-
         public SubscriptionRecordResult[] Subscriptions { get; private set; } = new SubscriptionRecordResult[] { };
 
         public AzureResourceManager()
         {
             Log.Info($"enter: token cache path: {TokenCacheHelper.CacheFilePath}");
-            ClientIdentity = new ClientIdentity();
+            ClientIdentity = new ClientIdentity(_config);
+        }
+
+        public AzureResourceManager(ConfigurationOptions config)
+        {
+            _config = config ?? throw new ArgumentNullException(nameof(config));
         }
 
         public bool Authenticate(bool throwOnError = false, string resource = Constants.ManagementAzureCom)
@@ -76,9 +78,9 @@ namespace CollectSFData.Azure
 
             try
             {
-                if (string.IsNullOrEmpty(Config.AzureTenantId))
+                if (string.IsNullOrEmpty(_config.AzureTenantId))
                 {
-                    Config.AzureTenantId = _commonTenantId;
+                    _config.AzureTenantId = _commonTenantId;
                 }
 
                 CreateClient(false, false, resource);
@@ -167,31 +169,31 @@ namespace CollectSFData.Azure
 
         public bool CreateClient(bool prompt, bool deviceLogin = false, string resource = "")
         {
-            if (Config.IsClientIdConfigured() & prompt)
+            if (_config.IsClientIdConfigured() & prompt)
             {
                 return false;
             }
-            else if (Config.IsClientIdConfigured() & !prompt)
+            else if (_config.IsClientIdConfigured() & !prompt)
             {
-                if (Config.ClientCertificate != null)
+                if (_config.ClientCertificate != null)
                 {
-                    CreateConfidentialCertificateClient(resource, Config.ClientCertificate);
+                    CreateConfidentialCertificateClient(resource, _config.ClientCertificate);
                 }
-                else if (!string.IsNullOrEmpty(Config.AzureKeyVault) & !string.IsNullOrEmpty(Config.AzureClientSecret))
+                else if (!string.IsNullOrEmpty(_config.AzureKeyVault) & !string.IsNullOrEmpty(_config.AzureClientSecret))
                 {
-                    CreateConfidentialCertificateClient(resource, ReadCertificateFromKeyvault(Config.AzureKeyVault, Config.AzureClientSecret));
+                    CreateConfidentialCertificateClient(resource, ReadCertificateFromKeyvault(_config.AzureKeyVault, _config.AzureClientSecret));
                 }
                 else if (ClientIdentity.IsTypeManagedIdentity)
                 {
                     CreateConfidentialManagedIdentityClient(resource);
                 }
-                else if (!string.IsNullOrEmpty(Config.AzureClientCertificate))
+                else if (!string.IsNullOrEmpty(_config.AzureClientCertificate))
                 {
-                    CreateConfidentialCertificateClient(resource, new CertificateUtilities().GetClientCertificate(Config.AzureClientCertificate));
+                    CreateConfidentialCertificateClient(resource, new CertificateUtilities().GetClientCertificate(_config.AzureClientCertificate));
                 }
-                else if (!string.IsNullOrEmpty(Config.AzureClientSecret))
+                else if (!string.IsNullOrEmpty(_config.AzureClientSecret))
                 {
-                    CreateConfidentialClient(resource, Config.AzureClientSecret);
+                    CreateConfidentialClient(resource, _config.AzureClientSecret);
                 }
                 else
                 {
@@ -214,12 +216,12 @@ namespace CollectSFData.Azure
             _confidentialClientApp = ConfidentialClientApplicationBuilder
                 .CreateWithApplicationOptions(new ConfidentialClientApplicationOptions
                 {
-                    ClientId = Config.AzureClientId,
+                    ClientId = _config.AzureClientId,
                     RedirectUri = resource,
-                    TenantId = Config.AzureTenantId,
+                    TenantId = _config.AzureTenantId,
                     ClientName = Constants.ApplicationName
                 })
-                .WithAuthority(AzureCloudInstance.AzurePublic, Config.AzureTenantId)
+                .WithAuthority(AzureCloudInstance.AzurePublic, _config.AzureTenantId)
                 .WithLogging(MsalLoggerCallback, LogLevel.Verbose, true, true)
                 .WithCertificate(clientCertificate)
                 .Build();
@@ -233,13 +235,13 @@ namespace CollectSFData.Azure
             _confidentialClientApp = ConfidentialClientApplicationBuilder
                .CreateWithApplicationOptions(new ConfidentialClientApplicationOptions
                {
-                   ClientId = Config.AzureClientId,
+                   ClientId = _config.AzureClientId,
                    RedirectUri = resource,
                    ClientSecret = secret,
-                   TenantId = Config.AzureTenantId,
-                   ClientName = Config.AzureClientId
+                   TenantId = _config.AzureTenantId,
+                   ClientName = _config.AzureClientId
                })
-               .WithAuthority(AzureCloudInstance.AzurePublic, Config.AzureTenantId)
+               .WithAuthority(AzureCloudInstance.AzurePublic, _config.AzureTenantId)
                .WithLogging(MsalLoggerCallback, LogLevel.Verbose, true, true)
                .Build();
 
@@ -260,7 +262,7 @@ namespace CollectSFData.Azure
             AuthenticationResult result = null;
             _publicClientApp = PublicClientApplicationBuilder
                 .Create(_wellKnownClientId)
-                .WithAuthority(AzureCloudInstance.AzurePublic, Config.AzureTenantId)
+                .WithAuthority(AzureCloudInstance.AzurePublic, _config.AzureTenantId)
                 .WithLogging(MsalLoggerCallback, LogLevel.Verbose, true, true)
                 .WithDefaultRedirectUri()
                 .Build();
@@ -345,10 +347,10 @@ namespace CollectSFData.Azure
         {
             bool response = false;
 
-            if (Subscriptions.Length == 0 && !string.IsNullOrEmpty(Config.AzureSubscriptionId))
+            if (Subscriptions.Length == 0 && !string.IsNullOrEmpty(_config.AzureSubscriptionId))
             {
                 response = _httpClient.SendRequest(_getSubscriptionRestUri, BearerToken
-                    .Replace("{subscriptionId}", Config.AzureSubscriptionId));
+                    .Replace("{subscriptionId}", _config.AzureSubscriptionId));
 
                 Subscriptions = new SubscriptionRecordResult[1]
                 {
@@ -402,7 +404,7 @@ namespace CollectSFData.Azure
             Log.Info($"enter:{keyvaultResourceId} {secretName}");
             X509Certificate2 certificate = null;
             TokenCredential credential = null;
-            string clientId = Config.AzureClientId;
+            string clientId = _config.AzureClientId;
 
             if (ClientIdentity.IsSystemManagedIdentity)
             {
