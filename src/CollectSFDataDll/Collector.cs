@@ -118,7 +118,7 @@ namespace CollectSFData
 
             if (string.IsNullOrEmpty(clusterId))
             {
-                TableManager tableMgr = new TableManager();
+                TableManager tableMgr = new TableManager(Config);
 
                 if (tableMgr.Connect())
                 {
@@ -189,7 +189,7 @@ namespace CollectSFData
 
             if (Config.FileType == FileTypesEnum.table)
             {
-                TableManager tableMgr = new TableManager()
+                TableManager tableMgr = new TableManager(Config)
                 {
                     IngestCallback = (exportedFile) => { QueueForIngest(exportedFile); }
                 };
@@ -201,7 +201,7 @@ namespace CollectSFData
             }
             else
             {
-                BlobManager blobMgr = new BlobManager()
+                BlobManager blobMgr = new BlobManager(Config)
                 {
                     IngestCallback = (sourceFileUri) => { QueueForIngest(sourceFileUri); },
                     ReturnSourceFileLink = (Config.IsKustoConfigured() & Config.KustoUseBlobAsSource) | Config.FileType == FileTypesEnum.exception

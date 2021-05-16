@@ -6,33 +6,18 @@ using System;
 namespace CollectSFData.Azure
 {
     public class ClientIdentity
-    {   
+    {
+        private ConfigurationOptions _config;
         private Instance _instance = Instance.Singleton();
         public bool IsAppRegistration { get; private set; } = false;
         public bool IsSystemManagedIdentity { get; private set; } = false;
         public bool IsTypeManagedIdentity => (IsSystemManagedIdentity | IsUserManagedIdentity);
         public bool IsUserManagedIdentity { get; private set; } = false;
         public AccessToken ManagedIdentityToken { get; private set; }
-        private ConfigurationOptions _config => _instance.Config;
 
-        public void SetIdentityType()
+        public ClientIdentity(ConfigurationOptions config)
         {
-            if (!string.IsNullOrEmpty(_config.AzureClientId) & !string.IsNullOrEmpty(_config.AzureClientCertificate))
-            {
-                IsAppRegistration = true;
-            }
-            else if (!string.IsNullOrEmpty(_config.AzureClientId))
-            {
-                IsUserManagedIdentity = IsManagedIdentity(_config.AzureClientId);
-            }
-            else if (string.IsNullOrEmpty(_config.AzureClientId))
-            {
-                IsSystemManagedIdentity = IsManagedIdentity();
-            }
-        }
-
-        public ClientIdentity()
-        {
+            _config = config ?? throw new ArgumentNullException(nameof(config));
             SetIdentityType();
         }
 
@@ -65,7 +50,7 @@ namespace CollectSFData.Azure
         public bool IsManagedIdentity(string managedClientId = null)
         {
             bool retval = false;
-        
+
             try
             {
                 ManagedIdentityCredential managedCredential = new ManagedIdentityCredential(managedClientId, new TokenCredentialOptions
@@ -95,6 +80,22 @@ namespace CollectSFData.Azure
 
             Log.Info($"returning{retval}");
             return retval;
+        }
+
+        public void SetIdentityType()
+        {
+            if (!string.IsNullOrEmpty(_config.AzureClientId) & !string.IsNullOrEmpty(_config.AzureClientCertificate))
+            {
+                IsAppRegistration = true;
+            }
+            else if (!string.IsNullOrEmpty(_config.AzureClientId))
+            {
+                IsUserManagedIdentity = IsManagedIdentity(_config.AzureClientId);
+            }
+            else if (string.IsNullOrEmpty(_config.AzureClientId))
+            {
+                IsSystemManagedIdentity = IsManagedIdentity();
+            }
         }
     }
 }
