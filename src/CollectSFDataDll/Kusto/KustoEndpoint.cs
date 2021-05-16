@@ -30,71 +30,54 @@ namespace CollectSFData.Kusto
         private static ICslQueryProvider _kustoQueryClient;
         private static int maxKustoClientTimeMs = 300 * 1000;
         private AzureResourceManager _arm = new AzureResourceManager();
+        private ConfigurationOptions _config;
         private Http _httpClient = Http.ClientFactory();
-        private Instance _instance = Instance.Singleton();
 
         public string ClusterIngestUrl { get; set; }
 
         public string ClusterName { get; private set; }
 
-        private ConfigurationOptions Config => _instance.Config;
-
         public KustoConnectionStringBuilder DatabaseConnection { get; set; }
         public string DatabaseName { get; set; }
-
         public bool DeleteSourceOnSuccess { get; set; }
-
         public KustoRestTable ExtendedPropertiesTable { get; private set; } = new KustoRestTable();
-
         public List<string> ExtendedResults { get; private set; }
-
         public string HostName { get; private set; }
-
         public string IdentityToken { get; private set; }
-
         public IngestionResourcesSnapshot IngestionResources { get; private set; }
-
         public bool LogLargeResults { get; set; } = true;
-
         public string ManagementUrl { get; private set; }
-
         public KustoRestTable PrimaryResultTable { get; private set; } = new KustoRestTable();
-
         public List<KustoRestTable> QueryResultTables { get; private set; } = new List<KustoRestTable>();
-
         public KustoRestResponseV1 ResponseDataSet { get; private set; } = new KustoRestResponseV1();
-
         public string RestMgmtUri { get; private set; }
-
         public string RestQueryUri { get; private set; }
-
         public string TableName { get; private set; }
-
         public KustoRestTableOfContentsV1 TableOfContents { get; private set; } = new KustoRestTableOfContentsV1();
-
         private Timer adminTimer { get; set; }
-
         private KustoConnectionStringBuilder ManagementConnection { get; set; }
 
         private Timer queryTimer { get; set; }
 
-        public KustoEndpoint()
+        public KustoEndpoint(ConfigurationOptions config)
         {
-            if (!Config.IsKustoConfigured())
+            _config = config ?? throw new ArgumentNullException(nameof(config));
+
+            if (!_config.IsKustoConfigured())
             {
                 string errMessage = "kusto not configured";
                 Log.Error(errMessage);
                 throw new ArgumentNullException(errMessage);
             }
 
-            DeleteSourceOnSuccess = !Config.KustoUseBlobAsSource;
+            DeleteSourceOnSuccess = !_config.KustoUseBlobAsSource;
 
-            if (Regex.IsMatch(Config.KustoCluster, Constants.KustoUrlPattern))
+            if (Regex.IsMatch(_config.KustoCluster, Constants.KustoUrlPattern))
             {
-                Match matches = Regex.Match(Config.KustoCluster, Constants.KustoUrlPattern);
+                Match matches = Regex.Match(_config.KustoCluster, Constants.KustoUrlPattern);
                 string domainName = matches.Groups["domainName"].Value;
                 DatabaseName = matches.Groups["databaseName"].Value;
-                TableName = Config.KustoTable;
+                TableName = _config.KustoTable;
                 string ingestPrefix = matches.Groups["ingest"].Value;
                 ClusterName = matches.Groups["clusterName"].Value;
                 string location = matches.Groups["location"].Value;
@@ -116,12 +99,12 @@ namespace CollectSFData.Kusto
         {
             _arm.Scopes = new List<string>() { $"{ClusterIngestUrl}/kusto.read", $"{ClusterIngestUrl}/kusto.write" };
 
-            if (Config.IsClientIdConfigured())
+            if (_config.IsClientIdConfigured())
             {
                 _arm.Scopes = new List<string>() { $"{ClusterIngestUrl}/.default" };
             }
 
-            if (Config.IsKustoConfigured() && _arm.Authenticate(throwOnError, ClusterIngestUrl))
+            if (_config.IsKustoConfigured() && _arm.Authenticate(throwOnError, ClusterIngestUrl))
             {
                 DatabaseConnection = new KustoConnectionStringBuilder(ClusterIngestUrl) { FederatedSecurity = true, InitialCatalog = DatabaseName, UserToken = _arm.BearerToken };
                 ManagementConnection = new KustoConnectionStringBuilder(ManagementUrl) { FederatedSecurity = true, InitialCatalog = DatabaseName, UserToken = _arm.BearerToken };

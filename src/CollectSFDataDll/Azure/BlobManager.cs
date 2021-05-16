@@ -23,28 +23,34 @@ namespace CollectSFData.Azure
         private readonly CustomTaskManager _blobTasks = new CustomTaskManager(true);
         private CloudStorageAccount _account;
         private CloudBlobClient _blobClient;
+        private ConfigurationOptions _config;
         private object _dateTimeMaxLock = new object();
         private object _dateTimeMinLock = new object();
         private string _fileFilterPattern = @"(?:.+_){6}(\d{20})_";
         private Instance _instance = Instance.Singleton();
-        private ConfigurationOptions Config => _instance.Config;
+
         public List<CloudBlobContainer> ContainerList { get; set; } = new List<CloudBlobContainer>();
 
         public Action<FileObject> IngestCallback { get; set; }
 
         public bool ReturnSourceFileLink { get; set; }
 
+        public BlobManager(ConfigurationOptions config)
+        {
+            _config = config ?? throw new ArgumentNullException(nameof(config));
+        }
+
         public bool Connect()
         {
-            if (!Config.SasEndpointInfo.IsPopulated())
+            if (!_config.SasEndpointInfo.IsPopulated())
             {
-                Log.Warning("no blob or token info. exiting:", Config.SasEndpointInfo);
+                Log.Warning("no blob or token info. exiting:", _config.SasEndpointInfo);
                 return false;
             }
 
             try
             {
-                _account = CloudStorageAccount.Parse(Config.SasEndpointInfo.ConnectionString);
+                _account = CloudStorageAccount.Parse(_config.SasEndpointInfo.ConnectionString);
                 CloudBlobClient storageClient = _account.CreateCloudBlobClient();
                 _blobClient = storageClient.GetRootContainerReference().ServiceClient;
 
@@ -65,7 +71,7 @@ namespace CollectSFData.Azure
 
             foreach (CloudBlobContainer container in ContainerList)
             {
-                Log.Info($"ContainerName: {container.Name}, NodeFilter: {Config.NodeFilter}");
+                Log.Info($"ContainerName: {container.Name}, NodeFilter: {_config.NodeFilter}");
                 DownloadContainer(container);
             }
 
@@ -190,7 +196,7 @@ namespace CollectSFData.Azure
         {
             BlobContinuationToken blobToken = new BlobContinuationToken();
             ContainerResultSegment containerSegment = null;
-            string containerFilter = Config.ContainerFilter ?? string.Empty;
+            string containerFilter = _config.ContainerFilter ?? string.Empty;
 
             try
             {
@@ -248,10 +254,10 @@ namespace CollectSFData.Azure
                 Log.Warning($"unable to connect to containerPrefix: {containerPrefix} containerFilter: {containerFilter} error: {e.HResult}");
             }
 
-            if (Config.SasEndpointInfo.AbsolutePath.Length > 1)
+            if (_config.SasEndpointInfo.AbsolutePath.Length > 1)
             {
                 Log.Info("absolute path sas");
-                CloudBlobContainer container = new CloudBlobContainer(new Uri(_account.BlobEndpoint + Config.SasEndpointInfo.AbsolutePath + "?" + _account.Credentials.SASToken));
+                CloudBlobContainer container = new CloudBlobContainer(new Uri(_account.BlobEndpoint + _config.SasEndpointInfo.AbsolutePath + "?" + _account.Credentials.SASToken));
 
                 // force connection / error
                 if (container.ListBlobsSegmented(null, true, new BlobListingDetails(), 1, null, null, null).Results.Count() == 1)
@@ -315,7 +321,7 @@ namespace CollectSFData.Azure
                 BlobRequestOptions blobRequestOptions = new BlobRequestOptions()
                 {
                     RetryPolicy = new IngestRetryPolicy(),
-                    ParallelOperationThreadCount = Config.Threads
+                    ParallelOperationThreadCount = _config.Threads
                 };
 
                 if (sourceLength > Constants.MaxStreamTransmitBytes)
@@ -363,9 +369,9 @@ namespace CollectSFData.Azure
 
                 if (blob is CloudBlobDirectory)
                 {
-                    if (!string.IsNullOrEmpty(Config.NodeFilter) && !Regex.IsMatch(blob.Uri.ToString(), Config.NodeFilter, RegexOptions.IgnoreCase))
+                    if (!string.IsNullOrEmpty(_config.NodeFilter) && !Regex.IsMatch(blob.Uri.ToString(), _config.NodeFilter, RegexOptions.IgnoreCase))
                     {
-                        Log.Debug($"blob:{blob.Uri} does not match nodeFilter pattern:{Config.NodeFilter}, skipping...");
+                        Log.Debug($"blob:{blob.Uri} does not match nodeFilter pattern:{_config.NodeFilter}, skipping...");
                         continue;
                     }
 
@@ -380,7 +386,7 @@ namespace CollectSFData.Azure
                 {
                     long ticks = Convert.ToInt64(Regex.Match(blob.Uri.ToString(), _fileFilterPattern, RegexOptions.IgnoreCase).Groups[1].Value);
 
-                    if (ticks < Config.StartTimeUtc.Ticks | ticks > Config.EndTimeUtc.Ticks)
+                    if (ticks < _config.StartTimeUtc.Ticks | ticks > _config.EndTimeUtc.Ticks)
                     {
                         _instance.TotalFilesSkipped++;
                         Log.Debug($"exclude:bloburi file ticks {new DateTime(ticks).ToString("o")} outside of time range:{blob.Uri}");
@@ -411,26 +417,26 @@ namespace CollectSFData.Azure
                     DateTimeOffset lastModified = blobRef.Properties.LastModified.Value;
                     SetMinMaxDate(ref segmentMinDateTicks, ref segmentMaxDateTicks, lastModified.Ticks);
 
-                    if (!string.IsNullOrEmpty(Config.UriFilter) && !Regex.IsMatch(blob.Uri.ToString(), Config.UriFilter, RegexOptions.IgnoreCase))
+                    if (!string.IsNullOrEmpty(_config.UriFilter) && !Regex.IsMatch(blob.Uri.ToString(), _config.UriFilter, RegexOptions.IgnoreCase))
                     {
                         _instance.TotalFilesSkipped++;
-                        Log.Debug($"blob:{blob.Uri} does not match uriFilter pattern:{Config.UriFilter}, skipping...");
+                        Log.Debug($"blob:{blob.Uri} does not match uriFilter pattern:{_config.UriFilter}, skipping...");
                         continue;
                     }
 
-                    if (Config.FileType != FileTypesEnum.any
-                        && !FileTypes.MapFileTypeUri(blob.Uri.AbsolutePath).Equals(Config.FileType))
+                    if (_config.FileType != FileTypesEnum.any
+                        && !FileTypes.MapFileTypeUri(blob.Uri.AbsolutePath).Equals(_config.FileType))
                     {
                         _instance.TotalFilesSkipped++;
                         Log.Debug($"skipping uri with incorrect file type: {FileTypes.MapFileTypeUri(blob.Uri.AbsolutePath)}");
                         continue;
                     }
 
-                    if (lastModified >= Config.StartTimeUtc && lastModified <= Config.EndTimeUtc)
+                    if (lastModified >= _config.StartTimeUtc && lastModified <= _config.EndTimeUtc)
                     {
                         _instance.TotalFilesMatched++;
 
-                        if (Config.List)
+                        if (_config.List)
                         {
                             Log.Info($"listing file with timestamp: {lastModified}\r\n file: {blob.Uri.AbsolutePath}");
                             continue;
@@ -438,7 +444,7 @@ namespace CollectSFData.Azure
 
                         if (ReturnSourceFileLink)
                         {
-                            FileObject fileObjectSourceLink = new FileObject(blob.Uri.AbsolutePath, Config.SasEndpointInfo.BlobEndpoint)
+                            FileObject fileObjectSourceLink = new FileObject(blob.Uri.AbsolutePath, _config.SasEndpointInfo.BlobEndpoint)
                             {
                                 LastModified = lastModified,
                                 Status = FileStatus.enumerated
@@ -455,7 +461,7 @@ namespace CollectSFData.Azure
                             continue;
                         }
 
-                        FileObject fileObject = new FileObject(blob.Uri.AbsolutePath, Config.CacheLocation)
+                        FileObject fileObject = new FileObject(blob.Uri.AbsolutePath, _config.CacheLocation)
                         {
                             LastModified = lastModified,
                             Status = FileStatus.enumerated
