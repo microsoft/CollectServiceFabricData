@@ -23,10 +23,14 @@ namespace CollectSFData.DataFile
     public class FileManager
     {
         private readonly CustomTaskManager _fileTasks = new CustomTaskManager(true);
+        private ConfigurationOptions _config;
         private Instance _instance = Instance.Singleton();
         private object _lockObj = new object();
 
-        private ConfigurationOptions Config => _instance.Config;
+        public FileManager(ConfigurationOptions config)
+        {
+            _config = config ?? throw new ArgumentNullException(nameof(config));
+        }
 
         public static string NormalizePath(string path, string directorySeparator = "/")
         {
@@ -250,7 +254,7 @@ namespace CollectSFData.DataFile
             DeleteFile(outputFile);
             Log.Info($"Writing {outputFile}");
 
-            if (Config.UseTx)
+            if (_config.UseTx)
             {
                 result = TxBlg(fileObject, outputFile);
             }
@@ -263,7 +267,7 @@ namespace CollectSFData.DataFile
             {
                 _instance.TotalFilesConverted++;
 
-                if (!Config.UseTx)
+                if (!_config.UseTx)
                 {
                     fileObject.Stream.ReadFromFile(outputFile);
                     fileObject.Stream.Write<CsvCounterRecord>(ExtractPerfRelogCsvData(fileObject));
@@ -276,7 +280,7 @@ namespace CollectSFData.DataFile
 
             DeleteFile(outputFile);
 
-            if (Config.UseMemoryStream | !Config.IsCacheLocationPreConfigured())
+            if (_config.UseMemoryStream | !_config.IsCacheLocationPreConfigured())
             {
                 DeleteFile(fileObject.FileUri);
             }
@@ -319,7 +323,7 @@ namespace CollectSFData.DataFile
             DeleteFile(outputFile);
 
             //todo review
-            if (Config.DeleteCache && (Config.UseMemoryStream | !Config.IsCacheLocationPreConfigured()))
+            if (_config.DeleteCache && (_config.UseMemoryStream | !_config.IsCacheLocationPreConfigured()))
             {
                 DeleteFile(fileObject.FileUri);
             }
@@ -332,10 +336,10 @@ namespace CollectSFData.DataFile
             Log.Debug($"enter:{fileObject.FileUri}");
             IList<CsvExceptionRecord> records = new List<CsvExceptionRecord>
             {
-                new CsvExceptionRecord($"{fileObject.FileUri}", fileObject, Config.ResourceUri)
+                new CsvExceptionRecord($"{fileObject.FileUri}", fileObject, _config.ResourceUri)
             };
 
-            Log.Last($"{fileObject.LastModified} {fileObject.FileUri}{Config.SasEndpointInfo.SasToken}", ConsoleColor.Cyan);
+            Log.Last($"{fileObject.LastModified} {fileObject.FileUri}{_config.SasEndpointInfo.SasToken}", ConsoleColor.Cyan);
             fileObject.Stream.Write(records);
             return PopulateCollection<CsvExceptionRecord>(fileObject);
         }
@@ -369,7 +373,7 @@ namespace CollectSFData.DataFile
                         // new record, write old record
                         if (record.Length > 0)
                         {
-                            records.Add(new T().Populate(fileObject, record, Config.ResourceUri));
+                            records.Add(new T().Populate(fileObject, record, _config.ResourceUri));
                         }
 
                         record = string.Empty;
@@ -381,7 +385,7 @@ namespace CollectSFData.DataFile
                 // last record
                 if (record.Length > 0)
                 {
-                    records.Add(new T().Populate(fileObject, record, Config.ResourceUri));
+                    records.Add(new T().Populate(fileObject, record, _config.ResourceUri));
                 }
 
                 Log.Debug($"finished format:{fileObject.FileUri}");
@@ -403,19 +407,19 @@ namespace CollectSFData.DataFile
             _instance.TotalFilesFormatted++;
             _instance.TotalRecords += fileObject.RecordCount;
 
-            if (Config.IsKustoConfigured())
+            if (_config.IsKustoConfigured())
             {
                 // kusto native format is Csv
                 // kusto json ingest is 2 to 3 times slower and does *not* use standard json format. uses json document per line no comma
                 // using csv and compression for best performance
                 collection = SerializeCsv<T>(fileObject);
 
-                if (Config.KustoCompressed)
+                if (_config.KustoCompressed)
                 {
                     collection.ForEach(x => x.Stream.Compress());
                 }
             }
-            else if (Config.IsLogAnalyticsConfigured())
+            else if (_config.IsLogAnalyticsConfigured())
             {
                 // la is kusto based but only accepts non compressed json format ingest
                 collection = SerializeJson<T>(fileObject);
@@ -438,7 +442,7 @@ namespace CollectSFData.DataFile
                 recordsCount++;
             });
 
-            parser.ParseTraces(fileObject.FileUri, Config.StartTimeUtc.UtcDateTime, Config.EndTimeUtc.UtcDateTime);
+            parser.ParseTraces(fileObject.FileUri, _config.StartTimeUtc.UtcDateTime, _config.EndTimeUtc.UtcDateTime);
             int totalMs = (int)(DateTime.Now - startTime).TotalMilliseconds;
             double recordsPerSecond = recordsCount / (totalMs * .001);
             Log.Info($"complete:total ms:{totalMs} total records:{recordsCount} records per second:{recordsPerSecond}");
@@ -496,7 +500,7 @@ namespace CollectSFData.DataFile
         {
             try
             {
-                if (force || (!Config.UseMemoryStream & !fileObject.Exists))
+                if (force || (!_config.UseMemoryStream & !fileObject.Exists))
                 {
                     fileObject.Stream.SaveToFile();
                 }
