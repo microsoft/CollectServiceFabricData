@@ -22,7 +22,7 @@ namespace CollectSFData.Kusto
     public class KustoConnection
     {
         private const int _maxMessageCount = 32;
-        private readonly CustomTaskManager _kustoTasks = new CustomTaskManager(true);
+        private readonly CustomTaskManager _kustoTasks;
         private readonly TimeSpan _messageTimeToLive = new TimeSpan(0, 1, 0, 0);
         private readonly CancellationTokenSource _tokenSource = new CancellationTokenSource();
         private bool _appendingToExistingTableUnique;
@@ -31,15 +31,16 @@ namespace CollectSFData.Kusto
         private DateTime _failureQueryTime;
         private string _ingestCursor = "''";
         private IEnumerator<string> _ingestionQueueEnumerator;
-        private Instance _instance = Instance.Singleton();
+        private Instance _instance;
         private Task _monitorTask;
         private IEnumerator<string> _tempContainerEnumerator;
+        public KustoEndpoint Endpoint { get; set; }
 
-        public KustoEndpoint Endpoint { get; private set; }
-
-        public KustoConnection(ConfigurationOptions config)
+        public KustoConnection(Instance instance)
         {
-            _config = config ?? throw new ArgumentNullException(nameof(config));
+            _instance = instance ?? throw new ArgumentNullException(nameof(instance));
+            _config = _instance.Config;
+            _kustoTasks = new CustomTaskManager(true);
         }
 
         public void AddFile(FileObject fileObject)
@@ -107,18 +108,9 @@ namespace CollectSFData.Kusto
             Endpoint = new KustoEndpoint(_config);
             Endpoint.Authenticate();
             _failureQueryTime = _instance.StartTime.ToUniversalTime();
-            _tempContainerEnumerator = Endpoint.IngestionResources.TempStorageContainers.GetEnumerator();
-            _ingestionQueueEnumerator = Endpoint.IngestionResources.IngestionQueues.GetEnumerator();
 
-            if (!_ingestionQueueEnumerator.MoveNext())
+            if (!PopulateQueueEnumerators())
             {
-                Log.Error($"problem with ingestion queues", Endpoint.IngestionResources);
-                return false;
-            }
-
-            if (!_tempContainerEnumerator.MoveNext())
-            {
-                Log.Error($"problem with temp container ", Endpoint.IngestionResources);
                 return false;
             }
 
@@ -152,6 +144,53 @@ namespace CollectSFData.Kusto
                 _monitorTask = Task.Run((Action)QueueMonitor, _tokenSource.Token);
             }
 
+            return true;
+        }
+
+        public Tuple<string, string> GetNextIngestionQueue()
+        {
+            string tempContainer = null;
+            string ingestionQueue = null;
+
+            lock (_enumeratorLock)
+            {
+                if (!_tempContainerEnumerator.MoveNext())
+                {
+                    _tempContainerEnumerator.Reset();
+                    _tempContainerEnumerator.MoveNext();
+                }
+
+                tempContainer = _tempContainerEnumerator.Current;
+
+                if (!_ingestionQueueEnumerator.MoveNext())
+                {
+                    _ingestionQueueEnumerator.Reset();
+                    _ingestionQueueEnumerator.MoveNext();
+                }
+
+                ingestionQueue = _ingestionQueueEnumerator.Current;
+            }
+
+            Log.Debug($"returning:tempContainer.Current:{tempContainer} ingestionQueue.Current:{ingestionQueue}");
+            return new Tuple<string, string>(ingestionQueue, tempContainer);
+        }
+
+        public bool PopulateQueueEnumerators()
+        {
+            _tempContainerEnumerator = Endpoint.IngestionResources.TempStorageContainers.GetEnumerator();
+            _ingestionQueueEnumerator = Endpoint.IngestionResources.IngestionQueues.GetEnumerator();
+
+            if (!_ingestionQueueEnumerator.MoveNext())
+            {
+                Log.Error($"problem with ingestion queues", Endpoint.IngestionResources);
+                return false;
+            }
+
+            if (!_tempContainerEnumerator.MoveNext())
+            {
+                Log.Error($"problem with temp container ", Endpoint.IngestionResources);
+                return false;
+            }
             return true;
         }
 
@@ -210,30 +249,9 @@ namespace CollectSFData.Kusto
         {
             string blobUriWithSas = null;
             string ingestionMapping = SetIngestionMapping(fileObject);
-            string tempContainer = null;
-            string ingestionQueue = null;
-
-            lock (_enumeratorLock)
-            {
-                if (!_tempContainerEnumerator.MoveNext())
-                {
-                    _tempContainerEnumerator.Reset();
-                    _tempContainerEnumerator.MoveNext();
-                }
-
-                tempContainer = _tempContainerEnumerator.Current;
-
-                if (!_ingestionQueueEnumerator.MoveNext())
-                {
-                    _ingestionQueueEnumerator.Reset();
-                    _ingestionQueueEnumerator.MoveNext();
-                }
-
-                ingestionQueue = _ingestionQueueEnumerator.Current;
-            }
-
-            Log.Debug($"tempContainer.Current:{tempContainer}");
-            Log.Debug($"ingestionQueue.Current:{ingestionQueue}");
+            Tuple<string, string> nextQueues = GetNextIngestionQueue();
+            string ingestionQueue = nextQueues.Item1;
+            string tempContainer = nextQueues.Item2;
 
             if (_config.KustoUseBlobAsSource)
             {
