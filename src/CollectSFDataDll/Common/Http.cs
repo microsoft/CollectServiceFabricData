@@ -18,7 +18,7 @@ namespace CollectSFData.Common
     {
         private readonly HttpClient _httpClient;
 
-        private readonly CustomTaskManager _httpTasks = new CustomTaskManager(true);
+        private static readonly CustomTaskManager _httpTasks = new CustomTaskManager(true);
 
         public bool DisplayError { get; set; }
 
