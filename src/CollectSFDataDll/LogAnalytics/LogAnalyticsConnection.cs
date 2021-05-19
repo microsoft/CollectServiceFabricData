@@ -22,13 +22,13 @@ namespace CollectSFData.LogAnalytics
 {
     public class LogAnalyticsConnection
     {
-        private readonly AzureResourceManager _arm = new AzureResourceManager();
-        private readonly AzureResourceManager _laArm = new AzureResourceManager();
+        private readonly AzureResourceManager _arm;
+        private readonly AzureResourceManager _laArm;
         private string _armAuthResource = "https://management.core.windows.net";
         private ConfigurationOptions _config;
         private LogAnalyticsWorkspaceModel _currentWorkspaceModelModel = new LogAnalyticsWorkspaceModel();
         private Http _httpClient = Http.ClientFactory();
-        private Instance _instance = Instance.Singleton();
+        private Instance _instance;
         private string _logAnalyticsApiVer = "api-version=2020-08-01";
         private string _logAnalyticsAuthResource = "https://api.loganalytics.io";
         private string _logAnalyticsCustomLogSuffix = ".ods.opinsights.azure.com/api/logs?api-version=2016-04-01";
@@ -36,9 +36,12 @@ namespace CollectSFData.LogAnalytics
         private string _timeStampField = "";
         private LogAnalyticsWorkspaceRecordResult CurrentWorkspace { get; set; }
 
-        public LogAnalyticsConnection(ConfigurationOptions config)
+        public LogAnalyticsConnection(Instance instance)
         {
-            _config = config ?? throw new ArgumentNullException(nameof(config));
+            _instance = instance ?? throw new ArgumentNullException(nameof(instance));
+            _config = _instance.Config;
+            _arm = new AzureResourceManager(_config);
+            _laArm = new AzureResourceManager(_config);
         }
 
         public void AddFile(FileObject fileObject)

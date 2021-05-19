@@ -19,16 +19,17 @@ namespace CollectSFData.Azure
     {
         private readonly CustomTaskManager _tableTasks = new CustomTaskManager(true);
         private ConfigurationOptions _config;
-        private Instance _instance = Instance.Singleton();
+        private Instance _instance;
         private CloudTableClient _tableClient;
 
         public Action<FileObject> IngestCallback { get; set; }
 
         public List<CloudTable> TableList { get; set; } = new List<CloudTable>();
 
-        public TableManager(ConfigurationOptions config)
+        public TableManager(Instance instance)
         {
-            _config = config ?? throw new ArgumentNullException(nameof(config));
+            _instance = instance ?? throw new ArgumentNullException(nameof(instance));
+            _config = _instance.Config;
         }
 
         public bool Connect()
