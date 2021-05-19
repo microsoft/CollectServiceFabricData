@@ -28,7 +28,6 @@ namespace CollectSFData.Azure
         private List<string> _defaultScope = new List<string>() { ".default" };
         private string _getSubscriptionRestUri = Constants.ManagementAzureCom + "/subscriptions/{subscriptionId}?api-version=2016-06-01";
         private Http _httpClient = Http.ClientFactory();
-        private Instance _instance = Instance.Singleton();
         private string _listSubscriptionsRestUri = Constants.ManagementAzureCom + "/subscriptions?api-version=2016-06-01";
         private IPublicClientApplication _publicClientApp;
         private string _resource;
@@ -54,15 +53,11 @@ namespace CollectSFData.Azure
         public List<string> Scopes { get; set; } = new List<string>();
         public SubscriptionRecordResult[] Subscriptions { get; private set; } = new SubscriptionRecordResult[] { };
 
-        public AzureResourceManager()
-        {
-            Log.Info($"enter: token cache path: {TokenCacheHelper.CacheFilePath}");
-            ClientIdentity = new ClientIdentity(_config);
-        }
-
         public AzureResourceManager(ConfigurationOptions config)
         {
             _config = config ?? throw new ArgumentNullException(nameof(config));
+            Log.Info($"enter: token cache path: {TokenCacheHelper.CacheFilePath}");
+            ClientIdentity = new ClientIdentity(_config);
         }
 
         public bool Authenticate(bool throwOnError = false, string resource = Constants.ManagementAzureCom)
@@ -267,10 +262,7 @@ namespace CollectSFData.Azure
                 .WithDefaultRedirectUri()
                 .Build();
 
-            if (_instance.IsWindows)
-            {
-                TokenCacheHelper.EnableSerialization(_publicClientApp.UserTokenCache);
-            }
+            TokenCacheHelper.EnableSerialization(_publicClientApp.UserTokenCache);
 
             if (prompt)
             {
@@ -475,10 +467,7 @@ namespace CollectSFData.Azure
                 Scopes = _defaultScope;
             }
 
-            if (_instance.IsWindows)
-            {
-                TokenCacheHelper.EnableSerialization(_confidentialClientApp.AppTokenCache);
-            }
+            TokenCacheHelper.EnableSerialization(_confidentialClientApp.AppTokenCache);
 
             foreach (string scope in Scopes)
             {

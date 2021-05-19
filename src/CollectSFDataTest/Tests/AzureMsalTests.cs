@@ -51,9 +51,10 @@ namespace CollectSFDataTest
         [Test(Description = "Azure Msal auth as device test", TestOf = typeof(AzureResourceManager))]
         public void AzureMsalDeviceAuthTest()
         {
-            ProcessOutput results = DefaultUtilities().ExecuteTest(() =>
+            TestUtilities utils = DefaultUtilities();
+            ProcessOutput results = DefaultUtilities().ExecuteTest((config) =>
             {
-                AzureResourceManager arm = new AzureResourceManager();
+                AzureResourceManager arm = new AzureResourceManager(config);
                 AzureResourceManager.MsalMessage += AzureResourceManager_MsalMessage;
                 AzureResourceManager.MsalDeviceCode += AzureResourceManager_MsalDeviceCode;
 
@@ -62,7 +63,7 @@ namespace CollectSFDataTest
                 AzureResourceManager.MsalDeviceCode -= AzureResourceManager_MsalDeviceCode;
 
                 return result;
-            });
+            }, utils.Collector.Config);
 
             Assert.IsFalse(results.HasErrors(), results.ToString());
         }

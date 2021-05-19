@@ -531,7 +531,7 @@ namespace CollectSFData.Common
         public bool ValidateAad()
         {
             CertificateUtilities certificateUtilities = new CertificateUtilities();
-            AzureResourceManager arm = new AzureResourceManager();
+            AzureResourceManager arm = new AzureResourceManager(this);
             bool retval = true;
             bool clientIdConfigured = IsClientIdConfigured();
             bool usingAad = clientIdConfigured | IsKustoConfigured() | IsKustoPurgeRequested();
@@ -852,7 +852,7 @@ namespace CollectSFData.Common
 
         private void CheckLogFile()
         {
-            if(LogDebug == LoggingLevel.Verbose && !HasValue(LogFile))
+            if (LogDebug == LoggingLevel.Verbose && !HasValue(LogFile))
             {
                 LogFile = $"{CacheLocation}/{_tempName}.log";
                 Log.Warning($"LogDebug 5 (Verbose) requires log file. setting LogFile:{LogFile}");
