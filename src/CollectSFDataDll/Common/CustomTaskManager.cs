@@ -17,12 +17,11 @@ namespace CollectSFData.Common
         private static ConfigurationOptions _config = new ConfigurationOptions();
         private static CustomTaskScheduler _customScheduler;
         private static Instance _instance;
-        private static bool _isRunning;
         private static Task _taskMonitor = new Task(TaskMonitor);
         private static object _taskMonLock = new object();
         private string CallerName;
         public static CancellationTokenSource CancellationTokenSource { get; private set; } = new CancellationTokenSource();
-
+        public static bool IsRunning { get; private set; }
         public SynchronizedList<Task> AllTasks { get; set; } = new SynchronizedList<Task>();
 
         public CancellationToken CancellationToken { get => CancellationTokenSource.Token; }
@@ -54,7 +53,7 @@ namespace CollectSFData.Common
             {
                 Log.Debug($"{CallerName} in lock. taskmonitor status: {_taskMonitor.Status}", ConsoleColor.White);
 
-                if (!_isRunning)
+                if (!IsRunning)
                 {
                     Log.Highlight($"{CallerName} starting taskmonitor. status: {_taskMonitor.Status}", ConsoleColor.White);
                     Resume();
@@ -79,13 +78,13 @@ namespace CollectSFData.Common
             CancellationTokenSource.Cancel();
             _taskMonitor.Wait();
             _allInstances.Clear();
-            _isRunning = false;
+            IsRunning = false;
             Log.Info("taskmanager cancelled", ConsoleColor.White);
         }
 
         public static void Resume()
         {
-            if (!_isRunning)
+            if (!IsRunning)
             {
                 Log.Info("taskmanager resuming", ConsoleColor.White);
                 _allInstances.Clear();
@@ -96,7 +95,7 @@ namespace CollectSFData.Common
                 _taskMonitor.Start();
 
                 Log.Info("taskmanager resumed", ConsoleColor.White);
-                _isRunning = true;
+                IsRunning = true;
             }
         }
 
