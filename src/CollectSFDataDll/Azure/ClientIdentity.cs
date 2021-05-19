@@ -8,7 +8,6 @@ namespace CollectSFData.Azure
     public class ClientIdentity
     {
         private ConfigurationOptions _config;
-        private Instance _instance = Instance.Singleton();
         public bool IsAppRegistration { get; private set; } = false;
         public bool IsSystemManagedIdentity { get; private set; } = false;
         public bool IsTypeManagedIdentity => (IsSystemManagedIdentity | IsUserManagedIdentity);

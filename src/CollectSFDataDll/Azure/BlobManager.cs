@@ -27,7 +27,7 @@ namespace CollectSFData.Azure
         private object _dateTimeMaxLock = new object();
         private object _dateTimeMinLock = new object();
         private string _fileFilterPattern = @"(?:.+_){6}(\d{20})_";
-        private Instance _instance = Instance.Singleton();
+        private Instance _instance;
 
         public List<CloudBlobContainer> ContainerList { get; set; } = new List<CloudBlobContainer>();
 
@@ -35,9 +35,10 @@ namespace CollectSFData.Azure
 
         public bool ReturnSourceFileLink { get; set; }
 
-        public BlobManager(ConfigurationOptions config)
+        public BlobManager(Instance instance)
         {
-            _config = config ?? throw new ArgumentNullException(nameof(config));
+            _instance = instance ?? throw new ArgumentNullException(nameof(instance));
+            _config = _instance.Config;
         }
 
         public bool Connect()

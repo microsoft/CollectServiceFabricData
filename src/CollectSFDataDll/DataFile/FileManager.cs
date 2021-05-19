@@ -24,12 +24,13 @@ namespace CollectSFData.DataFile
     {
         private readonly CustomTaskManager _fileTasks = new CustomTaskManager(true);
         private ConfigurationOptions _config;
-        private Instance _instance = Instance.Singleton();
+        private Instance _instance;
         private object _lockObj = new object();
 
-        public FileManager(ConfigurationOptions config)
+        public FileManager(Instance instance)
         {
-            _config = config ?? throw new ArgumentNullException(nameof(config));
+            _instance = instance ?? throw new ArgumentNullException(nameof(instance));
+            _config = _instance.Config;
         }
 
         public static string NormalizePath(string path, string directorySeparator = "/")
@@ -440,7 +441,7 @@ namespace CollectSFData.DataFile
                 trace.RelativeUri = fileObject.RelativeUri;
                 fileObject.Stream.Write<DtrTraceRecord>(new List<DtrTraceRecord>() { trace }, true);
                 recordsCount++;
-            });
+            }, _config);
 
             parser.ParseTraces(fileObject.FileUri, _config.StartTimeUtc.UtcDateTime, _config.EndTimeUtc.UtcDateTime);
             int totalMs = (int)(DateTime.Now - startTime).TotalMilliseconds;
@@ -454,7 +455,21 @@ namespace CollectSFData.DataFile
             DateTime startTime = DateTime.Now;
             TraceObserver<T> observer = new TraceObserver<T>();
             source.Subscribe(observer);
-            bool waitResult = observer.Completed.Wait(-1, _fileTasks.CancellationToken);
+            int records = -1;
+            bool waitResult = false;
+
+            while (!waitResult && observer.Records.Count > records)
+            {
+                records = observer.Records.Count;
+                Log.Debug($"waiting for completion:current record count{records}");
+                waitResult = observer.Completed.Wait(Constants.ThreadSleepMs10000, _fileTasks.CancellationToken);
+            }
+
+            if (!waitResult)
+            {
+                _instance.TotalErrors++;
+                Log.Error($"timed out waiting for observer progress.", source);
+            }
 
             int totalMs = (int)(DateTime.Now - startTime).TotalMilliseconds;
             int recordsCount = observer.Records.Count;

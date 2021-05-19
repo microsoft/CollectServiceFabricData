@@ -15,13 +15,15 @@ namespace CollectSFData.DataFile
     public class EtlTraceFileParser<T> where T : ITraceRecord, new()
     {
         private readonly Action<T> _traceDispatcher;
+        private ConfigurationOptions _config;
         public static ManifestCache ManifestCache { get; set; }
-        private ConfigurationOptions Config => Instance.Singleton().Config;
         public int EventsLost { get; private set; }
         public TraceSessionMetadata TraceSessionMetaData { get; private set; }
 
-        public EtlTraceFileParser(Action<T> traceDispatcher, ManifestCache cache = null)
+        public EtlTraceFileParser(Action<T> traceDispatcher, ConfigurationOptions config, ManifestCache cache = null)
         {
+            _config = config ?? throw new ArgumentNullException(nameof(config));
+
             if (cache != null)
             {
                 ManifestCache = cache;
@@ -29,7 +31,7 @@ namespace CollectSFData.DataFile
 
             if (ManifestCache == null)
             {
-                ManifestCache = LoadManifests(Config.EtwManifestCache, Config.CacheLocation);
+                ManifestCache = LoadManifests(_config.EtwManifestCache, _config.CacheLocation);
             }
 
             _traceDispatcher = traceDispatcher;
@@ -38,7 +40,7 @@ namespace CollectSFData.DataFile
         public ManifestCache LoadManifests(string manifestPath, string cacheLocation, string versionString = null)
         {
             Version version = null;
-            if(!Version.TryParse(versionString, out version))
+            if (!Version.TryParse(versionString, out version))
             {
                 Log.Debug("unknown version:{versionString}");
                 version = new Version();
@@ -73,10 +75,10 @@ namespace CollectSFData.DataFile
                     List<string> versionedManifestFiles = manifestFiles.Where(x => Regex.IsMatch(x, versionPattern)).ToList();
                     List<string> unVersionedManifestFiles = manifestFiles.Where(x => !Regex.IsMatch(x, versionPattern)).ToList();
 
-                    foreach(string file in versionedManifestFiles)
+                    foreach (string file in versionedManifestFiles)
                     {
-                        Version fileVersion  = new Version(Regex.Match(file,versionPattern).Groups[1].Value);
-                        if(fileVersion > maxVersion)
+                        Version fileVersion = new Version(Regex.Match(file, versionPattern).Groups[1].Value);
+                        if (fileVersion > maxVersion)
                         {
                             Log.Info($"setting maxVersion:{maxVersion} -> {fileVersion}");
                             maxVersion = fileVersion;
