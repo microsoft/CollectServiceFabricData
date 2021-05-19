@@ -194,7 +194,15 @@ namespace CollectSFData.DataFile
             }
 
             _fileUri = fileUri;
-            Log.Debug($"extracted node properties:node:{NodeName} filetype:{FileDataType.ToString()}\r\n relativeUri:{RelativeUri}", ConsoleColor.Cyan);
+            if (!string.IsNullOrEmpty(fileUri))
+            {
+                Log.Info($"extracted node properties:node:{NodeName} filetype:{FileDataType.ToString()}\r\n relativeUri:{RelativeUri}", ConsoleColor.Cyan);
+            }
+            else
+            {
+                Log.Debug($"extracted node properties:node:{NodeName} filetype:{FileDataType.ToString()}\r\n relativeUri:{RelativeUri}", ConsoleColor.Cyan);
+            }
+
             return fileUri;
         }
 
