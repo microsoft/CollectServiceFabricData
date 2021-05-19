@@ -29,7 +29,7 @@ namespace CollectSFData.Kusto
         private static ICslAdminProvider _kustoAdminClient;
         private static ICslQueryProvider _kustoQueryClient;
         private static int maxKustoClientTimeMs = 300 * 1000;
-        private AzureResourceManager _arm = new AzureResourceManager();
+        private AzureResourceManager _arm;
         private ConfigurationOptions _config;
         private Http _httpClient = Http.ClientFactory();
 
@@ -44,7 +44,7 @@ namespace CollectSFData.Kusto
         public List<string> ExtendedResults { get; private set; }
         public string HostName { get; private set; }
         public string IdentityToken { get; private set; }
-        public IngestionResourcesSnapshot IngestionResources { get; private set; }
+        public IngestionResourcesSnapshot IngestionResources { get; set; }
         public bool LogLargeResults { get; set; } = true;
         public string ManagementUrl { get; private set; }
         public KustoRestTable PrimaryResultTable { get; private set; } = new KustoRestTable();
@@ -62,6 +62,7 @@ namespace CollectSFData.Kusto
         public KustoEndpoint(ConfigurationOptions config)
         {
             _config = config ?? throw new ArgumentNullException(nameof(config));
+            _arm = new AzureResourceManager(_config);
 
             if (!_config.IsKustoConfigured())
             {

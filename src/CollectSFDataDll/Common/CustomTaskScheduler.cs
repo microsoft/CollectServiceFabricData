@@ -12,7 +12,7 @@ namespace CollectSFData.Common
 {
     public class CustomTaskScheduler : TaskScheduler
     {
-        private readonly ConfigurationOptions _cfg;
+        private readonly ConfigurationOptions _config;
         private readonly int _minThreadPoolCount = 2;
 
         public int DelegatesQueuedOrRunning { get; set; }
@@ -21,7 +21,7 @@ namespace CollectSFData.Common
 
         public CustomTaskScheduler(ConfigurationOptions configurationOptions)
         {
-            _cfg = configurationOptions;
+            _config = configurationOptions;
         }
 
         protected override IEnumerable<Task> GetScheduledTasks()
@@ -35,7 +35,7 @@ namespace CollectSFData.Common
             Tasks.Add(task);
             ++DelegatesQueuedOrRunning;
 
-            if (DelegatesQueuedOrRunning < Math.Max(_minThreadPoolCount, _cfg.Threads * Constants.MinThreadMultiplier))
+            if (DelegatesQueuedOrRunning < Math.Max(_minThreadPoolCount, _config.Threads * Constants.MinThreadMultiplier))
             {
                 NotifyThreadPoolOfPendingWork();
             }
