@@ -7,12 +7,15 @@ using System.Text;
 using System.Threading.Tasks;
 using CollectSFData.Common;
 using CollectSFData.Azure;
+using CollectSFData.DataFile;
 
 namespace CollectSFData.Tests
 {
     [TestFixture()]
     public class CollectorTests
     {
+        private List<string> messages = new List<string>();
+
         [Test()]
         public void CloseTest()
         {
@@ -41,11 +44,18 @@ namespace CollectSFData.Tests
         [Test()]
         public void CollectTest1()
         {
-            // todo add success tests
-            throw new NotImplementedException();
             Collector collector = new Collector();
-            int result = collector.Collect();
-            Assert.Zero(result);
+            ConfigurationOptions configurationOptions = new ConfigurationOptions();
+            configurationOptions.VersionOption = true;
+            configurationOptions.GatherType = FileTypesEnum.trace.ToString();
+            Log.MessageLogged += Log_MessageLogged;
+            configurationOptions.Validate();
+
+            int result = collector.Collect(configurationOptions);
+            string results = string.Join<string>(Environment.NewLine, messages.ToArray());
+            collector.Close();
+            Assert.IsTrue(results.Contains("CheckReleaseVersion:"));
+            messages.Clear();
         }
 
         [Test()]
@@ -67,6 +77,11 @@ namespace CollectSFData.Tests
             collector.Initialize(new ConfigurationOptions());
             Assert.IsTrue(CustomTaskManager.IsRunning);
             CloseTest();
+        }
+
+        private void Log_MessageLogged(object sender, LogMessage args)
+        {
+            messages.Add(args.Message);
         }
     }
 }
