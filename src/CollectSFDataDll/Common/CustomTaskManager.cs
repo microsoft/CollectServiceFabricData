@@ -21,26 +21,32 @@ namespace CollectSFData.Common
         private static object _taskMonLock = new object();
         private string CallerName;
         public static CancellationTokenSource CancellationTokenSource { get; private set; } = new CancellationTokenSource();
+
         public static bool IsRunning { get; private set; }
+
         public SynchronizedList<Task> AllTasks { get; set; } = new SynchronizedList<Task>();
 
         public CancellationToken CancellationToken { get => CancellationTokenSource.Token; }
+
         public TaskContinuationOptions ContinuationOptions { get; set; } = TaskContinuationOptions.OnlyOnRanToCompletion;
 
         public TaskCreationOptions CreationOptions { get; set; } = TaskCreationOptions.PreferFairness;
+
+        public Instance Instance
+        {
+            set
+            {
+                _instance = value;
+                _config = _instance.Config;
+            }
+        }
+
         public SynchronizedList<TaskObject> QueuedTaskObjects { get; set; } = new SynchronizedList<TaskObject>();
 
         public bool RemoveWhenComplete { get; set; }
 
         static CustomTaskManager()
         {
-        }
-
-        public CustomTaskManager(Instance instance) : this()
-        {
-            CallerName = $"Instance-{this.GetHashCode()}";
-            _instance = instance ?? throw new ArgumentNullException(nameof(instance));
-            _config = _instance.Config;
         }
 
         public CustomTaskManager(bool removeWhenComplete = false, [CallerMemberName] string callerName = "")
@@ -151,7 +157,11 @@ namespace CollectSFData.Common
                 foreach (Task badTask in instance.AllTasks.FindAll(x => x.Status > TaskStatus.RanToCompletion))
                 {
                     Log.Error("task failure: ", badTask);
-                    _instance.TotalErrors++;
+
+                    if (_instance != null)
+                    {
+                        _instance.TotalErrors++;
+                    }
                 }
 
                 instance.AllTasks.RemoveAll(x => x.IsCompleted);
@@ -170,14 +180,17 @@ namespace CollectSFData.Common
                 instance.ScheduleTask(taskObject);
                 instance.QueuedTaskObjects.Remove(taskObject);
 
-                Log.Info($"scheduled task {instance.GetHashCode()} " +
-                    $"instance:{instance.CallerName} " +
-                    $"total:{instance.AllTasks.Count()} " +
-                    $"incomplete:{instance.AllTasks.Count(x => !x.IsCompleted)} " +
-                    $"queued:{instance.QueuedTaskObjects.Count()} " +
-                    $"GC:{GC.GetTotalMemory(false)} " +
-                    $"total records:{_instance.TotalRecords} " +
-                    $"rps:{_instance.TotalRecords / (DateTime.Now - _instance.StartTime).TotalSeconds}", ConsoleColor.Magenta);
+                if (_instance != null)
+                {
+                    Log.Info($"scheduled task {instance.GetHashCode()} " +
+                        $"instance:{instance.CallerName} " +
+                        $"total:{instance.AllTasks.Count()} " +
+                        $"incomplete:{instance.AllTasks.Count(x => !x.IsCompleted)} " +
+                        $"queued:{instance.QueuedTaskObjects.Count()} " +
+                        $"GC:{GC.GetTotalMemory(false)} " +
+                        $"total records:{_instance.TotalRecords} " +
+                        $"rps:{_instance.TotalRecords / (DateTime.Now - _instance.StartTime).TotalSeconds}", ConsoleColor.Magenta);
+                }
             }
 
             return instance.AllTasks.Count(x => !x.IsCompleted);
