@@ -128,23 +128,34 @@ namespace CollectSFData.DataFile
 
         private void OnEventRead(object sender, EventRecordEventArgs e)
         {
-            string eventType = null;
-            string eventText = null;
-            int formatVersion = 0;
-            ManifestCache.FormatEvent(e.Record, out eventType, out eventText, formatVersion);
-
-            EventDefinition eventDefinition = ManifestCache.GetEventDefinition(e.Record);
-            T traceEvent = new T()
+            try
             {
-                Timestamp = DateTime.FromFileTimeUtc(e.Record.EventHeader.TimeStamp),
-                Level = eventDefinition?.Level ?? e.Record.EventHeader.EventDescriptor.Level.ToString(),
-                TID = (int)e.Record.EventHeader.ThreadId,
-                PID = (int)e.Record.EventHeader.ProcessId,
-                Type = $"{eventDefinition?.TaskName}.{eventDefinition?.EventName}", //eventType, // todo:not complete string
-                Text = eventText?.Replace("\n", "\t"),
-            };
+                string eventType = null;
+                string eventText = null;
+                int formatVersion = 0;
+                string[] formattedEvent = ManifestCache.FormatEvent(e.Record, out eventType, out eventText, formatVersion).Split(new char[] { ',' }, 6);
 
-            _traceDispatcher(traceEvent);
+                Log.Debug($"formattedEvent", formattedEvent);
+                Log.Debug($"e", e);
+                EventDefinition eventDefinition = ManifestCache.GetEventDefinition(e.Record);
+                Log.Debug($"eventDefinition", eventDefinition);
+
+                T traceEvent = new T()
+                {
+                    Timestamp = DateTime.FromFileTimeUtc(e.Record.EventHeader.TimeStamp),
+                    Level = formattedEvent[1],
+                    TID = (int)e.Record.EventHeader.ThreadId,
+                    PID = (int)e.Record.EventHeader.ProcessId,
+                    Type = formattedEvent[4],
+                    Text = formattedEvent[5]
+                };
+
+                _traceDispatcher(traceEvent);
+            }
+            catch (Exception ex)
+            {
+                Log.Exception($"{ex}");
+            }
         }
     }
 }
