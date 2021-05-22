@@ -35,9 +35,9 @@ namespace CollectSFData.Common
         {
         }
 
-        public Instance()
+        public Instance(ConfigurationOptions configurationOptions = null)
         {
-            Initialize();
+            Initialize(configurationOptions);
         }
 
         public void Close()
@@ -47,7 +47,7 @@ namespace CollectSFData.Common
 
         public void Initialize(ConfigurationOptions configurationOptions = null)
         {
-            TaskManager = new CustomTaskManager(this);
+            TaskManager = new CustomTaskManager(true) { Instance = this };
 
             if (configurationOptions == null)
             {
@@ -55,7 +55,7 @@ namespace CollectSFData.Common
             }
 
             Config = configurationOptions;
-
+            Log.Config = Config;
             DiscoveredMaxDateTicks = DateTime.MinValue.Ticks;
             DiscoveredMinDateTicks = DateTime.MaxValue.Ticks;
             FileObjects = new FileObjectCollection();
