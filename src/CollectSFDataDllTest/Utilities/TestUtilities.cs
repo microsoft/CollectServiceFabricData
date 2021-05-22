@@ -28,8 +28,10 @@ namespace CollectSFDataDllTest.Utilities
         public static TestContext Context { get; set; }
         public static string DefaultOptionsFile => $"{WorkingDir}\\..\\..\\..\\..\\..\\..\\configurationFiles\\collectsfdata.options.json";
         public static string ScriptsDir => $"{WorkingDir}\\..\\..\\..\\..\\..\\..\\scripts";
+        public static string SolutionDir => $"{WorkingDir}\\..\\..\\..\\..\\..\\..";
         public static string TempDir => $"{WorkingDir}\\..\\..\\Temp";
         public static string TestConfigurationsDir => $"{WorkingDir}\\..\\..\\..\\..\\TestConfigurations";
+        public static string TestDataFilesDir => $"{WorkingDir}\\..\\..\\..\\..\\TestDataFiles";
         public static TestProperties TestProperties { get; set; }
         public static string TestPropertiesFile => $"{Environment.GetEnvironmentVariable("LOCALAPPDATA")}\\collectsfdata\\collectSfDataTestProperties.json";
         public static string TestPropertiesSetupScript => $"{ScriptsDir}\\setup-test-env.ps1";
@@ -130,7 +132,7 @@ namespace CollectSFDataDllTest.Utilities
                 Directory.CreateDirectory(TempDir);
             }
 
-            ReadTestSettings();
+            //            ReadTestSettings();
         }
 
         [OneTimeTearDown]
