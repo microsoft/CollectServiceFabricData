@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using CollectSFDataDllTest.Utilities;
 
 namespace CollectSFData.DataFile.Tests
 {
@@ -222,6 +223,7 @@ namespace CollectSFData.DataFile.Tests
             fileObject.Stream.Write(records);
 
             fileManager.SaveToCache(fileObject);
+            Assert.IsTrue(File.Exists(tempFile));
 
             fileManager.DeleteFile(tempFile);
             Assert.IsFalse(File.Exists(tempFile));
@@ -248,7 +250,37 @@ namespace CollectSFData.DataFile.Tests
         [Test()]
         public void TxEtlTest()
         {
-            throw new NotImplementedException();
+            string manifestPath = $"{TestUtilities.SolutionDir}/manifests";
+            string tempPath = Path.GetTempPath();
+            string outputFile = $"{tempPath}/txetltest.json";
+            string inputFile = $"{TestUtilities.TestDataFilesDir}/fabric_traces_8.0.514.9590_132652435843195282_117.etl";
+
+            Assert.IsTrue(Directory.Exists(manifestPath));
+            Assert.IsTrue(File.Exists(inputFile));
+
+            ConfigurationOptions configurationOptions = new ConfigurationOptions
+            {
+                LogDebug = 5,
+                LogFile = "c:\\temp\\etl.log",
+                StartTimeStamp = DateTime.FromFileTimeUtc(0).ToString("O"),
+                EndTimeStamp = DateTime.Now.ToString("O"),
+                GatherType = FileTypesEnum.trace.ToString(),
+                CacheLocation = tempPath,
+                EtwManifestCache = manifestPath,
+                FileUris = new string[]
+                {
+                    inputFile
+                }
+            };
+
+            Instance instance = new Instance(configurationOptions);
+            FileManager fileManager = new FileManager(instance);
+            FileObject fileObject = new FileObject(inputFile);
+
+            File.Delete(outputFile);
+            fileManager.ReadEtl(fileObject, outputFile);
+
+            File.Delete(outputFile);
         }
     }
 }
