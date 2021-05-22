@@ -66,16 +66,6 @@ namespace CollectSFData.Common
 
         public bool IsValid { get; set; }
 
-        public new int LogDebug
-        {
-            get => base.LogDebug;
-            set
-            {
-                base.LogDebug = value;
-                Log.LogDebug = value;
-            }
-        }
-
         public bool NeedsValidation { get; set; } = true;
 
         public new string StartTimeStamp
@@ -860,7 +850,7 @@ namespace CollectSFData.Common
 
             if (HasValue(LogFile))
             {
-                Log.LogFile = FileManager.NormalizePath(LogFile);
+                LogFile = FileManager.NormalizePath(LogFile);
                 Log.Info($"setting output log file to: {LogFile}");
             }
         }
