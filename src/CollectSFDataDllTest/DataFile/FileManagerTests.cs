@@ -99,7 +99,7 @@ namespace CollectSFData.DataFile.Tests
         public void NormalizePathTest()
         {
             string path = "c:";
-            char defaultSeparator = Convert.ToChar("/");
+            char defaultSeparator = '/';
             Assert.IsNotEmpty(FileManager.NormalizePath(path));
             Assert.IsFalse(FileManager.NormalizePath(path).Contains(defaultSeparator));
 
@@ -208,21 +208,22 @@ namespace CollectSFData.DataFile.Tests
         public void SaveToCacheTest()
         {
             string tempFile = Path.GetTempFileName();
-            Instance instance = new Instance();
-            FileManager fileManager = new FileManager(instance);
+            FileManager fileManager = new FileManager(new Instance());
 
             Assert.IsTrue(File.Exists(tempFile));
             fileManager.DeleteFile(tempFile);
 
             FileObject fileObject = new FileObject(tempFile);
-            List<DtrTraceRecord> records = new List<DtrTraceRecord>();
-            string traceRecord = $"{DateTime.Now},Informational,456,123,test.type,\"test text\",_nt0_0,fabric,/relative.uri";
-            DtrTraceRecord dtrTraceRecord = new DtrTraceRecord(traceRecord, fileObject);
+            List<DtrTraceRecord> records = new List<DtrTraceRecord>()
+            {
+                new DtrTraceRecord($"{DateTime.Now},Informational,456,123,test.type,\"test text\",nt0,fabric,/relative.uri", fileObject),
+                new DtrTraceRecord($"{DateTime.Now},Warning,789,123,test2.type,\"test text 2\",nt1,fabric,/relative.uri", fileObject),
+                new DtrTraceRecord($"{DateTime.Now},Error,123,456,test3.type,\"test text 3\",nt2,fabric,/relative.uri", fileObject)
+            };
 
-            records.Add(dtrTraceRecord);
             fileObject.Stream.Write(records);
 
-            fileManager.SaveToCache(fileObject);
+            fileManager.SaveToCache(fileObject, true);
             Assert.IsTrue(File.Exists(tempFile));
 
             fileManager.DeleteFile(tempFile);
@@ -251,7 +252,7 @@ namespace CollectSFData.DataFile.Tests
         public void TxEtlTest()
         {
             string manifestPath = $"{TestUtilities.SolutionDir}/manifests";
-            string tempPath = Path.GetTempPath();
+            string tempPath = TestUtilities.TempDir;
             string outputFile = $"{tempPath}/txetltest.json";
             string inputFile = $"{TestUtilities.TestDataFilesDir}/fabric_traces_8.0.514.9590_132652435843195282_117.etl";
 
@@ -261,7 +262,7 @@ namespace CollectSFData.DataFile.Tests
             ConfigurationOptions configurationOptions = new ConfigurationOptions
             {
                 LogDebug = 5,
-                LogFile = "c:\\temp\\etl.log",
+                LogFile = $"{tempPath}\\etl.log",
                 StartTimeStamp = DateTime.FromFileTimeUtc(0).ToString("O"),
                 EndTimeStamp = DateTime.Now.ToString("O"),
                 GatherType = FileTypesEnum.trace.ToString(),
