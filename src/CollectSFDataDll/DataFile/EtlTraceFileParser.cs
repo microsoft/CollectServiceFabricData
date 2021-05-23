@@ -131,24 +131,22 @@ namespace CollectSFData.DataFile
             string eventType = null;
             string eventText = null;
             int formatVersion = 0;
-            string[] formattedEvent = ManifestCache.FormatEvent(e.Record, out eventType, out eventText, formatVersion).Split(new char[] { ',' }, 6);
+            string[] formattedEvent = ManifestCache.FormatEvent(e.Record, out eventType, out eventText, formatVersion).Split(new char[] { ',' }, EtlInputFields.Count());
 
             Log.Debug($"formattedEvent", formattedEvent);
-            Log.Debug($"e", e);
-            EventDefinition eventDefinition = ManifestCache.GetEventDefinition(e.Record);
-            Log.Debug($"eventDefinition", eventDefinition);
+            //Log.Debug($"e", e);
+            //EventDefinition eventDefinition = ManifestCache.GetEventDefinition(e.Record);
+            //Log.Debug($"eventDefinition", eventDefinition);
 
-            T traceEvent = new T()
+            _traceDispatcher(new T()
             {
                 Timestamp = DateTime.FromFileTimeUtc(e.Record.EventHeader.TimeStamp),
-                Level = formattedEvent[1],
+                Level = formattedEvent[EtlInputFields.Level],
                 TID = (int)e.Record.EventHeader.ThreadId,
                 PID = (int)e.Record.EventHeader.ProcessId,
-                Type = formattedEvent[4],
-                Text = formattedEvent[5]
-            };
-
-            _traceDispatcher(traceEvent);
+                Type = formattedEvent[EtlInputFields.Type],
+                Text = formattedEvent[EtlInputFields.Text]
+            });
         }
     }
 }
