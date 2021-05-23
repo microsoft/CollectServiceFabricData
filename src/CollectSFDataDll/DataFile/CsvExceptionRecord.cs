@@ -44,11 +44,18 @@ namespace CollectSFData.DataFile
 
         public IRecord Populate(FileObject fileObject, string traceRecord, string resourceUri = null)
         {
-            Match match = Regex.Match(traceRecord, @"/(?<Type>\w+?)(\.\w+?)?\.(?<PID>\d+?)\.dmp");
+            Match match = Regex.Match(traceRecord, @"(?:/|^)(?<Type>\w+?)(?:\.+?){0,2}(?<PID>\d+?){0,1}\.dmp", RegexOptions.IgnoreCase);
+            int pid = 0;
+            string pidMatch = match.Groups["PID"]?.Value;
+
+            if (!string.IsNullOrEmpty(pidMatch))
+            {
+                pid = Convert.ToInt32(pidMatch);
+            }
 
             Timestamp = fileObject.LastModified.UtcDateTime;
-            PID = Convert.ToInt32(match.Groups["PID"].Value);
-            Type = match.Groups["Type"].Value;
+            PID = pid;
+            Type = match.Groups["Type"]?.Value;
             Text = traceRecord;
             NodeName = fileObject.NodeName;
             FileType = fileObject.FileDataType.ToString();
