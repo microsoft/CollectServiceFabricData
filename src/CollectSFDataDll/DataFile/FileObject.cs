@@ -128,6 +128,20 @@ namespace CollectSFData.DataFile
             return HasKey(this, searchItem);
         }
 
+        public bool IsSourceFileLinkCompliant()
+        {
+            // csv compliant type files (trace dtr zips)
+            // and gather types that use links (gather type exception uses links)
+            bool retval = false;
+            if (FileType == FileTypesEnum.exception || (FileType == FileTypesEnum.trace && FileExtensionType == FileExtensionTypesEnum.zip))
+            {
+                retval = true;
+            }
+                    
+            Log.Debug("exit:{retval}");
+            return retval;
+        }
+
         private bool Compare(string self, string comparable)
         {
             if (string.IsNullOrEmpty(self) | string.IsNullOrEmpty(comparable))
