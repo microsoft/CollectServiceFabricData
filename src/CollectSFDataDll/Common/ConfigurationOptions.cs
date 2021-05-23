@@ -92,13 +92,13 @@ namespace CollectSFData.Common
             _cmdLineArgs.InitFromCmdLine();
         }
 
-        public ConfigurationOptions() : this(new string[0])
+        public ConfigurationOptions() : this(null)
         {
         }
 
-        public ConfigurationOptions(string[] commandlineArguments, bool validate = false)
+        public ConfigurationOptions(string[] commandlineArguments = null, bool validate = false, bool loadDefaultConfig = true)
         {
-            if (commandlineArguments.Any())
+            if (commandlineArguments != null)
             {
                 _commandlineArguments = commandlineArguments;
             }
@@ -110,7 +110,11 @@ namespace CollectSFData.Common
             StartTimeStamp = defaultOffset.AddHours(Constants.DefaultStartTimeHours).ToString(Constants.DefaultDatePattern);
             EndTimeUtc = defaultOffset.UtcDateTime;
             EndTimeStamp = defaultOffset.ToString(Constants.DefaultDatePattern);
-            LoadDefaultConfig();
+
+            if (loadDefaultConfig)
+            {
+                LoadDefaultConfig();
+            }
 
             if (validate)
             {
@@ -885,6 +889,7 @@ namespace CollectSFData.Common
                     return true;
                 }
 
+                SetDefaultConfig(Clone());
                 return false;
             }
             else
