@@ -246,6 +246,35 @@ namespace CollectSFData.DataFile.Tests
         public void TxBlgTest()
         {
             throw new NotImplementedException();
+            string tempPath = TestUtilities.TempDir;
+            string outputFile = $"{tempPath}/txetltest.json";
+            string[] inputFiles = Directory.GetFiles("", $"{TestUtilities.TestDataFilesDir}/fabric_counters*.blg", SearchOption.AllDirectories);
+            string inputFile = inputFiles[0];
+            string logFile = $"{tempPath}\\etl.log";
+            Assert.IsTrue(File.Exists(inputFile));
+
+            ConfigurationOptions configurationOptions = new ConfigurationOptions
+            {
+                LogDebug = 5,
+                LogFile = logFile,
+                StartTimeStamp = DateTime.FromFileTimeUtc(0).ToString("O"),
+                EndTimeStamp = DateTime.Now.ToString("O"),
+                GatherType = FileTypesEnum.counter.ToString(),
+                CacheLocation = tempPath,
+                FileUris = new string[]
+                {
+                    inputFile
+                }
+            };
+
+            Instance instance = new Instance(configurationOptions);
+            FileManager fileManager = new FileManager(instance);
+            FileObject fileObject = new FileObject(inputFile);
+
+            File.Delete(outputFile);
+            fileManager.TxBlg(fileObject, outputFile);
+            Assert.IsTrue(File.Exists(outputFile), $"check log file {logFile}");
+            File.Delete(outputFile);
         }
 
         [Test()]
@@ -254,15 +283,16 @@ namespace CollectSFData.DataFile.Tests
             string manifestPath = $"{TestUtilities.SolutionDir}/manifests";
             string tempPath = TestUtilities.TempDir;
             string outputFile = $"{tempPath}/txetltest.json";
-            string inputFile = $"{TestUtilities.TestDataFilesDir}/fabric_traces_8.0.514.9590_132652435843195282_117.etl";
-
+            string[] inputFiles = Directory.GetFiles("", $"{TestUtilities.TestDataFilesDir}/fabric_traces_*.etl", SearchOption.AllDirectories);
+            string inputFile = inputFiles[0];
+            string logFile = $"{tempPath}\\etl.log";
             Assert.IsTrue(Directory.Exists(manifestPath));
             Assert.IsTrue(File.Exists(inputFile));
 
             ConfigurationOptions configurationOptions = new ConfigurationOptions
             {
                 LogDebug = 5,
-                LogFile = $"{tempPath}\\etl.log",
+                LogFile = logFile,
                 StartTimeStamp = DateTime.FromFileTimeUtc(0).ToString("O"),
                 EndTimeStamp = DateTime.Now.ToString("O"),
                 GatherType = FileTypesEnum.trace.ToString(),
@@ -280,7 +310,7 @@ namespace CollectSFData.DataFile.Tests
 
             File.Delete(outputFile);
             fileManager.ReadEtl(fileObject, outputFile);
-
+            Assert.IsTrue(File.Exists(outputFile), $"check log file {logFile}");
             File.Delete(outputFile);
         }
     }
