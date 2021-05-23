@@ -443,25 +443,6 @@ namespace CollectSFData.Azure
                             continue;
                         }
 
-                        if (ReturnSourceFileLink)
-                        {
-                            FileObject fileObjectSourceLink = new FileObject(blob.Uri.AbsolutePath, _config.SasEndpointInfo.BlobEndpoint)
-                            {
-                                LastModified = lastModified,
-                                Status = FileStatus.enumerated
-                            };
-
-                            if (_instance.FileObjects.FindByUriFirstOrDefault(fileObjectSourceLink.RelativeUri).Status == FileStatus.existing)
-                            {
-                                Log.Info($"{fileObjectSourceLink} already exists. skipping", ConsoleColor.DarkYellow);
-                                continue;
-                            }
-
-                            _instance.FileObjects.Add(fileObjectSourceLink);
-                            IngestCallback?.Invoke(fileObjectSourceLink);
-                            continue;
-                        }
-
                         FileObject fileObject = new FileObject(blob.Uri.AbsolutePath, _config.CacheLocation)
                         {
                             LastModified = lastModified,
@@ -470,11 +451,19 @@ namespace CollectSFData.Azure
 
                         if (_instance.FileObjects.FindByUriFirstOrDefault(fileObject.RelativeUri).Status == FileStatus.existing)
                         {
-                            Log.Info($"{fileObject.RelativeUri} already exists. skipping", ConsoleColor.DarkYellow);
+                            Log.Info($"{fileObject} already exists. skipping", ConsoleColor.DarkYellow);
                             continue;
                         }
 
                         _instance.FileObjects.Add(fileObject);
+
+                        if (ReturnSourceFileLink && fileObject.IsSourceFileLinkCompliant())
+                        {
+                            fileObject.BaseUri = _config.SasEndpointInfo.BlobEndpoint;
+                            IngestCallback?.Invoke(fileObject);
+                            continue;
+                        }
+
                         Log.Info($"queueing blob with timestamp: {lastModified}\r\n file: {blob.Uri.AbsolutePath}");
                         InvokeCallback(blob, fileObject, (int)blobRef.Properties.Length);
                     }
