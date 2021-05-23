@@ -5,7 +5,7 @@
 
 namespace CollectSFData.Common
 {
-    public static class LoggingLevel
+    public struct LoggingLevel
     {
         public static int Error = 2;
         public static int Exception = 1;
