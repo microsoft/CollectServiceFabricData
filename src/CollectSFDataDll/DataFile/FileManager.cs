@@ -515,7 +515,7 @@ namespace CollectSFData.DataFile
         {
             try
             {
-                if (force || (!_config.UseMemoryStream & !fileObject.Exists))
+                if (force || (!_config.UseMemoryStream && fileObject.FileUriType == FileUriTypesEnum.fileUri && !fileObject.Exists))
                 {
                     fileObject.Stream.SaveToFile();
                 }
