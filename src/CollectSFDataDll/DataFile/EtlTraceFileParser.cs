@@ -14,31 +14,34 @@ namespace CollectSFData.DataFile
 {
     public class EtlTraceFileParser<T> where T : ITraceRecord, new()
     {
-        private static object _manifestLoadLock = new object();
-        private readonly Action<T> _traceDispatcher;
+        private static object _manifestLock = new object();
+        private Action<T> _traceDispatcher;
         private ConfigurationOptions _config;
         public static ManifestCache ManifestCache { get; set; }
         public int EventsLost { get; private set; }
         public TraceSessionMetadata TraceSessionMetaData { get; private set; }
 
-        public EtlTraceFileParser(Action<T> traceDispatcher, ConfigurationOptions config, ManifestCache cache = null)
+        public EtlTraceFileParser(ConfigurationOptions config, ManifestCache cache = null)
         {
-            _config = config ?? throw new ArgumentNullException(nameof(config));
-
-            if (cache != null)
+            lock (_manifestLock)
             {
-                ManifestCache = cache;
-            }
+                if (ManifestCache != null && cache == null)
+                {
+                    return;
+                }
 
-            lock (_manifestLoadLock)
-            {
+                _config = config ?? throw new ArgumentNullException(nameof(config));
+
+                if (cache != null)
+                {
+                    ManifestCache = cache;
+                }
+
                 if (ManifestCache == null)
                 {
                     ManifestCache = LoadManifests(_config.EtwManifestCache, _config.CacheLocation);
                 }
             }
-
-            _traceDispatcher = traceDispatcher;
         }
 
         public ManifestCache LoadManifests(string manifestPath, string cacheLocation, string versionString = null)
@@ -119,8 +122,10 @@ namespace CollectSFData.DataFile
             return ManifestCache;
         }
 
-        public void ParseTraces(string fileName, DateTime startTime, DateTime endTime)
+        public void ParseTraces(Action<T> traceDispatcher, string fileName, DateTime startTime, DateTime endTime)
         {
+            _traceDispatcher = traceDispatcher;
+
             using (var reader = new TraceFileEventReader(fileName))
             {
                 TraceSessionMetaData = reader.ReadTraceSessionMetadata();
