@@ -24,8 +24,6 @@ namespace CollectSFData.Azure
         private CloudStorageAccount _account;
         private CloudBlobClient _blobClient;
         private ConfigurationOptions _config;
-        private object _dateTimeMaxLock = new object();
-        private object _dateTimeMinLock = new object();
         private string _fileFilterPattern = @"(?:.+_){6}(\d{20})_";
         private Instance _instance;
 
@@ -392,7 +390,7 @@ namespace CollectSFData.Azure
                         _instance.TotalFilesSkipped++;
                         Log.Debug($"exclude:bloburi file ticks {new DateTime(ticks).ToString("o")} outside of time range:{blob.Uri}");
 
-                        SetMinMaxDate(ref segmentMinDateTicks, ref segmentMaxDateTicks, ticks);
+                        _instance.SetMinMaxDate(ticks);
                         continue;
                     }
                 }
@@ -416,7 +414,7 @@ namespace CollectSFData.Azure
                 if (blobRef.Properties.LastModified.HasValue)
                 {
                     DateTimeOffset lastModified = blobRef.Properties.LastModified.Value;
-                    SetMinMaxDate(ref segmentMinDateTicks, ref segmentMaxDateTicks, lastModified.Ticks);
+                    _instance.SetMinMaxDate(lastModified.Ticks);
 
                     if (!string.IsNullOrEmpty(_config.UriFilter) && !Regex.IsMatch(blob.Uri.ToString(), _config.UriFilter, RegexOptions.IgnoreCase))
                     {
@@ -472,7 +470,7 @@ namespace CollectSFData.Azure
                         _instance.TotalFilesSkipped++;
                         Log.Debug($"exclude:bloburi {lastModified.ToString("o")} outside of time range:{blob.Uri}");
 
-                        SetMinMaxDate(ref segmentMinDateTicks, ref segmentMaxDateTicks, lastModified.Ticks);
+                        _instance.SetMinMaxDate(lastModified.Ticks);
                         continue;
                     }
                 }
@@ -480,30 +478,6 @@ namespace CollectSFData.Azure
                 {
                     Log.Error("unable to read blob modified date", blobRef);
                     _instance.TotalErrors++;
-                }
-            }
-        }
-
-        private void SetMinMaxDate(ref long segmentMinDateTicks, ref long segmentMaxDateTicks, long ticks)
-        {
-            if (ticks > DateTime.MinValue.Ticks && ticks < DateTime.MaxValue.Ticks)
-            {
-                if (ticks < segmentMinDateTicks)
-                {
-                    Log.Debug($"set new discovered min time range ticks: {new DateTime(ticks).ToString("o")}");
-                    lock (_dateTimeMinLock)
-                    {
-                        segmentMinDateTicks = _instance.DiscoveredMinDateTicks = Math.Min(_instance.DiscoveredMinDateTicks, ticks);
-                    }
-                }
-
-                if (ticks > segmentMaxDateTicks)
-                {
-                    Log.Debug($"set new discovered max time range ticks: {new DateTime(ticks).ToString("o")}");
-                    lock (_dateTimeMaxLock)
-                    {
-                        segmentMaxDateTicks = _instance.DiscoveredMaxDateTicks = Math.Max(_instance.DiscoveredMaxDateTicks, ticks);
-                    }
                 }
             }
         }

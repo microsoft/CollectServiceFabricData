@@ -73,5 +73,36 @@ namespace CollectSFData.Common
             TotalFilesSkipped = 0;
             TotalRecords = 0;
         }
+
+        public void SetMaxDate(long maxDateTicks)
+        {
+            if (maxDateTicks > DiscoveredMaxDateTicks && maxDateTicks < DateTime.MaxValue.Ticks)
+            {
+                DiscoveredMaxDateTicks = maxDateTicks;
+                Log.Debug($"set new discovered max time range ticks: {new DateTime(maxDateTicks).ToString("o")}");
+            }
+        }
+
+        public void SetMinDate(long minDateTicks)
+        {
+            if (minDateTicks < DiscoveredMinDateTicks && minDateTicks > DateTime.MinValue.Ticks)
+            {
+                DiscoveredMinDateTicks = minDateTicks;
+                Log.Debug($"set new discovered min time range ticks: {new DateTime(minDateTicks).ToString("o")}");
+            }
+        }
+
+        public void SetMinMaxDate(long ticks)
+        {
+            SetMaxDate(ticks);
+            SetMinDate(ticks);
+        }
+
+        public void SetMinMaxDate(long minDateTicks, long maxDateTicks)
+        {
+            SetMaxDate(minDateTicks);
+            SetMinDate(maxDateTicks);
+        }
+
     }
 }
