@@ -28,6 +28,8 @@ namespace CollectSFData.DataFile
 
         public FileExtensionTypesEnum FileExtensionType { get => FileTypes.MapKnownFileExtension(FileUri); }
 
+        public FileExtensionTypesEnum FileExtensionSubType { get => FileTypes.MapKnownFileExtension(Path.GetFileNameWithoutExtension(FileUri)); }
+
         public FileTypesEnum FileType { get => FileTypes.MapFileTypeUri(FileUri); }
 
         public string FileUri { get => _fileUri; set => ExtractProperties(value); }
@@ -133,11 +135,16 @@ namespace CollectSFData.DataFile
             // csv compliant type files (trace dtr zips)
             // and gather types that use links (gather type exception uses links)
             bool retval = false;
-            if (FileType == FileTypesEnum.exception || (FileType == FileTypesEnum.trace && FileExtensionType == FileExtensionTypesEnum.zip && FileUriType == FileUriTypesEnum.azureStorageUri))
+            if (FileType == FileTypesEnum.exception)
             {
                 retval = true;
             }
-                    
+            else if(FileType == FileTypesEnum.trace && FileUriType == FileUriTypesEnum.azureStorageUri
+                    && (FileExtensionType == FileExtensionTypesEnum.zip && FileExtensionSubType == FileExtensionTypesEnum.dtr))
+            {
+                retval = true;
+            }
+
             Log.Debug("exit:{retval}");
             return retval;
         }
