@@ -31,8 +31,8 @@ namespace CollectSFData.DataFile.Tests
             ExtensionTests(Constants.PerfCtrExtension, FileDataTypesEnum.counter);
             ExtensionTests(Constants.SetupExtension, FileDataTypesEnum.fabricsetup);
             ExtensionTests(Constants.TableExtension, FileDataTypesEnum.table);
-            ExtensionTests(Constants.TraceFileExtension, FileDataTypesEnum.fabric);
-            ExtensionTests(Constants.TraceZipExtension, FileDataTypesEnum.fabric);
+            ExtensionTests(Constants.DtrExtension, FileDataTypesEnum.fabric);
+            ExtensionTests(Constants.DtrZipExtension, FileDataTypesEnum.fabric);
             ExtensionTests(Constants.ZipExtension, FileDataTypesEnum.unknown);
         }
 
@@ -46,6 +46,19 @@ namespace CollectSFData.DataFile.Tests
             Assert.IsTrue(FileTypes.MapFileTypeRelativeUriPrefix(FileTypesEnum.table) == FileTypesKnownUrisPrefix.fabriclog);
             Assert.IsTrue(FileTypes.MapFileTypeRelativeUriPrefix(FileTypesEnum.trace) == FileTypesKnownUrisPrefix.fabriclog);
             Assert.IsTrue(FileTypes.MapFileTypeRelativeUriPrefix(FileTypesEnum.unknown) == FileTypesKnownUrisPrefix.unknown);
+        }
+
+        [Test()]
+        public void MapKnownFileExtensionTest()
+        {
+            var result = FileTypes.MapKnownFileExtension("./test.zip");
+            Assert.IsTrue(result == FileExtensionTypesEnum.zip, result.ToString());
+
+            result = FileTypes.MapKnownFileExtension("./test.dtr.zip");
+            Assert.IsTrue(result.HasFlag(FileExtensionTypesEnum.zip), result.ToString());
+
+            result = FileTypes.MapKnownFileExtension("./test.etl.zip");
+            Assert.IsTrue(result == FileExtensionTypesEnum.zip, result.ToString());
         }
 
         private static void ExtensionTests(string extension, FileDataTypesEnum dataType)

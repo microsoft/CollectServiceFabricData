@@ -82,7 +82,7 @@ namespace CollectSFData.DataFile
             {
                 extension = FileDataTypesEnum.fabriccrashdumps;
             }
-            else if (fileUri.EndsWith(Constants.TraceZipExtension) | fileUri.EndsWith(Constants.TraceFileExtension))
+            else if (fileUri.EndsWith(Constants.ZipExtension) | fileUri.EndsWith(Constants.DtrExtension))
             {
                 // using default fabric / lease
                 extension = FileDataTypesEnum.fabric;
@@ -316,7 +316,7 @@ namespace CollectSFData.DataFile
                         extension = FileExtensionTypesEnum.etl;
                         break;
                     }
-                case Constants.TraceFileExtension:
+                case Constants.DtrExtension:
                     {
                         extension = FileExtensionTypesEnum.dtr;
                         break;
