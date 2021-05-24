@@ -14,6 +14,7 @@ namespace CollectSFData.DataFile
 {
     public class EtlTraceFileParser<T> where T : ITraceRecord, new()
     {
+        private static object _manifestLoadLock = new object();
         private readonly Action<T> _traceDispatcher;
         private ConfigurationOptions _config;
         public static ManifestCache ManifestCache { get; set; }
@@ -29,9 +30,12 @@ namespace CollectSFData.DataFile
                 ManifestCache = cache;
             }
 
-            if (ManifestCache == null)
+            lock (_manifestLoadLock)
             {
-                ManifestCache = LoadManifests(_config.EtwManifestCache, _config.CacheLocation);
+                if (ManifestCache == null)
+                {
+                    ManifestCache = LoadManifests(_config.EtwManifestCache, _config.CacheLocation);
+                }
             }
 
             _traceDispatcher = traceDispatcher;
