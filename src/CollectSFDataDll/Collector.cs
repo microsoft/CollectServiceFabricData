@@ -465,6 +465,8 @@ namespace CollectSFData
                 }
             }
 
+            Instance.TotalFilesEnumerated += files.Count;
+
             foreach (string file in files)
             {
                 FileObject fileObject = new FileObject(file, Config.CacheLocation) { Status = FileStatus.enumerated };
