@@ -183,14 +183,16 @@ namespace CollectSFData.DataFile
         public FileObjectCollection FormatEtlFile(FileObject fileObject)
         {
             Log.Debug($"enter:{fileObject.FileUri}");
-            string outputFile = fileObject.FileUri + Constants.CsvExtension;
             bool result;
 
             fileObject.Stream.SaveToFile();
-            DeleteFile(outputFile);
-            Log.Info($"Writing {outputFile}");
-            //result = TxEtl(fileObject, outputFile);
-            result = ReadEtl(fileObject, outputFile);
+            result = ReadEtl(fileObject);
+
+            //todo review
+            if (_config.DeleteCache && (_config.UseMemoryStream | !_config.IsCacheLocationPreConfigured()))
+            {
+                DeleteFile(fileObject.FileUri);
+            }
 
             if (result)
             {
@@ -201,21 +203,12 @@ namespace CollectSFData.DataFile
                 //     fileObject.Stream.ReadFromFile(outputFile);
                 //     fileObject.Stream.Write<CsvCounterRecord>(ExtractPerfRelogCsvData(fileObject));
                 // }
-            }
-            else
-            {
-                _instance.TotalErrors++;
+
+                return PopulateCollection<DtrTraceRecord>(fileObject);
             }
 
-            DeleteFile(outputFile);
-
-            //todo review
-            if (_config.DeleteCache && (_config.UseMemoryStream | !_config.IsCacheLocationPreConfigured()))
-            {
-                DeleteFile(fileObject.FileUri);
-            }
-
-            return PopulateCollection<DtrTraceRecord>(fileObject);
+            _instance.TotalErrors++;
+            return new FileObjectCollection();
         }
 
         public FileObjectCollection FormatExceptionFile(FileObject fileObject)
@@ -430,8 +423,9 @@ namespace CollectSFData.DataFile
             return new FileObjectCollection();
         }
 
-        public bool ReadEtl(FileObject fileObject, string outputFile)
+        public bool ReadEtl(FileObject fileObject)
         {
+            bool success = false;
             int recordsCount = 0;
             DateTime startTime = DateTime.Now;
             EtlTraceFileParser<DtrTraceRecord> parser = new EtlTraceFileParser<DtrTraceRecord>((trace) =>
@@ -439,15 +433,20 @@ namespace CollectSFData.DataFile
                 trace.FileType = fileObject.FileDataType.ToString();
                 trace.NodeName = fileObject.NodeName;
                 trace.RelativeUri = fileObject.RelativeUri;
-                fileObject.Stream.Write<DtrTraceRecord>(new List<DtrTraceRecord>() { trace }, true);
+                fileObject.Stream.Write<DtrTraceRecord>(new List<DtrTraceRecord>(1) { trace }, true);
                 recordsCount++;
             }, _config);
 
             parser.ParseTraces(fileObject.FileUri, _config.StartTimeUtc.UtcDateTime, _config.EndTimeUtc.UtcDateTime);
+            _instance.SetMinMaxDate(parser.TraceSessionMetaData.EndTime.Ticks, parser.TraceSessionMetaData.StartTime.Ticks);
+
+            success = recordsCount != 0;
+            // set status of .etl to succeeded
+            fileObject.Status = success ? FileStatus.succeeded : FileStatus.failed;
+
             int totalMs = (int)(DateTime.Now - startTime).TotalMilliseconds;
-            double recordsPerSecond = recordsCount / (totalMs * .001);
-            Log.Info($"complete:total ms:{totalMs} total records:{recordsCount} records per second:{recordsPerSecond}");
-            return true;
+            Log.Info($"complete:total ms:{totalMs} total records:{recordsCount} records per second:{recordsCount / (totalMs * .001)}", ConsoleColor.Green);
+            return success;
         }
 
         public TraceObserver<T> ReadTraceRecords<T>(IObservable<T> source)
@@ -587,7 +586,7 @@ namespace CollectSFData.DataFile
 
                     if (newFileObject.Length < Constants.WarningJsonTransmitBytes)
                     {
-                        newFileObject.Stream.Write<T>(new List<T> { record }, true);
+                        newFileObject.Stream.Write<T>(new List<T>(1) { record }, true);
                     }
                     else
                     {
@@ -598,6 +597,7 @@ namespace CollectSFData.DataFile
                     }
                 }
 
+                _instance.FileObjects.Remove(fileObject);
                 newFileObject.FileUri = $"{sourceFile}.{counter}{Constants.JsonExtension}";
                 collection.Add(newFileObject);
             }
