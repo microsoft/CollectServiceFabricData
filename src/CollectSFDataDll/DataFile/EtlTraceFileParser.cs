@@ -90,7 +90,7 @@ namespace CollectSFData.DataFile
                     manifestFiles = unVersionedManifestFiles;
                 }
 
-                Log.Info("filtered manifest files:", manifestFiles);
+                Log.Info("filtered manifest files:", ConsoleColor.Cyan, null, manifestFiles);
 
                 foreach (string manifestFile in manifestFiles)
                 {
@@ -119,20 +119,21 @@ namespace CollectSFData.DataFile
         {
             using (var reader = new TraceFileEventReader(fileName))
             {
+                TraceSessionMetaData = reader.ReadTraceSessionMetadata();
+                if (TraceSessionMetaData.StartTime > endTime | TraceSessionMetaData.EndTime < startTime)
+                {
+                    Log.Warning($"{fileName} outside time range start:{TraceSessionMetaData.StartTime} end:{TraceSessionMetaData.EndTime}");
+                    return;
+                }
                 reader.EventRead += this.OnEventRead;
                 reader.ReadEvents(startTime, endTime);
                 EventsLost = (int)reader.EventsLost;
-                TraceSessionMetaData = reader.ReadTraceSessionMetadata();
             }
         }
 
         private void OnEventRead(object sender, EventRecordEventArgs e)
         {
-            string eventType = null;
-            string eventText = null;
-            int formatVersion = 0;
-            string[] formattedEvent = ManifestCache.FormatEvent(e.Record, out eventType, out eventText, formatVersion).Split(new char[] { ',' }, EtlInputFields.Count());
-
+            string[] formattedEvent = ManifestCache.FormatEvent(e.Record).Split(new char[] { ',' }, EtlInputFields.Count());
             Log.Debug($"formattedEvent", formattedEvent);
             //Log.Debug($"e", e);
             //EventDefinition eventDefinition = ManifestCache.GetEventDefinition(e.Record);
