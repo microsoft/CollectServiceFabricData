@@ -53,7 +53,7 @@ namespace CollectSFData.Kusto
                 return;
             }
 
-            if (_config.KustoUseBlobAsSource)
+            if (_config.KustoUseBlobAsSource && fileObject.IsSourceFileLinkCompliant())
             {
                 IngestSingleFile(fileObject);
             }
@@ -253,7 +253,7 @@ namespace CollectSFData.Kusto
             string ingestionQueue = nextQueues.Item1;
             string tempContainer = nextQueues.Item2;
 
-            if (_config.KustoUseBlobAsSource)
+            if (_config.KustoUseBlobAsSource && fileObject.IsSourceFileLinkCompliant())
             {
                 blobUriWithSas = $"{fileObject.FileUri}{_config.SasEndpointInfo.SasToken}";
             }

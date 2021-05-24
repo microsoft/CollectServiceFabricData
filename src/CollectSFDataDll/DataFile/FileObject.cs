@@ -133,7 +133,7 @@ namespace CollectSFData.DataFile
             // csv compliant type files (trace dtr zips)
             // and gather types that use links (gather type exception uses links)
             bool retval = false;
-            if (FileType == FileTypesEnum.exception || (FileType == FileTypesEnum.trace && FileExtensionType == FileExtensionTypesEnum.zip))
+            if (FileType == FileTypesEnum.exception || (FileType == FileTypesEnum.trace && FileExtensionType == FileExtensionTypesEnum.zip && FileUriType == FileUriTypesEnum.azureStorageUri))
             {
                 retval = true;
             }

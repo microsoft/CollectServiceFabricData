@@ -458,6 +458,7 @@ namespace CollectSFData.Azure
                         if (ReturnSourceFileLink && fileObject.IsSourceFileLinkCompliant())
                         {
                             fileObject.BaseUri = _config.SasEndpointInfo.BlobEndpoint;
+                            fileObject.FileUri = blob.Uri.AbsolutePath;
                             IngestCallback?.Invoke(fileObject);
                             continue;
                         }
