@@ -445,11 +445,11 @@ namespace CollectSFData
                         break;
 
                     case FileTypesEnum.trace:
-                        files = Directory.GetFiles(Config.CacheLocation, $"*{Constants.TraceFileExtension}{Constants.ZipExtension}", SearchOption.AllDirectories).ToList();
+                        files = Directory.GetFiles(Config.CacheLocation, $"*{Constants.DtrExtension}{Constants.ZipExtension}", SearchOption.AllDirectories).ToList();
 
                         if (files.Count < 1)
                         {
-                            files = Directory.GetFiles(Config.CacheLocation, $"*{Constants.TraceFileExtension}", SearchOption.AllDirectories).ToList();
+                            files = Directory.GetFiles(Config.CacheLocation, $"*{Constants.DtrExtension}", SearchOption.AllDirectories).ToList();
                         }
 
                         break;
