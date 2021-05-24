@@ -309,7 +309,7 @@ namespace CollectSFData.DataFile.Tests
             FileObject fileObject = new FileObject(inputFile);
 
             File.Delete(outputFile);
-            fileManager.ReadEtl(fileObject, outputFile);
+            fileManager.ReadEtl(fileObject);
             Assert.IsTrue(File.Exists(outputFile), $"check log file {logFile}");
             File.Delete(outputFile);
         }
