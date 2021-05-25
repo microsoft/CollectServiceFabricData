@@ -101,7 +101,7 @@
   </ItemGroup>
   <ItemGroup>
     <Reference Include="EtlReader">
-      <HintPath>..\include\EtlReader.dll</HintPath>
+      <HintPath>..\Include\EtlReader.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -111,10 +111,16 @@
   </ItemGroup>
   <ItemGroup>
     <Reference Include="system.fabric.strings">
-      <HintPath>..\include\System.Fabric.Strings.dll</HintPath>
+      <HintPath>..\Include\System.Fabric.Strings.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <None Update="Include\EtlReader.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Include\System.Fabric.Strings.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="System.Fabric.Strings.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
