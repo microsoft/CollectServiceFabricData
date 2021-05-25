@@ -126,6 +126,6 @@
     </None>
   </ItemGroup>
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="dir $(OutDir)&#xD;&#xA;md $(OutDir)manifests&#xD;&#xA;copy $(ProjectDir)..\..\manifests\* $(OutDir)\manifests" />
+    <Exec Command="dir $(OutDir)&#xD;&#xA;md $(OutDir)manifests&#xD;&#xA;copy $(ProjectDir)..\..\manifests\* $(OutDir)\manifests&#xD;&#xA;copy $(ProjectDir)..\..\configurationFiles\collectsfdata.options.json $(OutDir)" />
   </Target>
 </Project>
