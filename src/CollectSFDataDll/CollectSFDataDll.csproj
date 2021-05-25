@@ -125,4 +125,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="dir $(OutDir)&#xD;&#xA;md $(OutDir)manifests&#xD;&#xA;copy $(ProjectDir)..\..\manifests\* $(OutDir)\manifests" />
+  </Target>
 </Project>
