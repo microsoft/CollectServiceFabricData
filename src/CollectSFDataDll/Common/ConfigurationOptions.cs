@@ -38,8 +38,11 @@ namespace CollectSFData.Common
             get => base.EndTimeStamp;
             set
             {
-                EndTimeUtc = ConvertToUtcTime(value);
-                base.EndTimeStamp = ConvertToUtcTimeString(value);
+                if (!string.IsNullOrEmpty(value) && base.EndTimeStamp != value)
+                {
+                    EndTimeUtc = ConvertToUtcTime(value);
+                    base.EndTimeStamp = ConvertToUtcTimeString(value);
+                }
             }
         }
 
@@ -73,8 +76,11 @@ namespace CollectSFData.Common
             get => base.StartTimeStamp;
             set
             {
-                StartTimeUtc = ConvertToUtcTime(value);
-                base.StartTimeStamp = ConvertToUtcTimeString(value);
+                if (!string.IsNullOrEmpty(value) && base.StartTimeStamp != value)
+                {
+                    StartTimeUtc = ConvertToUtcTime(value);
+                    base.StartTimeStamp = ConvertToUtcTimeString(value);
+                }
             }
         }
 
