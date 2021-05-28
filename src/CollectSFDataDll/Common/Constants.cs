@@ -26,7 +26,7 @@ namespace CollectSFData.Common
         public const string EtlExtension = ".etl";
         public const string EtwDefaultManifestsCache = "./manifests";
         public const string EtwManifestExtension = ".man";
-        public const string EtwManifestsUrlIndex = "https://raw.githubusercontent.com/jagilber/CollectServiceFabricData/etlreader/manifests/index.json"; //"https://raw.githubusercontent.com/microsoft/CollectServiceFabricData/master/manifests/index.json";
+        public const string EtwManifestsUrl = "https://raw.githubusercontent.com/microsoft/CollectServiceFabricData/master/manifests";
         public const string FalseStringPattern = @"(false|0|off|null)";
         public const string JsonExtension = ".json";
         public const string KustoUrlPattern = "https://(?<ingest>ingest-){1}(?<clusterName>.+?)\\.(?<location>.+?){0,1}\\.(?<domainName>.+?)/(?<databaseName>.+?){1}(/|$)";
@@ -55,5 +55,6 @@ namespace CollectSFData.Common
         public const double WarningTimeSpanMinHours = .5F;
         public const string ZipExtension = ".zip";
         public static readonly string ApplicationName = AppDomain.CurrentDomain.FriendlyName;
+        public static readonly string EtwManifestsUrlIndex = $"{EtwManifestsUrl}/index.json";
     }
 }
