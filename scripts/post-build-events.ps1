@@ -19,15 +19,15 @@ function main() {
     $defaultOptionsPath = "$projectDir\..\..\configurationFiles"
     $defaultOptionsFile = "$defaultOptionsPath\collectsfdata.options.json"
 
-    $manifestIndex = "$manifestPath\index.html"
+    $manifestIndex = "$manifestPath\index.json"
     $manifests = Get-ChildItem -Filter "*.man" -path $manifestpath
-    $manifestHtml = $manifests.name # | ConvertTo-Html -Property Name -As Table
-    $currentManifestHtml = Get-Content -raw $manifestIndex
+    $manifestJson = $manifests.name | convertto-json 
+    $currentManifestJson = Get-Content -raw $manifestIndex
     $manifestOutDir = "$outDir\manifests"
 
-    if ($manifestHtml -ne $currentManifestHtml) {
+    if (($manifestJson | convertfrom-json) -ne ($currentManifestJson | convertfrom-json)) {
         write-host "updating $manifestIndex" -ForegroundColor Magenta
-        $manifestHtml | out-file -path $manifestIndex
+        $manifestJson | out-file -path $manifestIndex
     }
 
     if (!(test-path $manifestOutDir)) {
