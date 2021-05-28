@@ -1,3 +1,6 @@
+<#
+post build event script called from CollectSFDataDll.csproj
+#>
 param(
     $projectDir,
     $outdir
@@ -20,12 +23,13 @@ function main() {
     $defaultOptionsFile = "$defaultOptionsPath\collectsfdata.options.json"
 
     $manifestIndex = "$manifestPath\index.json"
-    $manifests = Get-ChildItem -Filter "*.man" -path $manifestpath
-    $manifestJson = $manifests.name | convertto-json 
+    [object]$root = @{}
+    $root.manifests = (Get-ChildItem -Filter "*.man" -path $manifestpath).Name
+    $manifestJson = $root | convertto-json 
     $currentManifestJson = Get-Content -raw $manifestIndex
     $manifestOutDir = "$outDir\manifests"
 
-    if (($manifestJson | convertfrom-json) -ne ($currentManifestJson | convertfrom-json)) {
+    if ([string]::Compare($manifestJson, $currentManifestJson) -ne 0) {
         write-host "updating $manifestIndex" -ForegroundColor Magenta
         $manifestJson | out-file -path $manifestIndex
     }
