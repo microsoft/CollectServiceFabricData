@@ -92,6 +92,13 @@ namespace CollectSFData.Common.Tests
         }
 
         [Test()]
+        public void DownloadEtwManifestsTest()
+        {
+            ConfigurationOptions configurationOptions = new ConfigurationOptions();
+            configurationOptions.DownloadEtwManifests();
+        }
+
+        [Test()]
         public void GetDefaultConfigTest()
         {
             throw new NotImplementedException();
