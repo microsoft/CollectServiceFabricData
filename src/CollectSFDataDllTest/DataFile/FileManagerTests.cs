@@ -297,7 +297,7 @@ namespace CollectSFData.DataFile.Tests
                 EndTimeStamp = DateTime.Now.ToString("O"),
                 GatherType = FileTypesEnum.trace.ToString(),
                 CacheLocation = tempPath,
-                EtwManifestCache = manifestPath,
+                EtwManifestsCache = manifestPath,
                 FileUris = new string[]
                 {
                     inputFile
