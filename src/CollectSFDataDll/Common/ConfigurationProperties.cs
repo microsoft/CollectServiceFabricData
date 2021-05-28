@@ -38,7 +38,7 @@ namespace CollectSFData.Common
 
         public DateTimeOffset EndTimeUtc { get; set; }
 
-        public string EtwManifestCache { get; set; } = "./manifests";
+        public string EtwManifestsCache { get; set; } = Constants.EtwDefaultManifestsCache;
 
         public bool Examples { get; private set; }
 

@@ -24,11 +24,13 @@ namespace CollectSFData.Common
         public const string DtrZipExtension = ".dtr.zip";
         public const string DumpExtension = ".dmp";
         public const string EtlExtension = ".etl";
+        public const string EtwDefaultManifestsCache = "./manifests";
+        public const string EtwManifestExtension = ".man";
+        public const string EtwManifestsUrlIndex = "https://raw.githubusercontent.com/jagilber/CollectServiceFabricData/etlreader/manifests/index.json"; //"https://raw.githubusercontent.com/microsoft/CollectServiceFabricData/master/manifests/index.json";
         public const string FalseStringPattern = @"(false|0|off|null)";
         public const string JsonExtension = ".json";
         public const string KustoUrlPattern = "https://(?<ingest>ingest-){1}(?<clusterName>.+?)\\.(?<location>.+?){0,1}\\.(?<domainName>.+?)/(?<databaseName>.+?){1}(/|$)";
         public const string ManagementAzureCom = "https://management.azure.com";
-        public const string ManifestExtension = ".man";
         public const int MaxCsvTransmitBytes = 1024 * 1024 * 100;
         public const int MaxJsonTransmitBytes = 1024 * 1024 * 25;
         public const int MaxResults = 5000;

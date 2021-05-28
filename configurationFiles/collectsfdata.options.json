@@ -11,7 +11,7 @@
   "ContainerFilter": null,
   "DeleteCache": false,
   "EndTimeStamp": null,
-  "EtwManifestCache": "./manifests",
+  "EtwManifestsCache": "./manifests",
   "FileUris": [],
   "GatherType": "trace",
   "KustoCluster": null,
