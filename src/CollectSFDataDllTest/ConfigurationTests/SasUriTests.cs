@@ -9,7 +9,7 @@ using CollectSFDataTest.Utilities;
 using NUnit.Framework;
 using System;
 
-namespace CollectSFDataDll.ConfigurationTests
+namespace CollectSFData.ConfigurationTests
 {
     [TestFixture]
     public class SasUriTests

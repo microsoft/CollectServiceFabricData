@@ -15,7 +15,7 @@ using System.IO;
 //using System.Windows;
 //using System.Windows.Forms;
 
-namespace CollectSFDataTest
+namespace CollectSFData.ConfigurationTests
 {
     [TestFixture]
     public class AzureMsalTests : TestUtilities
