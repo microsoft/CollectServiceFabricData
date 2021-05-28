@@ -206,6 +206,34 @@ namespace CollectSFData.Common
             return timeString;
         }
 
+        public bool CreateDirectory(string directory)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(directory))
+                {
+                    return false;
+                }
+
+                if (!Directory.Exists(directory))
+                {
+                    Log.Info($"creating directory:{directory}");
+                    Directory.CreateDirectory(directory);
+                }
+                else
+                {
+                    Log.Debug($"directory exists:{directory}");
+                }
+
+                return true;
+            }
+            catch (Exception e)
+            {
+                Log.Exception($"exception:{e}");
+                return false;
+            }
+        }
+
         public void DisplayStatus()
         {
             Log.Min($"      Gathering: {FileType.ToString()}", ConsoleColor.White);
@@ -247,28 +275,43 @@ namespace CollectSFData.Common
         public void DownloadEtwManifests()
         {
             Log.Info($"Checking EtwManifestsCache:{Constants.EtwManifestsUrlIndex}");
-            string response = "";
             Http http = Http.ClientFactory();
             http.DisplayError = false;
 
             Dictionary<string, string> headers = new Dictionary<string, string>();
             headers.Add("User-Agent", $"{Constants.ApplicationName}");
 
+            if (!CreateDirectory(EtwManifestsCache))
+            {
+                return;
+            }
+
             try
             {
                 if (http.SendRequest(uri: Constants.EtwManifestsUrlIndex, headers: headers, httpMethod: HttpMethod.Head)
                      && http.SendRequest(uri: Constants.EtwManifestsUrlIndex, headers: headers))
                 {
-                    JToken downloadUrl = http.ResponseStreamJson.SelectToken("assets[0].browser_download_url");
-                    JToken downloadVersion = http.ResponseStreamJson.SelectToken("tag_name");
-                    JToken body = http.ResponseStreamJson.SelectToken("body");
-                }
+                    JArray manifests = http.ResponseStreamJson.SelectToken("manifests") as JArray;
+                    Log.Info("manifests", manifests);
 
-                Log.Info(response);
+                    foreach (JToken manifest in manifests)
+                    {
+                        Log.Info($"downloading {manifest}");
+                        http.SendRequest(uri: $"{Constants.EtwManifestsUrl}/{manifest}", headers: headers);
+
+                        string manifestPath = $"{EtwManifestsCache}/{manifest}";
+                        Log.Info($"saving {manifestPath}");
+                        File.WriteAllText(manifestPath, http.ResponseStreamString);
+                    }
+                }
+                else
+                {
+                    Log.Warning($"unable to connect to manifests url {Constants.EtwManifestsUrlIndex}");
+                }
             }
-            catch
+            catch (Exception e)
             {
-                Log.Warning(response);
+                Log.Exception($"exception:{e}");
             }
         }
 
@@ -843,7 +886,7 @@ namespace CollectSFData.Common
 
             if (!Directory.Exists(CacheLocation))
             {
-                Directory.CreateDirectory(CacheLocation);
+                CreateDirectory(CacheLocation);
             }
             else if (Directory.Exists(CacheLocation)
                 & Directory.GetFileSystemEntries(CacheLocation).Length > 0
@@ -853,11 +896,7 @@ namespace CollectSFData.Common
                 // add working dir to outputlocation so it can be deleted
                 string workDirPath = $"{CacheLocation}{Path.DirectorySeparatorChar}{Path.GetFileName(Path.GetTempFileName())}";
                 Log.Warning($"outputlocation not empty and DeleteCache is enabled, creating work subdir {workDirPath}");
-
-                if (!Directory.Exists(workDirPath))
-                {
-                    Directory.CreateDirectory(workDirPath);
-                }
+                CreateDirectory(workDirPath);
 
                 Log.Info($"setting output location to: {workDirPath}");
                 CacheLocation = FileManager.NormalizePath(workDirPath);
@@ -892,7 +931,7 @@ namespace CollectSFData.Common
             if (!Directory.Exists(EtwManifestsCache))
             {
                 Log.Info($"creating EtwManifestsCache:{EtwManifestsCache}");
-                Directory.CreateDirectory(EtwManifestsCache);
+                CreateDirectory(EtwManifestsCache);
                 DownloadEtwManifests();
             }
         }
@@ -908,6 +947,7 @@ namespace CollectSFData.Common
             if (HasValue(LogFile))
             {
                 LogFile = FileManager.NormalizePath(LogFile);
+                CreateDirectory(Path.GetDirectoryName(LogFile));
                 Log.Info($"setting output log file to: {LogFile}");
             }
         }
