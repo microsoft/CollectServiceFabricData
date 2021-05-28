@@ -30,16 +30,19 @@ $globalNugetFiles = @{
 }
 
 $commonNugetFiles = @{
-    '../bin/$configuration$/$targetFramework/*.exe'                = 'tools/$targetFramework'
-    '../bin/$configuration$/$targetFramework/*.dll'                = 'tools/$targetFramework'
-    '../bin/$configuration$/$targetFramework/*.pdb'                = 'tools/$targetFramework'
-    '../bin/$configuration$/$targetFramework/Include/*.dll'        = 'tools/$targetFramework/include'
-    '../bin/$configuration$/$targetFramework/manifests/*.man'      = 'tools/$targetFramework/manifests'
-    '../bin/$configuration$/$targetFramework/CollectSFDataDll.dll' = 'lib/$targetFramework'
-    '../bin/$configuration$/$targetFramework/Sf.Tx.Core.dll'       = 'lib/$targetFramework'
-    '../bin/$configuration$/$targetFramework/Sf.Tx.Windows.dll'    = 'lib/$targetFramework'
-    '../../configurationFiles/collectsfdata.options.json'          = 'tools/$targetFramework'
-    '../bin/$configuration$/$targetFramework/*.config'             = 'tools/$targetFramework'
+    '../bin/$configuration$/$targetFramework/*.exe'                     = 'tools/$targetFramework'
+    '../bin/$configuration$/$targetFramework/*.dll'                     = 'tools/$targetFramework'
+    #'../bin/$configuration$/$targetFramework/*.pdb*'                     = 'tools/$targetFramework'
+    '../bin/$configuration$/$targetFramework/manifests/*.man'           = 'tools/$targetFramework/manifests'
+    '../../configurationFiles/collectsfdata.options.json'               = 'tools/$targetFramework'
+    '../bin/$configuration$/$targetFramework/*.config'                  = 'tools/$targetFramework'
+    '../bin/$configuration$/$targetFramework/EtlReader.dll'             = 'lib/$targetFramework'
+    '../bin/$configuration$/$targetFramework/System.Fabric.Strings.dll' = 'lib/$targetFramework'
+    '../bin/$configuration$/$targetFramework/manifests/*.man*'          = 'lib/$targetFramework/manifests'
+    '../bin/$configuration$/$targetFramework/CollectSFDataDll.dll'      = 'lib/$targetFramework'
+    '../bin/$configuration$/$targetFramework/Sf.Tx.Core.dll'            = 'lib/$targetFramework'
+    '../bin/$configuration$/$targetFramework/Sf.Tx.Windows.dll'         = 'lib/$targetFramework'
+    '../bin/$configuration$/$targetFramework/*.pdb'                     = 'lib/$targetFramework'
 }
 
 $netCoreNugetFiles = @{
