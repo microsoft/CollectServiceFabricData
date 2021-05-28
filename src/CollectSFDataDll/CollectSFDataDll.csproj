@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>netcoreapp3.1;net462;net472;net5.0</TargetFrameworks>
     <Platforms>x64</Platforms>
@@ -105,27 +105,19 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <None Update="EtlReader.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
     <Reference Include="system.fabric.strings">
       <HintPath>..\Include\System.Fabric.Strings.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <None Update="Include\EtlReader.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="Include\System.Fabric.Strings.dll">
+    <None Update="EtlReader.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="System.Fabric.Strings.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="dir $(OutDir)&#xD;&#xA;md $(OutDir)manifests&#xD;&#xA;copy $(ProjectDir)..\..\manifests\* $(OutDir)\manifests&#xD;&#xA;copy $(ProjectDir)..\..\configurationFiles\collectsfdata.options.json $(OutDir)" />
+    <Exec Command="pwsh $(ProjectDir)..\..\scripts\post-build-events.ps1 -projectDir $(ProjectDir) -outDir $(OutDir)&#xD;&#xA;" />
   </Target>
 </Project>
