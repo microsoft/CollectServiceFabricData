@@ -39,7 +39,7 @@ namespace CollectSFData.DataFile
 
                 if (ManifestCache == null)
                 {
-                    ManifestCache = LoadManifests(_config.EtwManifestCache, _config.CacheLocation);
+                    ManifestCache = LoadManifests(_config.EtwManifestsCache, _config.CacheLocation);
                 }
             }
         }
@@ -67,7 +67,7 @@ namespace CollectSFData.DataFile
 
             if (Directory.Exists(manifestPath) && Directory.Exists(cacheLocation))
             {
-                List<string> manifestFiles = Directory.GetFiles(manifestPath, $"*{Constants.ManifestExtension}").ToList();
+                List<string> manifestFiles = Directory.GetFiles(manifestPath, $"*{Constants.EtwManifestExtension}").ToList();
                 Log.Info("manifest files:", manifestFiles);
 
                 if (version != new Version())
