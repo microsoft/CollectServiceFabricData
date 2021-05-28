@@ -8,7 +8,7 @@ using CollectSFDataTest.Utilities;
 using NUnit.Framework;
 using System;
 
-namespace CollectSFDataTest
+namespace CollectSFData.ConfigurationTests
 {
     [TestFixture]
     public class GatherTypeTests : TestUtilities

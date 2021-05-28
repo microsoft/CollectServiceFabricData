@@ -10,7 +10,7 @@ using System;
 using System.IO;
 using System.Text.RegularExpressions;
 
-namespace CollectSFDataTest
+namespace CollectSFData.ConfigurationTests
 {
     [TestFixture]
     public class ConfigurationTests : TestUtilities
