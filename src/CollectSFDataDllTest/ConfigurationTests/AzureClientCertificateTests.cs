@@ -8,7 +8,7 @@ using System;
 using System.IO;
 using System.Security.Cryptography.X509Certificates;
 
-namespace CollectSFDataDll.ConfigurationTests
+namespace CollectSFData.ConfigurationTests
 {
     [TestFixture()]
     public class AzureClientCertificateTests : TestUtilities
