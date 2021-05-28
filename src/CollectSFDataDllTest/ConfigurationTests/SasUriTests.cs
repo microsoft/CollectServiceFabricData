@@ -12,7 +12,7 @@ using System;
 namespace CollectSFDataDll.ConfigurationTests
 {
     [TestFixture]
-    public class SasUriTests : TestUtilities
+    public class SasUriTests
     {
         [Test(Description = "SAS ASC / Jarvis connection string test", TestOf = typeof(SasEndpoints))]
         public void SasAscTest()
