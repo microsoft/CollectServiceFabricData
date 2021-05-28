@@ -6,6 +6,7 @@ env:
   artifacts_path: .\src\bin\artifacts
   release_path: .\src\bin\Release
   release_config: .\configurationFiles\collectsfdata.options.json
+  target_version: net472
   github_owner: ${{ github.event.repository.owner.name }}
 
 on:
@@ -103,7 +104,7 @@ jobs:
         id: prepare_release_asset
         run: |
           md "$($env:release_path)_upload"
-          $releaseFramework = "$($env:release_path)\net472"
+          $releaseFramework = "$($env:release_path)\$($env:target_version)"
           copy "$($releaseFramework)\*.config" "$($env:release_path)_upload"
           copy "$($releaseFramework)\*.exe" "$($env:release_path)_upload"
           copy "$($releaseFramework)\*.dll" "$($env:release_path)_upload"
