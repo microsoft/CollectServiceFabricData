@@ -30,21 +30,25 @@ function main() {
     $manifestOutDir = "$outDir\manifests"
 
     if ([string]::Compare($manifestJson, $currentManifestJson) -ne 0) {
+        write-host "manifestjson:$($manifestJson)"
+        write-host "currentManifestjson:$($currentManifestJson)"
         write-host "updating $manifestIndex" -ForegroundColor Magenta
         $manifestJson | out-file -path $manifestIndex
     }
 
     if (!(test-path $manifestOutDir)) {
         mkdir $manifestOutDir
-    }
 
-    write-host "copying manifests $manifestPath to $outputDir"
-    foreach ($manifest in $manifests) {
-        Copy-Item $manifest.FullName "$outDir\manifests"
+        write-host "copying manifests $manifestPath to $outputDir"
+        foreach ($manifest in $manifests) {
+            Copy-Item $manifest.FullName "$outDir\manifests"
+        }
     }
-
-    write-host "copying default options file $defaultOptionsFile"
-    Copy-Item $defaultOptionsFile $outDir
+    
+    if (!(test-path $defaultOptionsFile)) {
+        write-host "copying default options file $defaultOptionsFile"
+        Copy-Item $defaultOptionsFile $outDir
+    }
 }
 
 main
