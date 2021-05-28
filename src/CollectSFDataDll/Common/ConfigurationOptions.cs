@@ -244,6 +244,34 @@ namespace CollectSFData.Common
             }
         }
 
+        public void DownloadEtwManifests()
+        {
+            Log.Info($"Checking EtwManifestsCache:{Constants.EtwManifestsUrlIndex}");
+            string response = "";
+            Http http = Http.ClientFactory();
+            http.DisplayError = false;
+
+            Dictionary<string, string> headers = new Dictionary<string, string>();
+            headers.Add("User-Agent", $"{Constants.ApplicationName}");
+
+            try
+            {
+                if (http.SendRequest(uri: Constants.EtwManifestsUrlIndex, headers: headers, httpMethod: HttpMethod.Head)
+                     && http.SendRequest(uri: Constants.EtwManifestsUrlIndex, headers: headers))
+                {
+                    JToken downloadUrl = http.ResponseStreamJson.SelectToken("assets[0].browser_download_url");
+                    JToken downloadVersion = http.ResponseStreamJson.SelectToken("tag_name");
+                    JToken body = http.ResponseStreamJson.SelectToken("body");
+                }
+
+                Log.Info(response);
+            }
+            catch
+            {
+                Log.Warning(response);
+            }
+        }
+
         public ConfigurationOptions GetDefaultConfig()
         {
             LoadDefaultConfig();
@@ -499,6 +527,7 @@ namespace CollectSFData.Common
                 {
                     retval &= ValidateSasKey();
                     CheckCache();
+                    CheckEtwManifestsCache();
                     CheckLogFile();
 
                     retval &= ValidateFileType();
@@ -847,6 +876,24 @@ namespace CollectSFData.Common
             {
                 Log.Warning($"setting 'DeleteCache' is set to true but no sas information provided.\r\nfiles will be deleted at exit!\r\nctrl-c now if this incorrect.");
                 Thread.Sleep(Constants.ThreadSleepMsWarning);
+            }
+        }
+
+        private void CheckEtwManifestsCache()
+        {
+            if (!HasValue(EtwManifestsCache))
+            {
+                EtwManifestsCache = Constants.EtwDefaultManifestsCache;
+                Log.Info($"setting EtwManifestsCache default value:{EtwManifestsCache}");
+            }
+
+            EtwManifestsCache = FileManager.NormalizePath(EtwManifestsCache);
+
+            if (!Directory.Exists(EtwManifestsCache))
+            {
+                Log.Info($"creating EtwManifestsCache:{EtwManifestsCache}");
+                Directory.CreateDirectory(EtwManifestsCache);
+                DownloadEtwManifests();
             }
         }
 
