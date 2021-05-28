@@ -195,7 +195,13 @@ namespace CollectSFData.Azure
         {
             BlobContinuationToken blobToken = new BlobContinuationToken();
             ContainerResultSegment containerSegment = null;
-            string containerFilter = _config.ContainerFilter ?? string.Empty;
+            string containerFilter = string.Empty;
+            
+            if(!string.IsNullOrEmpty(_config.ContainerFilter))
+            {
+                containerPrefix = null;
+                containerFilter = _config.ContainerFilter;
+            }
 
             try
             {
