@@ -1,6 +1,7 @@
 ﻿using CollectSFData.Common;
 using NUnit.Framework;
 using System;
+using System.IO;
 
 namespace CollectSFData.Common.Tests
 {
@@ -95,7 +96,17 @@ namespace CollectSFData.Common.Tests
         public void DownloadEtwManifestsTest()
         {
             ConfigurationOptions configurationOptions = new ConfigurationOptions();
+            configurationOptions.EtwManifestsCache = $"{Path.GetTempPath()}/manifests";
+            if (Directory.Exists(configurationOptions.EtwManifestsCache))
+            {
+                Directory.Delete(configurationOptions.EtwManifestsCache, true);
+            }
+
             configurationOptions.DownloadEtwManifests();
+
+            Assert.IsTrue(Directory.Exists(configurationOptions.EtwManifestsCache));
+            Assert.IsTrue(Directory.GetFiles(configurationOptions.EtwManifestsCache).Length > 1);
+            Directory.Delete(configurationOptions.EtwManifestsCache, true);
         }
 
         [Test()]
