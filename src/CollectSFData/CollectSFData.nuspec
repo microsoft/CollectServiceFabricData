@@ -146,7 +146,6 @@
     <file src="..\bin\$configuration$\net462\*.pdb" target="lib\net462" />
     <file src="..\bin\$configuration$\net462\Etlreader.dll" target="lib\net462" />
     <file src="..\bin\$configuration$\net462\System.Fabric.Strings.dll" target="lib\net462" />
-    <file src="..\bin\$configuration$\net462\manifests\*.man" target="lib\net462\manifests" />
     <!-- net472 tools -->
     <!-- 
     <file src="..\bin\$configuration$\net472\*.exe" target="tools\net472" />
@@ -163,7 +162,6 @@
     <file src="..\bin\$configuration$\net472\*.pdb" target="lib\net472" />
     <file src="..\bin\$configuration$\net472\Etlreader.dll" target="lib\net472" />
     <file src="..\bin\$configuration$\net472\System.Fabric.Strings.dll" target="lib\net472" />
-    <file src="..\bin\$configuration$\net472\manifests\*.man" target="lib\net472\manifests" />
     <!-- netcoreapp3.1 tools -->
     <file src="..\bin\$configuration$\netcoreapp3.1\*.exe" target="tools\netcoreapp3.1" />
     <file src="..\bin\$configuration$\netcoreapp3.1\*.runtimeconfig.json" target="tools\netcoreapp3.1" />
@@ -179,7 +177,6 @@
     <file src="..\bin\$configuration$\netcoreapp3.1\*.pdb" target="lib\netcoreapp3.1" />
     <file src="..\bin\$configuration$\netcoreapp3.1\Etlreader.dll" target="lib\netcoreapp3.1" />
     <file src="..\bin\$configuration$\netcoreapp3.1\System.Fabric.Strings.dll" target="lib\netcoreapp3.1" />
-    <file src="..\bin\$configuration$\netcoreapp3.1\manifests\*.man" target="lib\netcoreapp3.1\manifests" />
     <!-- net5.0 tools -->
     <!-- 
     <file src="..\bin\$configuration$\net5.0\*.exe" target="tools\net5.0" />
@@ -197,7 +194,6 @@
     <file src="..\bin\$configuration$\net5.0\*.pdb" target="lib\net5.0" />
     <file src="..\bin\$configuration$\net5.0\Etlreader.dll" target="lib\net5.0" />
     <file src="..\bin\$configuration$\net5.0\System.Fabric.Strings.dll" target="lib\net5.0" />
-    <file src="..\bin\$configuration$\net5.0\manifests\*.man" target="lib\net5.0\manifests" />
     <!-- icon -->
     <file src="..\FabricSupport.png" target="images\" />
   </files>
