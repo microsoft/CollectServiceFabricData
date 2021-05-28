@@ -21,11 +21,11 @@ function main() {
 
     $manifestIndex = "$manifestPath\index.html"
     $manifests = Get-ChildItem -Filter "*.man" -path $manifestpath
-    $manifestHtml = $manifests | ConvertTo-Html -Property Name -As Table
-    $curentManifestHtml = Get-Content -raw $manifestIndex
+    $manifestHtml = $manifests.name # | ConvertTo-Html -Property Name -As Table
+    $currentManifestHtml = Get-Content -raw $manifestIndex
     $manifestOutDir = "$outDir\manifests"
 
-    if ($manifestHtml -ne $curentManifestHtml) {
+    if ($manifestHtml -ne $currentManifestHtml) {
         write-host "updating $manifestIndex" -ForegroundColor Magenta
         $manifestHtml | out-file -path $manifestIndex
     }
