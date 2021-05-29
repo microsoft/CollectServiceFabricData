@@ -2,8 +2,8 @@
 post build event script called from CollectSFDataDll.csproj
 #>
 param(
-    $projectDir,
-    $outdir
+    $projectDir = "..\src\CollectSfDataDll\",
+    $outdir = "..\bin\Debug\netcoreapp3.1\"
 )
 
 $ErrorActionPreference = 'continue'
@@ -27,9 +27,10 @@ function main() {
     $root.manifests = (Get-ChildItem -Filter "*.man" -path $manifestpath).Name
     $manifestJson = $root | convertto-json 
     $currentManifestJson = Get-Content -raw $manifestIndex
+    $currentManifest = $currentManifestJson | convertfrom-json
     $manifestOutDir = "$outDir\manifests"
 
-    if ([string]::Compare($manifestJson, $currentManifestJson) -ne 0) {
+    if(Compare-Object -ReferenceObject $root.manifests -DifferenceObject $currentManifest.manifests){
         write-host "manifestjson:$($manifestJson)"
         write-host "currentManifestjson:$($currentManifestJson)"
         write-host "updating $manifestIndex" -ForegroundColor Magenta
