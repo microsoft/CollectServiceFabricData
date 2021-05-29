@@ -8,6 +8,7 @@ using CollectSFData.Kusto;
 using CollectSFDataTest.Utilities;
 using NUnit.Framework;
 using System;
+using CollectSFDataDllTest.Utilities;
 
 namespace CollectSFData.ConfigurationTests
 {
