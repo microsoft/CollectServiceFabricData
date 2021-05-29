@@ -9,6 +9,7 @@ using NUnit.Framework;
 using System;
 using System.IO;
 using System.Text.RegularExpressions;
+using CollectSFDataDllTest.Utilities;
 
 namespace CollectSFData.ConfigurationTests
 {
