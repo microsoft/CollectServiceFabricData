@@ -11,6 +11,7 @@ using NUnit.Framework;
 using System;
 using System.Diagnostics;
 using System.IO;
+using CollectSFDataDllTest.Utilities;
 
 //using System.Windows;
 //using System.Windows.Forms;
