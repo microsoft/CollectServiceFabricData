@@ -113,6 +113,26 @@ namespace CollectSFData.DataFile.Tests
             Assert.IsTrue(foc.Any(fsMultipleOption));
 
             Assert.IsTrue(foc.Count(fsMultipleOption) == 2, $"expected:2 got:{foc.Count(fsMultipleOption)}");
+
+            foc.Clear();
+            fsMultipleOption = FileStatus.existing | FileStatus.succeeded;
+            Assert.IsFalse(foc.Any());
+            foc.AddRange(new FileObject[10]
+            {
+                new FileObject() { Status = FileStatus.uploading },
+                new FileObject() { Status = FileStatus.existing },
+                new FileObject() { Status = FileStatus.succeeded },
+                new FileObject() { Status = FileStatus.succeeded },
+                new FileObject() { Status = FileStatus.succeeded },
+                new FileObject() { Status = FileStatus.existing },
+                new FileObject() { Status = FileStatus.failed },
+                new FileObject() { Status = FileStatus.succeeded },
+                new FileObject() { Status = FileStatus.succeeded },
+                new FileObject() { Status = FileStatus.downloading },
+            });
+            Assert.IsTrue(foc.Any(fsMultipleOption));
+
+            Assert.IsTrue(foc.Count(fsMultipleOption) == 7, $"expected:7 got:{foc.Count(fsMultipleOption)}");
         }
 
         [Test()]
