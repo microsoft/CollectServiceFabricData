@@ -86,7 +86,8 @@ namespace CollectSFData
                 Instance.TotalErrors += Log.LogErrors;
 
                 LogSummary();
-                return Instance.TotalErrors;
+                int unsuccessfulFileCount = (Instance.FileObjects.Count() - Instance.FileObjects.Count(FileStatus.succeeded | FileStatus.existing));
+                return Instance.TotalErrors + unsuccessfulFileCount;
             }
             catch (Exception ex)
             {
