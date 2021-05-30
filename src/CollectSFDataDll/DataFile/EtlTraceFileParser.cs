@@ -142,11 +142,16 @@ namespace CollectSFData.DataFile
 
         private void OnEventRead(object sender, EventRecordEventArgs e)
         {
-            string[] formattedEvent = ManifestCache.FormatEvent(e.Record).Split(new char[] { ',' }, EtlInputFields.Count());
-            Log.Debug($"formattedEvent", formattedEvent);
+            string[] formattedEvent = ManifestCache.FormatEvent(e.Record)?.Split(new char[] { ',' }, EtlInputFields.Count());
+            Log.Trivial($"formattedEvent", formattedEvent);
             //Log.Debug($"e", e);
             //EventDefinition eventDefinition = ManifestCache.GetEventDefinition(e.Record);
             //Log.Debug($"eventDefinition", eventDefinition);
+            if(formattedEvent == null)
+            {
+                Log.Warning("null etl event");
+                return;
+            }
 
             _traceDispatcher(new T()
             {
