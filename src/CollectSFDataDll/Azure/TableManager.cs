@@ -17,7 +17,7 @@ namespace CollectSFData.Azure
 {
     public class TableManager
     {
-        private readonly CustomTaskManager _tableTasks = new CustomTaskManager(true);
+        private readonly CustomTaskManager _tableTasks = new CustomTaskManager();
         private ConfigurationOptions _config;
         private Instance _instance;
         private CloudTableClient _tableClient;

@@ -19,8 +19,8 @@ namespace CollectSFData.Azure
 {
     public class BlobManager
     {
-        private readonly CustomTaskManager _blobChildTasks = new CustomTaskManager(true) { CreationOptions = TaskCreationOptions.AttachedToParent };
-        private readonly CustomTaskManager _blobTasks = new CustomTaskManager(true);
+        private readonly CustomTaskManager _blobChildTasks = new CustomTaskManager() { CreationOptions = TaskCreationOptions.AttachedToParent };
+        private readonly CustomTaskManager _blobTasks = new CustomTaskManager();
         private CloudStorageAccount _account;
         private CloudBlobClient _blobClient;
         private ConfigurationOptions _config;
