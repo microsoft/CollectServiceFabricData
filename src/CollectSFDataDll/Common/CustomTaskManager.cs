@@ -52,16 +52,16 @@ namespace CollectSFData.Common
         {
             CallerName = $"{callerName}-{this.GetHashCode()}";
 
-            Log.Debug($"{CallerName} waiting on lock. taskmonitor status: {_taskMonitor.Status}", ConsoleColor.White);
+            Log.Debug($"{CallerName} waiting on lock. taskmonitor status: {_taskMonitor.Status}");
             lock (_taskMonLock)
             {
-                Log.Debug($"{CallerName} in lock. taskmonitor status: {_taskMonitor.Status}", ConsoleColor.White);
+                Log.Debug($"{CallerName} in lock. taskmonitor status: {_taskMonitor.Status}");
 
                 if (!IsRunning)
                 {
-                    Log.Highlight($"{CallerName} starting taskmonitor. status: {_taskMonitor.Status}", ConsoleColor.White);
+                    Log.Highlight($"{CallerName} starting taskmonitor. status: {_taskMonitor.Status}");
                     Resume();
-                    Log.Highlight($"{CallerName} started taskmonitor. status: {_taskMonitor.Status}", ConsoleColor.White);
+                    Log.Highlight($"{CallerName} started taskmonitor. status: {_taskMonitor.Status}");
                 }
 
                 if (_taskMonitor.Status != TaskStatus.RanToCompletion)
