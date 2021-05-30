@@ -115,7 +115,7 @@ namespace CollectSFData.DataFile
         public IEnumerable<T> Read<T>()
         {
             Open(true);
-            Log.Trivial($"enter: memoryStream length: {_memoryStream.Length}");
+            Log.Debug($"enter: memoryStream length: {_memoryStream.Length}");
             char[] trimChars = new char[] { '[', ']', ',' };
 
             using (StreamReader reader = new StreamReader(_memoryStream, Encoding.UTF8, false, StreamBufferSize, _leaveStreamOpen))
@@ -181,7 +181,7 @@ namespace CollectSFData.DataFile
         public IEnumerable<string> ReadLine()
         {
             Open(true);
-            Log.Trivial($"enter: memoryStream length: {_memoryStream.Length}");
+            Log.Debug($"enter: memoryStream length: {_memoryStream.Length}");
 
             using (StreamReader reader = new StreamReader(_memoryStream, Encoding.UTF8, false, StreamBufferSize, _leaveStreamOpen))
             {
@@ -230,7 +230,7 @@ namespace CollectSFData.DataFile
 
         public MemoryStream Write<T>(IList<T> records, bool append = false)
         {
-            Log.Trivial($"enter: record length: {records.Count}");
+            Log.Debug($"enter: record length: {records.Count}");
 
             if (_leaveStreamOpen && append)
             {
@@ -244,7 +244,7 @@ namespace CollectSFData.DataFile
 
                     string lastChar = Encoding.UTF8.GetString(lastByte);
 
-                    Log.Trivial($"last character:{lastChar}");
+                    Log.Debug($"last character:{lastChar}");
 
                     if (lastChar.Equals("]"))
                     {
@@ -290,16 +290,16 @@ namespace CollectSFData.DataFile
             if (_memoryStream == null | reset)
             {
                 _memoryStream = new MemoryStream();
-                Log.Trivial("creating new stream");
+                Log.Debug("creating new stream");
             }
             else if (!_memoryStream.CanRead && !_memoryStream.CanWrite)
             {
                 _memoryStream = new MemoryStream(_memoryStream.ToArray());
-                Log.Trivial($"opening stream. stream length: {_memoryStream.Length}");
+                Log.Debug($"opening stream. stream length: {_memoryStream.Length}");
             }
             else
             {
-                Log.Trivial($"stream already open. stream length: {_memoryStream.Length}");
+                Log.Debug($"stream already open. stream length: {_memoryStream.Length}");
 
                 if (resetPosition)
                 {
