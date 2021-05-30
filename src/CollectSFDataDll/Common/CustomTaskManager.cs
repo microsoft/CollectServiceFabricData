@@ -20,7 +20,6 @@ namespace CollectSFData.Common
         private static Task _taskMonitor = new Task(TaskMonitor);
         private static object _taskMonLock = new object();
         private string CallerName;
-        private bool _modified;
         public static CancellationTokenSource CancellationTokenSource { get; private set; } = new CancellationTokenSource();
 
         public static bool IsRunning { get; private set; }
@@ -50,7 +49,7 @@ namespace CollectSFData.Common
         {
         }
 
-        public CustomTaskManager(bool removeWhenComplete = true, [CallerMemberName] string callerName = "")
+        public CustomTaskManager(bool removeWhenComplete = false, [CallerMemberName] string callerName = "")
         {
             RemoveWhenComplete = removeWhenComplete;
             CallerName = $"{callerName}-{this.GetHashCode()}";
@@ -129,21 +128,15 @@ namespace CollectSFData.Common
 
         public void Wait(int milliseconds = 0)
         {
-            Log.Debug($"taskmanager:enter:{CallerName} allTasks:{AllTasks.Count()} queuedTasks:{QueuedTaskObjects.Count()}");
-            DateTime timer = DateTime.Now;
+            Log.Debug("taskmanager:enter", CallerName);
 
-            while (_modified || QueuedTaskObjects.Any() || AllTasks.Any())
+            while (QueuedTaskObjects.Any())
             {
-                _modified = false;
-                // if(AllTasks.Any())
-                // {
-                //     Task.WaitAll(AllTasks.ToArray());
-                // }
-                Log.Debug($"taskmanager:waiting:{CallerName} ms wait:{DateTime.Now.Subtract(timer).TotalMilliseconds} allTasks:{AllTasks.Count()} queuedTasks:{QueuedTaskObjects.Count()}");
                 Thread.Sleep(Constants.ThreadSleepMs100);
             }
 
-            Log.Debug($"taskmanager:exit:{CallerName} allTasks:{AllTasks.Count()} queuedTasks:{QueuedTaskObjects.Count()}");
+            Task.WaitAll(AllTasks.ToArray());
+            Log.Debug("taskmanager:exit", CallerName);
         }
 
         private static int ManageTasks(CustomTaskManager instance)
@@ -230,7 +223,6 @@ namespace CollectSFData.Common
             int workerThreads = 0;
             int completionPortThreads = 0;
             int count = 0;
-            _modified = true;
 
             if (CancellationTokenSource.IsCancellationRequested)
             {
@@ -282,8 +274,6 @@ namespace CollectSFData.Common
 
         private void ScheduleTask(TaskObject taskObject)
         {
-            _modified = true;
-
             if (taskObject.Action != null)
             {
                 taskObject.Task = ScheduleTaskAction(taskObject);

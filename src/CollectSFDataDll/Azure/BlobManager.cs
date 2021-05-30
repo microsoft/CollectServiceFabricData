@@ -79,6 +79,25 @@ namespace CollectSFData.Azure
             _blobChildTasks.Wait();
         }
 
+        public void DownloadFiles(List<string> uris)
+        {
+            List<IListBlobItem> blobItems = new List<IListBlobItem>();
+
+            foreach (string uri in uris)
+            {
+                try
+                {
+                    blobItems.Add(_blobClient.GetBlobReferenceFromServer(new Uri(uri)));
+                }
+                catch (Exception e)
+                {
+                    Log.Exception($"{e}");
+                }
+            }
+
+            QueueBlobSegmentDownload(blobItems);
+        }
+
         public void DownloadFiles(string[] uris)
         {
             List<IListBlobItem> blobItems = new List<IListBlobItem>();
@@ -105,10 +124,6 @@ namespace CollectSFData.Azure
 
             QueueBlobSegmentDownload(blobItems);
             uris = blobItems.Select(x => x.Uri.ToString()).ToArray();
-
-            Log.Info("waiting for download tasks");
-            _blobTasks.Wait();
-            _blobChildTasks.Wait();
         }
 
         private void AddContainerToList(CloudBlobContainer container)
@@ -181,8 +196,8 @@ namespace CollectSFData.Azure
             BlobContinuationToken blobToken = new BlobContinuationToken();
             ContainerResultSegment containerSegment = null;
             string containerFilter = string.Empty;
-
-            if (!string.IsNullOrEmpty(_config.ContainerFilter))
+            
+            if(!string.IsNullOrEmpty(_config.ContainerFilter))
             {
                 containerPrefix = null;
                 containerFilter = _config.ContainerFilter;
