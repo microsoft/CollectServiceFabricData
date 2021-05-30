@@ -369,14 +369,6 @@ namespace CollectSFData.Common
             CloseFile();
         }
 
-        public static void Trivial(string message, object jsonSerializer = null, [CallerMemberName] string callerName = "")
-        {
-            if (_logDebug >= LoggingLevel.Trivial)
-            {
-                Debug(message, jsonSerializer, callerName);
-            }
-        }
-
         private static void WriteFile(LogMessage result)
         {
             if (_streamWriter == null)
