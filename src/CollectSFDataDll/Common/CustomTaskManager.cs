@@ -44,15 +44,12 @@ namespace CollectSFData.Common
 
         public SynchronizedList<TaskObject> QueuedTaskObjects { get; set; } = new SynchronizedList<TaskObject>();
 
-        public bool RemoveWhenComplete { get; set; }
-
         static CustomTaskManager()
         {
         }
 
-        public CustomTaskManager(bool removeWhenComplete = true, [CallerMemberName] string callerName = "")
+        public CustomTaskManager([CallerMemberName] string callerName = "")
         {
-            RemoveWhenComplete = removeWhenComplete;
             CallerName = $"{callerName}-{this.GetHashCode()}";
 
             Log.Debug($"{CallerName} waiting on lock. taskmonitor status: {_taskMonitor.Status}", ConsoleColor.White);
@@ -148,7 +145,7 @@ namespace CollectSFData.Common
 
         private static int ManageTasks(CustomTaskManager instance)
         {
-            if (instance.RemoveWhenComplete && instance.AllTasks.Any(x => x.IsCompleted))
+            if (instance.AllTasks.Any(x => x.IsCompleted))
             {
                 string taskUpdate = $"removing completed tasks from instance {instance.CallerName} " +
                     $"scheduled:{instance.AllTasks.Count()} " +

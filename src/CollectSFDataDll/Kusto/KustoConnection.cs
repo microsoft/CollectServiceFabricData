@@ -40,7 +40,7 @@ namespace CollectSFData.Kusto
         {
             _instance = instance ?? throw new ArgumentNullException(nameof(instance));
             _config = _instance.Config;
-            _kustoTasks = new CustomTaskManager(true);
+            _kustoTasks = new CustomTaskManager();
         }
 
         public void AddFile(FileObject fileObject)
