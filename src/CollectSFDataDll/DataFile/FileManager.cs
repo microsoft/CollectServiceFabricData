@@ -22,7 +22,7 @@ namespace CollectSFData.DataFile
 {
     public class FileManager
     {
-        private readonly CustomTaskManager _fileTasks = new CustomTaskManager(true);
+        private readonly CustomTaskManager _fileTasks = new CustomTaskManager();
         private ConfigurationOptions _config;
         private Instance _instance;
         private object _lockObj = new object();

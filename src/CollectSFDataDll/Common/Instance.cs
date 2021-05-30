@@ -47,7 +47,7 @@ namespace CollectSFData.Common
 
         public void Initialize(ConfigurationOptions configurationOptions = null)
         {
-            TaskManager = new CustomTaskManager(true) { Instance = this };
+            TaskManager = new CustomTaskManager() { Instance = this };
 
             if (configurationOptions == null)
             {
