@@ -114,6 +114,11 @@ namespace CollectSFData.DataFile
             return FindByUriFirstOrDefault(searchItem).IsPopulated;
         }
 
+        public int Pending()
+        {
+            return (Count() - Count(FileStatus.succeeded | FileStatus.existing));
+        }
+
         public string StatusString()
         {
             StringBuilder display = new StringBuilder();
