@@ -156,7 +156,7 @@ namespace CollectSFData.Common
                     instance.AllTasks.ForEach(x => taskUpdate += $"\r\n  ID:{x.Id.ToString().PadRight(6)} {x.Status.ToString().PadRight(15)} ({x.CreationOptions.ToString()})");
                 }
 
-                Log.Debug(taskUpdate, ConsoleColor.White);
+                Log.Debug(taskUpdate);
 
                 foreach (Task badTask in instance.AllTasks.FindAll(x => x.Status > TaskStatus.RanToCompletion))
                 {
