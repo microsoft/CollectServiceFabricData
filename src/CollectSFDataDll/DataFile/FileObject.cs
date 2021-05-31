@@ -221,7 +221,7 @@ namespace CollectSFData.DataFile
             }
             else
             {
-                Log.Debug($"extracted node properties:node:{NodeName} filetype:{FileDataType.ToString()}\r\n relativeUri:{RelativeUri}", ConsoleColor.Cyan);
+                Log.Debug($"extracted node properties:node:{NodeName} filetype:{FileDataType.ToString()}\r\n relativeUri:{RelativeUri}");
             }
 
             return fileUri;
