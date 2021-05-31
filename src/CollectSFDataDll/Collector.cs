@@ -58,14 +58,15 @@ namespace CollectSFData
                 if (Config.SasEndpointInfo.IsPopulated())
                 {
                     DownloadAzureData();
+                    CustomTaskManager.WaitAll();
                 }
 
                 if (Config.IsCacheLocationPreConfigured() | Config.FileUris.Any())
                 {
                     UploadCacheData();
+                    CustomTaskManager.WaitAll();
                 }
 
-                CustomTaskManager.WaitAll();
                 FinalizeKusto();
 
                 if (Config.DeleteCache && Config.IsCacheLocationPreConfigured() && Directory.Exists(Config.CacheLocation))
