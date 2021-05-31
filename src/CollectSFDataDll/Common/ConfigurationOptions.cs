@@ -882,8 +882,6 @@ namespace CollectSFData.Common
                 CacheLocation = _tempPath;
             }
 
-            CacheLocation = FileManager.NormalizePath(CacheLocation);
-
             if (!Directory.Exists(CacheLocation))
             {
                 CreateDirectory(CacheLocation);
@@ -894,12 +892,10 @@ namespace CollectSFData.Common
                 & SasEndpointInfo.IsPopulated())
             {
                 // add working dir to outputlocation so it can be deleted
-                string workDirPath = $"{CacheLocation}{Path.DirectorySeparatorChar}{Path.GetFileName(Path.GetTempFileName())}";
+                string workDirPath = $"{CacheLocation}{Path.GetFileName(Path.GetTempFileName())}";
                 Log.Warning($"outputlocation not empty and DeleteCache is enabled, creating work subdir {workDirPath}");
                 CreateDirectory(workDirPath);
-
-                Log.Info($"setting output location to: {workDirPath}");
-                CacheLocation = FileManager.NormalizePath(workDirPath);
+                CacheLocation = workDirPath;
             }
 
             if (!UseMemoryStream && !CacheLocation.StartsWith("\\\\"))
@@ -916,6 +912,9 @@ namespace CollectSFData.Common
                 Log.Warning($"setting 'DeleteCache' is set to true but no sas information provided.\r\nfiles will be deleted at exit!\r\nctrl-c now if this incorrect.");
                 Thread.Sleep(Constants.ThreadSleepMsWarning);
             }
+
+            CacheLocation = FileManager.NormalizePath(CacheLocation);
+            Log.Info($"output location set to: {CacheLocation}");
         }
 
         private void CheckEtwManifestsCache()
