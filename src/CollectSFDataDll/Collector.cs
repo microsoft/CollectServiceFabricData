@@ -84,11 +84,10 @@ namespace CollectSFData
                 }
 
                 Config.SaveConfigFile();
-                Instance.TotalErrors += Log.LogErrors;
-
+                Instance.TotalErrors += Instance.FileObjects.Pending() + Log.LogErrors;
                 LogSummary();
-                int unsuccessfulFileCount = (Instance.FileObjects.Count() - Instance.FileObjects.Count(FileStatus.succeeded | FileStatus.existing));
-                return Instance.TotalErrors + unsuccessfulFileCount;
+
+                return Instance.TotalErrors;
             }
             catch (Exception ex)
             {
@@ -269,10 +268,9 @@ namespace CollectSFData
             Log.Last($"{Instance.TotalFilesEnumerated} files enumerated.");
             Log.Last($"{Instance.TotalFilesMatched} files matched.");
             Log.Last($"{Instance.TotalFilesDownloaded} files downloaded.");
-            Log.Last($"{Instance.TotalFilesSkipped} files skipped.");
             Log.Last($"{Instance.TotalFilesFormatted} files formatted.");
-            Log.Last($"{Instance.TotalErrors} errors.");
-            Log.Last($"{Instance.TotalRecords} parsed records.");
+            Log.Last($"{Instance.TotalFilesSkipped} files skipped.");
+            Log.Last($"{Instance.TotalRecords} parsed events.");
             Log.Last($"timed out: {Instance.TimedOut}.");
             Log.Last($"{Instance.FileObjects.StatusString()}", ConsoleColor.Cyan);
 
@@ -313,6 +311,8 @@ namespace CollectSFData
                 Config.CheckReleaseVersion();
             }
 
+            Log.Last($"{Instance.TotalErrors} errors.", Instance.TotalErrors > 0 ? ConsoleColor.Yellow : ConsoleColor.Green);
+            Log.Last($"{Instance.FileObjects.Pending()} files failed to be processed.", Instance.FileObjects.Pending() > 0 ? ConsoleColor.Red : ConsoleColor.Green);
             Log.Last($"total execution time in minutes: { (DateTime.Now - Instance.StartTime).TotalMinutes.ToString("F2") }");
         }
 
