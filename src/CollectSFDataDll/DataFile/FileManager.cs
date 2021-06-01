@@ -26,7 +26,6 @@ namespace CollectSFData.DataFile
         private ConfigurationOptions _config;
         private Instance _instance;
         private object _lockObj = new object();
-        private EtlTraceFileParser<DtrTraceRecord> _parser;
 
         public FileManager(Instance instance)
         {
@@ -438,16 +437,11 @@ namespace CollectSFData.DataFile
                 recordsCount++;
             });
 
-            if (_parser == null)
-            {
-                _parser = new EtlTraceFileParser<DtrTraceRecord>(_config);
-            }
-
-            _parser.ParseTraces(action, fileObject.FileUri, _config.StartTimeUtc.UtcDateTime, _config.EndTimeUtc.UtcDateTime);
-            _instance.SetMinMaxDate(_parser.TraceSessionMetaData.EndTime.Ticks, _parser.TraceSessionMetaData.StartTime.Ticks);
-
+            EtlTraceFileParser<DtrTraceRecord> parser = new EtlTraceFileParser<DtrTraceRecord>(_config);
+            parser.ParseTraces(action, fileObject.FileUri, _config.StartTimeUtc.UtcDateTime, _config.EndTimeUtc.UtcDateTime);
+            
+            _instance.SetMinMaxDate(parser.TraceSessionMetaData.EndTime.Ticks, parser.TraceSessionMetaData.StartTime.Ticks);
             success = recordsCount != 0;
-            // set status of .etl to succeeded
             fileObject.Status = success ? FileStatus.succeeded : FileStatus.failed;
 
             int totalMs = (int)(DateTime.Now - startTime).TotalMilliseconds;
