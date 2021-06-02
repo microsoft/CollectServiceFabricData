@@ -118,6 +118,6 @@
     </None>
   </ItemGroup>
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="pwsh $(ProjectDir)..\..\scripts\post-build-events.ps1 -projectDir $(ProjectDir) -outDir $(OutDir)&#xD;&#xA;" />
+    <Exec Command="pwsh $(ProjectDir)..\..\scripts\post-build-events.ps1 -projectDir $(ProjectDir) -outDir $(OutDir)" />
   </Target>
 </Project>
