@@ -12,6 +12,9 @@ $currentDir = (get-location).path
 $scriptDir = $PSScriptRoot
 
 function main() {
+    $projectDir = Resolve-Path $projectDir
+    $outDir = Resolve-Path "$projectDir$outDir"
+
     write-host "starting post-build-event.ps1"
     write-host "projectDir:$projectDir"
     write-host "outDir:$outDir"
@@ -40,10 +43,15 @@ function main() {
     if (!(test-path $manifestOutDir)) {
         mkdir $manifestOutDir
 
-        write-host "copying manifests $manifestPath to $outputDir"
+        write-host (Get-ChildItem $manifestPath)
+
+        write-host "copying manifests $manifestPath to $manifestOutDir"
         foreach ($manifest in $manifests) {
-            Copy-Item $manifest.FullName "$outDir\manifests"
+            write-host "copying manifest $manifest to $manifestOutDir"
+            Copy-Item $manifest.FullName $manifestOutDir
         }
+
+        write-host (Get-ChildItem $manifestOutDir)
     }
     
     if (!(test-path $defaultOptionsFile)) {
