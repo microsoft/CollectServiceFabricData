@@ -26,6 +26,8 @@ function main() {
     $defaultOptionsFile = "$defaultOptionsPath\collectsfdata.options.json"
 
     $manifestIndex = "$manifestPath\index.json"
+    $manifests = (Get-ChildItem -Filter "*.man" -path $manifestpath).FullName
+
     [object]$root = @{}
     $root.manifests = (Get-ChildItem -Filter "*.man" -path $manifestpath).Name
     $manifestJson = $root | convertto-json 
@@ -48,7 +50,7 @@ function main() {
         write-host "copying manifests $manifestPath to $manifestOutDir"
         foreach ($manifest in $manifests) {
             write-host "copying manifest $manifest to $manifestOutDir"
-            Copy-Item $manifest.FullName $manifestOutDir
+            Copy-Item $manifest $manifestOutDir
         }
 
         write-host (Get-ChildItem $manifestOutDir)
