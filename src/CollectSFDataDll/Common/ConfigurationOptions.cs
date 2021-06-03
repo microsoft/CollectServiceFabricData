@@ -26,6 +26,7 @@ namespace CollectSFData.Common
     {
         private static readonly CommandLineArguments _cmdLineArgs = new CommandLineArguments();
         private static bool _cmdLineExecuted;
+        private static bool? _cacheLocationPreconfigured = null;
         private static string[] _commandlineArguments = new string[0];
         private static ConfigurationOptions _defaultConfig;
         private readonly string _tempName = "csfd";
@@ -339,9 +340,13 @@ namespace CollectSFData.Common
 
         public bool IsCacheLocationPreConfigured()
         {
-            // saving config file with no options will set cache location to %temp% by default
-            // collectsfdata.exe -save file.json
-            return !(!HasValue(CacheLocation) | (CacheLocation == _tempPath));
+            if(_cacheLocationPreconfigured == null)
+            {
+                _cacheLocationPreconfigured = HasValue(CacheLocation);
+                Log.Info($"{_cacheLocationPreconfigured}");
+            }
+
+            return (bool)_cacheLocationPreconfigured;
         }
 
         public bool IsClientIdConfigured()
