@@ -298,7 +298,7 @@ namespace CollectSFData.Common
                     foreach (JToken manifest in manifests)
                     {
                         Log.Info($"downloading {manifest}");
-                        http.SendRequest(uri: $"{Constants.EtwManifestsUrl}/{manifest}", headers: headers);
+                        http.SendRequest(uri: $"{Constants.EtwManifestsUrl}/{manifest}", headers: headers, expectJsonResult: false);
 
                         string manifestPath = $"{EtwManifestsCache}/{manifest}";
                         Log.Info($"saving {manifestPath}");
@@ -340,7 +340,7 @@ namespace CollectSFData.Common
 
         public bool IsCacheLocationPreConfigured()
         {
-            if(_cacheLocationPreconfigured == null)
+            if (_cacheLocationPreconfigured == null)
             {
                 _cacheLocationPreconfigured = HasValue(CacheLocation);
                 Log.Info($"{_cacheLocationPreconfigured}");

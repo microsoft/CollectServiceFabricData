@@ -53,7 +53,8 @@ namespace CollectSFData.Common
             string jsonBody = null,
             HttpMethod httpMethod = null,
             Dictionary<string, string> headers = null,
-            HttpStatusCode okStatus = HttpStatusCode.OK)
+            HttpStatusCode okStatus = HttpStatusCode.OK,
+            bool expectJsonResult = true)
         {
             HttpContent httpContent = default(HttpContent);
             httpMethod = httpMethod ?? Method;
@@ -99,7 +100,7 @@ namespace CollectSFData.Common
                 {
                     ResponseStreamString = Response.Content.ReadAsStringAsync().Result;
 
-                    if (!string.IsNullOrEmpty(ResponseStreamString))
+                    if (expectJsonResult && !string.IsNullOrEmpty(ResponseStreamString))
                     {
                         ResponseStreamJson = JObject.Parse(ResponseStreamString);
                         Log.Debug($"WebResponse stream: bytes: {Response.Content.Headers.ContentLength}\r\n{ResponseStreamJson}");
