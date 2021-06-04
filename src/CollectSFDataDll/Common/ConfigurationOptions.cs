@@ -26,9 +26,10 @@ namespace CollectSFData.Common
     {
         private static readonly CommandLineArguments _cmdLineArgs = new CommandLineArguments();
         private static bool _cmdLineExecuted;
+        private static bool? _cacheLocationPreconfigured = null;
         private static string[] _commandlineArguments = new string[0];
         private static ConfigurationOptions _defaultConfig;
-        private readonly string _workDir = "csfd";
+        private readonly string _tempName = "csfd";
         private string _tempPath;
 
         public X509Certificate2 ClientCertificate { get; set; }
@@ -38,8 +39,11 @@ namespace CollectSFData.Common
             get => base.EndTimeStamp;
             set
             {
-                EndTimeUtc = ConvertToUtcTime(value);
-                base.EndTimeStamp = ConvertToUtcTimeString(value);
+                if (!string.IsNullOrEmpty(value) && base.EndTimeStamp != value)
+                {
+                    EndTimeUtc = ConvertToUtcTime(value);
+                    base.EndTimeStamp = ConvertToUtcTimeString(value);
+                }
             }
         }
 
@@ -66,16 +70,6 @@ namespace CollectSFData.Common
 
         public bool IsValid { get; set; }
 
-        public new int LogDebug
-        {
-            get => base.LogDebug;
-            set
-            {
-                base.LogDebug = value;
-                Log.LogDebug = value;
-            }
-        }
-
         public bool NeedsValidation { get; set; } = true;
 
         public new string StartTimeStamp
@@ -83,8 +77,11 @@ namespace CollectSFData.Common
             get => base.StartTimeStamp;
             set
             {
-                StartTimeUtc = ConvertToUtcTime(value);
-                base.StartTimeStamp = ConvertToUtcTimeString(value);
+                if (!string.IsNullOrEmpty(value) && base.StartTimeStamp != value)
+                {
+                    StartTimeUtc = ConvertToUtcTime(value);
+                    base.StartTimeStamp = ConvertToUtcTimeString(value);
+                }
             }
         }
 
@@ -102,25 +99,29 @@ namespace CollectSFData.Common
             _cmdLineArgs.InitFromCmdLine();
         }
 
-        public ConfigurationOptions() : this(new string[0])
+        public ConfigurationOptions() : this(null)
         {
         }
 
-        public ConfigurationOptions(string[] commandlineArguments, bool validate = false)
+        public ConfigurationOptions(string[] commandlineArguments = null, bool validate = false, bool loadDefaultConfig = true)
         {
-            if (commandlineArguments.Any())
+            if (commandlineArguments != null)
             {
                 _commandlineArguments = commandlineArguments;
             }
 
-            _tempPath = FileManager.NormalizePath(Path.GetTempPath() + _workDir);
+            _tempPath = FileManager.NormalizePath(Path.GetTempPath() + _tempName);
 
             DateTimeOffset defaultOffset = DateTimeOffset.Now;
             StartTimeUtc = defaultOffset.UtcDateTime.AddHours(Constants.DefaultStartTimeHours);
             StartTimeStamp = defaultOffset.AddHours(Constants.DefaultStartTimeHours).ToString(Constants.DefaultDatePattern);
             EndTimeUtc = defaultOffset.UtcDateTime;
             EndTimeStamp = defaultOffset.ToString(Constants.DefaultDatePattern);
-            LoadDefaultConfig();
+
+            if (loadDefaultConfig)
+            {
+                LoadDefaultConfig();
+            }
 
             if (validate)
             {
@@ -132,7 +133,6 @@ namespace CollectSFData.Common
         {
             string response = $"\r\n\tlocal running version: {Version}";
             Http http = Http.ClientFactory();
-            http.DisplayResponse = false;
             http.DisplayError = false;
 
             Dictionary<string, string> headers = new Dictionary<string, string>();
@@ -207,6 +207,34 @@ namespace CollectSFData.Common
             return timeString;
         }
 
+        public bool CreateDirectory(string directory)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(directory))
+                {
+                    return false;
+                }
+
+                if (!Directory.Exists(directory))
+                {
+                    Log.Info($"creating directory:{directory}");
+                    Directory.CreateDirectory(directory);
+                }
+                else
+                {
+                    Log.Debug($"directory exists:{directory}");
+                }
+
+                return true;
+            }
+            catch (Exception e)
+            {
+                Log.Exception($"exception:{e}");
+                return false;
+            }
+        }
+
         public void DisplayStatus()
         {
             Log.Min($"      Gathering: {FileType.ToString()}", ConsoleColor.White);
@@ -245,6 +273,49 @@ namespace CollectSFData.Common
             }
         }
 
+        public void DownloadEtwManifests()
+        {
+            Log.Info($"Checking EtwManifestsCache:{Constants.EtwManifestsUrlIndex}");
+            Http http = Http.ClientFactory();
+            http.DisplayError = false;
+
+            Dictionary<string, string> headers = new Dictionary<string, string>();
+            headers.Add("User-Agent", $"{Constants.ApplicationName}");
+
+            if (!CreateDirectory(EtwManifestsCache))
+            {
+                return;
+            }
+
+            try
+            {
+                if (http.SendRequest(uri: Constants.EtwManifestsUrlIndex, headers: headers, httpMethod: HttpMethod.Head)
+                     && http.SendRequest(uri: Constants.EtwManifestsUrlIndex, headers: headers))
+                {
+                    JArray manifests = http.ResponseStreamJson.SelectToken("manifests") as JArray;
+                    Log.Info("manifests", manifests);
+
+                    foreach (JToken manifest in manifests)
+                    {
+                        Log.Info($"downloading {manifest}");
+                        http.SendRequest(uri: $"{Constants.EtwManifestsUrl}/{manifest}", headers: headers);
+
+                        string manifestPath = $"{EtwManifestsCache}/{manifest}";
+                        Log.Info($"saving {manifestPath}");
+                        File.WriteAllText(manifestPath, http.ResponseStreamString);
+                    }
+                }
+                else
+                {
+                    Log.Warning($"unable to connect to manifests url {Constants.EtwManifestsUrlIndex}");
+                }
+            }
+            catch (Exception e)
+            {
+                Log.Exception($"exception:{e}");
+            }
+        }
+
         public ConfigurationOptions GetDefaultConfig()
         {
             LoadDefaultConfig();
@@ -269,9 +340,13 @@ namespace CollectSFData.Common
 
         public bool IsCacheLocationPreConfigured()
         {
-            // saving config file with no options will set cache location to %temp% by default
-            // collectsfdata.exe -save file.json
-            return !(!HasValue(CacheLocation) | (CacheLocation == _tempPath));
+            if(_cacheLocationPreconfigured == null)
+            {
+                _cacheLocationPreconfigured = HasValue(CacheLocation);
+                Log.Info($"{_cacheLocationPreconfigured}");
+            }
+
+            return (bool)_cacheLocationPreconfigured;
         }
 
         public bool IsClientIdConfigured()
@@ -279,7 +354,7 @@ namespace CollectSFData.Common
             bool configured = ((HasValue(AzureClientId) & HasValue(ClientCertificate)) // app registration configured
                 || (HasValue(AzureClientId) & !HasValue(AzureKeyVault) & HasValue(AzureClientCertificate) & !HasValue(AzureClientSecret)) // app registration
                 || (HasValue(AzureClientId) & !HasValue(AzureKeyVault) & !HasValue(AzureClientCertificate) & HasValue(AzureClientSecret)) // app registration with clientsecret
-                || (HasValue(AzureClientId) & HasValue(AzureKeyVault)  & !HasValue(AzureClientCertificate) & HasValue(AzureClientSecret)) // app registration with kv user managed
+                || (HasValue(AzureClientId) & HasValue(AzureKeyVault) & !HasValue(AzureClientCertificate) & HasValue(AzureClientSecret)) // app registration with kv user managed
                 || (!HasValue(AzureClientId) & HasValue(AzureKeyVault) & !HasValue(AzureClientCertificate) & HasValue(AzureClientSecret)) // system managed identity with kv
                 || (HasValue(AzureClientId) & !HasValue(AzureKeyVault) & !HasValue(AzureClientCertificate) & !HasValue(AzureClientSecret)) // user managed identity
             );
@@ -498,12 +573,13 @@ namespace CollectSFData.Common
                 }
                 else
                 {
-                    CheckLogFile();
                     retval &= ValidateSasKey();
+                    CheckCache();
+                    CheckEtwManifestsCache();
+                    CheckLogFile();
+
                     retval &= ValidateFileType();
                     retval &= ValidateTime();
-
-                    CheckCache();
                     retval &= ValidateSource();
                     retval &= ValidateDestination();
                     retval &= ValidateAad();
@@ -532,7 +608,7 @@ namespace CollectSFData.Common
         public bool ValidateAad()
         {
             CertificateUtilities certificateUtilities = new CertificateUtilities();
-            AzureResourceManager arm = new AzureResourceManager();
+            AzureResourceManager arm = new AzureResourceManager(this);
             bool retval = true;
             bool clientIdConfigured = IsClientIdConfigured();
             bool usingAad = clientIdConfigured | IsKustoConfigured() | IsKustoPurgeRequested();
@@ -811,11 +887,9 @@ namespace CollectSFData.Common
                 CacheLocation = _tempPath;
             }
 
-            CacheLocation = FileManager.NormalizePath(CacheLocation);
-
             if (!Directory.Exists(CacheLocation))
             {
-                Directory.CreateDirectory(CacheLocation);
+                CreateDirectory(CacheLocation);
             }
             else if (Directory.Exists(CacheLocation)
                 & Directory.GetFileSystemEntries(CacheLocation).Length > 0
@@ -823,16 +897,10 @@ namespace CollectSFData.Common
                 & SasEndpointInfo.IsPopulated())
             {
                 // add working dir to outputlocation so it can be deleted
-                string workDirPath = $"{CacheLocation}{Path.DirectorySeparatorChar}{Path.GetFileName(Path.GetTempFileName())}";
+                string workDirPath = $"{CacheLocation}{Path.GetFileName(Path.GetTempFileName())}";
                 Log.Warning($"outputlocation not empty and DeleteCache is enabled, creating work subdir {workDirPath}");
-
-                if (!Directory.Exists(workDirPath))
-                {
-                    Directory.CreateDirectory(workDirPath);
-                }
-
-                Log.Info($"setting output location to: {workDirPath}");
-                CacheLocation = FileManager.NormalizePath(workDirPath);
+                CreateDirectory(workDirPath);
+                CacheLocation = workDirPath;
             }
 
             if (!UseMemoryStream && !CacheLocation.StartsWith("\\\\"))
@@ -849,13 +917,41 @@ namespace CollectSFData.Common
                 Log.Warning($"setting 'DeleteCache' is set to true but no sas information provided.\r\nfiles will be deleted at exit!\r\nctrl-c now if this incorrect.");
                 Thread.Sleep(Constants.ThreadSleepMsWarning);
             }
+
+            CacheLocation = FileManager.NormalizePath(CacheLocation);
+            Log.Info($"output location set to: {CacheLocation}");
+        }
+
+        private void CheckEtwManifestsCache()
+        {
+            if (!HasValue(EtwManifestsCache))
+            {
+                EtwManifestsCache = Constants.EtwDefaultManifestsCache;
+                Log.Info($"setting EtwManifestsCache default value:{EtwManifestsCache}");
+            }
+
+            EtwManifestsCache = FileManager.NormalizePath(EtwManifestsCache);
+
+            if (!Directory.Exists(EtwManifestsCache))
+            {
+                Log.Info($"creating EtwManifestsCache:{EtwManifestsCache}");
+                CreateDirectory(EtwManifestsCache);
+                DownloadEtwManifests();
+            }
         }
 
         private void CheckLogFile()
         {
+            if (LogDebug == LoggingLevel.Verbose && !HasValue(LogFile))
+            {
+                LogFile = $"{CacheLocation}/{_tempName}.log";
+                Log.Warning($"LogDebug 5 (Verbose) requires log file. setting LogFile:{LogFile}");
+            }
+
             if (HasValue(LogFile))
             {
-                Log.LogFile = FileManager.NormalizePath(LogFile);
+                LogFile = FileManager.NormalizePath(LogFile);
+                CreateDirectory(Path.GetDirectoryName(LogFile));
                 Log.Info($"setting output log file to: {LogFile}");
             }
         }
@@ -890,6 +986,7 @@ namespace CollectSFData.Common
                     return true;
                 }
 
+                SetDefaultConfig(Clone());
                 return false;
             }
             else

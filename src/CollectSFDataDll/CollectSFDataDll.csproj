@@ -25,6 +25,9 @@
     <SignAssembly>true</SignAssembly>
     <DelaySign>false</DelaySign>
     <AssemblyOriginatorKeyFile>..\CollectSFDataKey.snk</AssemblyOriginatorKeyFile>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AssemblyCLSCompliant>false</AssemblyCLSCompliant>
+    <DefineConstants>TRACE;WINDOWS_BUILD</DefineConstants>
   </PropertyGroup>
   <ItemGroup Condition=" '$(TargetFramework)' == 'net462'">
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
@@ -96,4 +99,25 @@
     <ProjectReference Include="..\Tx\Tx.Core\Tx.Core.csproj" />
     <ProjectReference Include="..\Tx\Tx.Windows\Tx.Windows.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <Reference Include="EtlReader">
+      <HintPath>..\Include\EtlReader.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="system.fabric.strings">
+      <HintPath>..\Include\System.Fabric.Strings.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="EtlReader.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="System.Fabric.Strings.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="pwsh $(ProjectDir)..\..\scripts\post-build-events.ps1 -projectDir $(ProjectDir) -outDir $(OutDir)" />
+  </Target>
 </Project>
