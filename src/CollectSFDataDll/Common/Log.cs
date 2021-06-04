@@ -14,14 +14,16 @@ using System.Threading.Tasks;
 
 namespace CollectSFData.Common
 {
-    public static class Log
+    public class Log
     {
         public static int LogErrors = 0;
-        public static bool LogFileEnabled;
+        private static ConfigurationOptions _config = new ConfigurationOptions();
         private static bool _isRunning;
         private static JsonSerializerSettings _jsonSerializerSettings;
         private static SynchronizedList<LogMessage> _lastMessageList = new SynchronizedList<LogMessage>();
+        private static int _logDebug = LoggingLevel.Info;
         private static string _logFile;
+        private static bool _logFileEnabled;
         private static SynchronizedList<LogMessage> _messageList = new SynchronizedList<LogMessage>();
         private static StreamWriter _streamWriter;
         private static Task _taskWriter;
@@ -33,9 +35,18 @@ namespace CollectSFData.Common
 
         private static event EventHandler<Newtonsoft.Json.Serialization.ErrorEventArgs> JsonErrorHandler;
 
+        public static ConfigurationOptions Config
+        {
+            set
+            {
+                _config = value;
+                _logFile = CheckLogFile(_config.LogFile) ? _config.LogFile : string.Empty;
+                _logDebug = _config.LogDebug;
+                Open();
+            }
+        }
+
         public static bool IsConsole { get; set; }
-        public static int LogDebug { get; set; }
-        public static string LogFile { get => _logFile; set => _logFile = CheckLogFile(value) ? value : string.Empty; }
         private static CancellationTokenSource _taskWriterCancellationToken => CustomTaskManager.CancellationTokenSource;
 
         static Log()
@@ -47,7 +58,6 @@ namespace CollectSFData.Common
                 Error = JsonErrorHandler
             };
 
-            LogDebug = LoggingLevel.Info;
             IsConsole = true;
             Open();
         }
@@ -85,15 +95,20 @@ namespace CollectSFData.Common
 
         public static void Debug(string message, object jsonSerializer = null, [CallerMemberName] string callerName = "")
         {
-            if (LogDebug >= LoggingLevel.Verbose)
+            if (_logDebug >= LoggingLevel.Verbose)
             {
-                Process("debug: " + message, ConsoleColor.Black, ConsoleColor.Gray, jsonSerializer, callerName: callerName);
+                QueueMessage(false, new LogMessage()
+                {
+                    TimeStamp = DateTime.Now.ToString("o") + "::",
+                    Message = $"{Thread.CurrentThread.ManagedThreadId}:{callerName}:debug:{message}{serializeJson(jsonSerializer)}",
+                    LogFileOnly = true
+                });
             }
         }
 
         public static void Error(string message, object jsonSerializer = null, [CallerMemberName] string callerName = "")
         {
-            if (LogDebug >= LoggingLevel.Error)
+            if (_logDebug >= LoggingLevel.Error)
             {
                 Process("error: " + message, ConsoleColor.Red, ConsoleColor.Black, jsonSerializer, isError: true, callerName: callerName);
             }
@@ -101,7 +116,7 @@ namespace CollectSFData.Common
 
         public static void Exception(string message, object jsonSerializer = null, [CallerMemberName] string callerName = "")
         {
-            if (LogDebug >= LoggingLevel.Exception)
+            if (_logDebug >= LoggingLevel.Exception)
             {
                 Process("exception: " + message, ConsoleColor.Black, ConsoleColor.Yellow, jsonSerializer, isError: true, callerName: callerName);
             }
@@ -109,7 +124,7 @@ namespace CollectSFData.Common
 
         public static void Highlight(string message, object jsonSerializer = null, [CallerMemberName] string callerName = "")
         {
-            if (LogDebug >= LoggingLevel.Warning)
+            if (_logDebug >= LoggingLevel.Warning)
             {
                 ConsoleColor color = ConsoleColor.White;
 
@@ -141,7 +156,7 @@ namespace CollectSFData.Common
                                         bool isError = false,
                                         [CallerMemberName] string callerName = "")
         {
-            if (LogDebug >= LoggingLevel.Info)
+            if (_logDebug >= LoggingLevel.Info)
             {
                 Process(message, foregroundColor, backgroundColor, jsonSerializer, minimal, lastMessage, isError, callerName);
             }
@@ -167,7 +182,7 @@ namespace CollectSFData.Common
                                 object jsonSerializer = null,
                                 [CallerMemberName] string callerName = "")
         {
-            if (LogDebug >= LoggingLevel.Info)
+            if (_logDebug >= LoggingLevel.Info)
             {
                 Process(message, foregroundColor, backgroundColor, jsonSerializer, true, callerName: callerName);
             }
@@ -183,22 +198,9 @@ namespace CollectSFData.Common
             }
         }
 
-        public static void ToFile(string message, object jsonSerializer = null, [CallerMemberName] string callerName = "")
-        {
-            if (LogDebug >= LoggingLevel.File)
-            {
-                QueueMessage(false, new LogMessage()
-                {
-                    TimeStamp = DateTime.Now.ToString("o") + "::",
-                    Message = $"{Thread.CurrentThread.ManagedThreadId}:{callerName}:trivial:{message}{serializeJson(jsonSerializer)}",
-                    LogFileOnly = true
-                });
-            }
-        }
-
         public static void Warning(string message, object jsonSerializer = null, [CallerMemberName] string callerName = "")
         {
-            if (LogDebug >= LoggingLevel.Warning)
+            if (_logDebug >= LoggingLevel.Warning)
             {
                 Process("warning: " + message, ConsoleColor.Yellow, ConsoleColor.Black, jsonSerializer, callerName: callerName);
             }
@@ -208,13 +210,13 @@ namespace CollectSFData.Common
         {
             try
             {
-                if ((Environment.OSVersion.Platform != PlatformID.Win32NT & Environment.OSVersion.Platform != PlatformID.Unix) | string.IsNullOrEmpty(logFile))
+                if (string.IsNullOrEmpty(logFile))
                 {
-                    LogFileEnabled = false;
+                    _logFileEnabled = false;
                     return true;
                 }
 
-                if (!LogFileEnabled)
+                if (!_logFileEnabled)
                 {
                     string directoryName = Path.GetDirectoryName(logFile);
                     if (!string.IsNullOrEmpty(directoryName) && !Directory.Exists(directoryName))
@@ -223,14 +225,14 @@ namespace CollectSFData.Common
                     }
 
                     File.Create(logFile).Close();
-                    LogFileEnabled = true;
+                    _logFileEnabled = true;
                 }
 
                 return true;
             }
             catch (Exception e)
             {
-                LogFileEnabled = false;
+                _logFileEnabled = false;
                 Exception(e.ToString());
                 return false;
             }
@@ -247,7 +249,7 @@ namespace CollectSFData.Common
         {
             e.ErrorContext.Handled = true;
 
-            if (LogDebug >= LoggingLevel.Verbose)
+            if (_logDebug >= LoggingLevel.Verbose)
             {
                 Process($"json serialization error: {e.ErrorContext.OriginalObject} {e.ErrorContext.Path}");
             }
@@ -346,7 +348,7 @@ namespace CollectSFData.Common
                             WriteMessage(result);
                         }
 
-                        if (LogFileEnabled)
+                        if (_logFileEnabled)
                         {
                             WriteFile(result);
                         }
@@ -367,11 +369,19 @@ namespace CollectSFData.Common
             CloseFile();
         }
 
+        public static void Trivial(string message, object jsonSerializer = null, [CallerMemberName] string callerName = "")
+        {
+            if (_logDebug >= LoggingLevel.Trivial)
+            {
+                Debug(message, jsonSerializer, callerName);
+            }
+        }
+
         private static void WriteFile(LogMessage result)
         {
             if (_streamWriter == null)
             {
-                _streamWriter = new StreamWriter(LogFile, true);
+                _streamWriter = new StreamWriter(_logFile, true);
             }
 
             _streamWriter.WriteLine(result.TimeStamp + result.Message);

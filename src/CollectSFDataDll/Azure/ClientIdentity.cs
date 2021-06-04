@@ -2,37 +2,31 @@
 using Azure.Identity;
 using CollectSFData.Common;
 using System;
+using System.Collections.Generic;
+using System.Net;
+using System.Net.NetworkInformation;
+using System.Net.Http;
+using System.Text;
+using System.Net.Sockets;
 
 namespace CollectSFData.Azure
 {
     public class ClientIdentity
-    {   
-        private Instance _instance = Instance.Singleton();
+    {
+        private static string _instanceMetaDataRestIp = "169.254.169.254";
+        private static string _instanceMetaDataRestUri = $"http://{_instanceMetaDataRestIp}/metadata/instance?api-version=2017-08-01";
+        private static bool _isManagedIdentity;
+        private static bool _instanceMetaDataEndpointChecked;
+        private ConfigurationOptions _config;
         public bool IsAppRegistration { get; private set; } = false;
         public bool IsSystemManagedIdentity { get; private set; } = false;
         public bool IsTypeManagedIdentity => (IsSystemManagedIdentity | IsUserManagedIdentity);
         public bool IsUserManagedIdentity { get; private set; } = false;
         public AccessToken ManagedIdentityToken { get; private set; }
-        private ConfigurationOptions _config => _instance.Config;
 
-        public void SetIdentityType()
+        public ClientIdentity(ConfigurationOptions config)
         {
-            if (!string.IsNullOrEmpty(_config.AzureClientId) & !string.IsNullOrEmpty(_config.AzureClientCertificate))
-            {
-                IsAppRegistration = true;
-            }
-            else if (!string.IsNullOrEmpty(_config.AzureClientId))
-            {
-                IsUserManagedIdentity = IsManagedIdentity(_config.AzureClientId);
-            }
-            else if (string.IsNullOrEmpty(_config.AzureClientId))
-            {
-                IsSystemManagedIdentity = IsManagedIdentity();
-            }
-        }
-
-        public ClientIdentity()
-        {
+            _config = config ?? throw new ArgumentNullException(nameof(config));
             SetIdentityType();
         }
 
@@ -62,10 +56,46 @@ namespace CollectSFData.Azure
             return defaultCredential;
         }
 
+        public bool CheckInstanceMetaDataEndpoint()
+        {
+            string hostUri = _instanceMetaDataRestIp;
+            int portNumber = _instanceMetaDataRestUri.ToLower().StartsWith("https:") ? 443 : 80;
+
+            try
+            {
+                using (TcpClient client = new TcpClient(hostUri, portNumber))
+                {
+                    Log.Info($"successful pinging host:{hostUri}:{portNumber}", ConsoleColor.Green);
+                    return true;
+                }
+            }
+            catch (SocketException e)
+            {
+                Log.Info($"error pinging host:{hostUri}:{portNumber}");
+                Log.Debug($"error pinging host:{hostUri}:{portNumber}\r\n{e}");
+                return false;
+            }
+        }
+
         public bool IsManagedIdentity(string managedClientId = null)
         {
+            if (!_instanceMetaDataEndpointChecked)
+            {
+                _instanceMetaDataEndpointChecked = true;
+
+                if (CheckInstanceMetaDataEndpoint())
+                {
+                    _isManagedIdentity = GetManagedIdentity(managedClientId);
+                }
+            }
+
+            Log.Info($"returning:{_isManagedIdentity}");
+            return _isManagedIdentity;
+        }
+
+        private bool GetManagedIdentity(string managedClientId)
+        {
             bool retval = false;
-        
             try
             {
                 ManagedIdentityCredential managedCredential = new ManagedIdentityCredential(managedClientId, new TokenCredentialOptions
@@ -93,8 +123,23 @@ namespace CollectSFData.Azure
                 Log.Info($"exception:{e.Message}");
             }
 
-            Log.Info($"returning{retval}");
             return retval;
+        }
+
+        public void SetIdentityType()
+        {
+            if (!string.IsNullOrEmpty(_config.AzureClientId) & !string.IsNullOrEmpty(_config.AzureClientCertificate))
+            {
+                IsAppRegistration = true;
+            }
+            else if (!string.IsNullOrEmpty(_config.AzureClientId))
+            {
+                IsUserManagedIdentity = IsManagedIdentity(_config.AzureClientId);
+            }
+            else if (string.IsNullOrEmpty(_config.AzureClientId))
+            {
+                IsSystemManagedIdentity = IsManagedIdentity();
+            }
         }
     }
 }
