@@ -30,4 +30,8 @@
     <ProjectReference Include="..\CollectSFDataDll\CollectSFDataDll.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="TestDataFiles\" />
+  </ItemGroup>
+
 </Project>
