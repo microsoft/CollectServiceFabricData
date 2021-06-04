@@ -7,8 +7,6 @@ param(
     [string[]]$targetFrameworks = @('net472', 'netcoreapp3.1', 'net5.0', 'net462'),
     [ValidateSet('all', 'debug', 'release')]
     $configuration = 'all',
-    [ValidateSet('win-x64', 'ubuntu.18.04-x64')]
-    $runtimeIdentifier = 'win-x64',
     [switch]$publish,
     [string]$projectDir = (resolve-path "$psscriptroot/../src"),
     [string]$nugetFallbackFolder = "$($env:userprofile)/.dotnet/NuGetFallbackFolder",
@@ -17,7 +15,7 @@ param(
 )
 
 $ErrorActionPreference = 'continue'
-
+$runtimeIdentifier = 'win-x64',
 $error.Clear()
 $global:tempFiles = [collections.arraylist]::new()
 $csproj = "$projectDir/CollectSFData/CollectSFData.csproj"
@@ -28,17 +26,23 @@ $nuspecFile = "$projectDir/CollectSFData/CollectSFData.nuspec"
 $xmlns = "http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd"
 
 $globalNugetFiles = @{
-    '../FabricSupport.png'                                         = 'images/'
+    '../FabricSupport.png' = 'images/'
 }
 
 $commonNugetFiles = @{
-    '../bin/$configuration$/$targetFramework/*.exe'                = 'tools/$targetFramework'
-    '../bin/$configuration$/$targetFramework/*.dll'                = 'tools/$targetFramework'
-    '../bin/$configuration$/$targetFramework/CollectSFDataDll.dll' = 'lib/$targetFramework'
-    '../bin/$configuration$/$targetFramework/Sf.Tx.Core.dll'       = 'lib/$targetFramework'
-    '../bin/$configuration$/$targetFramework/Sf.Tx.Windows.dll'    = 'lib/$targetFramework'
-    '../../configurationFiles/collectsfdata.options.json'          = 'tools/$targetFramework'
-    '../bin/$configuration$/$targetFramework/*.config'             = 'tools/$targetFramework'
+    '../bin/$configuration$/$targetFramework/*.exe'                     = 'tools/$targetFramework'
+    '../bin/$configuration$/$targetFramework/*.dll'                     = 'tools/$targetFramework'
+    #'../bin/$configuration$/$targetFramework/*.pdb*'                     = 'tools/$targetFramework'
+    '../bin/$configuration$/$targetFramework/manifests/*.man'           = 'tools/$targetFramework/manifests'
+    '../../configurationFiles/collectsfdata.options.json'               = 'tools/$targetFramework'
+    '../bin/$configuration$/$targetFramework/*.config'                  = 'tools/$targetFramework'
+    '../bin/$configuration$/$targetFramework/EtlReader.dll'             = 'lib/$targetFramework'
+    '../bin/$configuration$/$targetFramework/System.Fabric.Strings.dll' = 'lib/$targetFramework'
+    #'../bin/$configuration$/$targetFramework/manifests/*.man*'          = 'lib/$targetFramework/manifests'
+    '../bin/$configuration$/$targetFramework/CollectSFDataDll.dll'      = 'lib/$targetFramework'
+    '../bin/$configuration$/$targetFramework/Sf.Tx.Core.dll'            = 'lib/$targetFramework'
+    '../bin/$configuration$/$targetFramework/Sf.Tx.Windows.dll'         = 'lib/$targetFramework'
+    '../bin/$configuration$/$targetFramework/*.pdb'                     = 'lib/$targetFramework'
 }
 
 $netCoreNugetFiles = @{
