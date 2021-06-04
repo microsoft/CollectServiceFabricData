@@ -32,6 +32,7 @@ namespace CollectSFData.DataFile
         blg,
         dmp,
         dtr,
+        etl,
         json,
         trace,
         zip
@@ -63,74 +64,53 @@ namespace CollectSFData.DataFile
 
         public static FileDataTypesEnum MapFileDataTypeExtension(string fileUri)
         {
+            string file = fileUri?.ToLower();
             FileDataTypesEnum extension = FileDataTypesEnum.unknown;
-            switch (Path.GetExtension(fileUri.ToLower()))
+
+            if (file == null)
             {
-                case Constants.PerfCsvExtension:
-                case Constants.PerfCtrExtension:
-                    {
-                        extension = FileDataTypesEnum.counter;
-                        break;
-                    }
-
-                case Constants.TableExtension:
-                    {
-                        extension = FileDataTypesEnum.table;
-                        break;
-                    }
-
-                case Constants.DumpExtension:
-                    {
-                        extension = FileDataTypesEnum.fabriccrashdumps;
-                        break;
-                    }
-
-                case Constants.TraceZipExtension:
-                case Constants.TraceFileExtension:
-                    {
-                        // using default fabric / lease
-                        extension = FileDataTypesEnum.fabric;
-                        break;
-                    }
-
-                case Constants.SetupExtension:
-                    {
-                        // using default fabricsetup / fabricdeployer
-                        extension = FileDataTypesEnum.fabricsetup;
-                        break;
-                    }
-
-                case Constants.ZipExtension:
-                    {
-                        // todo: implement
-                        extension = FileDataTypesEnum.unknown;
-                        break;
-                    }
-
-                case Constants.JsonExtension:
-                    {
-                        // todo: implement
-                        extension = FileDataTypesEnum.unknown;
-                        break;
-                    }
-                case Constants.EtlExtension:
-                    {
-                        // todo: implement
-                        extension = FileDataTypesEnum.unknown;
-                        break;
-                    }
-                case Constants.CsvExtension:
-                    {
-                        // todo: implement
-                        extension = FileDataTypesEnum.unknown;
-                        break;
-                    }
-
-                default:
-                    {
-                        extension = FileDataTypesEnum.unknown;
-                        break;
-                    }
+            }
+            else if (fileUri.EndsWith(Constants.PerfCsvExtension) | fileUri.EndsWith(Constants.PerfCtrExtension))
+            {
+                extension = FileDataTypesEnum.counter;
+            }
+            else if (fileUri.EndsWith(Constants.TableExtension))
+            {
+                extension = FileDataTypesEnum.table;
+            }
+            else if (fileUri.EndsWith(Constants.DumpExtension))
+            {
+                extension = FileDataTypesEnum.fabriccrashdumps;
+            }
+            else if (fileUri.EndsWith(Constants.ZipExtension) | fileUri.EndsWith(Constants.DtrExtension))
+            {
+                // using default fabric / lease
+                extension = FileDataTypesEnum.fabric;
+            }
+            else if (fileUri.EndsWith(Constants.SetupExtension))
+            {
+                // using default fabricsetup / fabricdeployer
+                extension = FileDataTypesEnum.fabricsetup;
+            }
+            else if (fileUri.EndsWith(Constants.ZipExtension))
+            {
+                // todo: implement
+                extension = FileDataTypesEnum.unknown;
+            }
+            else if (fileUri.EndsWith(Constants.JsonExtension))
+            {
+                // todo: implement
+                extension = FileDataTypesEnum.unknown;
+            }
+            else if (fileUri.EndsWith(Constants.EtlExtension))
+            {
+                // todo: implement
+                extension = FileDataTypesEnum.unknown;
+            }
+            else if (fileUri.EndsWith(Constants.CsvExtension))
+            {
+                // todo: implement
+                extension = FileDataTypesEnum.unknown;
             }
 
             Log.Debug($"returning {extension}");
@@ -331,7 +311,12 @@ namespace CollectSFData.DataFile
                         break;
                     }
 
-                case Constants.TraceFileExtension:
+                case Constants.EtlExtension:
+                    {
+                        extension = FileExtensionTypesEnum.etl;
+                        break;
+                    }
+                case Constants.DtrExtension:
                     {
                         extension = FileExtensionTypesEnum.dtr;
                         break;

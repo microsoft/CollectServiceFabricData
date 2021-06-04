@@ -9,6 +9,7 @@ using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Management.Automation;
@@ -25,11 +26,14 @@ namespace CollectSFDataDllTest.Utilities
         public string[] TempArgs;
         private static object _executing = new object();
         private bool _logMessageQueueEnabled;
+        private bool hasExited = false;
         public static TestContext Context { get; set; }
         public static string DefaultOptionsFile => $"{WorkingDir}\\..\\..\\..\\..\\..\\..\\configurationFiles\\collectsfdata.options.json";
         public static string ScriptsDir => $"{WorkingDir}\\..\\..\\..\\..\\..\\..\\scripts";
+        public static string SolutionDir => $"{WorkingDir}\\..\\..\\..\\..\\..\\..";
         public static string TempDir => $"{WorkingDir}\\..\\..\\Temp";
         public static string TestConfigurationsDir => $"{WorkingDir}\\..\\..\\..\\..\\TestConfigurations";
+        public static string TestDataFilesDir => $"{WorkingDir}\\..\\..\\..\\..\\TestDataFiles";
         public static TestProperties TestProperties { get; set; }
         public static string TestPropertiesFile => $"{Environment.GetEnvironmentVariable("LOCALAPPDATA")}\\collectsfdata\\collectSfDataTestProperties.json";
         public static string TestPropertiesSetupScript => $"{ScriptsDir}\\setup-test-env.ps1";
@@ -130,7 +134,7 @@ namespace CollectSFDataDllTest.Utilities
                 Directory.CreateDirectory(TempDir);
             }
 
-            ReadTestSettings();
+            //            ReadTestSettings();
         }
 
         [OneTimeTearDown]
@@ -173,6 +177,59 @@ namespace CollectSFDataDllTest.Utilities
             //FlushConsoleOutput();
             //Console.SetOut(ConsoleOut);
             //Console.SetError(ConsoleErr);
+        }
+
+        public ProcessOutput ExecuteCollectSfData(string arguments = null, bool wait = true)
+        {
+            Log.Info("enter");
+
+            return ExecuteProcess($"{Context.WorkDirectory}\\collectsfdata.exe", arguments, wait);
+        }
+
+        public ProcessOutput ExecuteProcess(string imageFile, string arguments = null, bool wait = true)
+        {
+            hasExited = false;
+            Log.Info($"ExecuteProcess: current dir: {Directory.GetCurrentDirectory()} image: {imageFile} args: {arguments}");
+            Assert.IsTrue(File.Exists(imageFile));
+
+            Process process = new Process();
+            process.Exited += new EventHandler(ProcessExited);
+            process.EnableRaisingEvents = true;
+
+            //ProcessStartInfo startInfo = new ProcessStartInfo($"cmd.exe", $" /c {imageFile} {arguments}");
+            ProcessStartInfo startInfo = new ProcessStartInfo(imageFile, arguments);
+            startInfo.CreateNoWindow = true;
+            startInfo.UseShellExecute = !wait;
+            startInfo.RedirectStandardOutput = wait;
+            startInfo.RedirectStandardError = wait;
+            startInfo.ErrorDialog = false;
+
+            process.StartInfo = startInfo;
+            bool reference = process.Start();
+            ProcessOutput output = new ProcessOutput();
+
+            while (!hasExited && wait && reference) // && !process.HasExited)
+            {
+                Thread.Sleep(100);
+                //while (wait && reference && !process.HasExited)
+                //process.WaitForExit();
+                while (process.StandardOutput.Peek() > -1)
+                {
+                    string line = process.StandardOutput.ReadToEnd();//.ReadLine();
+                    TestContext.WriteLine(line);
+                    output.StandardOutput += line;
+                }
+
+                while (process.StandardError.Peek() > -1)
+                {
+                    string errorLine = $"error:{process.StandardError.ReadToEnd()}";//.ReadLine()}";
+                    Console.Error.WriteLine(errorLine);
+                    output.StandardError += errorLine;
+                }
+            }
+
+            output.ExitCode = process.ExitCode;
+            return output;
         }
 
         public ProcessOutput ExecuteTest(Func<bool> func)
@@ -337,6 +394,13 @@ namespace CollectSFDataDllTest.Utilities
             }
 
             WriteConsole(args.Message);
+        }
+
+        private void ProcessExited(object sender, EventArgs e)
+        {
+            //Log.Info($"sender", sender);
+            //Log.Info($"args", e);
+            hasExited = true;
         }
     }
 }

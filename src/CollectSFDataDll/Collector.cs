@@ -24,11 +24,10 @@ namespace CollectSFData
         private Timer _noProgressTimer;
         private ParallelOptions _parallelConfig;
         private Tuple<int, int, int, int, int, int, int> _progressTuple = new Tuple<int, int, int, int, int, int, int>(0, 0, 0, 0, 0, 0, 0);
-        private CustomTaskManager _taskManager = new CustomTaskManager(true);
 
         public ConfigurationOptions Config { get => Instance.Config; }
 
-        public Instance Instance { get; } = Instance.Singleton();
+        public Instance Instance { get; } = new Instance();
 
         public Collector(bool isConsole = false)
         {
@@ -37,7 +36,7 @@ namespace CollectSFData
 
         public void Close()
         {
-            CustomTaskManager.Cancel();
+            Instance.Close();
             _noProgressTimer?.Dispose();
             Log.Close();
         }
@@ -59,14 +58,15 @@ namespace CollectSFData
                 if (Config.SasEndpointInfo.IsPopulated())
                 {
                     DownloadAzureData();
+                    CustomTaskManager.WaitAll();
                 }
 
                 if (Config.IsCacheLocationPreConfigured() | Config.FileUris.Any())
                 {
                     UploadCacheData();
+                    CustomTaskManager.WaitAll();
                 }
 
-                CustomTaskManager.WaitAll();
                 FinalizeKusto();
 
                 if (Config.DeleteCache && Config.IsCacheLocationPreConfigured() && Directory.Exists(Config.CacheLocation))
@@ -84,9 +84,9 @@ namespace CollectSFData
                 }
 
                 Config.SaveConfigFile();
-                Instance.TotalErrors += Log.LogErrors;
-
+                Instance.TotalErrors += Instance.FileObjects.Pending() + Log.LogErrors;
                 LogSummary();
+
                 return Instance.TotalErrors;
             }
             catch (Exception ex)
@@ -97,7 +97,6 @@ namespace CollectSFData
             finally
             {
                 Close();
-                CustomTaskManager.Resume();
             }
         }
 
@@ -118,7 +117,7 @@ namespace CollectSFData
 
             if (string.IsNullOrEmpty(clusterId))
             {
-                TableManager tableMgr = new TableManager();
+                TableManager tableMgr = new TableManager(Instance);
 
                 if (tableMgr.Connect())
                 {
@@ -144,9 +143,6 @@ namespace CollectSFData
             _noProgressTimer = new Timer(NoProgressCallback, null, 0, 60 * 1000);
 
             Log.Open();
-            CustomTaskManager.Resume();
-            _taskManager?.Wait();
-            _taskManager = new CustomTaskManager();
 
             Instance.Initialize(configurationOptions);
             Log.Info($"version: {Config.Version}");
@@ -189,7 +185,7 @@ namespace CollectSFData
 
             if (Config.FileType == FileTypesEnum.table)
             {
-                TableManager tableMgr = new TableManager()
+                TableManager tableMgr = new TableManager(Instance)
                 {
                     IngestCallback = (exportedFile) => { QueueForIngest(exportedFile); }
                 };
@@ -201,7 +197,7 @@ namespace CollectSFData
             }
             else
             {
-                BlobManager blobMgr = new BlobManager()
+                BlobManager blobMgr = new BlobManager(Instance)
                 {
                     IngestCallback = (sourceFileUri) => { QueueForIngest(sourceFileUri); },
                     ReturnSourceFileLink = (Config.IsKustoConfigured() & Config.KustoUseBlobAsSource) | Config.FileType == FileTypesEnum.exception
@@ -272,10 +268,9 @@ namespace CollectSFData
             Log.Last($"{Instance.TotalFilesEnumerated} files enumerated.");
             Log.Last($"{Instance.TotalFilesMatched} files matched.");
             Log.Last($"{Instance.TotalFilesDownloaded} files downloaded.");
-            Log.Last($"{Instance.TotalFilesSkipped} files skipped.");
             Log.Last($"{Instance.TotalFilesFormatted} files formatted.");
-            Log.Last($"{Instance.TotalErrors} errors.");
-            Log.Last($"{Instance.TotalRecords} parsed records.");
+            Log.Last($"{Instance.TotalFilesSkipped} files skipped.");
+            Log.Last($"{Instance.TotalRecords} parsed events.");
             Log.Last($"timed out: {Instance.TimedOut}.");
             Log.Last($"{Instance.FileObjects.StatusString()}", ConsoleColor.Cyan);
 
@@ -316,6 +311,8 @@ namespace CollectSFData
                 Config.CheckReleaseVersion();
             }
 
+            Log.Last($"{Instance.TotalErrors} errors.", Instance.TotalErrors > 0 ? ConsoleColor.Yellow : ConsoleColor.Green);
+            Log.Last($"{Instance.FileObjects.Pending()} files failed to be processed.", Instance.FileObjects.Pending() > 0 ? ConsoleColor.Red : ConsoleColor.Green);
             Log.Last($"total execution time in minutes: { (DateTime.Now - Instance.StartTime).TotalMinutes.ToString("F2") }");
         }
 
@@ -323,7 +320,7 @@ namespace CollectSFData
         {
             Log.Highlight($"checking progress {_noProgressCounter} of {Config.NoProgressTimeoutMin}.");
 
-            if (Config.NoProgressTimeoutMin < 1 | _taskManager.IsCancellationRequested)
+            if (Config.NoProgressTimeoutMin < 1 | Instance.TaskManager.CancellationToken.IsCancellationRequested)
             {
                 _noProgressTimer?.Dispose();
                 return;
@@ -375,17 +372,17 @@ namespace CollectSFData
             {
                 if (Config.IsKustoConfigured())
                 {
-                    _taskManager.QueueTaskAction(() => Instance.Kusto.AddFile(fileObject));
+                    Instance.TaskManager.QueueTaskAction(() => Instance.Kusto.AddFile(fileObject));
                 }
 
                 if (Config.IsLogAnalyticsConfigured())
                 {
-                    _taskManager.QueueTaskAction(() => Instance.LogAnalytics.AddFile(fileObject));
+                    Instance.TaskManager.QueueTaskAction(() => Instance.LogAnalytics.AddFile(fileObject));
                 }
             }
             else
             {
-                _taskManager.QueueTaskAction(() => Instance.FileMgr.ProcessFile(fileObject));
+                Instance.TaskManager.QueueTaskAction(() => Instance.FileMgr.ProcessFile(fileObject));
             }
 
             Log.Debug("exit");
@@ -450,11 +447,11 @@ namespace CollectSFData
                         break;
 
                     case FileTypesEnum.trace:
-                        files = Directory.GetFiles(Config.CacheLocation, $"*{Constants.TraceFileExtension}{Constants.ZipExtension}", SearchOption.AllDirectories).ToList();
+                        files = Directory.GetFiles(Config.CacheLocation, $"*{Constants.DtrExtension}{Constants.ZipExtension}", SearchOption.AllDirectories).ToList();
 
                         if (files.Count < 1)
                         {
-                            files = Directory.GetFiles(Config.CacheLocation, $"*{Constants.TraceFileExtension}", SearchOption.AllDirectories).ToList();
+                            files = Directory.GetFiles(Config.CacheLocation, $"*{Constants.DtrExtension}", SearchOption.AllDirectories).ToList();
                         }
 
                         break;
@@ -469,6 +466,8 @@ namespace CollectSFData
                     Log.Error($"configuration set to upload cache files from 'cachelocation' {Config.CacheLocation} but no files found");
                 }
             }
+
+            Instance.TotalFilesEnumerated += files.Count;
 
             foreach (string file in files)
             {
