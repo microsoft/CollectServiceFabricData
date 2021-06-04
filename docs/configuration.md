@@ -11,7 +11,7 @@ For help with command line options, type 'collectsfdata.exe -?'.
 **NOTE:** command line options **are** case sensitive.
 
 ```text
-G:\github\Tools\CollectSFData\CollectSFData\bin\x64\Debug>CollectSFData.exe /?
+C:\>CollectSFData.exe /?
 Usage: CollectSFData [options]
 
 Options:
@@ -23,8 +23,8 @@ Options:
                                          for non interactive to kusto. default is to use integrated AAD auth token
                                          and leave this blank.
   -secret|--azureClientSecret        [string] azure application id / client id secret for use with authentication
-                                        for non interactive to kusto. default is to use integrated AAD auth token
-                                        and leave this blank.
+                                         for non interactive to kusto. default is to use integrated AAD auth token
+                                         and leave this blank.
   -vault|--AzureKeyVault             [string] azure base key vault fqdn for use with authentication
                                          for non interactive to kusto. default is to use integrated AAD auth token
                                          and leave this blank.
@@ -40,7 +40,8 @@ Options:
   -cf|--containerFilter              [string] string / regex to filter container names
   -dc|--deleteCache                  [bool] delete downloaded blobs from local disk at end of execution.
   -to|--stop                         [DateTime] end time range to collect data to. default is now.
-                                         example: "04/25/2021 07:34:52 -04:00"
+                                         example: "06/01/2021 09:01:23 -04:00"
+  -mc|--etwManifestsCache            [string] local folder path to use for manifest cache .man files.
   -ex|--examples                     [bool] show example commands
   -uris|--fileUris                   [string[]] optional comma separated string array list of files to ingest.
                                          overrides default collection from diagnosticsStore
@@ -94,7 +95,7 @@ Options:
                                          specify file name 'collectsfdata.options.json' to create default configuration file.
   -from|--start                      [DateTime] start time range to collect data from.
                                          default is -2 hours.
-                                         example: "04/25/2021 05:34:52 -04:00"
+                                         example: "06/01/2021 07:01:23 -04:00"
   -t|--threads                       [int] override default number of threads equal to processor count.
   -u|--unique                        [bool] default true to query for fileuri before ingestion to prevent duplicates
   -uf|--uriFilter                    [string] string / regex filter for storage account blob uri.
@@ -122,6 +123,7 @@ To use a default configuration file without having to specify on the command lin
 - **ContainerFilter** - optional. string / regex. default null. if populated, pattern will be used to filter which containers are enumerated for blob download.
 - **DeleteCache** - bool. default false. if true, blobs downloaded from storage account into 'cacheLocation' will be deleted at end after successful formatting and ingestion.
 - **EndTimeStamp** - datetime string. default is now. example format: "10/31/2018 22:00:00 +00:00".
+- **EtwManifestsCache** - required. string. default is ./manifests. local path where manifest (.man) files are located for parsing .etl files to .csv.
 - **FileUris** - optional, string[]. default null. if populated, FileUris will be used for the source file ingestion and will bypass default behavior of enumerating cluster 'diagnosticsStore'.
 - **GatherType** - required. string. options: counter, exception, table, trace, any
   - **counter** - 'counter' will enumerate service fabric performance counter (.blg) blobs from 'fabriccounters*' container.

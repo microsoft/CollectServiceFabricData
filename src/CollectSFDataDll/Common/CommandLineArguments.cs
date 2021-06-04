@@ -39,6 +39,8 @@ namespace CollectSFData.Common
 
         public CommandOption EndTimeStamp { get; set; }
 
+        public CommandOption EtwManifestsCache { get; set; }
+
         public CommandOption Examples { get; set; }
 
         public CommandOption FileUris { get; set; }
@@ -401,6 +403,10 @@ namespace CollectSFData.Common
             EndTimeStamp = CmdLineApp.Option("-to|--stop",
                     $"[DateTime] end time range to collect data to. default is now." +
                     $"{newLine} example: \"{DateTime.Now.ToString(exampleDateFormat)}\"",
+                    CommandOptionType.SingleValue);
+
+            EtwManifestsCache = CmdLineApp.Option("-mc|--etwManifestsCache",
+                    "[string] local folder path to use for manifest cache .man files.",
                     CommandOptionType.SingleValue);
 
             Examples = CmdLineApp.Option("-ex|--examples",
