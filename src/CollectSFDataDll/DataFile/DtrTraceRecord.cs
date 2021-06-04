@@ -4,13 +4,14 @@
 // ------------------------------------------------------------
 
 using System;
+using CollectSFData.Common;
 
 namespace CollectSFData.DataFile
 {
     [Serializable]
     public class DtrTraceRecord : ITraceRecord
     {
-        private const int _fieldCount = 6;
+        private static readonly int _fieldCount = EtlInputFields.Count();
 
         public string FileType { get; set; }
 
@@ -45,12 +46,12 @@ namespace CollectSFData.DataFile
         {
             string[] fields = ParseRecord(dtrRecord);
 
-            Timestamp = Convert.ToDateTime(fields[0]);
-            Level = fields[1];
-            TID = Convert.ToInt32(fields[2]);
-            PID = Convert.ToInt32(fields[3]);
-            Type = fields[4];
-            Text = fields[5];
+            Timestamp = Convert.ToDateTime(fields[EtlInputFields.TimeStamp]);
+            Level = fields[EtlInputFields.Level];
+            TID = Convert.ToInt32(fields[EtlInputFields.TID]);
+            PID = Convert.ToInt32(fields[EtlInputFields.PID]);
+            Type = fields[EtlInputFields.Type];
+            Text = fields[EtlInputFields.Text];
             NodeName = fileObject.NodeName;
             FileType = fileObject.FileDataType.ToString();
             RelativeUri = fileObject.RelativeUri;

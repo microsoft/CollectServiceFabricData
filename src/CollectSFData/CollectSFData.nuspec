@@ -132,36 +132,69 @@
     </frameworkAssemblies>
   </metadata>
   <files>
+    <!-- net462 tools -->
     <file src="..\bin\$configuration$\net462\*.exe" target="tools\net462" />
     <file src="..\bin\$configuration$\net462\*.dll" target="tools\net462" />
+    <file src="..\bin\$configuration$\net462\*.pdb" target="tools\net462" />
+    <file src="..\bin\$configuration$\net462\manifests\*.man" target="tools\net462\manifests" />
+    <file src="..\bin\$configuration$\net462\*.config" target="tools\net462" />
+    <file src="..\..\configurationFiles\collectsfdata.options.json" target="tools\net462" />
+    <!-- net462 lib -->
     <file src="..\bin\$configuration$\net462\CollectSFDataDll.dll" target="lib\net462" />
     <file src="..\bin\$configuration$\net462\Sf.Tx.Core.dll" target="lib\net462" />
     <file src="..\bin\$configuration$\net462\Sf.Tx.Windows.dll" target="lib\net462" />
-    <file src="..\..\configurationFiles\collectsfdata.options.json" target="tools\net462" />
-    <file src="..\bin\$configuration$\net462\*.config" target="tools\net462" />
+    <file src="..\bin\$configuration$\net462\*.pdb" target="lib\net462" />
+    <file src="..\bin\$configuration$\net462\Etlreader.dll" target="lib\net462" />
+    <file src="..\bin\$configuration$\net462\System.Fabric.Strings.dll" target="lib\net462" />
+    <!-- net472 tools -->
+    <!-- 
     <file src="..\bin\$configuration$\net472\*.exe" target="tools\net472" />
     <file src="..\bin\$configuration$\net472\*.dll" target="tools\net472" />
+    <file src="..\bin\$configuration$\net472\*.pdb" target="tools\net472" />
+    <file src="..\bin\$configuration$\net472\manifests\*.man" target="tools\net472\manifests" />
+    <file src="..\bin\$configuration$\net472\*.config" target="tools\net472" />
+    <file src="..\..\configurationFiles\collectsfdata.options.json" target="tools\net472" />
+    -->
+    <!-- net472 lib -->
     <file src="..\bin\$configuration$\net472\CollectSFDataDll.dll" target="lib\net472" />
     <file src="..\bin\$configuration$\net472\Sf.Tx.Core.dll" target="lib\net472" />
     <file src="..\bin\$configuration$\net472\Sf.Tx.Windows.dll" target="lib\net472" />
-    <file src="..\..\configurationFiles\collectsfdata.options.json" target="tools\net472" />
-    <file src="..\bin\$configuration$\net472\*.config" target="tools\net472" />
+    <file src="..\bin\$configuration$\net472\*.pdb" target="lib\net472" />
+    <file src="..\bin\$configuration$\net472\Etlreader.dll" target="lib\net472" />
+    <file src="..\bin\$configuration$\net472\System.Fabric.Strings.dll" target="lib\net472" />
+    <!-- netcoreapp3.1 tools -->
     <file src="..\bin\$configuration$\netcoreapp3.1\*.exe" target="tools\netcoreapp3.1" />
     <file src="..\bin\$configuration$\netcoreapp3.1\*.runtimeconfig.json" target="tools\netcoreapp3.1" />
     <file src="..\bin\$configuration$\netcoreapp3.1\*.dll" target="tools\netcoreapp3.1" />
-    <file src="..\bin\$configuration$\netcoreapp3.1\CollectSFDataDll.dll" target="lib\netcoreapp3.1" />
-    <file src="..\bin\$configuration$\net472\Sf.Tx.Core.dll" target="lib\netcoreapp3.1" />
-    <file src="..\bin\$configuration$\net472\Sf.Tx.Windows.dll" target="lib\netcoreapp3.1" />
-    <file src="..\..\configurationFiles\collectsfdata.options.json" target="tools\netcoreapp3.1" />
+    <file src="..\bin\$configuration$\netcoreapp3.1\*.pdb" target="tools\netcoreapp3.1" />
+    <file src="..\bin\$configuration$\netcoreapp3.1\manifests\*.man" target="tools\netcoreapp3.1\manifests" />
     <file src="..\bin\$configuration$\netcoreapp3.1\*.config" target="tools\netcoreapp3.1" />
+    <file src="..\..\configurationFiles\collectsfdata.options.json" target="tools\netcoreapp3.1" />
+    <!-- netcoreapp3.1 lib -->
+    <file src="..\bin\$configuration$\netcoreapp3.1\CollectSFDataDll.dll" target="lib\netcoreapp3.1" />
+    <file src="..\bin\$configuration$\netcoreapp3.1\Sf.Tx.Core.dll" target="lib\netcoreapp3.1" />
+    <file src="..\bin\$configuration$\netcoreapp3.1\Sf.Tx.Windows.dll" target="lib\netcoreapp3.1" />
+    <file src="..\bin\$configuration$\netcoreapp3.1\*.pdb" target="lib\netcoreapp3.1" />
+    <file src="..\bin\$configuration$\netcoreapp3.1\Etlreader.dll" target="lib\netcoreapp3.1" />
+    <file src="..\bin\$configuration$\netcoreapp3.1\System.Fabric.Strings.dll" target="lib\netcoreapp3.1" />
+    <!-- net5.0 tools -->
+    <!-- 
     <file src="..\bin\$configuration$\net5.0\*.exe" target="tools\net5.0" />
     <file src="..\bin\$configuration$\net5.0\*.runtimeconfig.json" target="tools\net5.0" />
     <file src="..\bin\$configuration$\net5.0\*.dll" target="tools\net5.0" />
+    <file src="..\bin\$configuration$\net5.0\*.pdb" target="tools\net5.0" />
+    <file src="..\bin\$configuration$\net5.0\manifests\*.man" target="tools\net5.0\manifests" />
+    <file src="..\bin\$configuration$\net5.0\*.config" target="tools\net5.0" />
+    <file src="..\..\configurationFiles\collectsfdata.options.json" target="tools\net5.0" />
+    -->
+    <!-- net5.0 lib -->
     <file src="..\bin\$configuration$\net5.0\CollectSFDataDll.dll" target="lib\net5.0" />
     <file src="..\bin\$configuration$\net5.0\Sf.Tx.Core.dll" target="lib\net5.0" />
     <file src="..\bin\$configuration$\net5.0\Sf.Tx.Windows.dll" target="lib\net5.0" />
-    <file src="..\..\configurationFiles\collectsfdata.options.json" target="tools\net5.0" />
-    <file src="..\bin\$configuration$\net5.0\*.config" target="tools\net5.0" />
+    <file src="..\bin\$configuration$\net5.0\*.pdb" target="lib\net5.0" />
+    <file src="..\bin\$configuration$\net5.0\Etlreader.dll" target="lib\net5.0" />
+    <file src="..\bin\$configuration$\net5.0\System.Fabric.Strings.dll" target="lib\net5.0" />
+    <!-- icon -->
     <file src="..\FabricSupport.png" target="images\" />
   </files>
 </package>

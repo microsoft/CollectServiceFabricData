@@ -17,27 +17,35 @@ namespace CollectSFData.Azure
 {
     public class TableManager
     {
-        private readonly CustomTaskManager _tableTasks = new CustomTaskManager(true);
-        private Instance _instance = Instance.Singleton();
+        private readonly CustomTaskManager _tableTasks = new CustomTaskManager();
+        private ConfigurationOptions _config;
+        private Instance _instance;
         private CloudTableClient _tableClient;
-        private ConfigurationOptions Config => _instance.Config;
+
         public Action<FileObject> IngestCallback { get; set; }
+
         public List<CloudTable> TableList { get; set; } = new List<CloudTable>();
+
+        public TableManager(Instance instance)
+        {
+            _instance = instance ?? throw new ArgumentNullException(nameof(instance));
+            _config = _instance.Config;
+        }
 
         public bool Connect()
         {
             TableContinuationToken tableToken = null;
             CancellationToken cancellationToken = new CancellationToken();
 
-            if (!Config.SasEndpointInfo.IsPopulated())
+            if (!_config.SasEndpointInfo.IsPopulated())
             {
-                Log.Warning("no table or token info. exiting:", Config.SasEndpointInfo);
+                Log.Warning("no table or token info. exiting:", _config.SasEndpointInfo);
                 return false;
             }
 
             try
             {
-                CloudTable table = new CloudTable(new Uri(Config.SasEndpointInfo.TableEndpoint + Config.SasEndpointInfo.SasToken));
+                CloudTable table = new CloudTable(new Uri(_config.SasEndpointInfo.TableEndpoint + _config.SasEndpointInfo.SasToken));
                 _tableClient = table.ServiceClient;
 
                 TableResultSegment tables = _tableClient.ListTablesSegmentedAsync(
@@ -63,14 +71,14 @@ namespace CollectSFData.Azure
             Log.Info($"enumerating tables: with prefix {tablePrefix}");
             int resultsCount = 0;
             TableContinuationToken token = new TableContinuationToken();
-            tablePrefix = string.IsNullOrEmpty(Config.UriFilter) ? tablePrefix : Config.UriFilter;
+            tablePrefix = string.IsNullOrEmpty(_config.UriFilter) ? tablePrefix : _config.UriFilter;
 
             while (token != null)
             {
                 try
                 {
                     Task<TableResultSegment> tableSegment = _tableClient.ListTablesSegmentedAsync(tablePrefix, Constants.MaxResults, token, null, null);
-                    Task<TableResultSegment> task = DownloadTablesSegment(tableSegment, Config.ContainerFilter);
+                    Task<TableResultSegment> task = DownloadTablesSegment(tableSegment, _config.ContainerFilter);
 
                     token = task.Result.ContinuationToken;
                     resultsCount += task.Result.Results.Count;
@@ -214,18 +222,18 @@ namespace CollectSFData.Azure
                         continue;
                     }
 
-                    if (Config.List)
+                    if (_config.List)
                     {
                         Log.Info($"cloudtable: {cloudTable.Name} results: {resultsChunk.Count}");
                         continue;
                     }
 
-                    string relativeUri = $"{Config.StartTimeUtc.Ticks}-{Config.EndTimeUtc.Ticks}-{cloudTable.Name}.{chunkCount++}{Constants.TableExtension}";
-                    FileObject fileObject = new FileObject(relativeUri, Config.CacheLocation) { Status = FileStatus.enumerated };
-                    
-                    if(_instance.FileObjects.FindByUriFirstOrDefault(relativeUri).Status == FileStatus.existing)
+                    string relativeUri = $"{_config.StartTimeUtc.Ticks}-{_config.EndTimeUtc.Ticks}-{cloudTable.Name}.{chunkCount++}{Constants.TableExtension}";
+                    FileObject fileObject = new FileObject(relativeUri, _config.CacheLocation) { Status = FileStatus.enumerated };
+
+                    if (_instance.FileObjects.FindByUriFirstOrDefault(relativeUri).Status == FileStatus.existing)
                     {
-                        Log.Info($"{relativeUri} already exists. skipping",ConsoleColor.DarkYellow);
+                        Log.Info($"{relativeUri} already exists. skipping", ConsoleColor.DarkYellow);
                         continue;
                     }
 
@@ -281,7 +289,7 @@ namespace CollectSFData.Azure
                         PropertyName = entity.Key,
                         PropertyValue = $"\"{entity.Value.Trim('"').Replace("\"", "'")}\"",
                         RelativeUri = cloudTable.Name,
-                        ResourceUri = Config.ResourceUri
+                        ResourceUri = _config.ResourceUri
                     });
                 }
             }
@@ -292,8 +300,8 @@ namespace CollectSFData.Azure
         private TableQuery GenerateTimeQuery(int maxResults = Constants.TableMaxResults)
         {
             TableQuery query = new TableQuery();
-            string startDate = TableQuery.GenerateFilterConditionForDate("Timestamp", QueryComparisons.GreaterThanOrEqual, Config.StartTimeUtc);
-            string endDate = TableQuery.GenerateFilterConditionForDate("Timestamp", QueryComparisons.LessThanOrEqual, Config.EndTimeUtc);
+            string startDate = TableQuery.GenerateFilterConditionForDate("Timestamp", QueryComparisons.GreaterThanOrEqual, _config.StartTimeUtc);
+            string endDate = TableQuery.GenerateFilterConditionForDate("Timestamp", QueryComparisons.LessThanOrEqual, _config.EndTimeUtc);
 
             query.FilterString = TableQuery.CombineFilters(startDate, TableOperators.And, endDate);
             query.TakeCount = Math.Min(maxResults, Constants.MaxResults);
