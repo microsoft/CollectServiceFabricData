@@ -13,6 +13,7 @@ namespace CollectSFData.DataFile
     public class FileObjectCollection : SynchronizedList<FileObject>
     {
         private object _collectionLock = new object();
+
         public FileObjectCollection() : base(new List<FileObject>())
         {
         }
@@ -59,31 +60,14 @@ namespace CollectSFData.DataFile
 
         public bool Any(FileStatus fileObjectStatus = FileStatus.all)
         {
-            foreach (FileStatus status in Enum.GetValues(typeof(FileStatus)))
-            {
-                if (CompareStatus(status, fileObjectStatus))
-                {
-                    if (this.Any(x => x.Status == status))
-                    {
-                        return true;
-                    }
-                }
-            }
-            return false;
+            bool retval = this.Any(x => !x.Status.Equals(FileStatus.unknown) && fileObjectStatus.HasFlag(x.Status));
+            Log.Debug($"returning:{retval}");
+            return retval;
         }
 
         public new int Count(FileStatus fileObjectStatus)
         {
-            int count = 0;
-            foreach (FileStatus status in Enum.GetValues(typeof(FileStatus)))
-            {
-                if (CompareStatus(status, fileObjectStatus))
-                {
-                    int statusCount = this.Count(x => x.Status == status);
-                    count += statusCount;
-                }
-            }
-
+            int count = this.Count(x => !x.Equals(FileStatus.unknown) && fileObjectStatus.HasFlag(x.Status));
             Log.Debug($"returning:count:{count}", fileObjectStatus);
             return count;
         }
@@ -91,16 +75,7 @@ namespace CollectSFData.DataFile
         public List<FileObject> FindAll(FileStatus fileObjectStatus = FileStatus.all)
         {
             List<FileObject> results = new List<FileObject>();
-            StringBuilder display = new StringBuilder();
-
-            foreach (FileStatus status in Enum.GetValues(typeof(FileStatus)))
-            {
-                if (CompareStatus(status, fileObjectStatus))
-                {
-                    results.AddRange(this.FindAll(x => x.Status == status));
-                }
-            }
-
+            results.AddRange(this.FindAll(x => !x.Status.Equals(FileStatus.unknown) && fileObjectStatus.HasFlag(x.Status)));
             return results;
         }
 
@@ -139,45 +114,38 @@ namespace CollectSFData.DataFile
             return FindByUriFirstOrDefault(searchItem).IsPopulated;
         }
 
-        public string StatusString(FileStatus fileObjectStatus = FileStatus.all)
+        public int Pending()
+        {
+            return (Count() - Count(FileStatus.succeeded | FileStatus.existing));
+        }
+
+        public string StatusString()
         {
             StringBuilder display = new StringBuilder();
             display.Append("FileObjects:status:");
 
             foreach (FileStatus status in Enum.GetValues(typeof(FileStatus)))
             {
-                if (CompareStatus(status, fileObjectStatus))
+                // since all is not a real status, populate with total count
+                int statusCount = 0;
+                if (status == FileStatus.all)
                 {
-                    // since all is not a real status, populate with total count
-                    int statusCount = 0;
-                    if (status == FileStatus.all)
-                    {
-                        statusCount = this.Count();
-                    }
-                    else
-                    {
-                        statusCount = this.Count(x => x.Status == status);
-                    }
-
-                    display.Append($"{status}:{statusCount} ");
+                    statusCount = this.Count();
                 }
+                else if (status == FileStatus.unknown)
+                {
+                    statusCount = this.Count(x => x.Status.Equals(status));
+                }
+                else
+                {
+                    statusCount = this.Count(x => !x.Status.Equals(FileStatus.unknown) && status.HasFlag(x.Status));
+                }
+
+                display.Append($"{status}:{statusCount} ");
             }
 
             Log.Debug(display.ToString());
             return display.ToString();
-        }
-
-        private bool CompareStatus(FileStatus current, FileStatus filter)
-        {
-            bool retval = false;
-
-            if (filter == FileStatus.all | (current & filter) == filter)
-            {
-                retval = true;
-            }
-
-            Log.Debug($"returning:{retval} = {current} == {filter}");
-            return retval;
         }
     }
 }

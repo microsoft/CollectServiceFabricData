@@ -1,0 +1,8 @@
+{
+  "manifests": [
+    "Microsoft-WindowsFabric-BlockStoreEvents_8.0.514.9590.man",
+    "Microsoft-WindowsFabric-Events_8.0.514.9590.man",
+    "Microsoft-WindowsFabric-KtlEvents_8.0.514.9590.man",
+    "Microsoft-WindowsFabric-LeaseEvents_8.0.514.9590.man"
+  ]
+}
