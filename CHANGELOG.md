@@ -1,5 +1,38 @@
 # Change log
 
+## 06/01/2021
+
+- adding support for formatting service fabric etw (.etl) files to csv for kusto ingest  
+- using sf binary etlreader.dll for formatting etl  
+- using sf manifests (.man) for formatting etl in /manifests directory  
+- if /manifests directory is not found, repo will be checked
+- update schema with new EtwManifestsCache value defaults to ./manifests
+- reduce attempts to check for managedIdentity
+- fix 'ContainerFilter' not always being applied correctly if other containers match container prefix.
+- merge test projects.
+- add additional tests.
+- move debug logging to file only.
+- update nuspec to reduce file size and add manifests.
+- only check time variables if not empty.
+- add pdbs to nuget package.
+- add postbuild events ps1 to solution.
+- improve logsummary output indicating items of interest for overall result.
+
+    ```text
+    1:LogSummary:22 files enumerated.
+    1:LogSummary:22 files matched.
+    1:LogSummary:22 files downloaded.
+    1:LogSummary:22 files formatted.
+    1:LogSummary:0 files skipped.
+    1:LogSummary:4643415 parsed events.
+    1:LogSummary:timed out: False.
+    1:LogSummary:FileObjects:status:unknown:0 enumerated:0 existing:0 queued:0 downloading:0 formatting:0 uploading:0 failed:0 succeeded:22 all:22
+    1:LogSummary:discovered time range: 2021-05-11T21:53:04.3278378 - 2021-06-01T12:38:10.0000000
+    1:LogSummary:1 errors.
+    1:LogSummary:0 files failed to be processed.
+    1:LogSummary:total execution time in minutes: 1.14
+    ```
+
 ## 4/18/2021
 
 - fix potential scenario where blob could be deleted from storage by hardcoding RetainBlobOnSuccess = true
