@@ -12,12 +12,10 @@ namespace CollectSFData.Common
 {
     public class Instance
     {
-        private static readonly Instance _instance = new Instance();
         public long DiscoveredMaxDateTicks { get; set; }
         public long DiscoveredMinDateTicks { get; set; }
         public FileManager FileMgr { get; set; }
         public FileObjectCollection FileObjects { get; set; }
-        public bool IsWindows { get; } = Environment.OSVersion.Platform.Equals(PlatformID.Win32NT);
         public KustoConnection Kusto { get; set; }
         public LogAnalyticsConnection LogAnalytics { get; set; }
         public DateTime StartTime { get; set; }
@@ -30,46 +28,81 @@ namespace CollectSFData.Common
         public int TotalFilesMatched { get; set; }
         public int TotalFilesSkipped { get; set; }
         public int TotalRecords { get; set; }
-        protected internal ConfigurationOptions Config { get; private set; }
+        protected internal ConfigurationOptions Config { get; private set; } = new ConfigurationOptions();
+        protected internal CustomTaskManager TaskManager { get; private set; }
 
         static Instance()
         {
-            Initialize();
         }
 
-        private Instance()
+        public Instance(ConfigurationOptions configurationOptions = null)
         {
+            Initialize(configurationOptions);
         }
 
-        public static void Initialize(ConfigurationOptions configurationOptions = null)
+        public void Close()
         {
+            CustomTaskManager.Cancel();
+        }
+
+        public void Initialize(ConfigurationOptions configurationOptions = null)
+        {
+            TaskManager = new CustomTaskManager() { Instance = this };
+
             if (configurationOptions == null)
             {
                 configurationOptions = new ConfigurationOptions();
             }
 
-            _instance.Config = configurationOptions;
-            _instance.DiscoveredMaxDateTicks = DateTime.MinValue.Ticks;
-            _instance.DiscoveredMinDateTicks = DateTime.MaxValue.Ticks;
-            _instance.FileObjects = new FileObjectCollection();
-            _instance.FileMgr = new FileManager();
-            _instance.Kusto = new KustoConnection();
-            _instance.LogAnalytics = new LogAnalyticsConnection();
-            _instance.StartTime = DateTime.Now;
-            _instance.TimedOut = false;
-            _instance.TotalErrors = 0;
-            _instance.TotalFilesConverted = 0;
-            _instance.TotalFilesDownloaded = 0;
-            _instance.TotalFilesEnumerated = 0;
-            _instance.TotalFilesFormatted = 0;
-            _instance.TotalFilesMatched = 0;
-            _instance.TotalFilesSkipped = 0;
-            _instance.TotalRecords = 0;
+            Config = configurationOptions;
+            Log.Config = Config;
+            DiscoveredMaxDateTicks = DateTime.MinValue.Ticks;
+            DiscoveredMinDateTicks = DateTime.MaxValue.Ticks;
+            FileObjects = new FileObjectCollection();
+            FileMgr = new FileManager(this);
+            Kusto = new KustoConnection(this);
+            LogAnalytics = new LogAnalyticsConnection(this);
+            StartTime = DateTime.Now;
+            TimedOut = false;
+            TotalErrors = 0;
+            TotalFilesConverted = 0;
+            TotalFilesDownloaded = 0;
+            TotalFilesEnumerated = 0;
+            TotalFilesFormatted = 0;
+            TotalFilesMatched = 0;
+            TotalFilesSkipped = 0;
+            TotalRecords = 0;
         }
 
-        public static Instance Singleton()
+        public void SetMaxDate(long maxDateTicks)
         {
-            return _instance;
+            if (maxDateTicks > DiscoveredMaxDateTicks && maxDateTicks < DateTime.MaxValue.Ticks)
+            {
+                DiscoveredMaxDateTicks = maxDateTicks;
+                Log.Debug($"set new discovered max time range ticks: {new DateTime(maxDateTicks).ToString("o")}");
+            }
         }
+
+        public void SetMinDate(long minDateTicks)
+        {
+            if (minDateTicks < DiscoveredMinDateTicks && minDateTicks > DateTime.MinValue.Ticks)
+            {
+                DiscoveredMinDateTicks = minDateTicks;
+                Log.Debug($"set new discovered min time range ticks: {new DateTime(minDateTicks).ToString("o")}");
+            }
+        }
+
+        public void SetMinMaxDate(long ticks)
+        {
+            SetMaxDate(ticks);
+            SetMinDate(ticks);
+        }
+
+        public void SetMinMaxDate(long minDateTicks, long maxDateTicks)
+        {
+            SetMaxDate(minDateTicks);
+            SetMinDate(maxDateTicks);
+        }
+
     }
 }

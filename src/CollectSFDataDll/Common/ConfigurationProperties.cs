@@ -38,6 +38,8 @@ namespace CollectSFData.Common
 
         public DateTimeOffset EndTimeUtc { get; set; }
 
+        public string EtwManifestsCache { get; set; } = Constants.EtwDefaultManifestsCache;
+
         public bool Examples { get; private set; }
 
         public string[] FileUris { get; set; } = new string[0];
@@ -54,13 +56,13 @@ namespace CollectSFData.Common
 
         public string KustoTable { get; set; }
 
-        public bool KustoUseBlobAsSource { get; set; } = true;
+        public bool KustoUseBlobAsSource { get; set; }
 
-        public bool KustoUseIngestMessage { get; set; } = false;
+        public bool KustoUseIngestMessage { get; set; }
 
         public bool List { get; set; } = false;
 
-        public bool LogAnalyticsCreate { get; set; } = false;
+        public bool LogAnalyticsCreate { get; set; }
 
         public string LogAnalyticsId { get; set; }
 
@@ -70,7 +72,7 @@ namespace CollectSFData.Common
 
         public string LogAnalyticsPurge { get; set; }
 
-        public bool LogAnalyticsRecreate { get; set; } = false;
+        public bool LogAnalyticsRecreate { get; set; }
 
         public string LogAnalyticsWorkspaceName { get; set; }
 
@@ -108,7 +110,7 @@ namespace CollectSFData.Common
 
         public bool UseTx { get; set; } = true;
 
-        public bool VersionOption { get; set; } = false;
+        public bool VersionOption { get; set; }
 
         public ConfigurationProperties()
         {
