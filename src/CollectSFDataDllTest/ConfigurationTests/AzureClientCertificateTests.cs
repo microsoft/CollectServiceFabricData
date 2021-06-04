@@ -8,7 +8,7 @@ using System;
 using System.IO;
 using System.Security.Cryptography.X509Certificates;
 
-namespace CollectSFDataDll.ConfigurationTests
+namespace CollectSFData.ConfigurationTests
 {
     [TestFixture()]
     public class AzureClientCertificateTests : TestUtilities
@@ -68,7 +68,7 @@ namespace CollectSFDataDll.ConfigurationTests
             {
                 config.AzureClientId = "";
                 Assert.IsTrue(config.IsClientIdConfigured(), "test configuration invalid");
-                AzureResourceManager arm = new AzureResourceManager();
+                AzureResourceManager arm = new AzureResourceManager(config);
 
                 Assert.IsTrue(arm.ClientIdentity.IsSystemManagedIdentity, "arm.IsSystemManagedIdentity not detected. test from azure vm with system managed identity enabled.");
                 return config.ValidateAad();
@@ -90,7 +90,7 @@ namespace CollectSFDataDll.ConfigurationTests
             {
                 //config.AzureClientId = "";
                 Assert.IsTrue(config.IsClientIdConfigured(), "test configuration invalid");
-                AzureResourceManager arm = new AzureResourceManager();
+                AzureResourceManager arm = new AzureResourceManager(config);
 
                 Assert.IsTrue(arm.ClientIdentity.IsUserManagedIdentity, "arm.IsUserManagedIdentity not detected. test from azure vm with user managed identity enabled.");
                 return config.ValidateAad();
@@ -110,7 +110,7 @@ namespace CollectSFDataDll.ConfigurationTests
 
             ProcessOutput results = utils.ExecuteTest((config) =>
             {
-                AzureResourceManager arm = new AzureResourceManager();
+                AzureResourceManager arm = new AzureResourceManager(config);
                 string certFile = $"{TestUtilities.TempDir}\\{config.AzureClientSecret}.pfx";
                 new CertificateUtilities().SaveCertificateToFile(_appCertificate, certFile);
 
@@ -229,7 +229,7 @@ namespace CollectSFDataDll.ConfigurationTests
             CertificateUtilities certificateUtilities = new CertificateUtilities();
             ConfigurationOptions config = utils.Collector.Config;
             // verify test credentials work
-            AzureResourceManager arm = new AzureResourceManager();
+            AzureResourceManager arm = new AzureResourceManager(config);
             _appCertificate = certificateUtilities.GetClientCertificate(TestUtilities.TestProperties.AzureClientCertificate);
             //_appCertificate = new X509Certificate2(Convert.FromBase64String(TestUtilities.TestProperties.AzureClientCertificate),
             //    TestUtilities.TestProperties.adminPassword,
