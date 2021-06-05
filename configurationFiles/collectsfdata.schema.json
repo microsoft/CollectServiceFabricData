@@ -164,6 +164,19 @@
       ],
       "pattern": "^([0-9]{1,4}(\\/|-)[0-9]{1,2}(\\/|-)[0-9]{1,4} [0-9]{1,2}:[0-9]{1,2}(:[0-9]{1,2}|) (-|\\+)[0-9]{1,2}:[0-9]{1,2})$"
     },
+    "EtwManifests": {
+      "$id": "#/properties/EtwManifests",
+      "type": "string",
+      "title": "EtwManifests",
+      "description": "local device manifest cache source / destination path",
+      "default": "./manifests",
+      "examples": [
+        null,
+        "./manifests",
+        "c:\\temp"
+      ],
+      "pattern": "^(.+)$"
+    },
     "FileUris": {
       "$id": "#/properties/FileUris",
       "type": "array",
