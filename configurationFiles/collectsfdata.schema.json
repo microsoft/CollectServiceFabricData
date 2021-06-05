@@ -168,7 +168,7 @@
       "$id": "#/properties/EtwManifests",
       "type": "string",
       "title": "EtwManifests",
-      "description": "local device manifest cache source / destination path",
+      "description": "local device manifest cache source path",
       "default": "./manifests",
       "examples": [
         null,
