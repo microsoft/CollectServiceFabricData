@@ -1,5 +1,9 @@
 # Change log
 
+## 06/21/2021
+
+- add .WithSendX5C(sendX5C) for SNI certificate authentication.
+
 ## 06/01/2021
 
 - adding support for formatting service fabric etw (.etl) files to csv for kusto ingest  
