@@ -220,7 +220,7 @@ namespace CollectSFData.Azure
                 .WithLogging(MsalLoggerCallback, LogLevel.Verbose, true, true)
                 .WithCertificate(clientCertificate)
                 .Build();
-            AddClientScopes();
+            AddClientScopes(true);
         }
 
         public void CreateConfidentialClient(string resource, string secret)
@@ -460,7 +460,7 @@ namespace CollectSFData.Azure
             }
         }
 
-        private void AddClientScopes()
+        private void AddClientScopes(bool sendX5C = false)
         {
             if (Scopes.Count < 1)
             {
@@ -473,6 +473,7 @@ namespace CollectSFData.Azure
             {
                 AuthenticationResult result = _confidentialClientApp
                     .AcquireTokenForClient(new List<string>() { scope })
+                    .WithSendX5C(sendX5C)
                     .ExecuteAsync().Result;
                 Log.Debug($"scope authentication result:", AuthenticationResultToken);
                 AuthenticationResultToken = new AccessToken(result.AccessToken, result.ExpiresOn);
