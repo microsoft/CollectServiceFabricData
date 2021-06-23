@@ -3,6 +3,7 @@
 # CollectSFData
 
 >[Current download](https://github.com/microsoft/CollectServiceFabricData/releases/latest)  
+>[Privacy](#privacy)
 >[Requirements](#requirements)  
 >[Setup](#setup)  
 >>[Kusto Quick Start](/docs/kustoQuickStart.md)  
@@ -26,6 +27,10 @@ Service Fabric diagnostic data that can be enumerated / downloaded from configur
 - service fabric fabric exceptions .dmp files. (fabriccrashdump-*)
 - service fabric events stored in Azure blob tables.
 - service fabric setup .trace files.
+
+## Privacy
+
+Microsoft Privacy Statement: https://privacy.microsoft.com/en-US/privacystatement
 
 ## Requirements
 
