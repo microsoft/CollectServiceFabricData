@@ -1,6 +1,10 @@
 # Change log
 
-## 06/21/2021
+## 06/23/2021  
+
+- add support for Geneva. Geneva Action server does not support .NET MD5. so need have set UseV1MD5 to false when using Azure Storage. CloudStorageAccount.UseV1MD5 = false;
+
+## 06/21/2021 https://github.com/microsoft/CollectServiceFabricData/releases/tag/v2.9.2106.12112
 
 - add .WithSendX5C(sendX5C) for SNI certificate authentication.
 
@@ -36,6 +40,9 @@
     1:LogSummary:0 files failed to be processed.
     1:LogSummary:total execution time in minutes: 1.14
     ```
+## 5/3/2021 https://github.com/microsoft/CollectServiceFabricData/releases/tag/v2.9.2105.10313
+
+- Add Client Certificate authentication
 
 ## 4/18/2021
 
