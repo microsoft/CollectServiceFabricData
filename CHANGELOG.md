@@ -3,6 +3,7 @@
 ## 06/23/2021  
 
 - add support for Geneva. Geneva Action server does not support .NET MD5. so need have set UseV1MD5 to false when using Azure Storage. CloudStorageAccount.UseV1MD5 = false;
+- add SECURITY.md for current microsoft OSS compliance
 
 ## 06/21/2021 https://github.com/microsoft/CollectServiceFabricData/releases/tag/v2.9.2106.12112
 
