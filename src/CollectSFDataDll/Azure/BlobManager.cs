@@ -49,6 +49,7 @@ namespace CollectSFData.Azure
 
             try
             {
+                CloudStorageAccount.UseV1MD5 = false;
                 _account = CloudStorageAccount.Parse(_config.SasEndpointInfo.ConnectionString);
                 CloudBlobClient storageClient = _account.CreateCloudBlobClient();
                 _blobClient = storageClient.GetRootContainerReference().ServiceClient;
