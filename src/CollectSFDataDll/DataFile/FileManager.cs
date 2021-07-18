@@ -439,7 +439,8 @@ namespace CollectSFData.DataFile
 
             EtlTraceFileParser<DtrTraceRecord> parser = new EtlTraceFileParser<DtrTraceRecord>(_config);
             parser.ParseTraces(action, fileObject.FileUri, _config.StartTimeUtc.UtcDateTime, _config.EndTimeUtc.UtcDateTime);
-            
+
+            _instance.TotalErrors += parser.EventReadErrors;
             _instance.SetMinMaxDate(parser.TraceSessionMetaData.EndTime.Ticks, parser.TraceSessionMetaData.StartTime.Ticks);
             success = recordsCount != 0;
             fileObject.Status = success ? FileStatus.succeeded : FileStatus.failed;
