@@ -932,7 +932,7 @@ namespace CollectSFData.Common
 
             EtwManifestsCache = FileManager.NormalizePath(EtwManifestsCache);
 
-            if (!Directory.Exists(EtwManifestsCache))
+            if (!Directory.Exists(EtwManifestsCache) || Directory.GetFiles(EtwManifestsCache).Length < 1)
             {
                 Log.Info($"creating EtwManifestsCache:{EtwManifestsCache}");
                 CreateDirectory(EtwManifestsCache);
