@@ -8,6 +8,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -34,6 +35,12 @@ namespace CollectSFData.Common
         public static event LogMessageHandler MessageLogged;
 
         private static event EventHandler<Newtonsoft.Json.Serialization.ErrorEventArgs> JsonErrorHandler;
+
+        private static readonly Encoding Utf8Encoder = Encoding.GetEncoding(
+            "UTF-8",
+            new EncoderReplacementFallback(string.Empty),
+            new DecoderExceptionFallback()
+        );
 
         public static ConfigurationOptions Config
         {
@@ -376,7 +383,6 @@ namespace CollectSFData.Common
                 Debug(message, jsonSerializer, callerName);
             }
         }
-
         private static void WriteFile(LogMessage result)
         {
             if (_streamWriter == null)
@@ -384,7 +390,7 @@ namespace CollectSFData.Common
                 _streamWriter = new StreamWriter(_logFile, true);
             }
 
-            _streamWriter.WriteLine(result.TimeStamp + result.Message);
+            _streamWriter.WriteLine(Utf8Encoder.GetString(Utf8Encoder.GetBytes(result.TimeStamp + result.Message)));
         }
 
         private static void WriteMessage(LogMessage message)
