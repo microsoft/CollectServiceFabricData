@@ -7,7 +7,7 @@ using namespace System.Security.Cryptography.X509Certificates;
 param(
     [switch]$clean,
     [switch]$reset,
-    [string]$configurationFile = "$env:LOCALAPPDATA\collectsfdata\collectSfDataTestProperties.json", # "$psscriptroot\..\bin\temp\collectSfDataTestProperties.json",
+    [string]$configurationFile = "$env:LOCALAPPDATA\collectsfdata\collectSfDataDllTestProperties.json", # "$psscriptroot\..\bin\temp\collectSfDataDllTestProperties.json",
     [string]$tempDir = "$psscriptroot\..\src\bin\temp"
 )
 
@@ -508,7 +508,10 @@ class TestEnv {
         #     return Get-AzADApplication -DisplayName $settings.AzureClientSecret
         # }
         # return $null
-        return Get-AzADApplication -DisplayName $displayName
+        write-host "Get-AzADApplication -DisplayName $displayName"
+        [object]$retval = Get-AzADApplication -DisplayName $displayName
+        write-host "return: $retval"
+        return $retval
     }
 
     [object] GetAzureKeyVault() {

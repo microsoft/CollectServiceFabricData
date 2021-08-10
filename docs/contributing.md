@@ -68,7 +68,7 @@ to build a specific configuration:
 .\dotnet-build.ps1 -targetFrameworks net462 -configuration debug -runtimeIdentifier win-x64
 ```
 
-## CollectSFDataTest
+## CollectSFDataDllTest
 
 Visual Studio Code with .netcoreapp3.1 / net5 and powershell 7.0+
 or
@@ -87,18 +87,18 @@ This client is used for creating resources in azure for testing collectsfdata.
 
 ```powershell
 .\scripts\azure-az-create-aad-application-spn.ps1 `
-  -aadDisplayName collectsfdatatestclient `
-  -uri http://collectsfdatatestclient `
+  -aadDisplayName CollectSFDataDllTestclient `
+  -uri http://CollectSFDataDllTestclient `
   -logontype cert `
   -password {{cert password}}
 
 ...
 application id: 59c41f0c-fb6c-43e7-a070-480e2af83838
 tenant id: 1a4b5850-4150-4da6-9d0e-4cfcc078292b
-application identifier Uri: http://collectsfdatatestclient
+application identifier Uri: http://CollectSFDataDllTestclient
 cert and key base64: MIIDHjCCAgagAwIBAgIQFgKT81w9vapAjxN...
 thumbprint: C124CE6208B0547CB576019104FDDF97B01A37A8
-pfx path: C:\Users\user\AppData\Local\Temp\collectsfdatatestclient.pfx
+pfx path: C:\Users\user\AppData\Local\Temp\CollectSFDataDllTestclient.pfx
 clientid / applicationid saved in $global:applicationId
 clientsecret / base64 thumb saved in $global:clientSecret
 
@@ -133,7 +133,7 @@ clientsecret / base64 thumb saved in $global:clientSecret
 - .\scripts\setup-test-env.ps1
 
 ```powershell
-.\scripts\setup-test-env.ps1 creates the following configuration file: $env:LocalAppData\collectsfdata\collectSfDataTestProperties.json
+.\scripts\setup-test-env.ps1 creates the following configuration file: $env:LocalAppData\collectsfdata\CollectSFDataDllTestProperties.json
 ```
 
 using output from .\scripts\azure-az-create-aad-application-spn.ps1, enter:
@@ -147,7 +147,7 @@ example using values from above:
 {
   "testAzClientId": "59c41f0c-fb6c-43e7-a070-480e2af83838",
   "testAzClientCertificate": "MIIDHjCCAgagAwIBAgIQFgKT81w9vapAjxN...",
-  "testAzStorageAccount": "collectsfdatatests",
+  "testAzStorageAccount": "CollectSFDataDllTests",
   "adminUserName": null,
   "adminPassword": null,
   "AzureClientId": "14b3dd02-66ec-46b4-b7aa-b65abc9bbb4d",
