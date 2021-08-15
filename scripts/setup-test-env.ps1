@@ -162,6 +162,11 @@ class TestEnv {
         )
         #>
 
+        if ((get-module -ListAvailable -Name azurerm)) {
+            write-error "azurerm modules are installed and are not compatible with this script. remove azurerm modules and install az modules. and restart."
+            return $false
+        }
+
         if (!(get-module -ListAvailable -Name az.accounts)) {
             install-module Az.Accounts -Force -scope CurrentUser #-UseWindowsPowerShell
         }
@@ -186,7 +191,7 @@ class TestEnv {
 
             $error.Clear()
             write-host "loading test client cert $($settings.testAzClientCertificate)"
-            $cert = $this.LoadCertificate($settings.testAzClientCertificate, $null)
+            $cert = $this.LoadCertificate($settings.testAzClientCertificate, $settings.testCertificatePassword)
             if ($error) { return $false }
 
             write-host "connect-AzAccount -TenantId $($settings.AzureTenantId) `
@@ -268,7 +273,7 @@ class TestEnv {
         }
 
         $cert = $this.LoadCertificate($base64String, $password)
-        if ($error) { return $false }
+        if (!$cert -or $error) { return $false }
         
         
         if (!(Get-AzKeyVaultCertificate -VaultName $keyvaultname -Name $secretName)) {
@@ -463,7 +468,7 @@ class TestEnv {
         $settings = $this.testSettings
         #$appRegistration = New-AzADApplication -DisplayName $displayName -CertValue ([convert]::tobase64string($certificate.GetRawCertData()))
         $appRegistration = New-AzADApplication -DisplayName $displayName -IdentifierUris @("http://$displayName") #-CertValue ([convert]::tobase64string($certificate.GetRawCertData()))
-        if($error){
+        if ($error) {
             write-error "error:createappregistration $($error |out-string)"
             return $false
         }
@@ -550,18 +555,49 @@ class TestEnv {
     [X509Certificate2] LoadCertificate([string]$base64String, [string]$password) {
         $error.Clear()
         $settings = $this.testSettings
-        write-host "loading collectsfdata cert $($settings.AzureClientCertificate)"
+        $cert = $null
+
+        if (!$base64String) {
+            Write-Warning "LoadCertificate:empty base64string. returning"
+            return $null
+        }
+
+        write-host "loading collectsfdata cert $($base64String.Substring(0,10)) with pw: $password"
         [X509Certificate2]$cert = $null
         [byte[]] $bytes = $null
+        $securePassword = $null
 
-        $cert = [Security.Cryptography.X509Certificates.X509Certificate2]::new([convert]::FromBase64String($base64String), $password, [X509KeyStorageFlags]::Exportable)
+        if ($password) {
+            write-host "converting password"
+            $securePassword = ConvertTo-SecureString -String $password -Force -AsPlainText
+        }
+
+        $store = [Security.Cryptography.X509Certificates.X509Store]::new([Security.Cryptography.X509Certificates.StoreName]::My, [Security.Cryptography.X509Certificates.StoreLocation]::CurrentUser)
+        $store.Open([Security.Cryptography.X509Certificates.OpenFlags]::ReadWrite -bor [Security.Cryptography.X509Certificates.OpenFlags]::OpenExistingOnly)
+        
+        try {
+            $cert = [Security.Cryptography.X509Certificates.X509Certificate2]::new([convert]::FromBase64String($base64String), $securePassword, [X509KeyStorageFlags]::UserKeySet -bor [X509KeyStorageFlags]::PersistKeySet -bor [X509KeyStorageFlags]::Exportable)        
+        }
+        catch {
+            Write-Error "exception: $($_)"
+        }      
+        
+        if (!($store.Certificates.thumbprint.contains($cert.Thumbprint))) {
+            write-host "adding cert $($cert.Thumbprint) to store"
+            $store.Add($cert)
+        }
+        else {
+            write-host "$($cert.Thumbprint) already exists in store"
+        }
+
+        $store.Close()
         $bytes = $cert.Export([X509ContentType]::pkcs12, $password)
 
-        # if ($bytes) {
-        #     $this.certFile = "$($this.tempdir)\$($cert.thumbprint).pfx"
-        #     write-host "saving cert to temp dir $($this.certFile)"
-        #     [io.File]::WriteAllBytes($this.certFile, $bytes)
-        # }
+        if ($bytes) {
+            $this.certFile = "$($this.tempdir)\$($cert.thumbprint).pfx"
+            write-host "saving cert to temp dir $($this.certFile)"
+            [io.File]::WriteAllBytes($this.certFile, $bytes)
+        }
 
         return $cert
     }
