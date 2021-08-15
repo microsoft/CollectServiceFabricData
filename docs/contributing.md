@@ -104,6 +104,17 @@ clientsecret / base64 thumb saved in $global:clientSecret
 
 ```
 
+collectSfDataDllTestProperties.json diff:
+
+```diff
+{
++  "testAzClientId": "59c41f0c-fb6c-43e7-a070-480e2af83838",
++  "testAzClientCertificate": "MIIDHjCCAgagAwIBAgIQFgKT81w9vapAjxN...",
++  "testAzClientName": "CollectSFDataDllTestclient",
+}
+```
+
+
 #### **powershell collectsfdata app registration id setup**
 
 the following script will create an app registration using certificate logon for confidentialclient msal collectsfdata testing.
@@ -128,6 +139,18 @@ clientsecret / base64 thumb saved in $global:clientSecret
 
 ```
 
+collectSfDataDllTestProperties.json diff:
+
+```diff
+{
++  "AzureClientId": "14b3dd02-66ec-46b4-b7aa-b65abc9bbb4d",
++  "AzureClientCertificate": "MIIDEjCCAfqgAwIBAgIQPnmXz4qmKIpHlu...",
++  "AzureClientSecret": "{{private key}}",
++  "AzureTenantId": "1a4b5850-4150-4da6-9d0e-4cfcc078292b",
+}
+```
+
+
 ### Environment Setup
 
 - .\scripts\setup-test-env.ps1
@@ -148,8 +171,12 @@ example using values from above:
   "testAzClientId": "59c41f0c-fb6c-43e7-a070-480e2af83838",
   "testAzClientCertificate": "MIIDHjCCAgagAwIBAgIQFgKT81w9vapAjxN...",
   "testAzStorageAccount": "CollectSFDataDllTests",
-  "adminUserName": null,
-  "adminPassword": null,
+  "testAzClientName": "CollectSFDataDllTestclient",
+  "testCertificateNoPasswordBase64": "",
+  "testCertificateWithPasswordBase64": "",
+  "testCertificatePassword": "",
+  "testAdminUserName": null,
+  "testAdminPassword": null,
   "AzureClientId": "14b3dd02-66ec-46b4-b7aa-b65abc9bbb4d",
   "AzureClientCertificate": "MIIDEjCCAfqgAwIBAgIQPnmXz4qmKIpHlu...",
   "AzureClientSecret": "{{private key}}",
@@ -169,8 +196,12 @@ clean example:
   "testAzClientId": "{{test client app registration}}",
   "testAzClientCertificate": "{{test client base64 certificate}}",
   "testAzStorageAccount": "{{test storage account name}}",
-  "adminUserName": null,
-  "adminPassword": null,
+  "testAzClientName": "collectsfdataapp",
+  "testCertificateNoPasswordBase64": "",
+  "testCertificateWithPasswordBase64": "",
+  "testCertificatePassword": "",
+  "testAdminUserName": null,
+  "testAdminPassword": null,
   "AzureClientId": "{{collectsfdata app registration}}",
   "AzureClientCertificate": "{{collectsfdata client base64 certificate}}",
   "AzureClientSecret": "{{private key}}",
