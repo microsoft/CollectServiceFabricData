@@ -1,0 +1,24 @@
+.create-or-alter function with (docstring = "[T:string] where T=table name. Function to show Last time FabricGateway was unable to Authenticate, returns Incoming Certificate Details it was trying to use to match.  Requires TableName and ConnectionId", folder = "sflogs/hosting")
+    TraceHostingFabricGatewayIncomingCert(T:string, Cid:string) {
+    //Show incoming certs details we are trying to use to authenticate with
+    let pattern_anyThumbprint = @"([a-fA-F0-9]{40})";
+    let pattern_subject = @"subject='([^']*)";
+    let pattern_thumbprint = @"thumbprint\s=\s([a-fA-F0-9]{40})";
+    let pattern_issuer = @"issuer='([^']*)";
+    let pattern_issuerThumbprint = @"issuerCertThumbprint=([^,]*)";
+    let pattern_notBefore = @"NotBefore=([^,]*)";
+    let pattern_notAfter = @"NotAfter=([^,]*)";
+    table(T)
+    | where Type startswith "Transport.Security"
+    | where Text startswith "incoming cert:"
+    | where Type contains Cid
+    | extend Subject = extract(pattern_subject, 1, Text, typeof(string))
+    | extend Thumbprint = extract(pattern_thumbprint, 1, Text, typeof(string))
+    | extend Issuer = extract(pattern_issuer, 1, Text, typeof(string))
+    | extend IssuerThumbprint = extract(pattern_issuerThumbprint, 1, Text, typeof(string))
+    | extend NotBefore = extract(pattern_notBefore, 1, Text, typeof(string))
+    | extend NotAfter = extract(pattern_notAfter, 1, Text, typeof(string))
+    | project Timestamp, NodeName, Subject, Thumbprint, Issuer, IssuerThumbprint, NotBefore, NotAfter
+    | order by Timestamp desc 
+    | take 1
+}

@@ -1,0 +1,23 @@
+.create-or-alter function with (docstring = "[t:string, paritionId:string, percentileArray:dynamic, nodeName:string]
+        where t=table name, paritionId=Parition Id, percentiles = dynamic array of percentile, nodeName=node name. 
+        Return DrainReplicationPerf performance table with given PercentilesArray. (this is a custom trace)", folder = "rc-perf/native")
+    DrainReplicationPerfTablePercentile(t:string, partitionId:string, percentileArray:dynamic, nodeName:string) {
+    let drainReplicationPerfTable = DrainReplicationPerfTable(t, partitionId, nodeName);
+    let OpCount = toscalar(drainReplicationPerfTable | count);
+    let percentileRow = drainReplicationPerfTable
+    | extend r = range(0,array_length(percentileArray),1)
+    | mv-expand r
+    // Change the following statement based on the type of timing we are ranking
+    //| where Order1GetOperationAsync == OpCount*(1-todouble(PercentileArray[toint(r)])*0.01)
+    //| where Order2FlushAsync == OpCount*(1-todouble(PercentileArray[toint(r)])*0.01)
+    //| where Order3AwaitDrainTask == OpCount*(1-todouble(PercentileArray[toint(r)])*0.01)
+    //| where Order4GetLastReplicatedRecord  == OpCount*(1-todouble(PercentileArray[toint(r)])*0.01)
+    //| where Order5LogLogicalRecordONSecondaryAsync  == OpCount*(1-todouble(PercentileArray[toint(r)])*0.01)
+    //| where Order6DrainReplicationReceiveTrace  == OpCount*(1-todouble(PercentileArray[toint(r)])*0.01)
+    //| where Order7AwaitFlushingReplicatedRecordTask  == OpCount*(1-todouble(PercentileArray[toint(r)])*0.01)
+    | where OrderTotalTime == OpCount*(1-todouble(percentileArray[toint(r)])*0.01)
+    | extend Percentiles = todouble(percentileArray[toint(r)])
+    | order by Percentiles desc
+    | project-away r;
+    percentileRow
+}

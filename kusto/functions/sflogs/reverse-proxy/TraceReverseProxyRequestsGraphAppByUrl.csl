@@ -17,7 +17,7 @@
     | extend serviceName = extract(extractPattern_AppServiceNames, 2, serviceUrl)
     | extend controllerName = extract(extractPattern_ControllerMethodNames, 1, serviceUrl)
     | extend methodName = extract(extractPattern_ControllerMethodNames, 2, serviceUrl)
-    | extend summarizedUrl = strcat(appName,':' , serviceName,':' , controllerName)
+    | extend summarizedUrl = strcat(appName,':' , serviceName,':' , controllerMethod)
     | where appName contains AppName and serviceUrl contains routePath
     | summarize count() by xtime=bin(Timestamp,60s), tostring(summarizedUrl)
     | render timechart;
