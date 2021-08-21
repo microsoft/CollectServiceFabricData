@@ -1,0 +1,28 @@
+.create-or-alter function with (docstring = "[T:string] where T=table name. function to graph maximum Transport latency by IP.", folder = "sflogs/performance")
+    TraceTransportMaxHeartbeatLatencyTable(T:string) {
+    let extractPattern_Ip = @'(\d*.\d*.\d*.\d*)(:\d*)-(\d*.\d*.\d*.\d*)(:\d*)';
+    let extractPattern_ToIp = @'((?:https?:\/\/[^,?]*))';
+    let extractPattern_Latencies = @'latencies\s=\s(.*)';
+    let extractPattern_ConnectionTypes = @'(Transport.Connection.+[@])';
+    let extractPattern_Parse = @'\s';
+    let extractDigits = @'((?:\d+)+),?';
+    table(T)
+    | where Text contains "heartbeat log"
+    | where Text !contains "localhost"
+    | extend fromIp = extract(extractPattern_Ip, 1, Text)
+    | extend toIp = extract(extractPattern_Ip, 3, Text)
+    | extend latencies = substring(extract_all(extractPattern_Latencies, Text), 2, strlen(extract_all(extractPattern_Latencies, Text))-4)
+    | extend latencyArray = extract_all(extractDigits, latencies)
+    | extend sortedArray = array_sort_desc(latencyArray)
+    | extend maxLatency = toint(sortedArray[0])
+    | extend fromTo = strcat(fromIp, "-", toIp)
+    | where fromIp != toIp
+    | project Timestamp, Type, Text, fromIp, toIp, fromTo, latencies, latencyArray, sortedArray, maxLatency, NodeName
+    | summarize max(maxLatency) by xtime=bin(Timestamp,60s), fromTo, NodeName
+    | partition by NodeName
+    (
+        top 3 by max_maxLatency
+    )
+    | project NodeName, xtime, fromTo, max_maxLatency
+    | order by NodeName asc , xtime
+}

@@ -1,0 +1,16 @@
+.create-or-alter function with (docstring = "[T:string] where T=table name. Function to show which certificates are currently getting found on each node", folder = "sflogs/hosting")
+    TraceHostingCertificatesFound(T:string) {
+        let pattern_anyThumbprint = @"([a-fA-F0-9]{40})";
+    table(T)
+    | where (Type startswith "Transport.SecurityContextSsl" and Text startswith "incoming cert:")
+         or (Type startswith "Common.CryptoUtility" and Text startswith "GetCertificate: match found for")
+         or (Type startswith "Transport.SecurityCredentials" and Text startswith "credentials sorted:")
+    | extend Certificate = extract(pattern_anyThumbprint, 1, Text, typeof(string))
+    | order by Timestamp desc
+    | partition by NodeName
+        (
+        top 10 by Timestamp desc
+        )
+    | distinct NodeName, Type, Text
+    | order by NodeName asc
+}

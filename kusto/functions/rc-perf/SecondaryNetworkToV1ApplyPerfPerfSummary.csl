@@ -1,0 +1,14 @@
+.create-or-alter function with (docstring = "[t:string, paritionId:string, percentiles:dynamic, nodeName:string]
+        where t=table name, paritionId=Parition Id, percentiles = dynamic array of percentile, nodeName=node name. 
+        Return percentile of Secondary Network Receive to V1 Apply latency with given partitionId and nodeName.
+        Need to turn on RE.SecondaryReceiveBatch", folder = "rc-perf")
+    SecondaryNetworkToV1ApplyPerfPerfSummary(t:string, partitionId:string, percentilesVector:dynamic, nodeName:string) {
+    let summary = SecondaryNetworkToV1ApplyPerfTable(t, partitionId, nodeName)
+    | summarize 
+        percentiles_array(NetworkToV1ApplyTimeMSec, percentilesVector)
+    | extend Percentiles = percentilesVector
+    | project Result = zip(Percentiles, percentiles_NetworkToV1ApplyTimeMSec)
+    | mv-expand Result
+    | project Percentiles = Result[0], percentiles_NetworkToV1ApplyTimeMSec = Result[1];
+    summary
+}

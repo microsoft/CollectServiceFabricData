@@ -1,0 +1,18 @@
+.create-or-alter function with (docstring = "[T:string] where T=table name. function to graph Heartbeat timeouts by IP.", folder = "sflogs/performance")
+    TraceTransportHeartbeatTimeout(T:string) {
+    let regex_Ip = @'(\d*.\d*.\d*.\d*)(:\d*)-(\d*.\d*.\d*.\d*)(:\d*)';
+    let regex_ToIp = @'((?:https?:\/\/[^,?]*))';
+    let regex_HeartbeatTimeout = @'heartbeatTimeoutCount\s=\s(\d+)';
+    table(T)
+    | where Type startswith "Transport.Connection@"
+    | where Text contains "heartbeat log"
+    | where Text !contains "localhost"
+    | extend fromIp = extract(regex_Ip, 1, Text)
+    | extend toIp = extract(regex_Ip, 3, Text)
+    | extend heartbeatTimeout = extract(regex_HeartbeatTimeout, 1, Text, typeof(long))
+    | extend fromTo = strcat(fromIp, "-", toIp)
+    | where fromIp != toIp
+    | project Timestamp, Type, Text, fromTo, heartbeatTimeout
+    | summarize sum(heartbeatTimeout) by xtime=bin(Timestamp,60s), fromTo
+    | render timechart;
+}
