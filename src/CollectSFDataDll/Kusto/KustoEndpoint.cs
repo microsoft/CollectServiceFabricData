@@ -109,6 +109,8 @@ namespace CollectSFData.Kusto
             {
                 if (_arm.ClientIdentity.IsAppRegistration)
                 {
+                    Log.Info($"connecting to kusto with app registration {_config.AzureClientId}");
+                    
                     DatabaseConnection = new KustoConnectionStringBuilder(ClusterIngestUrl)
                     {
                         FederatedSecurity = true,
