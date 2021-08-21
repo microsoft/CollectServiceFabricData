@@ -3,11 +3,39 @@
         let minTimestamp = toscalar(table(T)|top 1 by Timestamp asc|project Timestamp);
         let maxTimestamp = toscalar(table(T)|top 1 by Timestamp desc|project Timestamp);
         //
+        let fabricHostStart = materialize(table(T)
+            | where Type startswith 'Hosting.Hosted' or Type startswith 'Hosting.CertificateAclingManager' // logs frequently
+            | extend userProcess = toint(PID)
+            | extend processName = 'FabricHost'
+            | summarize Timestamp=min(Timestamp) by userProcess, processName, NodeName
+            | project startTimestamp=Timestamp, userProcess, processName, NodeName, Timestamp);
+        //
+        let fabricHostEnd = materialize(table(T)
+            | where Type startswith 'Hosting.Hosted' or Type startswith 'Hosting.CertificateAclingManager' // logs frequently
+            | extend userProcess = toint(PID)
+            | extend processName = 'FabricHost'
+            | summarize Timestamp=max(Timestamp) by userProcess, processName, NodeName
+            | project endTimestamp=Timestamp, userProcess, NodeName, Timestamp);
+        //
+        let fabricServiceStart = materialize(table(T)
+            | where Type startswith 'Hosting.HostedServiceActivated' and Text startswith 'HostedService: HostedService' and Text has 'activated successfully with ProcessId'
+            | extend userProcess = toint(extract(@".+ProcessId (\d+?),",1,Text))
+            | extend processName = extract(@".+_(.+?) activated successfully",1,Text)
+            | project startTimestamp=Timestamp, userProcess, processName, NodeName, Timestamp);
+        //
+        let fabricServiceEnd = materialize(table(T)
+            | extend userProcess = 0
+            | where Type startswith 'Hosting.ApplicationService' and Text startswith 'Application Host'
+            | extend userProcess = toint(extract(@".+ process id (\d+?),",1,Text))
+            | summarize endTimestamp=max(Timestamp) by userProcess, NodeName, Timestamp
+            | project endTimestamp, userProcess, NodeName, Timestamp);
+        //
+        //
         let userStart = materialize(table(T)
-        | where Type startswith 'Hosting.ApplicationService' and Text startswith 'Application Service' and Text has 'was activated with process id'
-        | extend userProcess = toint(extract(@".+process id (\d+?),",1,Text))
-        | extend processName = extract(@".+, ExeName (.+)",1,Text)
-        | project startTimestamp=Timestamp, userProcess, processName, NodeName, Timestamp);
+            | where Type startswith 'Hosting.ApplicationService' and Text startswith 'Application Service' and Text has 'was activated with process id'
+            | extend userProcess = toint(extract(@".+process id (\d+?),",1,Text))
+            | extend processName = extract(@".+, ExeName (.+)",1,Text)
+            | project startTimestamp=Timestamp, userProcess, processName, NodeName, Timestamp);
         //
         let userEnd = materialize(table(T)
             | extend userProcess = 0
@@ -31,5 +59,29 @@
                     $left.NodeName==$right.NodeName
             | project Timestamp, startTimestamp, endTimestamp, userProcess, processName, NodeName);
         //
-        union userStartJoin, userEndJoin
+        let fabricHostStartJoin = materialize (fabricHostStart
+            | join kind=leftouter fabricHostEnd 
+                on $left.userProcess==$right.userProcess, 
+                    $left.NodeName==$right.NodeName
+            | project Timestamp, startTimestamp, endTimestamp, userProcess, processName, NodeName);
+        //
+        let fabricHostEndJoin = materialize (fabricHostEnd
+            | join kind=leftouter fabricHostStart 
+                on $left.userProcess==$right.userProcess, 
+                    $left.NodeName==$right.NodeName
+            | project Timestamp, startTimestamp, endTimestamp, userProcess, processName, NodeName);
+        //
+        let fabricServiceStartJoin = materialize (fabricServiceStart
+            | join kind=leftouter fabricServiceEnd 
+                on $left.userProcess==$right.userProcess, 
+                    $left.NodeName==$right.NodeName
+            | project Timestamp, startTimestamp, endTimestamp, userProcess, processName, NodeName);
+        //
+        let fabricServiceEndJoin = materialize (fabricServiceEnd
+            | join kind=leftouter fabricServiceStart 
+                on $left.userProcess==$right.userProcess, 
+                    $left.NodeName==$right.NodeName
+            | project Timestamp, startTimestamp, endTimestamp, userProcess, processName, NodeName);
+        //
+        union fabricHostStartJoin, fabricHostEndJoin, fabricServiceStartJoin, fabricServiceEndJoin, userStartJoin, userEndJoin
 }

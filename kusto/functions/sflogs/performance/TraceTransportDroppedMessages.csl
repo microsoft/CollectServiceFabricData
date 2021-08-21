@@ -1,0 +1,19 @@
+.create-or-alter function with (docstring = "[T:string] where T=table name. function to graph transport Dropped Messages by IP.", folder = "sflogs/performance")
+    TraceTransportDroppedMessages(T:string) {
+    let regex_Ip = @'(\d+.\d+.\d+.\d+):(\d+)-(\d+.\d+.\d+.\d+):(\d+)';
+    let regex_Actor = @'Actor\s=\s(\w+)';
+    let regex_Action = @"Action\s=\s'(\w+)'";
+    table(T)
+    | where Type startswith "Transport.OutgoingMessageExpired"
+    | where Text !startswith "client-"
+    | extend fromIp = extract(regex_Ip, 1, Text)
+    | extend toIp = extract(regex_Ip, 3, Text)
+    | extend fromTo = strcat(fromIp, "-", toIp)
+    | extend actor = extract(regex_Actor, 1, Text)
+    | extend action = extract(regex_Action, 1, Text)
+    | project Timestamp, Type, Text, NodeName, fromIp, toIp, fromTo, actor, action
+    | order by action, fromTo
+    //| summarize count() by fromTo
+    | summarize count() by xtime=bin(Timestamp,60s), fromTo
+    | render timechart;
+}

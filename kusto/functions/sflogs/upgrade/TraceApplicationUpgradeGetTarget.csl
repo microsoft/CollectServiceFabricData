@@ -1,0 +1,11 @@
+.create-or-alter function with (docstring = "[T:string] where T=table name, [A:string] where A=activityId. Function return CM Application Upgrade Target Version.", folder = "sflogs/upgrade")
+    TraceApplicationUpgradeGetTarget(T:string, A:string) {
+     let pattern_Target = @'(fabric\:\/[^,]*)\,\s([^,]*)';
+     table(T)
+     | where Type startswith 'CM.UpgradeStart'
+       and Text contains A
+     | extend Application = extract(pattern_Target, 1, Text, typeof(string))
+     | extend Target = extract(pattern_Target, 2, Text, typeof(string))
+     | project Timestamp, Application, Target
+     | sort by Timestamp asc nulls last
+}
