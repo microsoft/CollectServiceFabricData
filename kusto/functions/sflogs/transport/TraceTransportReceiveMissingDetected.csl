@@ -1,0 +1,8 @@
+.create-or-alter function with (docstring = "[T:string] where T=table name. function to identify deadlocks or infinite loops in synchronous message handlers.", folder = "sflogs/transport")
+    TraceTransportReceiveMissingDetected(T:string) {
+    table(T)
+    | where Type startswith "Transport.ReceiveMissingDetected"
+    | project-rename Process = PID
+    | project-rename Thread = TID
+    | project Timestamp, Process, Thread, Type, Text, NodeName
+}

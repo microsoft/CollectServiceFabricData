@@ -8,11 +8,19 @@
             let extractPattern_PostHealthCheck = @'postHealthCheckComplete=([^\s]*)\sstart.utc=([^\s]*)\s([^\s]*)';
             table(T)
             | where FileType == 'fabric'
-            | where Type contains 'CM.UpgradeStart' 
-                or Type contains 'CM.UpgradeComplete'
-                or Type contains 'rollback' 
+            | where (Type contains 'CM.UpgradeStart' and Text contains tostring(A))
+                or (Type contains 'CM.UpgradeComplete' and Text contains tostring(A))
+                or (Type contains 'CM.ApplicationUpgradeContext' and  Text contains tostring(A))
+                or (Type contains 'CM._ApplicationsOps_ApplicationUpgradeStartOperational' and  Text contains tostring(A))
+                or (Type contains 'CM.UpgradeApplicationParameterChunk' and  Text contains tostring(A))                
+                or (Type contains 'rollback' and Text contains tostring(A))
                 or (Type startswith "FM.AppUpgrade@" and Type contains tostring(A)) 
-                or (Level in ('Error') 
+                //or (Type startswith 'FileStoreService' and Text contains tostring(A))
+                //or (Type startswith 'ImageBuilder' and Text contains tostring(A))
+                //or (Type startswith 'RAP' and Text contains tostring(A))
+                //or (Type startswith 'Client.' and Text contains tostring(A))
+                //or (Type startswith 'NativeImageStoreClient' and Text contains tostring(A))
+                or ((Level in ('Error') and Type !startswith 'FabricDCA')
                     or (Level in ('Warning','Error') and Type contains "termination")
                 )            
             | extend UpgradeContext = extract(extractPattern_Context1, 2, Text, typeof(string))

@@ -1,0 +1,13 @@
+.create-or-alter function with (docstring = "[T:string] where T=table name. function to graph Lease.SendQueueFull at lease layer", folder = "sflogs/lease")
+    TraceLeaseSendQueueFullGraph(T:string) {
+    //https://eng.ms/docs/cloud-ai-platform/azure/azure-core-compute/base-platform-bburns/service-fabric-service/service-fabric-service/tsgs-and-traces-by-component/federation/lease-failure
+    let pattern_ToFrom = @'target\s([a-fA-F0-9]*)\sto\s([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})\:\d{4}\sfrom\s([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})';
+    table(T)
+    | where Type contains "Lease.SendQueueFull"
+    | extend Target = extract(pattern_ToFrom, 1, Text, typeof(string))
+    | extend ToIp = extract(pattern_ToFrom, 2, Text, typeof(string))
+    | extend FromIp = extract(pattern_ToFrom, 3, Text, typeof(string))
+    | extend ToFrom = strcat(ToIp,"-",FromIp)
+    | summarize count() by xtime=bin(Timestamp,60s), ToFrom
+    | render timechart 
+}

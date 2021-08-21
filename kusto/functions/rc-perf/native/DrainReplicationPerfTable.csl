@@ -1,0 +1,47 @@
+.create-or-alter function with (docstring = "[t:string, paritionId:string, nodeName:string]
+        where t=table name, paritionId=Parition Id, nodeName=node name. 
+        Return DrainReplicationPerf trace breakdown (this is a custom trace)", folder = "rc-perf/native")
+    DrainReplicationPerfTable(t:string, partitionId:string, nodeName:string) {
+    let traces = GetTraces(t, partitionId, nodeName);
+    let DrainReplicationPerfTable = traces
+    | where Type == strcat("LR.DrainReplicationPerf@",partitionId)
+    | parse Text with 
+        ReplicaId:long ": Replication record: " LSN:long 
+        " message: Instance: 1GetOperationAsync: " 1GetOperationAsync:long 
+        " us, 2FlushAsync: " 2FlushAsync:long
+        " us, 3AwaitDrainTask: " 3AwaitDrainTask:long
+        " us, 4GetLastReplicatedRecord: " 4GetLastReplicatedRecord:long 
+        " us, 5LogLogicalRecordONSecondaryAsync: " 5LogLogicalRecordONSecondaryAsync:long
+        " us, 6DrainReplicationReceiveTrace: " 6DrainReplicationReceiveTrace:long 
+        " us, 7AwaitFlushingReplicatedRecordTask: " 7AwaitFlushingReplicatedRecordTask:long 
+        " us, TotalTime: " TotalTime:long " us, ." *
+    | project 
+        LSN, 
+        LSNString = tostring(LSN), 
+        1GetOperationAsync, 
+        2FlushAsync, 
+        3AwaitDrainTask, 
+        4GetLastReplicatedRecord, 
+        5LogLogicalRecordONSecondaryAsync, 
+        6DrainReplicationReceiveTrace,
+        7AwaitFlushingReplicatedRecordTask,
+        TotalTime
+    // need to add order based on each time here
+    | order by 1GetOperationAsync desc 
+    | extend Order1GetOperationAsync = row_number()
+    | order by 2FlushAsync desc 
+    | extend Order2FlushAsync = row_number()
+    | order by 3AwaitDrainTask desc 
+    | extend Order3AwaitDrainTask = row_number()
+    | order by 4GetLastReplicatedRecord desc 
+    | extend Order4GetLastReplicatedRecord = row_number()
+    | order by 5LogLogicalRecordONSecondaryAsync desc 
+    | extend Order5LogLogicalRecordONSecondaryAsync = row_number()
+    | order by 6DrainReplicationReceiveTrace desc 
+    | extend Order6DrainReplicationReceiveTrace = row_number()
+    | order by 7AwaitFlushingReplicatedRecordTask desc 
+    | extend Order7AwaitFlushingReplicatedRecordTask = row_number()
+    | order by TotalTime desc 
+    | extend OrderTotalTime = row_number();
+    DrainReplicationPerfTable
+}

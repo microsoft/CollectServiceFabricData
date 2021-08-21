@@ -1,0 +1,34 @@
+.create-or-alter function with (docstring = "[t:string, paritionId:string]
+        where t=table name and paritionId=Parition Id. 
+        Return primary performance table.
+        InstOp* column needs custom trace LR.InstrumentOperation", folder = "rc-perf/native")
+    PrimaryPerfTable(t:string, partitionId:string) {
+    let table = PrimaryReplicatePerfTable(t,partitionId)
+    | extend LSNString = tostring(LSN)
+    | join kind = inner (
+        PrimaryFlushPerfTable(t,partitionId)
+        | extend LSNString = tostring(LSN)) 
+      on LSN
+    | join kind = inner (
+        PrimaryInstOpPerfTable(t,partitionId)
+        | extend LSNString = tostring(LSN))
+      on LSN
+    | order by InstOpTotalTimeMSec asc 
+    | extend OrderInstOpTotalTimeMSec = row_number()
+    | project 
+        TransactionId, 
+        LSN,
+        BeforeApplyTimestamp,
+        AfterApplyTimestamp,
+        AfterReplicateTimestamp,
+        InstOpApplyTimeMSec,
+        InstOpReplicateTimeMSec,
+        InstOpTotalTimeMSec,
+        v2StartTimestamp,
+        v2FlushETWTimestamp,
+        FlushTimeMSec,
+        v1PrimaryReplicateTimestamp,
+        v1PrimaryReplicateDoneETWTimestamp,
+        ReplicateTimeMSec;
+    table
+}
