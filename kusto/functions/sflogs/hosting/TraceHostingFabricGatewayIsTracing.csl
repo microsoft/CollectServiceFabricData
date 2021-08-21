@@ -1,0 +1,13 @@
+.create-or-alter function with (docstring = "[T:string] where T=table name. Function to show Last time FabricGateway tracing was active", folder = "sflogs/hosting")
+    TraceHostingFabricGatewayIsTracing(T:string) {
+    let binLengthTimespan = totimespan("0.00:05:00");
+    table(T)
+    | where Type startswith 'FabricGateway' or Type startswith "HttpGateway" or Type startswith "EntreeServiceProxy"
+    | summarize count() by bin(Timestamp, binLengthTimespan), NodeName        
+    | partition by NodeName
+        (
+        top 1 by Timestamp desc
+        )
+    | project NodeName, Timestamp, count_
+    | order by NodeName asc 
+}

@@ -1,0 +1,22 @@
+.create-or-alter function with (docstring = "[t:string, paritionId:string, percentiles:dynamic, nodeName:string]
+        where t=table name, paritionId=Parition Id, percentiles = dynamic array of percentile, and nodeName=node name. 
+        Return percentile of Secondary perf summary with given partitionId and nodeName.
+        Need to turn on RE.SecondaryReceiveBatch for percentiles_NetworkTo* column", folder = "rc-perf/native")
+    SecondaryPerfSummary(t:string, partitionId:string, percentilesVector:dynamic, nodeName:string) {
+    let summary = SecondaryNetworkToV2StartPerfSummary(t, partitionId, percentilesVector, nodeName)
+    | extend PercentilesString = tostring(Percentiles)
+    | join kind = inner (
+        SecondaryNetworkToV1ApplyPerfPerfSummary(t, partitionId, percentilesVector, nodeName)
+        | extend PercentilesString = tostring(Percentiles))
+      on PercentilesString
+    | join kind = inner (
+        FlushPerfSummary(t, partitionId, percentilesVector, nodeName)
+        | extend PercentilesString = tostring(Percentiles))
+      on PercentilesString
+    | project   
+        Percentiles,
+        percentiles_NetworkToV2StartTimeMSec,
+        percentiles_FlushTimeMSec,
+        percentiles_NetworkToV1ApplyTimeMSec;
+    summary
+}

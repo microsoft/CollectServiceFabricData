@@ -1,0 +1,12 @@
+.create-or-alter function with (docstring = "[T:string] where T=table name, [C:string] where C=thumbprint. Function to show certificate matches", folder = "sflogs/hosting")
+    TraceHostingGetCertificateMatches(T:string, C:string) {
+    table(T)
+    | where Type startswith 'Common.CryptoUtility'
+    | where Text contains C
+    | partition by NodeName
+    (
+        top 1 by Timestamp desc 
+    )
+    | order by NodeName asc 
+    | project NodeName, Type, Text, Timestamp;  
+}
