@@ -352,7 +352,8 @@ namespace CollectSFData.Common
         public bool IsClientIdConfigured()
         {
             bool configured = ((HasValue(AzureClientId) & HasValue(ClientCertificate)) // app registration configured
-                || (HasValue(AzureClientId) & !HasValue(AzureKeyVault) & HasValue(AzureClientCertificate) & !HasValue(AzureClientSecret)) // app registration
+                || (HasValue(AzureClientId) & !HasValue(AzureKeyVault) & HasValue(AzureClientCertificate) & !HasValue(AzureClientSecret)) // app registration with certificate password
+                || (HasValue(AzureClientId) & !HasValue(AzureKeyVault) & HasValue(AzureClientCertificate) & HasValue(AzureClientSecret)) // app registration with certificate password and private key
                 || (HasValue(AzureClientId) & !HasValue(AzureKeyVault) & !HasValue(AzureClientCertificate) & HasValue(AzureClientSecret)) // app registration with clientsecret
                 || (HasValue(AzureClientId) & HasValue(AzureKeyVault) & !HasValue(AzureClientCertificate) & HasValue(AzureClientSecret)) // app registration with kv user managed
                 || (!HasValue(AzureClientId) & HasValue(AzureKeyVault) & !HasValue(AzureClientCertificate) & HasValue(AzureClientSecret)) // system managed identity with kv
@@ -642,6 +643,11 @@ namespace CollectSFData.Common
             {
                 if (clientIdConfigured && HasValue(AzureClientCertificate) && !HasValue(ClientCertificate))
                 {
+                    if(HasValue(AzureClientSecret))
+                    {
+                        certificateUtilities.SetSecurePassword(AzureClientSecret);
+                    }
+
                     ClientCertificate = certificateUtilities.GetClientCertificate(AzureClientCertificate);
                     if (!HasValue(ClientCertificate))
                     {
