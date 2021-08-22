@@ -1,0 +1,16 @@
+.create-or-alter function with (docstring = "[T:string] where T=table name. Function to show certificate initializtions by Node", folder = "sflogs/hosting")
+    TraceHostingGetCertificateIntializations(T:string) {
+    let pattern_connectionId = @'Transport.SecurityContextSsl@([0-9a-fA-F]*)';
+    let results = table(T)
+    | where Type startswith 'Transport.SecurityContextSsl'	
+    | where Text contains 'OnInitialize: credentials_'
+    | project NodeName, Type, Text, Timestamp, PID, TID;
+    results 
+    | extend connectionId = extract(pattern_connectionId, 1, Type, typeof(string))
+    | partition by NodeName
+    (
+        top 1 by Timestamp desc 
+    )
+    | order by NodeName asc 
+    | project NodeName, Type, Text, Timestamp, PID, TID, connectionId;
+}

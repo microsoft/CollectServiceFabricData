@@ -19,6 +19,7 @@ namespace CollectSFData.DataFile
         private ConfigurationOptions _config;
         public static ManifestCache ManifestCache { get; set; }
         public int EventsLost { get; private set; }
+        public int EventReadErrors {get; set;}
         public TraceSessionMetadata TraceSessionMetaData { get; private set; }
 
         public EtlTraceFileParser(ConfigurationOptions config, ManifestCache cache = null)
@@ -144,12 +145,14 @@ namespace CollectSFData.DataFile
         {
             string[] formattedEvent = ManifestCache.FormatEvent(e.Record)?.Split(new char[] { ',' }, EtlInputFields.Count());
             Log.Trivial($"formattedEvent", formattedEvent);
-            //Log.Debug($"e", e);
-            //EventDefinition eventDefinition = ManifestCache.GetEventDefinition(e.Record);
-            //Log.Debug($"eventDefinition", eventDefinition);
-            if(formattedEvent == null)
+
+            if (formattedEvent == null)
             {
-                Log.Warning("null etl event");
+                EventReadErrors++;
+                Log.Warning("null etl event. enable logdebug 5 and review log");
+                EventDefinition eventDefinition = ManifestCache.GetEventDefinition(e.Record);
+                Log.Debug($"null etl event: e:", e);
+                Log.Debug($"null etl event: eventDefinition", eventDefinition);
                 return;
             }
 
