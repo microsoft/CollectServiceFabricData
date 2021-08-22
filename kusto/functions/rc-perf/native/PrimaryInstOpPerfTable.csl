@@ -1,0 +1,41 @@
+.create-or-alter function with (docstring = "[t:string, paritionId:string]
+        where t=table name, paritionId=Parition Id.
+        Return primary service level performance table.
+        Need custom trace LR.InstrumentOperation", folder = "rc-perf/native")
+    PrimaryInstOpPerfTable(t:string, partitionId:string) {
+    let primaryTraces = GetPrimaryTraces(t, partitionId);
+    let instrumentOpTraces = primaryTraces
+    | where Type == strcat("LR.InstrumentOperation@",partitionId);
+    let beforeApplyTraces = instrumentOpTraces
+    | where Text has_cs "before AwaitApply()"
+    | parse Text with * "Lsn: " LSN:long " message: " *
+    | project BeforeApplyTimestamp = Timestamp, LSN;
+    let afterApplyTable = instrumentOpTraces
+    | where Text has_cs "after AwaitApply(), before AwaitReplication()"
+    | parse Text with * "Lsn: " LSN:long " message: " *
+    | project AfterApplyTimestamp = Timestamp, LSN;
+    let afterReplicateTable = instrumentOpTraces
+    | where Text has_cs "after AwaitReplication()"
+    | parse Text with * "Lsn: " LSN:long " message: " *
+    | project AfterReplicateTimestamp = Timestamp, LSN;
+    let instrumentOpTable = beforeApplyTraces
+    | join 
+        kind = inner 
+        afterApplyTable on LSN
+    | join 
+        kind = inner 
+        afterReplicateTable on LSN
+    | extend 
+        InstOpApplyTimeMSec = datetime_diff('Millisecond', AfterApplyTimestamp, BeforeApplyTimestamp),
+        InstOpReplicateTimeMSec = datetime_diff('Millisecond', AfterReplicateTimestamp, AfterApplyTimestamp),
+        InstOpTotalTimeMSec = datetime_diff('Millisecond', AfterReplicateTimestamp, BeforeApplyTimestamp)
+    | project 
+        LSN, 
+        BeforeApplyTimestamp, 
+        AfterApplyTimestamp, 
+        AfterReplicateTimestamp, 
+        InstOpApplyTimeMSec, 
+        InstOpReplicateTimeMSec, 
+        InstOpTotalTimeMSec;
+    instrumentOpTable
+}

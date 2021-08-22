@@ -133,6 +133,15 @@ namespace CollectSFData.Azure
                         return SetToken();
                     }
                 }
+                else if (e.GetBaseException() is MsalUiRequiredException)
+                {
+                    Log.Warning($"innerexception:MsalUiRequiredException");
+
+                    if (CreateClient(true, false, resource))
+                    {
+                        return SetToken();
+                    }
+                }
             }
             catch (Exception e)
             {

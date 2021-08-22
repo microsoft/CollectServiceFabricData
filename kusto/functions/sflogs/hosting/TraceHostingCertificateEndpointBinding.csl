@@ -1,0 +1,24 @@
+.create-or-alter function with (docstring = "[T:string] where T=table name. Function to show which certificates are currently bound to which SF endpoints", folder = "sflogs/hosting")
+    TraceHostingCertificateEndpointBinding(T:string) {
+    // which certs are bound
+    let pattern_anyThumbprint = @"([a-fA-F0-9]{40})";
+    let pattern_port = @"https\sport=([^,]*)";
+    let pattern_store = @"certStoreName\s([^,]*)";
+    let pattern_FindType = @"cert:\s([^=]*)";
+    let pattern_FindCertValue = @"=[^=]*=([^\s]*)";
+    table(T)
+    | where Type startswith "Hosting.HttpEndpointSecurityProvider"
+    | extend Port = extract(pattern_port, 1, Text, typeof(string))
+    | extend Store = extract(pattern_store, 1, Text, typeof(string))
+    | extend FindbyType = extract(pattern_FindType, 1, Text, typeof(string))
+    | extend Certificate = extract(pattern_FindCertValue, 1, Text, typeof(string))
+    | where FindbyType != ""
+    | project Timestamp, Level, Port, FindbyType, Certificate, NodeName
+    | order by Timestamp desc
+    | partition by NodeName
+        (
+        top 2 by Timestamp desc
+        )
+    | project NodeName, Timestamp, FindbyType, Certificate, Port
+    | order by NodeName asc, Port asc
+}
