@@ -1,0 +1,19 @@
+.create-or-alter function with (docstring = "[T:string] where T=table name. function to analyze FabricDCA.DiskSpaceManager usage by Node", folder = "sflogs/hosting")
+    TraceHostingFabricDcaDiskUsage(T:string, binLength:string) {
+        let pattern_FolderName = @'Folder\s([^\s]*)';
+        let pattern_BytesUsed = @'to\sbe\susing\s([^B]*)';
+        // example format "0.00:30:00" - 30 minute bins
+        let binLengthTimespan = totimespan(binLength);
+        table(T)
+        | where Type startswith 'FabricDCA.DiskSpaceManager'
+        | where Text startswith 'Folder'
+        | extend FolderName = extract(pattern_FolderName, 1, Text, typeof(string))
+        | extend BytesUsed = extract(pattern_BytesUsed, 1, Text, typeof(double))
+        | summarize avg(BytesUsed)  by bin(Timestamp, binLengthTimespan), NodeName, FolderName
+        | project-rename TotalBytesUsed = avg_BytesUsed
+        | project Timestamp, NodeName, FolderName, TotalBytesUsed
+        | summarize sum(TotalBytesUsed) by NodeName, Timestamp
+        | project-rename LogUsage = sum_TotalBytesUsed
+        | project Timestamp, NodeName, format_bytes(LogUsage,2)
+        | order by Timestamp asc, NodeName asc
+    }

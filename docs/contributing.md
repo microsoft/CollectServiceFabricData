@@ -68,7 +68,7 @@ to build a specific configuration:
 .\dotnet-build.ps1 -targetFrameworks net462 -configuration debug -runtimeIdentifier win-x64
 ```
 
-## CollectSFDataTest
+## CollectSFDataDllTest
 
 Visual Studio Code with .netcoreapp3.1 / net5 and powershell 7.0+
 or
@@ -87,22 +87,33 @@ This client is used for creating resources in azure for testing collectsfdata.
 
 ```powershell
 .\scripts\azure-az-create-aad-application-spn.ps1 `
-  -aadDisplayName collectsfdatatestclient `
-  -uri http://collectsfdatatestclient `
+  -aadDisplayName collectSFDataDllTestClient `
+  -uri http://collectSFDataDllTestClient `
   -logontype cert `
   -password {{cert password}}
 
 ...
 application id: 59c41f0c-fb6c-43e7-a070-480e2af83838
 tenant id: 1a4b5850-4150-4da6-9d0e-4cfcc078292b
-application identifier Uri: http://collectsfdatatestclient
+application identifier Uri: http://collectSFDataDllTestClient
 cert and key base64: MIIDHjCCAgagAwIBAgIQFgKT81w9vapAjxN...
 thumbprint: C124CE6208B0547CB576019104FDDF97B01A37A8
-pfx path: C:\Users\user\AppData\Local\Temp\collectsfdatatestclient.pfx
+pfx path: C:\Users\user\AppData\Local\Temp\collectSFDataDllTestClient.pfx
 clientid / applicationid saved in $global:applicationId
 clientsecret / base64 thumb saved in $global:clientSecret
 
 ```
+
+collectSfDataDllTestProperties.json diff:
+
+```diff
+{
++  "testAzClientId": "59c41f0c-fb6c-43e7-a070-480e2af83838",
++  "testAzClientCertificate": "MIIDHjCCAgagAwIBAgIQFgKT81w9vapAjxN...",
++  "testAzClientName": "collectSFDataDllTestClient",
+}
+```
+
 
 #### **powershell collectsfdata app registration id setup**
 
@@ -111,8 +122,8 @@ this client is used for testing azure client authentication in collectsfdata.
 
 ```powershell
 .\scripts\azure-az-create-aad-application-spn.ps1 `
-  -aadDisplayName collectsfdataapp `
-  -uri http://collectsfdataapp `
+  -aadDisplayName collectsfdataApp `
+  -uri http://collectsfdataApp `
   -logontype cert `
   -password {{cert password}}
 
@@ -122,18 +133,30 @@ tenant id: 1a4b5850-4150-4da6-9d0e-4cfcc078292b
 application identifier Uri: http://collectsfdata
 cert and key base64: MIIDEjCCAfqgAwIBAgIQPnmXz4qmKIpHlu...
 thumbprint: 8C1AD1A0DBA04F78F7EE86FBDBC6E9CF06DB79E3
-pfx path: C:\Users\user\AppData\Local\Temp\collectsfdataapp.pfx
+pfx path: C:\Users\user\AppData\Local\Temp\collectsfdataApp.pfx
 clientid / applicationid saved in $global:applicationId
 clientsecret / base64 thumb saved in $global:clientSecret
 
 ```
+
+collectSfDataDllTestProperties.json diff:
+
+```diff
+{
++  "AzureClientId": "14b3dd02-66ec-46b4-b7aa-b65abc9bbb4d",
++  "AzureClientCertificate": "MIIDEjCCAfqgAwIBAgIQPnmXz4qmKIpHlu...",
++  "AzureClientSecret": "{{private key}}",
++  "AzureTenantId": "1a4b5850-4150-4da6-9d0e-4cfcc078292b",
+}
+```
+
 
 ### Environment Setup
 
 - .\scripts\setup-test-env.ps1
 
 ```powershell
-.\scripts\setup-test-env.ps1 creates the following configuration file: $env:LocalAppData\collectsfdata\collectSfDataTestProperties.json
+.\scripts\setup-test-env.ps1 creates the following configuration file: $env:LocalAppData\collectsfdata\CollectSFDataDllTestProperties.json
 ```
 
 using output from .\scripts\azure-az-create-aad-application-spn.ps1, enter:
@@ -147,11 +170,16 @@ example using values from above:
 {
   "testAzClientId": "59c41f0c-fb6c-43e7-a070-480e2af83838",
   "testAzClientCertificate": "MIIDHjCCAgagAwIBAgIQFgKT81w9vapAjxN...",
-  "testAzStorageAccount": "collectsfdatatests",
-  "adminUserName": null,
-  "adminPassword": null,
+  "testAzStorageAccount": "CollectSFDataDllTests",
+  "testAzClientName": "collectSFDataDllTestClient",
+  "testCertificateNoPasswordBase64": "",
+  "testCertificateWithPasswordBase64": "",
+  "testCertificatePassword": "",
+  "testAdminUserName": null,
+  "testAdminPassword": null,
   "AzureClientId": "14b3dd02-66ec-46b4-b7aa-b65abc9bbb4d",
   "AzureClientCertificate": "MIIDEjCCAfqgAwIBAgIQPnmXz4qmKIpHlu...",
+  "AzureClientName": "collectsfdataDllTestApp",
   "AzureClientSecret": "{{private key}}",
   "AzureResourceGroup": "collectsfdataunittest",
   "AzureResourceGroupLocation": "eastus",
@@ -169,10 +197,15 @@ clean example:
   "testAzClientId": "{{test client app registration}}",
   "testAzClientCertificate": "{{test client base64 certificate}}",
   "testAzStorageAccount": "{{test storage account name}}",
-  "adminUserName": null,
-  "adminPassword": null,
+  "testAzClientName": "collectSFDataDllTestClient",
+  "testCertificateNoPasswordBase64": "",
+  "testCertificateWithPasswordBase64": "",
+  "testCertificatePassword": "",
+  "testAdminUserName": null,
+  "testAdminPassword": null,
   "AzureClientId": "{{collectsfdata app registration}}",
   "AzureClientCertificate": "{{collectsfdata client base64 certificate}}",
+  "AzureClientName": "collectsfdataDllTestApp",
   "AzureClientSecret": "{{private key}}",
   "AzureResourceGroup": "{{azure resource group name}}",
   "AzureResourceGroupLocation": "{{azure resource group location}}",

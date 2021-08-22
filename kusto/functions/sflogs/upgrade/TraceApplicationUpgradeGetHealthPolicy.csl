@@ -1,0 +1,22 @@
+.create-or-alter function with (docstring = "[T:string] where T=table name, [A:string] where A=activityId. Function return CM Application Upgrade Health Policy details.", folder = "sflogs/upgrade")
+    TraceApplicationUpgradeGetHealthPolicy(T:string, A:string) {
+     let pattern_ApplicationHealthPolicy = @'ApplicationHealthPolicy\s\=\s([^\s]*)';
+     let pattern_CWAE = @"ConsiderWarningAsError\'\'\:([true|false]*)";
+     let pattern_MPUDA = @"MaxPercentUnhealthyDeployedApplications\'\'\:(\d{1,3})";
+     let pattern_MPUS = @"MaxPercentUnhealthyServices\'\'\:(\d{1,3})";
+     let pattern_MPUPPS = @"MaxPercentUnhealthyPartitionsPerService\'\'\:(\d{1,3})";
+     let pattern_MPURPP = @"MaxPercentUnhealthyReplicasPerPartition\'\'\:(\d{1,3})";
+     table(T)
+     | where Type startswith 'CM.ApplicationUpgradeContext'
+       and Text contains A
+     | extend ApplicationHealthPolicy = extract(pattern_ApplicationHealthPolicy, 1, Text, typeof(string))
+     | extend ConsiderWarningAsError = extract(pattern_CWAE, 1, ApplicationHealthPolicy, typeof(string))
+     | extend MaxPercentUnhealthyDeployedApplications = extract(pattern_MPUDA, 1, ApplicationHealthPolicy, typeof(string))
+     | extend MaxPercentUnhealthyServices = extract(pattern_MPUS, 1, ApplicationHealthPolicy, typeof(string))
+     | extend MaxPercentUnhealthyPartitionsPerService = extract(pattern_MPUPPS, 1, ApplicationHealthPolicy, typeof(string))
+     | extend MaxPercentUnhealthyReplicasPerPartition = extract(pattern_MPURPP, 1, ApplicationHealthPolicy, typeof(string))
+     | project Timestamp, ApplicationHealthPolicy, ConsiderWarningAsError, 
+               MaxPercentUnhealthyDeployedApplications, MaxPercentUnhealthyServices, MaxPercentUnhealthyPartitionsPerService, MaxPercentUnhealthyReplicasPerPartition
+     | sort by Timestamp asc nulls last
+     | take 1
+}

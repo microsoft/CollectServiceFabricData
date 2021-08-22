@@ -1,0 +1,14 @@
+.create-or-alter function with (docstring = "[T:string] where T=table name. Function to show Last time FabricGateway was unable to Authenticate, returns Nodes unable to authenticate with last failed connectionid", folder = "sflogs/hosting")
+    TraceHostingFabricGatewayAuthenticationFailed(T:string) {
+    let pattern_ConnectId = @"([a-fA-F0-9]{10,12})";
+    table(T)
+    | where Type startswith "Transport.SecureSessionAuthorizationFailed"
+    | extend ConnectionId = extract(pattern_ConnectId, 1, Type, typeof(string))
+    | distinct ConnectionId, NodeName, Timestamp, Text
+    | partition by NodeName
+            (
+            top 1 by Timestamp desc
+            )
+        | project NodeName, Timestamp, ConnectionId, Text
+        | order by NodeName asc 
+}

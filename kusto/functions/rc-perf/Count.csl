@@ -1,0 +1,9 @@
+.create-or-alter function with (docstring = "[t:string, partitionId=Partition Id, nodeName:string, taskName:string, eventType:string]
+        where t=table name, paritionId=Parition Id, nodeName=node name, taskName=task name, eventType=event type. 
+        Return the count of trace with given taskName and eventType.", folder = "rc-perf")
+    Count(t:string, partitionId:string, nodeName:string, taskName:string, eventType:string) {
+    let traceCount = GetTraces(t, partitionId, nodeName)
+    | where Type contains strcat(taskName, ".", eventType)
+    | count;
+    toscalar(traceCount)
+}
