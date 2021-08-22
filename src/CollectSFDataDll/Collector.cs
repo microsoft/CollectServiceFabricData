@@ -454,10 +454,20 @@ namespace CollectSFData
                             files = Directory.GetFiles(Config.CacheLocation, $"*{Constants.DtrExtension}", SearchOption.AllDirectories).ToList();
                         }
 
+                        if (files.Count < 1)
+                        {
+                            files = Directory.GetFiles(Config.CacheLocation, $"*{Constants.EtlExtension}{Constants.ZipExtension}", SearchOption.AllDirectories).ToList();
+                        }
+
+                        if (files.Count < 1)
+                        {
+                            files = Directory.GetFiles(Config.CacheLocation, $"*{Constants.EtlExtension}", SearchOption.AllDirectories).ToList();
+                        }
+
                         break;
 
                     default:
-                        Log.Warning($"invalid filetype for cache upload. returning {Config.FileType}");
+                        Log.Warning($"configured filetype:{Config.FileType} not valid for cache upload. returning.");
                         return;
                 }
 

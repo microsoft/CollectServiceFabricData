@@ -3,7 +3,7 @@
 # CollectSFData
 
 >[Current download](https://github.com/microsoft/CollectServiceFabricData/releases/latest)  
->[Privacy](#privacy)
+>[Privacy](#privacy)  
 >[Requirements](#requirements)  
 >[Setup](#setup)  
 >>[Kusto Quick Start](/docs/kustoQuickStart.md)  

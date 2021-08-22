@@ -233,5 +233,6 @@
         TypeAndTextContains(T, "sfrp communication /cert issue", "InfrastructureService.WrpStreamChannel", "ReturnWrpStreamChannelResponse thrown System.AggregateException: Failed to send request while retrying with all available certificates"),
         TypeAndTextContains(T, "cert issue", "InfrastructureService.ClusterCommandProcessor", "CreateOperationStatusAsync: Exception encountered: System.Fabric.FabricServerAuthenticationFailedException"),
         TypeAndTextContains(T, "tcp port exhaustion. see https://docs.microsoft.com/en-us/troubleshoot/windows-client/networking/connect-tcp-greater-than-5000-error-wsaenobufs-10055", "Transport.Tcp@", "WSAENOBUFS"),
-        TypeAndTextContains(T, "possible desktop heap issue. dll init failed", "Hosting.ProcessActivationManager", "3221225794")
+        TypeAndTextContains(T, "possible desktop heap issue. dll init failed", "Hosting.ProcessActivationManager", "3221225794"),
+        TypeAndTextContains(T, "if FM not available, possible vmss-sf resource instance count mismatch", "FMM.Report", "FM service not created because cluster is below expected size")
     }

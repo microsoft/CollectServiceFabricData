@@ -1,0 +1,12 @@
+.create-or-alter function with (docstring = "[T:string] where T=table name, [A:string] where A=activityId. Function return CM Cluster Upgrade Target Version.", folder = "sflogs/upgrade")
+    TraceClusterUpgradeGetTarget(T:string, A:string) {
+     let pattern_Target = @'FabricUpgradeContext\(Pending\)\[([^,]*)';
+     let pattern_From = @'InstanceCloseDelayDuration\=[^,]*\,([^:]*)';
+     table(T)
+     | where Type startswith 'CM.UpgradeStart'
+       and Text contains A
+     | extend Target = extract(pattern_Target, 1, Text, typeof(string))
+     | extend From = extract(pattern_From, 1, Text, typeof(string))
+     | project Timestamp, Target, From
+     | sort by Timestamp asc nulls last
+}

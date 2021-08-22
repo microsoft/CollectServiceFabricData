@@ -1,0 +1,25 @@
+.create-or-alter function with (docstring = "[t:string, oaritionId:string, percentileArray:dynamic]
+        where t=table name, paritionId=Parition Id, and percentiles = dynamic array of percentile.
+        Return primary latency performance with provided percentile array.
+        This includes flush time, replicate time, and service level apply and replicate time.
+        InstOp* column needs custom trace LR.InstrumentOperation", folder = "rc-perf/native")
+    PrimaryPerfSummary(t:string, partitionId:string, percentileArray:dynamic) {
+    let summary = PrimaryReplicatePerfSummary(t, partitionId, percentileArray)
+    | extend PercentilesString = tostring(Percentiles)
+    | join kind = inner (
+        PrimaryFlushPerfSummary(t, partitionId, percentileArray)
+        | extend PercentilesString = tostring(Percentiles)) 
+      on PercentilesString
+    | join kind = inner (
+        PrimaryInstOpPerfSummary(t, partitionId, percentileArray)
+        | extend PercentilesString = tostring(Percentiles))
+      on PercentilesString
+    | project 
+        Percentiles, 
+        percentiles_FlushTimeMSec, 
+        percentiles_ReplicateTimeMSec, 
+        percentiles_InstOpApplyTimeMSec, 
+        percentiles_InstOpReplicateTimeMSec, 
+        percentiles_InstOpTotalTimeMSec;
+    summary
+}

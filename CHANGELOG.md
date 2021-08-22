@@ -1,5 +1,18 @@
 # Change log
 
+## 08/22/2021  
+
+- modify kusto certificate authentication option to use certificate instead of bearer token
+  - add ApplicationCertificateSendX5c = true
+- fix for stale .bin3 token cache requiring ui 'invalid_grant'
+- add kusto queries from sedwards
+- add privacy link as part of current ms oss guidelines
+- fix for enumerating .etl files when using 'CacheLocation'
+- fix to check for EtwManifestsCache and manifest files in cache
+- fix for writing special unicode error: One or more errors occurred.
+- update test project name
+- test setup script updates for certs
+
 ## 06/23/2021  
 
 - add support for Geneva. Geneva Action server does not support .NET MD5. so need have set UseV1MD5 to false when using Azure Storage. CloudStorageAccount.UseV1MD5 = false;
