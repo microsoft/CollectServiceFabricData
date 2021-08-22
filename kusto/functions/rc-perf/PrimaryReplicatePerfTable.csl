@@ -1,0 +1,21 @@
+.create-or-alter function with (docstring = "[t:string, paritionId:string] 
+        where t=table name, and paritionId=Parition Id. 
+        Return primary replicate performance table.", folder = "rc-perf")
+    PrimaryReplicatePerfTable(t:string, partitionId:string) {
+    let primaryTraces = GetPrimaryTraces(t, partitionId);
+    let v1PrimaryReplicateTraces = primaryTraces
+    | where Type == strcat("RE.PrimaryReplicate@",partitionId)
+    | parse Text with * "Replicate " LSN:long " to" *
+    | project v1PrimaryReplicateTimestamp = Timestamp, LSN, LSNString = tostring(LSN);
+    let v1PrimaryReplicateDoneTraces = primaryTraces
+    | where Type startswith strcat("RE.PrimaryReplicateDone@",partitionId)
+    | parse Text with * "starting at " StartLSN:long " totaling " OpsCount:long " ops" *
+    | extend LSN = range(StartLSN, StartLSN + OpsCount - 1)
+    | mv-expand LSN
+    | project v1PrimaryReplicateDoneETWTimestamp = Timestamp, LSN, LSNString = tostring(LSN);
+    let v1PrimaryReplicatePerfTable = v1PrimaryReplicateTraces
+    | join kind=inner v1PrimaryReplicateDoneTraces on LSNString
+    | project LSN, v1PrimaryReplicateTimestamp, v1PrimaryReplicateDoneETWTimestamp
+    | extend ReplicateTimeMSec = datetime_diff('Millisecond', v1PrimaryReplicateDoneETWTimestamp, v1PrimaryReplicateTimestamp);
+    v1PrimaryReplicatePerfTable
+}

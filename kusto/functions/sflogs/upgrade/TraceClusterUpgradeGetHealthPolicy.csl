@@ -1,0 +1,24 @@
+.create-or-alter function with (docstring = "[T:string] where T=table name, [A:string] where A=activityId. Function return CM Cluster Upgrade Health Policy details.", folder = "sflogs/upgrade")
+    TraceClusterUpgradeGetHealthPolicy(T:string, A:string) {
+     let pattern_ClusterHealthPolicy = @'ClusterHealthPolicy\s\=\s([^\s]*)';
+     let pattern_ClusterUpgradeHealthPolicy = @'ClusterUpgradeHealthPolicy\s\=\s([^\s]*)';
+     let pattern_CWAE = @"ConsiderWarningAsError\'\'\:([true|false]*)";
+     let pattern_MPUN = @"MaxPercentUnhealthyNodes\'\'\:(\d{1,3})";
+     let pattern_MPUA = @"MaxPercentUnhealthyApplications\'\'\:(\d{1,3})";
+     let pattern_MPDUN = @"MaxPercentDeltaUnhealthyNodes\'\'\:(\d{1,3})";
+     let pattern_MPUDDUN = @"MaxPercentUpgradeDomainDeltaUnhealthyNodes\'\'\:(\d{1,3})";
+     table(T)
+     | where Type startswith 'CM.FabricUpgradeContext'
+       and Text contains A
+     | extend ClusterHealthPolicy = extract(pattern_ClusterHealthPolicy, 1, Text, typeof(string))
+     | extend ClusterUpgradeHealthPolicy = extract(pattern_ClusterUpgradeHealthPolicy, 1, Text, typeof(string))
+     | extend ConsiderWarningAsError = extract(pattern_CWAE, 1, ClusterHealthPolicy, typeof(string))
+     | extend MaxPercentUnhealthyNodes = extract(pattern_MPUN, 1, ClusterHealthPolicy, typeof(long))
+     | extend MaxPercentUnhealthyApplications = extract(pattern_MPUA, 1, ClusterHealthPolicy, typeof(long))
+     | extend MaxPercentDeltaUnhealthyNodes = extract(pattern_MPDUN, 1, ClusterUpgradeHealthPolicy, typeof(long))
+     | extend MaxPercentUpgradeDomainDeltaUnhealthyNodes = extract(pattern_MPUDDUN, 1, ClusterUpgradeHealthPolicy, typeof(long))
+     | project Timestamp, ClusterHealthPolicy, ClusterUpgradeHealthPolicy, ConsiderWarningAsError, 
+               MaxPercentUnhealthyNodes, MaxPercentUnhealthyApplications, MaxPercentDeltaUnhealthyNodes, MaxPercentUpgradeDomainDeltaUnhealthyNodes
+     | sort by Timestamp asc nulls last
+     | take 1
+}

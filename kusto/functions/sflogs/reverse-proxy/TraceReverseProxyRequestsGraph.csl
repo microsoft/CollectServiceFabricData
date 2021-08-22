@@ -2,6 +2,6 @@
     TraceReverseProxyRequestsGraph(T:string) {
         table(T)
         | where Type contains "ReverseProxy.RequestReceived"
-        | summarize count() by xtime=bin(Timestamp,60s)
+        | summarize count() by xtime=bin(Timestamp,60s), NodeName
         | render timechart;
     }

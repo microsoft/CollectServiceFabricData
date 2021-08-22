@@ -1,0 +1,19 @@
+.create-or-alter function with (docstring = "[T:string] where T=table name. Function to show Last time FabricGateway was unable to Authenticate, returns Certificate Details it was trying to match.  Requires TableName and ConnectionId", folder = "sflogs/hosting")
+    TraceHostingFabricGatewayExpectedCert(T:string, Cid:string) {
+    //Show which certs are expected to be matched to
+    let pattern_anyThumbprint = @"([a-fA-F0-9]{40})";
+    let pattern_incoming = @"incoming:\stp='([a-fA-F0-9]{40})'";
+    let pattern_thumbprintToMatch = @"certThumbprintsToMatch='([']*)'";
+    let pattern_commonNameToMatch = @"x509NamesToMatch=.{3}([^']*)',issuer=([a-fA-F0-9]{40})";
+    table(T)
+    | where Type startswith "Transport.Security"
+    | where Text startswith "VerifyCertificate: remoteAuthenticatedAsPeer"
+    | where Type contains Cid
+    | extend Incoming = extract(pattern_incoming, 1, Text, typeof(string))
+    | extend tpToMatch = extract(pattern_thumbprintToMatch, 1, Text, typeof(string))
+    | extend nameToMatch = extract(pattern_commonNameToMatch, 1, Text, typeof(string))
+    | extend cmIssuer = extract(pattern_commonNameToMatch, 2, Text, typeof(string))
+    | project Timestamp, Type, NodeName, Incoming, tpToMatch, nameToMatch, cmIssuer
+    | order by Timestamp desc 
+    | take 1
+}
