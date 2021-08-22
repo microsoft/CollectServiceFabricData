@@ -111,6 +111,11 @@ function build-configuration($configuration) {
     
     if ((test-path $nugetFile)) {
         write-host "nuget add $nugetFile -source $nugetFallbackFolder" -ForegroundColor Green
+        if (!(test-path "nuget.exe")) {
+            [net.servicePointManager]::Expect100Continue = $true;[net.servicePointManager]::SecurityProtocol = [net.SecurityProtocolType]::Tls12;
+            invoke-webRequest "https://aka.ms/nuget-functions.ps1" -outFile "$pwd/nuget-functions.ps1";
+            .\nuget-functions.ps1;
+        }
         nuget add $nugetFile -source $nugetFallbackFolder
     }
 }

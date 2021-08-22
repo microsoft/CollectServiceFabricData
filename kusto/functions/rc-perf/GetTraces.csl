@@ -1,0 +1,11 @@
+.create-or-alter function with (docstring = "[t:string, paritionId:string, nodeName:string]                
+        where t=table name, paritionId=Parition Id, and nodeName=node name.                 
+        Return traces with given nodeName and parititionId.", folder = "rc-perf")
+    GetTraces(t:string, partitionId:string, nodeName:string) {
+    let startTime = GetPartitionStartTime(t, partitionId);
+    let endTime = GetPartitionEndTime(t, partitionId);
+    let traces = table(t) 
+    | where Timestamp >= startTime and Timestamp <= endTime
+    | where NodeName == nodeName;
+    traces
+}

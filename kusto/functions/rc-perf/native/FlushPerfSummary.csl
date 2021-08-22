@@ -1,0 +1,13 @@
+.create-or-alter function with (docstring = "[t:string, paritionId:string, percentiles:dynamic, nodeName:string]
+        where t=table name, paritionId=Parition Id, percentiles = dynamic array of percentile, and nodeName=node name. 
+        Return percentile of flush trace with given partitionId and nodeName.", folder = "rc-perf/native")
+    FlushPerfSummary(t:string, partitionId:string, percentilesVector:dynamic, nodeName:string) {
+    let summary = FlushPerfTable(t, partitionId, nodeName)
+    | summarize 
+        percentiles_array(FlushTimeMSec, percentilesVector)
+    | extend Percentiles = percentilesVector
+    | project Result = zip(Percentiles, percentiles_FlushTimeMSec)
+    | mv-expand Result
+    | project Percentiles = Result[0], percentiles_FlushTimeMSec = Result[1];
+    summary
+}

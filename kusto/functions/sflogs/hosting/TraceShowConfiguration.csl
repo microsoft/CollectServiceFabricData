@@ -1,0 +1,22 @@
+.create-or-alter function with (docstring = "[T:string] where T=table name. Function to show latest configuration properties and values", folder = "sflogs/hosting")
+    TraceShowConfiguration(T:string) {
+    let patternSection = @'Config\.ValueUpdated\@(.*)';
+    let patternProperty = @'Loaded\sproperty\s([^\s]*)';
+    let patternValue = @'with\svalue\s([^\.]*)';
+    let configuration = table(T)
+    | where Type startswith "Config."
+    | where Text startswith "Loaded property"
+    | extend Section = extract(patternSection, 1, Type)
+    | extend Property = extract(patternProperty, 1, Text)
+    | extend Value = extract(patternValue, 1, Text)
+    | extend SectionProp = strcat(Section,":",Property)
+    | order by Timestamp desc 
+    | distinct SectionProp, Section, Property, Value, Timestamp
+    | order by SectionProp, Section, Property, Timestamp desc ;
+    configuration
+    | top-nested 500 of SectionProp by max(Timestamp),
+    top-nested 1 of Value by max(Timestamp)
+    | project-away aggregated_SectionProp
+    | project-rename TimeLastSeen = aggregated_Value
+    | order by SectionProp asc
+}
