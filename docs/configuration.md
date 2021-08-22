@@ -176,7 +176,7 @@ To use a default configuration file without having to specify on the command lin
     [convert]::ToBase64String([io.file]::ReadAllBytes("C:\path\to\certificate.pfx"))
     ```
 
-- **AzureClientSecret** - required if AzureClientId is specified and not using AzureClientCertificate. string.
+- **AzureClientSecret** - required if AzureClientId is specified and not using AzureClientCertificate. string. Can also be used to pass certificate password.
 - **AzureKeyVault** - optional. can be used to store AzureClientCertificate if being used.
   - 'https://{{key vault name}}.vault.azure.net/'
 - **AzureResourceGroup** - required if using Log Analytics and creating a workspace. string. if populated, value is used for creation of Log Analytics workspace.
@@ -221,6 +221,19 @@ user managed identity: 3080722d-0cf6-4552-8e45-c5ccbc3d091f
   "AzureClientId": "f4289be6-a77a-4554-b5d7-13a5d0ef66c7",
   "AzureClientCertificate": "MIIXDAIBAzCCFsgGCSqGSIb3D...",
   "AzureClientSecret": null,
+  "AzureKeyVault": null,
+  "AzureSubscriptionId": "3ddc104f-35a1-4e5a-8122-b18c15a486bf",
+  "AzureTenantId": "b4be3bd5-1e7f-4c0c-a9b4-97d1d1bb0290",
+}
+```
+
+#### **app registration and client certificate and password**
+
+```json
+{
+  "AzureClientId": "f4289be6-a77a-4554-b5d7-13a5d0ef66c7",
+  "AzureClientCertificate": "MIIXDAIBAzCCFsgGCSqGSIb3D...",
+  "AzureClientSecret": "plaintextpassword",
   "AzureKeyVault": null,
   "AzureSubscriptionId": "3ddc104f-35a1-4e5a-8122-b18c15a486bf",
   "AzureTenantId": "b4be3bd5-1e7f-4c0c-a9b4-97d1d1bb0290",
