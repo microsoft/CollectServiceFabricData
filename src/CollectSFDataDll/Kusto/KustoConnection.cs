@@ -627,7 +627,8 @@ namespace CollectSFData.Kusto
                 RetryPolicy = new IngestRetryPolicy(),
                 ParallelOperationThreadCount = _config.Threads,
             };
-
+            
+            CloudStorageAccount.UseV1MD5 = false;
             CloudBlobContainer blobContainer = new CloudBlobContainer(blobUri);
             CloudBlockBlob blockBlob = blobContainer.GetBlockBlobReference(blobName);
 
