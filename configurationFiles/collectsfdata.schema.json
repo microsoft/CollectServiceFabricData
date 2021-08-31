@@ -502,7 +502,7 @@
         null,
         "/subscriptions/{{subscriptionId}}/resourceGroups/{{resourceGroup}}/Microsoft.ServiceFabric/clusters/{{clusterName}}"
       ],
-      "pattern": "^(/subscriptions/[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}/resourceGroups/\\w+providers/Microsoft.ServiceFabric/clusters/.+)$"
+      "pattern": "^(/subscriptions/[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}/resourceGroups/\\w+/providers/Microsoft.ServiceFabric/clusters/.+)$"
     },
     "SasKey": {
       "$id": "#/properties/SasKey",
