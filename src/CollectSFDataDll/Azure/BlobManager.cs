@@ -433,7 +433,7 @@ namespace CollectSFData.Azure
                             continue;
                         }
 
-                        FileObject fileObject = new FileObject(blob.Uri.AbsolutePath, _config.CacheLocation)
+                        FileObject fileObject = new FileObject(blob.Uri.AbsoluteUri, _config.CacheLocation)
                         {
                             LastModified = lastModified,
                             Status = FileStatus.enumerated

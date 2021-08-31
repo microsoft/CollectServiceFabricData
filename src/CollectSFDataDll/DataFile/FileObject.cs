@@ -139,8 +139,9 @@ namespace CollectSFData.DataFile
             {
                 retval = true;
             }
-            else if(FileType == FileTypesEnum.trace && FileUriType == FileUriTypesEnum.azureStorageUri
-                    && (FileExtensionType == FileExtensionTypesEnum.zip && FileExtensionSubType == FileExtensionTypesEnum.dtr))
+            else if(FileType == FileTypesEnum.trace 
+                && FileUriType == FileUriTypesEnum.azureStorageUri
+                && (FileExtensionType == FileExtensionTypesEnum.zip && FileExtensionSubType == FileExtensionTypesEnum.dtr))
             {
                 retval = true;
             }
