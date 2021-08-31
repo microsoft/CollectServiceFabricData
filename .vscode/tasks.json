@@ -37,24 +37,6 @@
         "/consoleloggerparameters:NoSummary"
       ],
       "problemMatcher": "$msCompile"
-    },
-    {
-      "type": "process",
-      "label": "makelldb: make",
-      "command": "/usr/bin/env",
-      "args": [
-        "CC=clang",
-        "CFLAGS=-g -Wall",
-        "make",
-        "${fileBasenameNoExtension}"
-      ],
-      "options": {
-        "cwd": "${fileDirname}"
-      },
-      "group": {
-        "kind": "build",
-        "isDefault": true
-      }
     }
   ]
 }
