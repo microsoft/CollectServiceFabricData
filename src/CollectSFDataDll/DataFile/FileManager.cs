@@ -137,7 +137,7 @@ namespace CollectSFData.DataFile
             string outputFile = fileObject.FileUri + Constants.PerfCsvExtension;
             bool result;
 
-            fileObject.Stream.SaveToFile();
+            fileObject.Stream.SaveToFile($"{_config.CacheLocation}/{fileObject.RelativeUri}");
             DeleteFile(outputFile);
             Log.Info($"Writing {outputFile}");
 
@@ -184,7 +184,7 @@ namespace CollectSFData.DataFile
         {
             Log.Debug($"enter:{fileObject.FileUri}");
             bool result;
-            fileObject.Stream.SaveToFile();
+            fileObject.Stream.SaveToFile($"{_config.CacheLocation}/{fileObject.RelativeUri}");
             result = ReadEtl(fileObject);
 
             //todo review
@@ -334,7 +334,7 @@ namespace CollectSFData.DataFile
                 if (fileObject.Length < 1 & fileObject.Exists)
                 {
                     // for cached directory uploads
-                    fileObject.Stream.ReadFromFile();
+                    fileObject.Stream.ReadFromFile($"{_config.CacheLocation}/{fileObject.RelativeUri}");
                 }
 
                 if (fileObject.FileExtensionType.Equals(FileExtensionTypesEnum.zip))
@@ -517,7 +517,7 @@ namespace CollectSFData.DataFile
             {
                 if (force || (!_config.UseMemoryStream && fileObject.FileUriType == FileUriTypesEnum.fileUri && !fileObject.Exists))
                 {
-                    fileObject.Stream.SaveToFile();
+                    fileObject.Stream.SaveToFile($"{_config.CacheLocation}/{fileObject.RelativeUri}");
                 }
             }
             catch (Exception e)
