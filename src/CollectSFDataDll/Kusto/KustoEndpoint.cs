@@ -107,46 +107,19 @@ namespace CollectSFData.Kusto
 
             if (_config.IsKustoConfigured() && _arm.Authenticate(throwOnError, ClusterIngestUrl))
             {
-                if (_arm.ClientIdentity.IsAppRegistration)
+                DatabaseConnection = new KustoConnectionStringBuilder(ClusterIngestUrl)
                 {
-                    Log.Info($"connecting to kusto with app registration {_config.AzureClientId}");
-                    
-                    DatabaseConnection = new KustoConnectionStringBuilder(ClusterIngestUrl)
-                    {
-                        FederatedSecurity = true,
-                        InitialCatalog = DatabaseName,
-                        ApplicationClientId = _config.AzureClientId,
-                        ApplicationCertificateBlob = _config.ClientCertificate,
-                        Authority = _config.AzureTenantId,
-                        ApplicationCertificateSendX5c = true
-                    };
+                    FederatedSecurity = true,
+                    InitialCatalog = DatabaseName,
+                    UserToken = _arm.BearerToken
+                };
 
-                    ManagementConnection = new KustoConnectionStringBuilder(ManagementUrl)
-                    {
-                        FederatedSecurity = true,
-                        InitialCatalog = DatabaseName,
-                        ApplicationClientId = _config.AzureClientId,
-                        ApplicationCertificateBlob = _config.ClientCertificate,
-                        Authority = _config.AzureTenantId,
-                        ApplicationCertificateSendX5c = true
-                    };
-                }
-                else
+                ManagementConnection = new KustoConnectionStringBuilder(ManagementUrl)
                 {
-                    DatabaseConnection = new KustoConnectionStringBuilder(ClusterIngestUrl)
-                    {
-                        FederatedSecurity = true,
-                        InitialCatalog = DatabaseName,
-                        UserToken = _arm.BearerToken
-                    };
-
-                    ManagementConnection = new KustoConnectionStringBuilder(ManagementUrl)
-                    {
-                        FederatedSecurity = true,
-                        InitialCatalog = DatabaseName,
-                        UserToken = _arm.BearerToken
-                    };
-                }
+                    FederatedSecurity = true,
+                    InitialCatalog = DatabaseName,
+                    UserToken = _arm.BearerToken
+                };
             }
             else
             {
