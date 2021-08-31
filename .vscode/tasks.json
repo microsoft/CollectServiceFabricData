@@ -11,6 +11,10 @@
         "/property:GenerateFullPaths=true",
         "/consoleloggerparameters:NoSummary"
       ],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
       "problemMatcher": "$msCompile"
     },
     {
@@ -37,6 +41,20 @@
         "/consoleloggerparameters:NoSummary"
       ],
       "problemMatcher": "$msCompile"
+    },
+    {
+      "type": "process",
+      "label": "makelldb: make",
+      "command": "/usr/bin/env",
+      "args": [
+        "CC=clang",
+        "CFLAGS=-g -Wall",
+        "make",
+        "${fileBasenameNoExtension}"
+      ],
+      "options": {
+        "cwd": "${fileDirname}"
+      }
     }
   ]
 }
