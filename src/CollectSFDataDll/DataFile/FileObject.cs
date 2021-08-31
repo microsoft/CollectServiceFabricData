@@ -64,6 +64,8 @@ namespace CollectSFData.DataFile
             }
         }
 
+        public string SourceUri { get; private set; }
+
         public StreamManager Stream { get; set; }
 
         public FileObject(string fileUri = null, string baseUri = null)
