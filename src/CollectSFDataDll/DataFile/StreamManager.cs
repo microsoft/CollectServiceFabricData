@@ -164,8 +164,9 @@ namespace CollectSFData.DataFile
             return ReadLine().ToList();
         }
 
-        public MemoryStream ReadFromFile(string fileUri)
+        public MemoryStream ReadFromFile(string fileUri = null)
         {
+            fileUri = fileUri ?? _fileObject.FileUri;
             Open(true, true);
             Log.Info($"reading memoryStream from file: {fileUri}", ConsoleColor.Green);
 
@@ -204,8 +205,9 @@ namespace CollectSFData.DataFile
             Open(true);
         }
 
-        public void SaveToFile(string fileUri)
+        public void SaveToFile(string fileUri = null)
         {
+            fileUri = fileUri ?? _fileObject.FileUri;
             Open(true);
 
             Directory.CreateDirectory(Path.GetDirectoryName(fileUri));
