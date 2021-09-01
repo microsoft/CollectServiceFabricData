@@ -64,6 +64,10 @@ namespace CollectSFData.DataFile
             }
         }
 
+        public string SourceFileUri { get; set; }
+
+        public FileUriTypesEnum SourceFileUriType { get => FileTypes.MapFileUriType(SourceFileUri); }
+
         public StreamManager Stream { get; set; }
 
         public FileObject(string fileUri = null, string baseUri = null)
@@ -71,6 +75,7 @@ namespace CollectSFData.DataFile
             Stream = new StreamManager(this);
             BaseUri = baseUri;
             FileUri = fileUri;
+            SourceFileUri = fileUri;
         }
 
         public bool Equals(FileObject fileObject)
@@ -139,8 +144,9 @@ namespace CollectSFData.DataFile
             {
                 retval = true;
             }
-            else if(FileType == FileTypesEnum.trace && FileUriType == FileUriTypesEnum.azureStorageUri
-                    && (FileExtensionType == FileExtensionTypesEnum.zip && FileExtensionSubType == FileExtensionTypesEnum.dtr))
+            else if (FileType == FileTypesEnum.trace
+                && SourceFileUriType == FileUriTypesEnum.azureStorageUri
+                && (FileExtensionType == FileExtensionTypesEnum.zip && FileExtensionSubType == FileExtensionTypesEnum.dtr))
             {
                 retval = true;
             }
