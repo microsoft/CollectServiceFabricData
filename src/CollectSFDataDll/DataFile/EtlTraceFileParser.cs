@@ -19,7 +19,7 @@ namespace CollectSFData.DataFile
         private ConfigurationOptions _config;
         public static ManifestCache ManifestCache { get; set; }
         public int EventsLost { get; private set; }
-        public int EventReadErrors {get; set;}
+        public int NullReadEvents {get; set;}
         public TraceSessionMetadata TraceSessionMetaData { get; private set; }
 
         public EtlTraceFileParser(ConfigurationOptions config, ManifestCache cache = null)
@@ -148,11 +148,8 @@ namespace CollectSFData.DataFile
 
             if (formattedEvent == null)
             {
-                EventReadErrors++;
-                Log.Warning("null etl event. enable logdebug 5 and review log");
-                EventDefinition eventDefinition = ManifestCache.GetEventDefinition(e.Record);
-                Log.Debug($"null etl event: e:", e);
-                Log.Debug($"null etl event: eventDefinition", eventDefinition);
+                // most likely a child event that will be written by next parent event
+                NullReadEvents++;
                 return;
             }
 
