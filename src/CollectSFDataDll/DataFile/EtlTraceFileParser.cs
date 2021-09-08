@@ -19,7 +19,7 @@ namespace CollectSFData.DataFile
         private ConfigurationOptions _config;
         public static ManifestCache ManifestCache { get; set; }
         public int EventsLost { get; private set; }
-        public int NullReadEvents {get; set;}
+        public int NullReadEvents { get; set; }
         public TraceSessionMetadata TraceSessionMetaData { get; private set; }
 
         public EtlTraceFileParser(ConfigurationOptions config, ManifestCache cache = null)
@@ -127,10 +127,11 @@ namespace CollectSFData.DataFile
         {
             _traceDispatcher = traceDispatcher;
 
+
             using (var reader = new TraceFileEventReader(fileName))
             {
                 TraceSessionMetaData = reader.ReadTraceSessionMetadata();
-                if (TraceSessionMetaData.StartTime > endTime | TraceSessionMetaData.EndTime < startTime)
+                if (TraceSessionMetaData.StartTime > endTime | (TraceSessionMetaData.EndTime < startTime & (TraceSessionMetaData.EndTime != Constants.UnixEpochMinValue)))
                 {
                     Log.Warning($"{fileName} outside time range start:{TraceSessionMetaData.StartTime} end:{TraceSessionMetaData.EndTime}");
                     return;
