@@ -33,7 +33,6 @@ namespace CollectSFData.Azure
         private string _resource;
         private Timer _timer;
         private DateTimeOffset _tokenExpirationHalfLife;
-        private string _wellKnownClientId = "1950a258-227b-4e31-a9cf-717495945fc2";
 
         public delegate void MsalDeviceCodeHandler(DeviceCodeResult arg);
 
@@ -201,17 +200,20 @@ namespace CollectSFData.Azure
                 }
                 else
                 {
-                    Log.Error("unknown configuration");
+                    Log.Error("unknown silent configuration");
                     return false;
                 }
 
                 return true;
             }
-            else
+            else if(_config.HasValue(_config.AzureClientId))
             {
-                CreatePublicClient(prompt, deviceLogin);
+                CreatePublicClient(prompt, _config.AzureClientId, deviceLogin);
                 return true;
             }
+
+            Log.Error("unknown configuration");
+            return false;
         }
 
         public void CreateConfidentialCertificateClient(string resource, X509Certificate2 clientCertificate)
@@ -260,12 +262,12 @@ namespace CollectSFData.Azure
             SetToken();
         }
 
-        public bool CreatePublicClient(bool prompt, bool deviceLogin = false)
+        public bool CreatePublicClient(bool prompt, string clientId, bool deviceLogin = false)
         {
             Log.Info($"enter: {prompt} {deviceLogin}");
             AuthenticationResult result = null;
             _publicClientApp = PublicClientApplicationBuilder
-                .Create(_wellKnownClientId)
+                .Create(clientId)
                 .WithAuthority(AzureCloudInstance.AzurePublic, _config.AzureTenantId)
                 .WithLogging(MsalLoggerCallback, LogLevel.Verbose, true, true)
                 .WithDefaultRedirectUri()
