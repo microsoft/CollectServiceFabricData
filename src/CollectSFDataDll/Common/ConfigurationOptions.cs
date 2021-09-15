@@ -364,11 +364,11 @@ namespace CollectSFData.Common
             return configured;
         }
 
-        public bool IsGuidIfPopulated(string guid)
+        public bool IsGuid(string guid)
         {
             if (!HasValue(guid))
             {
-                return true;
+                return false;
             }
 
             Guid testGuid = new Guid();
@@ -615,19 +615,19 @@ namespace CollectSFData.Common
             bool usingAad = clientIdConfigured | IsKustoConfigured() | IsKustoPurgeRequested();
             usingAad |= LogAnalyticsCreate | LogAnalyticsRecreate | IsLogAnalyticsPurgeRequested() | IsLogAnalyticsConfigured();
 
-            if (!IsGuidIfPopulated(AzureClientId))
+            if (HasValue(AzureClientId) && !IsGuid(AzureClientId))
             {
                 Log.Error($"invalid client id value:{AzureClientId} expected:guid");
                 retval &= false;
             }
 
-            if (!IsGuidIfPopulated(AzureSubscriptionId))
+            if (HasValue(AzureSubscriptionId) && !IsGuid(AzureSubscriptionId))
             {
                 Log.Error($"invalid subscription id value:{AzureSubscriptionId} expected:guid");
                 retval &= false;
             }
 
-            if (!IsGuidIfPopulated(AzureTenantId))
+            if (HasValue(AzureTenantId) && !IsGuid(AzureTenantId))
             {
                 Log.Error($"invalid tenant id value:{AzureTenantId} expected:guid");
                 retval &= false;
