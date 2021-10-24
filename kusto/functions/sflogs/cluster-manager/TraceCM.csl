@@ -1,8 +1,8 @@
 .create-or-alter function with (docstring = "function to enumerate Type 'CM.' traces'", folder = "sflogs/cluster-manager")
     TraceCM(T:string) {
     let serviceGuid = '00000000-0000-0000-0000-000000002000';
-    let componentName = 'CM.';
+    let typeName = 'CM.';
     table(T)
-        | where Type startswith componentName
-                            | order by Timestamp asc
+        | where Type startswith typeName
+        | order by Timestamp asc
 }
