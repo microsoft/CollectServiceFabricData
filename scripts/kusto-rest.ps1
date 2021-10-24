@@ -597,7 +597,8 @@ class KustoObj {
             write-verbose "token valid: $($this.authenticationResult.ExpiresOn). use -force to force logon"
             return $true
         }
-        return $this.LogonMsal($resourceUrl, @("$resourceUrl/kusto.read", "$resourceUrl/kusto.write"))
+        #return $this.LogonMsal($resourceUrl, @("$resourceUrl/kusto.read", "$resourceUrl/kusto.write"))
+        return $this.LogonMsal($resourceUrl, @("$resourceUrl/user_impersonation"))
     }
 
     hidden [bool] LogonMsal([string]$resourceUrl, [string[]]$scopes) {
