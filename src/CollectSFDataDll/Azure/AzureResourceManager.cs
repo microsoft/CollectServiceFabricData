@@ -33,6 +33,7 @@ namespace CollectSFData.Azure
         private string _resource;
         private Timer _timer;
         private DateTimeOffset _tokenExpirationHalfLife;
+        private string _wellKnownClientId = "1950a258-227b-4e31-a9cf-717495945fc2";
 
         public delegate void MsalDeviceCodeHandler(DeviceCodeResult arg);
 
@@ -206,9 +207,9 @@ namespace CollectSFData.Azure
 
                 return true;
             }
-            else if(_config.HasValue(_config.AzureClientId))
+            else
             {
-                CreatePublicClient(prompt, _config.AzureClientId, deviceLogin);
+                CreatePublicClient(prompt, _config.AzureClientId ?? _wellKnownClientId, deviceLogin);
                 return true;
             }
 
