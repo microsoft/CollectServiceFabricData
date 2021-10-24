@@ -1,0 +1,33 @@
+.create-or-alter function with (docstring = "[T:string] where T=table name, [A:string] where A=activityId. Function to search service fabric sflogs for CM Upgrade traces by ActivityId.", folder = "sflogs/upgrade")
+    TraceUpgradeGetTracesByActivityIdWithOverlappedWarnings(T:string, A:string) {
+  //Total elapsed upgrade time = persisted:overall + stopwatch:upgrade = 5:41:619 + 05.026 = 5:46.645
+  //Total elapsed upgrade domain time = persisted:UD + stopwatch:upgrade = 2:55.809 + 05.026 = 3:00.835
+  //Total elapsed health check time = persisted:health + stopwatch:health = 30.126 + 05.026 = 35.152
+  let pattern_Activity = @'([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}):([0-9]{18})\)\+([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})';
+  let pattern_PersistedOverallHealth = @'persisted\[overall=([^\s]*)\sUD=([^\s]*)\shealth=([^\]]*)';
+  let pattern_Stopwatch = @'(stopwatch\[upgrade=)([^\s]*)\s(health=)([^\]]*)';
+  let pattern_Wait = @'(wait=)(\S*)';
+  let pattern_Retry = @'monitored\supgrade\shealth\scheck\s([^:]*)[^=]*=([^\s]*)[^=]*=([^\]]*)[^=]*=([^\n]*)';
+  let pattern_Elapsed = @'Elapsed\stime:\s(\d{1,2}:\d{1,2}\.\d{1,3}|\d{1,2}:\d{1,2}:\d{1,2}\.\d{1,3})';
+  let pattern_Application = @'(fabric\:\/[^,:\s\)]*)';
+  let upgradeTraces = view() { table(T)
+    | where Type contains A
+      or Text contains A
+    | where Type !contains 'HM.ChildrenPerUd'
+    | where Text !contains 'delta 0' };
+  let tsRangeMin = upgradeTraces
+    | summarize min(Timestamp);
+  let tsRangeMax = upgradeTraces
+    | summarize max(Timestamp);
+  let warningTraces = view() { table(T) 
+    | where Timestamp between (toscalar(tsRangeMin) .. toscalar(tsRangeMax))
+    | where Level in ('Warning','Error') };
+  union withsource=SourceTable kind=outer upgradeTraces, warningTraces
+    | extend PersistedSW = extract(pattern_PersistedOverallHealth, 1, Text, typeof(string))
+    | extend OverallSW = extract(pattern_PersistedOverallHealth, 2, Text, typeof(string))
+    | extend HealthSW = extract(pattern_PersistedOverallHealth, 3, Text, typeof(string))
+    | extend Elapsed = extract(pattern_Elapsed, 1, Text, typeof(string))
+    | extend Application = extract(pattern_Application, 1, Text, typeof(string))
+    | project Timestamp, Level, Type, Text, Application, NodeName, PersistedSW, OverallSW, HealthSW, Elapsed, SourceTable
+    | sort by Timestamp asc nulls last
+}
