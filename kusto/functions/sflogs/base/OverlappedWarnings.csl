@@ -1,0 +1,13 @@
+.create-or-alter function with (docstring = "[T1:(Timestamp:datetime, Level:string, TID:int, PID:int, Type:string, Text:string, NodeName:string, FileType:string, RelativeUri:string)] where T1 = Input trace view or table to overlap warnings on., [T2:string] where T2 = table name", folder = "sflogs/base")
+    OverlappedWarnings(T1:(Timestamp:datetime,Level:string,TID:int,PID:int,Type:string,Text:string,NodeName:string,FileType:string,RelativeUri:string), T2:string) {
+    let resultTraces = view() { T1 };
+    let tsRangeMin = T1
+        | summarize min(Timestamp);
+    let tsRangeMax = T1
+        | summarize max(Timestamp);
+    let warningTraces = view() { table(T2) 
+        | where Timestamp between (toscalar(tsRangeMin) .. toscalar(tsRangeMax))
+        | where Level in ('Warning','Error') };
+    union withsource=SourceTable kind=outer T1, resultTraces
+    | distinct Timestamp, Level, TID, PID, Type, Text, NodeName, FileType, RelativeUri
+}
