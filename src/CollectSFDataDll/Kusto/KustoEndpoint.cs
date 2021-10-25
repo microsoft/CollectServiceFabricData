@@ -98,7 +98,7 @@ namespace CollectSFData.Kusto
 
         public void Authenticate(bool throwOnError = false)
         {
-            _arm.Scopes = new List<string>() { $"{ClusterIngestUrl}/kusto.read", $"{ClusterIngestUrl}/kusto.write" };
+            _arm.Scopes = new List<string>() { $"{ClusterIngestUrl}/user_impersonation" };
 
             if (_config.IsClientIdConfigured())
             {

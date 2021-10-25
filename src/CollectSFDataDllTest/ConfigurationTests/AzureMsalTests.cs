@@ -59,7 +59,7 @@ namespace CollectSFData.ConfigurationTests
                 AzureResourceManager.MsalMessage += AzureResourceManager_MsalMessage;
                 AzureResourceManager.MsalDeviceCode += AzureResourceManager_MsalDeviceCode;
 
-                bool result = arm.CreatePublicClient(true, true);
+                bool result = arm.CreatePublicClient(true, config.AzureClientId, true);
                 AzureResourceManager.MsalMessage -= AzureResourceManager_MsalMessage;
                 AzureResourceManager.MsalDeviceCode -= AzureResourceManager_MsalDeviceCode;
 
