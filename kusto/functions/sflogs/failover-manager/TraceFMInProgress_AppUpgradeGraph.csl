@@ -16,7 +16,7 @@
             @', Cancel=' ['cancel']
             @', NotReady=' notReady
             @', PLBSafetyCheckStatus=' plbSafetyCheckStatus
-        | where app matches regex strcat('(?i:',appName,')')
+        | where app matches regex strcat('((?i)',appName,')')
         | summarize 
             max(toint(domain)), 
             max(toint(tobool(isContextCompleted))),
