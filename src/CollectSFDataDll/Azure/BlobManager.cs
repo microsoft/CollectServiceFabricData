@@ -436,7 +436,8 @@ namespace CollectSFData.Azure
                         FileObject fileObject = new FileObject(blob.Uri.AbsolutePath, _config.CacheLocation)
                         {
                             LastModified = lastModified,
-                            Status = FileStatus.enumerated
+                            Status = FileStatus.enumerated,
+                            SourceFileUri = blob.Uri.AbsoluteUri
                         };
 
                         if (_instance.FileObjects.FindByUriFirstOrDefault(fileObject.RelativeUri).Status == FileStatus.existing)

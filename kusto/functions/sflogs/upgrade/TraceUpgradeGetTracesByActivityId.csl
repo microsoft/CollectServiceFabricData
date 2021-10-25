@@ -8,7 +8,7 @@
      let pattern_Stopwatch = @'(stopwatch\[upgrade=)([^\s]*)\s(health=)([^\]]*)';
      let pattern_Wait = @'(wait=)(\S*)';
      let pattern_Retry = @'monitored\supgrade\shealth\scheck\s([^:]*)[^=]*=([^\s]*)[^=]*=([^\]]*)[^=]*=([^\n]*)';
-     let pattern_Elapsed = @'Elapsed\stime:\s(\d{1,2}:\d{1,2}\.\d{1,3})';
+     let pattern_Elapsed = @'Elapsed\stime:\s(\d{1,2}:\d{1,2}\.\d{1,3}|\d{1,2}:\d{1,2}:\d{1,2}\.\d{1,3})';
      let pattern_Application = @'(fabric\:\/[^,:\s\)]*)';
      table(T)
      | where Type contains A

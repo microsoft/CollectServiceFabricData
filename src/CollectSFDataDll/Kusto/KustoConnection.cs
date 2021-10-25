@@ -71,7 +71,6 @@ namespace CollectSFData.Kusto
                 _tokenSource.Cancel();
                 _monitorTask.Wait();
                 _monitorTask.Dispose();
-                IngestResourceIdKustoTableMapping();
 
                 if (_appendingToExistingTableUnique
                     && _config.FileType == FileTypesEnum.table
@@ -137,6 +136,8 @@ namespace CollectSFData.Kusto
                     _instance.FileObjects.Add(new FileObject(existingUpload) { Status = FileStatus.existing });
                 }
             }
+
+            IngestResourceIdKustoTableMapping();
 
             // monitor for new files to be uploaded
             if (_monitorTask == null)
@@ -214,24 +215,6 @@ namespace CollectSFData.Kusto
         private void IngestResourceIdKustoTableMapping()
         {
             string resourceUri = _config.ResourceUri;
-
-            if (string.IsNullOrEmpty(resourceUri)
-                && _instance.FileObjects.Any(FileStatus.succeeded)
-                && _config.FileType == FileTypesEnum.trace)
-            {
-                // Fetch resource ID from ingested traces
-                List<string> results = Endpoint.Query($"['{Endpoint.TableName}']" +
-                    $" | where Type == 'InfrastructureService.RestClientHelper'" +
-                    $" | take 1");
-
-                if (results.Any())
-                {
-                    Regex pattern = new Regex(@"resourceId\W+?(/[A-Za-z0-9./-]+)");
-                    Match match = pattern.Match(results.FirstOrDefault());
-                    resourceUri = match.Groups[1].Value;
-                    Log.Info($"ResourceID: {resourceUri}");
-                }
-            }
 
             if (!string.IsNullOrWhiteSpace(resourceUri))
             {
@@ -627,7 +610,7 @@ namespace CollectSFData.Kusto
                 RetryPolicy = new IngestRetryPolicy(),
                 ParallelOperationThreadCount = _config.Threads,
             };
-            
+
             CloudStorageAccount.UseV1MD5 = false;
             CloudBlobContainer blobContainer = new CloudBlobContainer(blobUri);
             CloudBlockBlob blockBlob = blobContainer.GetBlockBlobReference(blobName);
