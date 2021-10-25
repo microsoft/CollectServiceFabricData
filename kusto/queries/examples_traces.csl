@@ -13,7 +13,7 @@ your_tablename_here
     or Type contains strcat(@'ApplicationUpgradeDomainComplete@', appName)
     or Text contains @'Phase='
     or Text contains @'failed'
-    or ((Type contains strcat(@'HM.Entity_QueryCompleted@', appName)) and (Text matches regex strcat('(?i:',@'is in Error',')') or Text matches regex strcat('(?i:',@'is in Warning',')')))
+    or ((Type contains strcat(@'HM.Entity_QueryCompleted@', appName)) and (Text matches regex strcat('((?i)',@'is in Error',')') or Text matches regex strcat('((?i)',@'is in Warning',')')))
 | where Type !contains exclusion1 and Text !contains exclusion1
 | project Timestamp , TID , PID , NodeName , Level , Type , Text , FileType
 | order by Timestamp asc
@@ -29,7 +29,7 @@ let extractPattern_ServiceName = @'(fabric):\/([\w_-]+)\/([\w_-]+)';
 your_tablename_here
 | where Type contains @'HM.Entity_QueryCompleted'
 | where Type matches regex filterPattern
-  and (Text matches regex strcat('(?i:',@'is in Error',')') or Text matches regex strcat('(?i:',@'is in Warning',')'))
+  and (Text matches regex strcat('((?i)',@'is in Error',')') or Text matches regex strcat('((?i)',@'is in Warning',')'))
 | extend partitionStats = extract(extractPattern_PartitionStats, 0, Text, typeof(string))
 | extend replicaStats = extract(extractPattern_ReplicaStats, 0, Text, typeof(string))
 | extend serviceName = extract(extractPattern_ServiceName, 0, Text, typeof(string))
@@ -64,9 +64,9 @@ your_tablename_here
 let appName = @'fabric:/';
 your_tablename_here
 | where Type contains @'FM.AppUpgrade'
-| where Text matches regex strcat('(?i:',@'accepted',')')  
-    or Text matches regex strcat('(?i:',@'and moving to',')')  
-    or Text matches regex strcat('(?i:',@'Starting',')')   
+| where Text matches regex strcat('((?i)',@'accepted',')')  
+    or Text matches regex strcat('((?i)',@'and moving to',')')  
+    or Text matches regex strcat('((?i)',@'Starting',')')   
 | project Timestamp , TID , PID , NodeName , Level , Type , Text , FileType
 | order by Timestamp asc
 | limit 5000
@@ -83,7 +83,7 @@ your_tablename_here
     or Type contains strcat(@'ApplicationUpgradeDomainComplete@', appName)
     or Text contains @'Phase='
     or Text contains @'failed'
-    or ((Type contains strcat(@'HM.Entity_QueryCompleted@', appName)) and (Text matches regex strcat('(?i:',@'is in Error',')') or Text matches regex strcat('(?i:',@'is in Warning',')')))
+    or ((Type contains strcat(@'HM.Entity_QueryCompleted@', appName)) and (Text matches regex strcat('((?i)',@'is in Error',')') or Text matches regex strcat('((?i)',@'is in Warning',')')))
 | where Type !contains exclusion1 and Text !contains exclusion1
 | project Timestamp , TID , PID , NodeName , Level , Type , Text , FileType
 | order by Timestamp asc
@@ -91,7 +91,7 @@ your_tablename_here
 
 // regex example with string match 'exception', case insensitive
 let filterPattern1 = @'exception';
-let regexPattern1 = strcat('(?i:',filterPattern1,')'); // re2 case insensitive
+let regexPattern1 = strcat('((?i)',filterPattern1,')'); // re2 case insensitive
 your_tablename_here
 | where Type matches regex regexPattern1 or Text matches regex regexPattern1 
 | where Level !contains "Informational"
