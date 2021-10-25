@@ -1,12 +1,9 @@
 .create-or-alter function with (docstring = "[T:string] where T=table name, [TS:strdatetimeing] where TS=timestamp, [N:string] where N=NodeName, [C:string] where C=connectionId. Function to show certificate initializtion traces", folder = "sflogs/hosting")
     TraceHostingGetCertificateIntializationTraces(T:string, TS:datetime, N:string, C:string) {
-    TracesNearTimestamp(T, TS, 1)
+    TracesNearTimestamp(T, TS, 2)
         | where NodeName == N
         | where Type startswith 'LeaseAgent.State'
-             or (Type contains C
-                 and (Type startswith 'Transport.SecurityContextSsl'
-                 or Type startswith 'Transport.SecurityContextCreated'
-                 or Type startswith 'Transport.ConnectionStateTransit'))
+             or Type contains C
         | project NodeName, Type, Text, Timestamp
         | order by Timestamp asc;
 }
