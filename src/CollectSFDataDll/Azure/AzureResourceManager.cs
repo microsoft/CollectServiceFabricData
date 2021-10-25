@@ -201,7 +201,7 @@ namespace CollectSFData.Azure
                 }
                 else
                 {
-                    Log.Error("unknown configuration");
+                    Log.Error("unknown silent configuration");
                     return false;
                 }
 
@@ -209,7 +209,7 @@ namespace CollectSFData.Azure
             }
             else
             {
-                CreatePublicClient(prompt, deviceLogin);
+                CreatePublicClient(prompt, _config.IsGuid(_config.AzureClientId) ? _config.AzureClientId : _wellKnownClientId, deviceLogin);
                 return true;
             }
         }
@@ -260,12 +260,12 @@ namespace CollectSFData.Azure
             SetToken();
         }
 
-        public bool CreatePublicClient(bool prompt, bool deviceLogin = false)
+        public bool CreatePublicClient(bool prompt, string clientId, bool deviceLogin = false)
         {
             Log.Info($"enter: {prompt} {deviceLogin}");
             AuthenticationResult result = null;
             _publicClientApp = PublicClientApplicationBuilder
-                .Create(_wellKnownClientId)
+                .Create(clientId)
                 .WithAuthority(AzureCloudInstance.AzurePublic, _config.AzureTenantId)
                 .WithLogging(MsalLoggerCallback, LogLevel.Verbose, true, true)
                 .WithDefaultRedirectUri()
