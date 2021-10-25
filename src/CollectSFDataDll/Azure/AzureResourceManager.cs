@@ -209,12 +209,9 @@ namespace CollectSFData.Azure
             }
             else
             {
-                CreatePublicClient(prompt, _config.AzureClientId ?? _wellKnownClientId, deviceLogin);
+                CreatePublicClient(prompt, _config.IsGuid(_config.AzureClientId) ? _config.AzureClientId : _wellKnownClientId, deviceLogin);
                 return true;
             }
-
-            Log.Error("unknown configuration");
-            return false;
         }
 
         public void CreateConfidentialCertificateClient(string resource, X509Certificate2 clientCertificate)
