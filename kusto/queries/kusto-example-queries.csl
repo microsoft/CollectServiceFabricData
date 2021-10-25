@@ -77,7 +77,7 @@ let filterPattern = @'Dns.+Duration \((?P<ms> \d{2,5}) ms \)';
 
 // regex example with match case insensitive
 let filterPattern = @'lease';
-let regexPattern = strcat('(?i:',filterPattern,')'); // re2 case insensitive
+let regexPattern = strcat('((?i)',filterPattern,')'); // re2 case insensitive
 '%kusto table name%'
 | where Type matches regex regexPattern or Text matches regex regexPattern
 //| where Type contains filterPattern or Text contains filterPattern
