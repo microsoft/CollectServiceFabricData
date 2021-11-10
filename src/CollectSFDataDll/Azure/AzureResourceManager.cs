@@ -33,7 +33,6 @@ namespace CollectSFData.Azure
         private string _resource;
         private Timer _timer;
         private DateTimeOffset _tokenExpirationHalfLife;
-        private string _wellKnownClientId = "1950a258-227b-4e31-a9cf-717495945fc2";
 
         public delegate void MsalDeviceCodeHandler(DeviceCodeResult arg);
 
@@ -207,11 +206,14 @@ namespace CollectSFData.Azure
 
                 return true;
             }
-            else
+            else if (_config.IsGuid(_config.AzureClientId))
             {
-                CreatePublicClient(prompt, _config.IsGuid(_config.AzureClientId) ? _config.AzureClientId : _wellKnownClientId, deviceLogin);
+                CreatePublicClient(prompt, _config.AzureClientId, deviceLogin);
                 return true;
             }
+
+            Log.Error("unknown configuration");
+            return false;
         }
 
         public void CreateConfidentialCertificateClient(string resource, X509Certificate2 clientCertificate)
