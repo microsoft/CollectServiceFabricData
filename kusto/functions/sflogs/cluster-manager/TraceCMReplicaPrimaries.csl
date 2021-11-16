@@ -12,7 +12,7 @@
         //| where Type contains 'RE.PrimaryCtor' or Type contains 'RE.PrimaryAckProcess' or Type contains 'RE.PrimaryClose'
         //| where Type contains 'RE.PrimaryAckProcess'
         | where Type contains 'RE.PrimaryConfiguration'
-        | where Type matches regex strcat('(?i:@',serviceGuid,')')
+        | where Type matches regex strcat('((?i)@',serviceGuid,')')
         | extend instance = extract(@';(.+?):',1,Text)
         | summarize MinTimestamp=arg_min(Timestamp,*), MaxTimestamp=arg_max(Timestamp,*) by Type,NodeName,instance
         | project Type, MinTimestamp, MaxTimestamp, NodeName, instance
