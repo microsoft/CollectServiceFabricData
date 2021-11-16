@@ -1,9 +1,16 @@
 # Change log
 
+## 11/16/2021  
+
+- fixes for breaking changes in authentication disallowing use of wellknown 195 guid. utility now requires an azure app registration 'clientid' to be specified for azure / kusto authentication. app registration needs to be added as a principal to kusto database. 
+- fix for slow utility start on .net core when not using managed identity
+- move TableMetaData record insertion to start of ingest from end of ingest for better tracking and consistency  
+- add / modify kusto query functions  
+
 ## 08/22/2021  
 
-- modify kusto certificate authentication option to use certificate instead of bearer token
-  - add ApplicationCertificateSendX5c = true
+- modify kusto certificate authentication option to use certificate instead of bearer token  
+- add ApplicationCertificateSendX5c = true
 - fix for stale .bin3 token cache requiring ui 'invalid_grant'
 - add kusto queries from sedwards
 - add privacy link as part of current ms oss guidelines
