@@ -77,7 +77,11 @@ namespace CollectSFData.Azure
                     _config.AzureTenantId = _commonTenantId;
                 }
 
-                CreateClient(false, false, resource);
+                if(!CreateClient(false, false, resource))
+                {
+                    throw new MsalClientException("silent authentication failed");
+                }
+                
                 return SetToken();
             }
             catch (MsalClientException e)
