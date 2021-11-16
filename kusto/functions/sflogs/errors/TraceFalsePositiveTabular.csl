@@ -18,8 +18,8 @@
         };
         // search Type And Text column using regex insensitive match
         let TypeAndTextIMatches = (tableName:(Type:string,Text:string,FalsePositive:bool,Reason:string),issue:string, typeQuery:string, textQuery:string) {
-            let itypeQuery = strcat('(?i:',typeQuery,')'); // re2 case insensitive
-            let itextQuery = strcat('(?i:',textQuery,')'); // re2 case insensitive
+            let itypeQuery = strcat('((?i)',typeQuery,')'); // re2 case insensitive
+            let itextQuery = strcat('((?i)',textQuery,')'); // re2 case insensitive
             tableName
             | extend isFalsePositive = iif((Type matches regex itypeQuery and Text matches regex itextQuery),true,false)
             | extend Reason = iif(isFalsePositive, strcat(issue,' ::type matches: ', typeQuery, ' ::text matches: ', textQuery ), Reason)
@@ -44,7 +44,7 @@
         };
         // search Text column using regex insensitive match
         let TextIMatches = (tableName:(Type:string,Text:string,FalsePositive:bool,Reason:string), issue:string, query:string) {
-            let iQuery = strcat('(?i:',query,')'); // re2 case insensitive
+            let iQuery = strcat('((?i)',query,')'); // re2 case insensitive
             tableName
             | extend isFalsePositive = iif((Text matches regex iQuery),true,false)
             | extend Reason = iif(isFalsePositive, strcat(issue,' ::text matches: ', query ), Reason)
@@ -69,7 +69,7 @@
         };
         // search Type column using regex insensitive match
         let TypeIMatches = (tableName:(Type:string,Text:string,FalsePositive:bool,Reason:string), issue:string, query:string) {
-            let iQuery = strcat('(?i:',query,')'); // re2 case insensitive
+            let iQuery = strcat('((?i)',query,')'); // re2 case insensitive
             tableName
             | extend isFalsePositive = iif((Type matches regex iQuery),true,false)
             | extend Reason = iif(isFalsePositive, strcat(issue,' ::type matches: ', query ), Reason)
@@ -94,7 +94,7 @@
         };
         // search Type or Text columns using regex insensitive match
         let TypeOrTextIMatches = (tableName:(Type:string,Text:string,FalsePositive:bool,Reason:string), issue:string, query:string) {
-            let iQuery = strcat('(?i:',query,')'); // re2 case insensitive
+            let iQuery = strcat('((?i)',query,')'); // re2 case insensitive
             tableName
             | extend isFalsePositive = iif((Type matches regex iQuery or Text matches regex iQuery),true,false)
             | extend Reason = iif(isFalsePositive, strcat(issue,' ::type or text matches: ', query ), Reason)

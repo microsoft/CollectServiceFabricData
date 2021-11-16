@@ -100,11 +100,6 @@ namespace CollectSFData.Kusto
         {
             _arm.Scopes = new List<string>() { $"{ClusterIngestUrl}/user_impersonation" };
 
-            if (_config.IsClientIdConfigured())
-            {
-                _arm.Scopes = new List<string>() { $"{ClusterIngestUrl}/.default" };
-            }
-
             if (_config.IsKustoConfigured() && _arm.Authenticate(throwOnError, ClusterIngestUrl))
             {
                 if (_arm.ClientIdentity.IsAppRegistration)
