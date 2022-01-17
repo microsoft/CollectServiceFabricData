@@ -163,8 +163,11 @@ To use a default configuration file without having to specify on the command lin
 
 ## Authorization
 
-- **AzureClientId** - optional. guid.
-- **AzureClientCertificate** - optional. string. used for non-interactive authorization. can be in the following forms:
+  **NOTE: Connecting to Azure resources requires an Azure Active Directory (AAD) Application registration. 
+  see [aad-configuration](./aad-configuration.md).**
+
+- **AzureClientId** - required. guid. AAD app registration object id.
+- **AzureClientCertificate** - optional. string. required if not useing AzureClientSecret. used for non-interactive authorization. can be in the following forms:
   - thumbprint if using local store 'D60F1AA6632B4C2A385879C227387359535B77DE'
   - path to file name if using local file system 'cluster.pfx'
   - subject name if using local store 'sfcluster.com'
@@ -176,12 +179,12 @@ To use a default configuration file without having to specify on the command lin
     [convert]::ToBase64String([io.file]::ReadAllBytes("C:\path\to\certificate.pfx"))
     ```
 
-- **AzureClientSecret** - required if AzureClientId is specified and not using AzureClientCertificate. string. Can also be used to pass certificate password.
-- **AzureKeyVault** - optional. can be used to store AzureClientCertificate if being used.
+- **AzureClientSecret** - optional. string. required if not using AzureClientCertificate. string. Can also be used to pass certificate password.
+- **AzureKeyVault** - optional. url. can be used to store AzureClientCertificate if being used.
   - 'https://{{key vault name}}.vault.azure.net/'
-- **AzureResourceGroup** - required if using Log Analytics and creating a workspace. string. if populated, value is used for creation of Log Analytics workspace.
-- **AzureResourceGroupLocation** - required if using Log Analytics and creating a workspace. string. if populated, value is used for location of resource group for creation of Log Analytics workspace.
-- **AzureSubscriptionId** - required if tenant contains multiple subscriptions and using AzureClientId.
+- **AzureResourceGroup** - optional. string. required if using Log Analytics and creating a workspace. string. if populated, value is used for creation of Log Analytics workspace.
+- **AzureResourceGroupLocation** - optional. string. required if using Log Analytics and creating a workspace. string. if populated, value is used for location of resource group for creation of Log Analytics workspace.
+- **AzureSubscriptionId** - optional. guid. required if tenant contains multiple subscriptions and using AzureClientId.
 - **AzureTenantId** - optional. guid. used in confidential and public client authentication if *not* using 'common'.
 
 ### **Using with Client Credentials for non-interactive execution**
