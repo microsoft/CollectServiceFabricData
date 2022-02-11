@@ -32,7 +32,7 @@ The following describes how to create an AAD app registration for use with Colle
 
     ![](media/azure-configure-desktop-devices.png)
 
-1. Authentication configuration should look same / similar to below.
+1. Authentication configuration should be configured same / similar to below.
 
     ![](media/azure-app-authentication-configuration.png)
 
@@ -52,16 +52,41 @@ The following describes how to create an AAD app registration for use with Colle
 
     ![](media/azure-api-permissions-configured.png)
 
+1. After app registration has been created, copy the 'Application (client) ID' guid value. Set CollectSFData parameter 'azureClientId' to the guid value and optionally 'azureazureClientCertificate' to certificate base64 value. These values can be done via command line or json configuration file. See [configuration](./configuration.md).
+
 ## (Optional) Add certificate as a client secret to app registration for non-interactive authentication
 
 For environments where CollectSFData utility executes non-interactively, for example if utility is called from a service, a client secret can be used to prevent interactive authentication prompt. Best practice is for a certificate to be used as a secret. If needed, use the steps below to add a certificate to app registration for use with non-interactive logon.
 
+1. Navigate to new app registration in azure portal and select 'Certificates & secretes'.  
+
+    ![](media/app-registration-cert.png)
+
+1. Select 'Upload certificate' to upload an existing certificate. If a certificate from a CA is unavailable, these steps can be used to create a self-signed test certificate: https://docs.microsoft.com/en-us/azure/active-directory/develop/howto-create-self-signed-certificate
+
+1. To configure CollectSFData to use certificate, copy the base64 string of the certificate uploaded to app registration and use as value for 'azureClientCertificate' parameter. See [configuration](./configuration.md).
+
+
 ## Add app registration to Kusto cluster and database
 
+Once app registration has been created and configured, the new app registration needs to be added to the kusto database permissions. Refer to https://docs.microsoft.com/azure/data-explorer/create-cluster-database-portal on how to create a kusto cluster and database if one has not been created.
 
-## Configuring CollectSFData to use App Registration
+**NOTE: Azure Data Explorer / Kusto is not free. See https://azure.microsoft.com/en-us/pricing/details/data-explorer/**
 
-After app registration has been created, copy the 'Application (client) ID' guid value. Set CollectSFData parameter 'azureClientId' to the guid value and optionally 'azureClientSecret' to certificate base64 value. These values can be done via command line or json configuration file. See [configuration](./configuration.md).
+1. In azure portal https://portal.azure.com, navigate to the kusto cluster database to be used to store service fabric diagnostic data.
+1. Select 'Permissions', 'Add', and a user type with rights to create, ingest, and read. 'User' rights are used for this configuration. Detailed permission definitions are located here https://docs.microsoft.com/azure/data-explorer/kusto/management/security-roles.
+
+    ![](media/kusto-database-permissions.png)
+
+    ![](media/kusto-database-user-select.png)
+
+1. Search for the new app registration created above, select, and click 'Select'.  
+
+    ![](media/kusto-database-principal-select.png)
+
+1. Set the kusto cluster 'Data Ingestion URI' ingest url *with* database name appended for the value of 'kustoCluster' parameter to use with CollectSFData. Using example from above: 'https://ingest-servicefabriccluster.eastus.kusto.windows.net/sflogs'. See [configuration](./configuration.md).
+
+    ![](media/kusto-overview-url.png)
 
 ## Application consent
 
