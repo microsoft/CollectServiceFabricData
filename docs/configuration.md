@@ -167,7 +167,7 @@ To use a default configuration file without having to specify on the command lin
   see [aad-configuration](./aad-configuration.md).**
 
 - **AzureClientId** - required. guid. AAD app registration object id.
-- **AzureClientCertificate** - optional. string. required if not useing AzureClientSecret. used for non-interactive authorization. can be in the following forms:
+- **AzureClientCertificate** - optional. string. required if not using AzureClientSecret. used for non-interactive authorization. can be in the following forms:
   - thumbprint if using local store 'D60F1AA6632B4C2A385879C227387359535B77DE'
   - path to file name if using local file system 'cluster.pfx'
   - subject name if using local store 'sfcluster.com'
