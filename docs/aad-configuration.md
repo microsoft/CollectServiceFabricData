@@ -100,4 +100,18 @@ With the default setting to prompt, the following will be displayed upon the fir
 
 ## Troubleshooting
 
-If app registration creation or api permission configuration fails, it is most likely due to insufficient permissions. Additional information should be available in the portal as to reason of failure.  
+If app registration creation or api permission configuration fails, it is most likely due to insufficient permissions or Azure / AAD policy. Additional information should be available in the portal as to reason of failure. 
+
+Enabling verbose logging in CollectSFData may help in troubleshooting if errors in portal are not resolving. Set parameter 'logDebug' to 5 and set 'logFile' to path and file name for log file.
+
+## Example CollectSFData json configuration using data from above
+
+```json
+{
+  "$schema": "https://raw.githubusercontent.com/microsoft/CollectServiceFabricData/master/configurationFiles/collectsfdata.schema.json",
+  "AzureClientCertificate": "MIIC8DCCAdigAwIBAgIQeiHV3GWWYplN2Tuha9ueTDANBgkqhkiG9w0BAQsFADALMQkwBwYDVQQDDAAwHhcNMjIwMjEyMTMyMjQ2WhcNMjMwMjEyMTM0M...",
+  "AzureClientId": "0d080aeb-2756-4671-9e7f-7dfb04e32c7f",
+  "AzureTenantId": "416df1dd-8718-4630-8ac3-f9f41543b794",
+  "KustoCluster": "https://ingest-servicefabriccluster.eastus.kusto.windows.net/sflogs",
+}
+```
