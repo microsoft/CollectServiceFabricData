@@ -66,6 +66,15 @@ For environments where CollectSFData utility executes non-interactively, for exa
 
 1. To configure CollectSFData to use certificate, copy the base64 string of the certificate uploaded to app registration and use as value for 'azureClientCertificate' parameter. See [configuration](./configuration.md).
 
+## (Optional) Configure app registration AD / AAD Group(s) to restrict access
+
+To restrict which users have access to app registration (collectsfdata), from the 'API Permissions' view, select 'Enterprise applications' or select [Enterprise Applications](https://portal.azure.com/#blade/Microsoft_AAD_IAM/StartboardApplicationsMenuBlade/AppAppsPreview/menuId/) from root of AAD blade. Select 'Users and Groups' to add specific users or groups.
+
+![](media/aad-user-permissions.png)
+
+NOTE: Using groups for permissions does require at least P2 level of Azure Active Directory.
+
+![](media/aad-group-permissions-error.png)
 
 ## Add app registration to Kusto cluster and database
 
