@@ -40,7 +40,7 @@ The following describes how to create an AAD app registration for use with Colle
 
     ![](media/azure-api-permissions.png)
 
-1. Select 'Add a permission', then 'Azure Data Explorer' Microsoft Api.
+1. If using Kusto, select 'Add a permission', then 'Azure Data Explorer' Microsoft Api.
 
     ![](media/azure-select-kusto-api.png)
 
@@ -76,9 +76,9 @@ NOTE: Using groups for permissions does require at least P2 level of Azure Activ
 
 ![](media/aad-group-permissions-error.png)
 
-## Add app registration to Kusto cluster and database
+## (Optional) Add app registration to Kusto cluster and database
 
-Once app registration has been created and configured, the new app registration needs to be added to the kusto database permissions. Refer to https://docs.microsoft.com/azure/data-explorer/create-cluster-database-portal on how to create a kusto cluster and database if one has not been created.
+Once app registration has been created and configured, if using Kusto, the new app registration needs to be added to the kusto database permissions. Refer to https://docs.microsoft.com/azure/data-explorer/create-cluster-database-portal on how to create a kusto cluster and database if one has not been created.
 
 **NOTE: Azure Data Explorer / Kusto is not free. See https://azure.microsoft.com/en-us/pricing/details/data-explorer/**
 
@@ -96,6 +96,16 @@ Once app registration has been created and configured, the new app registration 
 1. Set the kusto cluster 'Data Ingestion URI' ingest url *with* database name appended for the value of 'kustoCluster' parameter to use with CollectSFData. Using example from above: 'https://ingest-servicefabriccluster.eastus.kusto.windows.net/sflogs'. See [configuration](./configuration.md).
 
     ![](media/kusto-overview-url.png)
+
+Permissions can alternatively be applied using kusto commands. See [Principal and Identity Providers](https://docs.microsoft.com/azure/data-explorer/kusto/management/access-control/principals-and-identity-providers).
+
+Example:
+
+```kusto
+.show database {{database}} principals 
+
+.add database {{database}} users ('aadapp=4c7e82bd-6adb-46c3-b413-fdd44834c69b;fabrikam.com') 'Test app @fabrikam.com (AAD)'
+```
 
 ## Application consent
 
