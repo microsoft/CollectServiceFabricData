@@ -40,7 +40,7 @@ The following describes how to create an AAD app registration for use with Colle
 
     ![](media/azure-api-permissions.png)
 
-1. Select 'Add a permission', then 'Azure Data Explorer' Microsoft Api.
+1. If using Kusto, select 'Add a permission', then 'Azure Data Explorer' Microsoft Api.
 
     ![](media/azure-select-kusto-api.png)
 
@@ -66,10 +66,19 @@ For environments where CollectSFData utility executes non-interactively, for exa
 
 1. To configure CollectSFData to use certificate, copy the base64 string of the certificate uploaded to app registration and use as value for 'azureClientCertificate' parameter. See [configuration](./configuration.md).
 
+## (Optional) Configure app registration AD / AAD Group(s) to restrict access
 
-## Add app registration to Kusto cluster and database
+To restrict which users have access to app registration (collectsfdata), from the 'API Permissions' view, select 'Enterprise applications' or select [Enterprise Applications](https://portal.azure.com/#blade/Microsoft_AAD_IAM/StartboardApplicationsMenuBlade/AppAppsPreview/menuId/) from root of AAD blade. Select 'Users and Groups' to add specific users or groups.
 
-Once app registration has been created and configured, the new app registration needs to be added to the kusto database permissions. Refer to https://docs.microsoft.com/azure/data-explorer/create-cluster-database-portal on how to create a kusto cluster and database if one has not been created.
+![](media/aad-user-permissions.png)
+
+NOTE: Using groups for permissions does require at least P2 level of Azure Active Directory.
+
+![](media/aad-group-permissions-error.png)
+
+## (Optional) Add app registration to Kusto cluster and database
+
+Once app registration has been created and configured, if using Kusto, the new app registration needs to be added to the kusto database permissions. Refer to https://docs.microsoft.com/azure/data-explorer/create-cluster-database-portal on how to create a kusto cluster and database if one has not been created.
 
 **NOTE: Azure Data Explorer / Kusto is not free. See https://azure.microsoft.com/en-us/pricing/details/data-explorer/**
 
@@ -87,6 +96,16 @@ Once app registration has been created and configured, the new app registration 
 1. Set the kusto cluster 'Data Ingestion URI' ingest url *with* database name appended for the value of 'kustoCluster' parameter to use with CollectSFData. Using example from above: 'https://ingest-servicefabriccluster.eastus.kusto.windows.net/sflogs'. See [configuration](./configuration.md).
 
     ![](media/kusto-overview-url.png)
+
+Permissions can alternatively be applied using kusto commands. See [Principal and Identity Providers](https://docs.microsoft.com/azure/data-explorer/kusto/management/access-control/principals-and-identity-providers).
+
+Example:
+
+```kusto
+.show database {{database}} principals 
+
+.add database {{database}} users ('aadapp=4c7e82bd-6adb-46c3-b413-fdd44834c69b;fabrikam.com') 'Test app @fabrikam.com (AAD)'
+```
 
 ## Application consent
 

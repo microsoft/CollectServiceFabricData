@@ -1,13 +1,18 @@
 # Change log
 
-## 11/16/2021  
+## 03/11/2022
+
+- modify AzureResourceManager.cs add MSAL ESTS .WithAzureRegion(_config.AzureResourceGroupLocation)
+    - https://docs.microsoft.com/en-us/dotnet/api/microsoft.identity.client.confidentialclientapplicationbuilder.withazureregion?view=azure-dotnet
+
+## 11/16/2021  https://github.com/microsoft/CollectServiceFabricData/releases/tag/v2.9.2111.11617
 
 - fixes for breaking changes in authentication disallowing use of wellknown 195 guid. utility now requires an azure app registration 'clientid' to be specified for azure / kusto authentication. app registration needs to be added as a principal to kusto database. 
 - fix for slow utility start on .net core when not using managed identity
 - move TableMetaData record insertion to start of ingest from end of ingest for better tracking and consistency  
 - add / modify kusto query functions  
 
-## 08/22/2021  
+## 08/22/2021  https://github.com/microsoft/CollectServiceFabricData/releases/tag/v2.9.2108.12500
 
 - modify kusto certificate authentication option to use certificate instead of bearer token  
 - add ApplicationCertificateSendX5c = true
