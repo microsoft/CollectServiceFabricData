@@ -22,6 +22,7 @@ namespace CollectSFData.Azure
 {
     public class AzureResourceManager
     {
+        private const string _attemptRegionDiscovery = "TryAutoDetect";
         private string _commonTenantId = "common";
         private IConfidentialClientApplication _confidentialClientApp;
         private ConfigurationOptions _config;
@@ -234,6 +235,7 @@ namespace CollectSFData.Azure
                 .WithAuthority(AzureCloudInstance.AzurePublic, _config.AzureTenantId)
                 .WithLogging(MsalLoggerCallback, LogLevel.Verbose, true, true)
                 .WithCertificate(clientCertificate)
+                .WithAzureRegion(string.IsNullOrEmpty(_config.AzureResourceGroupLocation) ? _attemptRegionDiscovery : _config.AzureResourceGroupLocation)
                 .Build();
             AddClientScopes(true);
         }
@@ -253,6 +255,7 @@ namespace CollectSFData.Azure
                })
                .WithAuthority(AzureCloudInstance.AzurePublic, _config.AzureTenantId)
                .WithLogging(MsalLoggerCallback, LogLevel.Verbose, true, true)
+               .WithAzureRegion(string.IsNullOrEmpty(_config.AzureResourceGroupLocation) ? _attemptRegionDiscovery : _config.AzureResourceGroupLocation)
                .Build();
 
             AddClientScopes();
