@@ -183,7 +183,7 @@ To use a default configuration file without having to specify on the command lin
 - **AzureKeyVault** - optional. url. can be used to store AzureClientCertificate if being used.
   - 'https://{{key vault name}}.vault.azure.net/'
 - **AzureResourceGroup** - optional. string. required if using Log Analytics and creating a workspace. string. if populated, value is used for creation of Log Analytics workspace.
-- **AzureResourceGroupLocation** - optional. string. required if using Log Analytics and creating a workspace. string. if populated, value is used for location of resource group for creation of Log Analytics workspace.
+- **AzureResourceGroupLocation** - optional. string to identify current Azure region for MSAL authentication string. Default value 'TryAutoDetect' will be set if not populated. required if using Log Analytics and creating a workspace. string. if populated for Log Analytics, value is used for location of resource group for creation of Log Analytics workspace.
 - **AzureSubscriptionId** - optional. guid. required if tenant contains multiple subscriptions and using AzureClientId.
 - **AzureTenantId** - optional. guid. used in confidential and public client authentication if *not* using 'common'.
 
