@@ -371,7 +371,7 @@ namespace CollectSFData.Common
                     CommandOptionType.SingleValue);
 
             AzureResourceGroupLocation = CmdLineApp.Option("-loc|--azureResourceGroupLocation",
-                    "[string] azure resource group location / used for log analytics actions.",
+                    "[string] azure resource group location / used for MSAL and log analytics actions.",
                     CommandOptionType.SingleValue);
 
             AzureSubscriptionId = CmdLineApp.Option("-sub|--azureSubscriptionId",
