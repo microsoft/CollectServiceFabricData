@@ -31,8 +31,8 @@
         <dependency id="Microsoft.Azure.Storage.Common" version="11.1.0" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Azure.Storage.Queue" version="11.1.0" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Extensions.CommandLineUtils" version="1.1.1" exclude="Build,Analyzers" />
-        <dependency id="Azure.Identity" version="1.3.0" exclude="Build,Analyzers" />
-        <dependency id="Microsoft.Identity.Client.Extensions.Msal" version="2.18.0" exclude="Build,Analyzers" />
+        <dependency id="Azure.Identity" version="1.5.0" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.Identity.Client.Extensions.Msal" version="2.19.6" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Rest.ClientRuntime" version="2.3.20" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Rest.ClientRuntime.Azure" version="3.3.19" exclude="Build,Analyzers" />
         <dependency id="Newtonsoft.Json" version="11.0.2" exclude="Build,Analyzers" />
@@ -54,8 +54,8 @@
         <dependency id="Microsoft.Azure.Storage.Common" version="11.1.0" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Azure.Storage.Queue" version="11.1.0" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Extensions.CommandLineUtils" version="1.1.1" exclude="Build,Analyzers" />
-        <dependency id="Azure.Identity" version="1.3.0" exclude="Build,Analyzers" />
-        <dependency id="Microsoft.Identity.Client.Extensions.Msal" version="2.18.0" exclude="Build,Analyzers" />
+        <dependency id="Azure.Identity" version="1.5.0" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.Identity.Client.Extensions.Msal" version="2.19.6" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Rest.ClientRuntime" version="2.3.20" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Rest.ClientRuntime.Azure" version="3.3.19" exclude="Build,Analyzers" />
         <dependency id="Newtonsoft.Json" version="12.0.2" exclude="Build,Analyzers" />
@@ -77,8 +77,8 @@
         <dependency id="Microsoft.Azure.Storage.Common" version="11.1.0" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Azure.Storage.Queue" version="11.1.0" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Extensions.CommandLineUtils" version="1.1.1" exclude="Build,Analyzers" />
-        <dependency id="Azure.Identity" version="1.3.0" exclude="Build,Analyzers" />
-        <dependency id="Microsoft.Identity.Client.Extensions.Msal" version="2.18.0" exclude="Build,Analyzers" />
+        <dependency id="Azure.Identity" version="1.5.0" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.Identity.Client.Extensions.Msal" version="2.19.6" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Rest.ClientRuntime" version="2.3.20" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Rest.ClientRuntime.Azure" version="3.3.19" exclude="Build,Analyzers" />
         <dependency id="Newtonsoft.Json" version="12.0.2" exclude="Build,Analyzers" />
@@ -99,8 +99,8 @@
         <dependency id="Microsoft.Azure.Storage.Common" version="11.1.0" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Azure.Storage.Queue" version="11.1.0" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Extensions.CommandLineUtils" version="1.1.1" exclude="Build,Analyzers" />
-        <dependency id="Azure.Identity" version="1.3.0" exclude="Build,Analyzers" />
-        <dependency id="Microsoft.Identity.Client.Extensions.Msal" version="2.18.0" exclude="Build,Analyzers" />
+        <dependency id="Azure.Identity" version="1.5.0" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.Identity.Client.Extensions.Msal" version="2.19.6" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Rest.ClientRuntime" version="2.3.20" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Rest.ClientRuntime.Azure" version="3.3.19" exclude="Build,Analyzers" />
         <dependency id="Newtonsoft.Json" version="12.0.2" exclude="Build,Analyzers" />
