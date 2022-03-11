@@ -78,7 +78,7 @@
       "$id": "#/properties/AzureResourceGroupLocation",
       "type": "string",
       "title": "AzureResourceGroupLocation",
-      "description": "azure region for creation / recreation of Log Analytics Workspace",
+      "description": "azure MSAL region auth hint and azure region for creation / recreation of Log Analytics Workspace",
       "default": null,
       "examples": [
         null,
