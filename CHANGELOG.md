@@ -1,5 +1,9 @@
 # Change log
 
+## 03/22/2022
+
+- add explicit reference to microsoft.identity.client 4.42.0 for jarvis error
+
 ## 03/11/2022
 
 - modify AzureResourceManager.cs add MSAL ESTS .WithAzureRegion(_config.AzureResourceGroupLocation)
