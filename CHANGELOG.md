@@ -1,10 +1,23 @@
 # Change log
 
+## 03/22/2022
+
+- add explicit reference to microsoft.identity.client 4.42.0 for jarvis error
+
 ## 03/11/2022
 
 - modify AzureResourceManager.cs add MSAL ESTS .WithAzureRegion(_config.AzureResourceGroupLocation)
     - https://docs.microsoft.com/en-us/dotnet/api/microsoft.identity.client.confidentialclientapplicationbuilder.withazureregion?view=azure-dotnet
-
+    - LogDebug 5 msal azureregion verification:
+        
+        ```text
+        2022-03-11T11:04:48.9513010-05:00::6:MsalLoggerCallback:debug:Info False MSAL 4.42.0.0 MSAL.NetCore .NET 5.0.15 Microsoft Windows 10.0.22000
+        [2022-03-11 16:04:48Z - 4a216977-87ba-48b0-b9fc-8140d80a0acb] (CollectSFData: 0.0.0.0)
+        [Region discovery] Returning user provided region: eastus.
+        2022-03-11T11:04:48.9517230-05:00::6:MsalLoggerCallback:debug:Info False MSAL 4.42.0.0 MSAL.NetCore .NET 5.0.15 Microsoft Windows 10.0.22000
+        [2022-03-11 16:04:48Z - 4a216977-87ba-48b0-b9fc-8140d80a0acb] (CollectSFData: 0.0.0.0)
+        [Region discovery] Regionalized Environment is : eastus.r.login.microsoftonline.com. 
+        ```
 ## 11/16/2021  https://github.com/microsoft/CollectServiceFabricData/releases/tag/v2.9.2111.11617
 
 - fixes for breaking changes in authentication disallowing use of wellknown 195 guid. utility now requires an azure app registration 'clientid' to be specified for azure / kusto authentication. app registration needs to be added as a principal to kusto database. 
