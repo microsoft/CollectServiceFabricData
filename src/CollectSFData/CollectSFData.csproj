@@ -91,7 +91,7 @@
     <PackageReference Include="Microsoft.Azure.KeyVault.Core">
       <Version>3.0.4</Version>
     </PackageReference>
-        <PackageReference Include="Microsoft.Azure.Services.AppAuthentication">
+    <PackageReference Include="Microsoft.Azure.Services.AppAuthentication">
       <Version>1.6.1</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.Azure.Storage.Blob">
@@ -108,6 +108,9 @@
     </PackageReference>
     <PackageReference Include="Azure.Identity">
       <Version>1.5.0</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Identity.Client">
+      <Version>4.42.0</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.Identity.Client.Extensions.Msal">
       <Version>2.19.6</Version>
