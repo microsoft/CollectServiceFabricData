@@ -23,10 +23,11 @@ namespace CollectSFData.Azure
     public class AzureResourceManager
     {
         private const string _attemptRegionDiscovery = "TryAutoDetect";
+        public const string DefaultScope = ".default";
         private string _commonTenantId = "common";
         private IConfidentialClientApplication _confidentialClientApp;
         private ConfigurationOptions _config;
-        private List<string> _defaultScope = new List<string>() { ".default" };
+        private List<string> _defaultScope = new List<string>() { DefaultScope };
         private string _getSubscriptionRestUri = Constants.ManagementAzureCom + "/subscriptions/{subscriptionId}?api-version=2016-06-01";
         private Http _httpClient = Http.ClientFactory();
         private string _listSubscriptionsRestUri = Constants.ManagementAzureCom + "/subscriptions?api-version=2016-06-01";
@@ -237,7 +238,7 @@ namespace CollectSFData.Azure
                 .WithCertificate(clientCertificate)
                 .WithAzureRegion(string.IsNullOrEmpty(_config.AzureResourceGroupLocation) ? _attemptRegionDiscovery : _config.AzureResourceGroupLocation)
                 .Build();
-            AddClientScopes(true);
+            AcquireConfidentialClientToken(true);
         }
 
         public void CreateConfidentialClient(string resource, string secret)
@@ -258,7 +259,7 @@ namespace CollectSFData.Azure
                .WithAzureRegion(string.IsNullOrEmpty(_config.AzureResourceGroupLocation) ? _attemptRegionDiscovery : _config.AzureResourceGroupLocation)
                .Build();
 
-            AddClientScopes();
+            AcquireConfidentialClientToken();
         }
 
         public void CreateConfidentialManagedIdentityClient(string resource)
@@ -478,13 +479,13 @@ namespace CollectSFData.Azure
             }
         }
 
-        private void AddClientScopes(bool sendX5C = false)
+        private void AcquireConfidentialClientToken(bool sendX5C = false)
         {
+            // confidential client requires default scope 
             if (Scopes.Count < 1)
             {
                 Scopes = _defaultScope;
             }
-
             TokenCacheHelper.EnableSerialization(_confidentialClientApp.AppTokenCache);
 
             foreach (string scope in Scopes)
