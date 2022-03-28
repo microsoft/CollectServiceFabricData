@@ -98,7 +98,16 @@ namespace CollectSFData.Kusto
 
         public void Authenticate(bool throwOnError = false)
         {
-            _arm.Scopes = new List<string>() { $"{ClusterIngestUrl}/user_impersonation" };
+            _arm.Scopes = new List<string>();
+
+            if(_config.IsClientIdConfigured())
+            {
+                _arm.Scopes.Add($"{ClusterIngestUrl}/{AzureResourceManager.DefaultScope}");
+            }
+            else
+            {
+                _arm.Scopes.Add($"{ClusterIngestUrl}/user_impersonation");
+            }
 
             if (_config.IsKustoConfigured() && _arm.Authenticate(throwOnError, ClusterIngestUrl))
             {
