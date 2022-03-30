@@ -23,11 +23,10 @@ namespace CollectSFData.Azure
     public class AzureResourceManager
     {
         private const string _attemptRegionDiscovery = "TryAutoDetect";
-        public const string DefaultScope = ".default";
         private string _commonTenantId = "common";
         private IConfidentialClientApplication _confidentialClientApp;
         private ConfigurationOptions _config;
-        private List<string> _defaultScope = new List<string>() { DefaultScope };
+        private List<string> _defaultScope = new List<string>() { ".default" };
         private string _getSubscriptionRestUri = Constants.ManagementAzureCom + "/subscriptions/{subscriptionId}?api-version=2016-06-01";
         private Http _httpClient = Http.ClientFactory();
         private string _listSubscriptionsRestUri = Constants.ManagementAzureCom + "/subscriptions?api-version=2016-06-01";
