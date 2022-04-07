@@ -9,16 +9,16 @@
             "request": "launch",
             "browser": "edge",
             "type": "blazorwasm",
-            //"program": "${workspaceFolder}src/CollectSFDataGui/Client/bin/Debug/net5.0/CollectSFData.exe",
-            "program": "${workspaceFolder}src/CollectSFDataGui/Client/bin/Debug/net5.0/CollectSFDataGui.Client.dll",
-            "cwd": "${workspaceFolder}/src/CollectSFDataGui/Client/bin/Debug/net5.0"
+            //"program": "${workspaceFolder}src/CollectSFDataGui/Client/bin/Debug/net6.0/CollectSFData.exe",
+            "program": "${workspaceFolder}src/CollectSFDataGui/Client/bin/Debug/net6.0/CollectSFDataGui.Client.dll",
+            "cwd": "${workspaceFolder}/src/CollectSFDataGui/Client/bin/Debug/net6.0"
         },
         {
             "name": "Attach to Edge",
             "port": 5000,
             "request": "attach",
             "type": "pwa-msedge",
-            "webRoot": "${workspaceFolder}/src/CollectSFDataGui/bin/Debug/net5.0/wwwroot"
+            "webRoot": "${workspaceFolder}/src/CollectSFDataGui/bin/Debug/net6.0/wwwroot"
         },
         {
             "name": ".NET Core Launch (web)",
@@ -26,7 +26,7 @@
             "request": "launch",
             "justMyCode": false,
             "preLaunchTask": "build",
-            "program": "${workspaceFolder}/src/CollectSFDataGui/bin/Debug/net5.0/wwwroot/_framework/CollectSFDataGui.dll",
+            "program": "${workspaceFolder}/src/CollectSFDataGui/bin/Debug/net6.0/wwwroot/_framework/CollectSFDataGui.dll",
             "args": [],
             "cwd": "${workspaceFolder}",
             "stopAtEntry": false,
@@ -70,9 +70,9 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceFolder}/src/bin/Debug/net5.0/CollectSFData.dll",
+            "program": "${workspaceFolder}/src/bin/Debug/net6.0/CollectSFData.dll",
             "args": [],
-            "cwd": "${workspaceFolder}/src/bin/Debug/net5.0",
+            "cwd": "${workspaceFolder}/src/bin/Debug/net6.0",
             "console": "internalConsole",
             "stopAtEntry": false
         },
