@@ -1,4 +1,4 @@
-![](./CollectSFData/FabricSupport.ico)
+![](./src/FabricSupport.ico)
 
 # CollectSFData
 
