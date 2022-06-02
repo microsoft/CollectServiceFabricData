@@ -45,7 +45,7 @@
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageIcon>images\FabricSupport.png</PackageIcon>
-    <PackageIconUrl>http://raw.githubusercontent.com/microsoft/CollectServiceFabricData/master/CollectSFData/FabricSupport.ico</PackageIconUrl>
+    <PackageIconUrl>http://raw.githubusercontent.com/microsoft/CollectServiceFabricData/master/src/FabricSupport.ico</PackageIconUrl>
     <PackageReleaseNotes></PackageReleaseNotes>
     <PackageTags>servicefabric</PackageTags>
     <NuspecProperties>configuration=$(Configuration);version=$(Version)</NuspecProperties>

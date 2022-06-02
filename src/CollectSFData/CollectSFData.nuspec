@@ -10,7 +10,7 @@
     </owners>
     <license type="expression">MIT</license>
     <projectUrl>https://github.com/microsoft/CollectServiceFabricData</projectUrl>
-    <iconUrl>http://raw.githubusercontent.com/microsoft/CollectServiceFabricData/master/CollectSFData/FabricSupport.ico</iconUrl>
+    <iconUrl>http://raw.githubusercontent.com/microsoft/CollectServiceFabricData/master/src/FabricSupport.ico</iconUrl>
     <icon>images\FabricSupport.png</icon>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>.net framework / .net core console utility / dll to manage service fabric support logs.</description>
