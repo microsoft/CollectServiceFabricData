@@ -11,8 +11,8 @@ if(!(test-path $module)){
 
 import-module $module
 write-host "$collectsfdataOptionsFile"
-$validate = $true; #$false; # $true
-$loadDefaultConfig = $true; #$true; #$false
+$validate = $true; #$true; #$false; # $true
+$loadDefaultConfig = $false; #$true; #$true; #$false
 $logToConsole = $true
 
 write-host "[CollectSFData.Collector]`$global:csfd = [CollectSFData.Collector]::new($logToConsole)"
