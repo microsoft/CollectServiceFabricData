@@ -141,10 +141,8 @@ namespace CollectSFData
         {
             _noProgressCounter = 0;
             _noProgressTimer = new Timer(NoProgressCallback, null, 0, 60 * 1000);
-
-            Log.Open();
-
             Instance.Initialize(configurationOptions);
+
             Log.Last($"version: {Config.Version}");
 
             if ((Config.NeedsValidation && !Config.Validate()) | !Config.IsValid)
