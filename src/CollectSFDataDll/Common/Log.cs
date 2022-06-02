@@ -75,6 +75,7 @@ namespace CollectSFData.Common
             {
                 if (_isRunning)
                 {
+                    _isRunning = false;
                     _messageList.AddRange(_lastMessageList);
                     _lastMessageList.Clear();
 
@@ -86,8 +87,6 @@ namespace CollectSFData.Common
                     {
                         _taskWriter.Wait(Constants.ThreadSleepMs1000);
                     }
-
-                    _isRunning = false;
                 }
             }
             catch (TaskCanceledException) { }
@@ -250,6 +249,7 @@ namespace CollectSFData.Common
             _streamWriter?.Flush();
             _streamWriter?.Close();
             _streamWriter = null;
+            _isRunning = false;
         }
 
         private static void Log_JsonErrorHandler(object sender, Newtonsoft.Json.Serialization.ErrorEventArgs e)
