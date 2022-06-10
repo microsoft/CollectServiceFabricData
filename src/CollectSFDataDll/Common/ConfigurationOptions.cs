@@ -129,6 +129,31 @@ namespace CollectSFData.Common
             }
         }
 
+        public void CheckPublicIp()
+        {
+            Http http = Http.ClientFactory();
+            http.DisplayError = false;
+            JToken ipAddress = null;
+
+            try
+            {
+                if (http.CheckConnectivity(Constants.PublicIpUrl) && http.SendRequest(uri: Constants.PublicIpUrl))
+                {
+                    ipAddress = http.ResponseStreamJson.SelectToken("ip");
+                }
+
+                string response = $"for storage authentication errors, add public ip address to nsg / storage firewall: {ipAddress}";
+                Log.Highlight(response);
+                Log.Last(response);
+                return;
+            }
+            catch (Exception e)
+            {
+                Log.Exception($"unable to query for public ip:{e}");
+                return;
+            }
+        }
+
         public void CheckReleaseVersion()
         {
             string response = $"\r\n\tlocal running version: {Version}";
@@ -140,8 +165,7 @@ namespace CollectSFData.Common
 
             try
             {
-                if (http.SendRequest(uri: Constants.CodeLatestRelease, headers: headers, httpMethod: HttpMethod.Head)
-                     && http.SendRequest(uri: Constants.CodeLatestRelease, headers: headers))
+                if (http.CheckConnectivity(Constants.CodeLatestRelease) && http.SendRequest(uri: Constants.CodeLatestRelease, headers: headers))
                 {
                     JToken downloadUrl = http.ResponseStreamJson.SelectToken("assets[0].browser_download_url");
                     JToken downloadVersion = http.ResponseStreamJson.SelectToken("tag_name");
@@ -159,6 +183,7 @@ namespace CollectSFData.Common
                     }
                 }
 
+                Log.Info(response);
                 Log.Last(response);
             }
             catch
@@ -642,7 +667,7 @@ namespace CollectSFData.Common
             {
                 if (clientIdConfigured && HasValue(AzureClientCertificate) && !HasValue(ClientCertificate))
                 {
-                    if(HasValue(AzureClientSecret))
+                    if (HasValue(AzureClientSecret))
                     {
                         certificateUtilities.SetSecurePassword(AzureClientSecret);
                     }
