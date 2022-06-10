@@ -28,6 +28,7 @@ namespace CollectSFData.Common
         public const string EtwManifestExtension = ".man";
         public const string EtwManifestsUrl = "https://raw.githubusercontent.com/microsoft/CollectServiceFabricData/master/manifests";
         public const string FalseStringPattern = @"(false|0|off|null)";
+        public const string InstanceMetaDataRestUri = "http://169.254.169.254/metadata/instance?api-version=2017-08-01";
         public const string JsonExtension = ".json";
         public const string KustoUrlPattern = "https://(?<ingest>ingest-){1}(?<clusterName>.+?)\\.(?<location>.+?){0,1}\\.(?<domainName>.+?)/(?<databaseName>.+?){1}(/|$)";
         public const string ManagementAzureCom = "https://management.azure.com";
@@ -39,6 +40,7 @@ namespace CollectSFData.Common
         public const int MinThreadMultiplier = 10;
         public const string PerfCsvExtension = ".perf.csv";
         public const string PerfCtrExtension = ".blg";
+        public const string PublicIpUrl = "https://ipinfo.io/json";
         public const int RetryCount = 10;
         public const string SchemaFile = "https://raw.githubusercontent.com/microsoft/CollectServiceFabricData/master/configurationFiles/collectsfdata.schema.json";
         public const string SetupExtension = ".trace";

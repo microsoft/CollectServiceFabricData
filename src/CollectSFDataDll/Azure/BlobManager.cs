@@ -60,6 +60,7 @@ namespace CollectSFData.Azure
             }
             catch (Exception e)
             {
+                _config.CheckPublicIp();
                 Log.Exception($"{e}");
                 return false;
             }
