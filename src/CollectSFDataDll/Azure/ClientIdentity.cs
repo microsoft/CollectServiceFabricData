@@ -68,7 +68,7 @@ namespace CollectSFData.Azure
                     IAsyncResult asyncResult = client.BeginConnect(hostUri, portNumber, null, null);
                     using(asyncResult.AsyncWaitHandle)
                     {
-                        if(!asyncResult.AsyncWaitHandle.WaitOne(Constants.ThreadSleepMs100, false))
+                        if(!asyncResult.AsyncWaitHandle.WaitOne(Constants.ThreadSleepMs1000, false) | !client.Connected)
                         {
                             Log.Debug($"timed out ({Constants.ThreadSleepMs100}ms) pinging host:{hostUri}:{portNumber}");
                             return false;
