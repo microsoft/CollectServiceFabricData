@@ -1,3 +1,7 @@
+<#
+requires .net sdk 6
+requires pwsh
+#>
 param(
     [string]$module = (resolve-path "$psscriptroot/../src/bin/debug/net6.0/collectsfdatadll.dll"),
     [string]$collectsfdataOptionsFile = (resolve-path "$psscriptroot/../src/bin/debug/net6.0/collectsfdata.options.json")
@@ -22,6 +26,6 @@ write-host "[CollectSFData.Common.ConfigurationOptions]`$global:config = [Collec
 [CollectSFData.Common.ConfigurationOptions]$global:config = [CollectSFData.Common.ConfigurationOptions]::new(@($collectsfdataOptionsFile), $validate, $loadDefaultConfig)
 $global:csfd
 
-write-host "`$csfd.Collect($config)"
-$csfd.Collect($config)
+write-host "execute:`$csfd.Collect($config) when ready to collect"
+#$csfd.Collect($config)
 write-host "use `$global:csfd"
