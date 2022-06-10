@@ -13,8 +13,6 @@ namespace CollectSFData.Azure
 {
     public class ClientIdentity
     {
-        private static string _instanceMetaDataRestIp = "169.254.169.254";
-        private static string _instanceMetaDataRestUri = $"http://{_instanceMetaDataRestIp}/metadata/instance?api-version=2017-08-01";
         private static bool _isManagedIdentity;
         private static bool _instanceMetaDataEndpointChecked;
         private ConfigurationOptions _config;
@@ -56,44 +54,13 @@ namespace CollectSFData.Azure
             return defaultCredential;
         }
 
-        public bool CheckInstanceMetaDataEndpoint()
-        {
-            string hostUri = _instanceMetaDataRestIp;
-            int portNumber = _instanceMetaDataRestUri.ToLower().StartsWith("https:") ? 443 : 80;
-
-            try
-            {
-                using (TcpClient client = new TcpClient())
-                {
-                    IAsyncResult asyncResult = client.BeginConnect(hostUri, portNumber, null, null);
-                    using(asyncResult.AsyncWaitHandle)
-                    {
-                        if(!asyncResult.AsyncWaitHandle.WaitOne(Constants.ThreadSleepMs1000, false) | !client.Connected)
-                        {
-                            Log.Debug($"timed out ({Constants.ThreadSleepMs100}ms) pinging host:{hostUri}:{portNumber}");
-                            return false;
-                        }
-                    }
-
-                    Log.Info($"successful pinging host:{hostUri}:{portNumber}", ConsoleColor.Green);
-                    return true;
-                }
-            }
-            catch (SocketException e)
-            {
-                Log.Info($"error pinging host:{hostUri}:{portNumber}");
-                Log.Debug($"error pinging host:{hostUri}:{portNumber}\r\n{e}");
-                return false;
-            }
-        }
-
         public bool IsManagedIdentity(string managedClientId = null)
         {
             if (!_instanceMetaDataEndpointChecked)
             {
                 _instanceMetaDataEndpointChecked = true;
 
-                if (CheckInstanceMetaDataEndpoint())
+                if (Http.ClientFactory().CheckConnectivity(Constants.InstanceMetaDataRestUri))
                 {
                     _isManagedIdentity = GetManagedIdentity(managedClientId);
                 }
