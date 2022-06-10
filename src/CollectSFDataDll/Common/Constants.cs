@@ -39,6 +39,7 @@ namespace CollectSFData.Common
         public const int MinThreadMultiplier = 10;
         public const string PerfCsvExtension = ".perf.csv";
         public const string PerfCtrExtension = ".blg";
+        public const string PublicIpUrl = "https://ipinfo.io/json";
         public const int RetryCount = 10;
         public const string SchemaFile = "https://raw.githubusercontent.com/microsoft/CollectServiceFabricData/master/configurationFiles/collectsfdata.schema.json";
         public const string SetupExtension = ".trace";
