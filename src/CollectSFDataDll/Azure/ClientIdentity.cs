@@ -2,12 +2,6 @@
 using Azure.Identity;
 using CollectSFData.Common;
 using System;
-using System.Collections.Generic;
-using System.Net;
-using System.Net.NetworkInformation;
-using System.Net.Http;
-using System.Text;
-using System.Net.Sockets;
 
 namespace CollectSFData.Azure
 {
