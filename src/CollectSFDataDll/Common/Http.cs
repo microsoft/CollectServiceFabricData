@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 
@@ -45,6 +46,38 @@ namespace CollectSFData.Common
         public static Http ClientFactory()
         {
             return new Http();
+        }
+
+        public bool CheckConnectivity(string uri)
+        {
+            try
+            {
+                Uri uriType = new Uri(uri);
+                string host = uriType.Host;
+                int portNumber =uriType.Port;
+
+                using (TcpClient client = new TcpClient())
+                {
+                    IAsyncResult asyncResult = client.BeginConnect(host, portNumber, null, null);
+                    using(asyncResult.AsyncWaitHandle)
+                    {
+                        if(!asyncResult.AsyncWaitHandle.WaitOne(Constants.ThreadSleepMs1000, false) | !client.Connected)
+                        {
+                            Log.Debug($"timed out ({Constants.ThreadSleepMs100}ms) pinging host:{host}:{portNumber}");
+                            return false;
+                        }
+                    }
+
+                    Log.Info($"successful pinging host:{host}:{portNumber}", ConsoleColor.Green);
+                    return true;
+                }
+            }
+            catch (SocketException e)
+            {
+                Log.Info($"error pinging host:{uri}");
+                Log.Debug($"error pinging host:{uri}\r\n{e}");
+                return false;
+            }
         }
 
         public bool SendRequest(
