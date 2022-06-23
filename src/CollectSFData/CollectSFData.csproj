@@ -69,12 +69,12 @@
   </Target>
   <!-- dotnet build will not include ref project references for .netcoreapp3.1 unless references are duplicated here -->
   <ItemGroup Condition=" '$(TargetFramework)' == 'net462'">
-    <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageReference Include="Microsoft.Azure.Kusto.Data" Version="7.1.1" />
     <PackageReference Include="Microsoft.Azure.Kusto.Ingest" Version="7.1.1" />
   </ItemGroup>
   <ItemGroup Condition=" '$(TargetFramework)' != 'net462'">
-    <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageReference Include="Microsoft.Azure.Kusto.Data" Version="8.0.1" />
     <PackageReference Include="Microsoft.Azure.Kusto.Ingest" Version="8.0.1" />
   </ItemGroup>
