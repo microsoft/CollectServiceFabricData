@@ -234,5 +234,8 @@
         TypeAndTextContains(T, "cert issue", "InfrastructureService.ClusterCommandProcessor", "CreateOperationStatusAsync: Exception encountered: System.Fabric.FabricServerAuthenticationFailedException"),
         TypeAndTextContains(T, "tcp port exhaustion. see https://docs.microsoft.com/en-us/troubleshoot/windows-client/networking/connect-tcp-greater-than-5000-error-wsaenobufs-10055", "Transport.Tcp@", "WSAENOBUFS"),
         TypeAndTextContains(T, "possible desktop heap issue. dll init failed", "Hosting.ProcessActivationManager", "3221225794"),
-        TypeAndTextContains(T, "if FM not available, possible vmss-sf resource instance count mismatch", "FMM.Report", "FM service not created because cluster is below expected size")
+        TypeAndTextContains(T, "if FM not available, possible vmss-sf resource instance count mismatch", "FMM.Report", "FM service not created because cluster is below expected size"),
+        TypeAndTextContains(T, "possible unsecure cluster (http://)", "Hosting.CertificateAclingManager", "Can't find anonymous certificate. ErrorCode: E_FAIL"),
+        TypeAndTextContains(T, "possible unsecure cluster (http://)", "Hosting.CertificateAclingManager", "Error at AclAnonymousCertificate, ErrorCode E_FAIL"),
+        TypeAndTextContains(T, "possible unsecure cluster (http://)", "Common.CryptoUtility", "Can't get private key filename for certificate. Error: 0x80090014")
     }
