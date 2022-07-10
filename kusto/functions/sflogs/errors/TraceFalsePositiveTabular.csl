@@ -1,4 +1,4 @@
-.create-or-alter function with (docstring = "[T:string] where T=sf log table. function to create FalsePositives column by searching service fabric sflogs for false warning / error traces", folder = "sflogs/errors")
+.create-or-alter function with (docstring = "[T:string] where T=sf log table. function to create FalsePositives column by searching service fabric sflogs for false warning / error traces",folder = "sflogs/errors")
     TraceFalsePositiveTabular(T:(Timestamp:datetime,Level:string,TID:int,PID:int,Type:string,Text:string,NodeName:string,FileType:string,RelativeUri:string)) {
         // search Type And Text column using string contains
         let TypeAndTextContains = (tableName:(Type:string,Text:string,FalsePositive:bool,Reason:string), issue:string, typeQuery:string, textQuery:string) {
@@ -121,4 +121,8 @@
             | invoke TypeAndTextContains("not an error if BRS not installed", "HttpGateway.ApplicationsHandler", "PerformBackupRestoreOperation EndProcessRequest failed with FABRIC_E_SERVICE_DOES_NOT_EXIST")
             | invoke TypeAndTextMatches("not an error if BRS not installed", "ReverseProxy.ProcessRequestErrorPreSend", "Error while processing request.+(/BackupRestore/BackupPolicies|GetBackupConfigurationInfo).+FABRIC_E_SERVICE_DOES_NOT_EXIST")
             | invoke TypeAndTextContains("not critical error if dca cant parse etw.", "FabricDCA.TelemetryEtwSink", "Failed to get all the fields of event of type")
+            | invoke TypeAndTextContains("normal cert resolving trace", "Hosting.CertificateAclingManager", "Can't find anonymous certificate. ErrorCode: E_FAIL")
+            | invoke TypeAndTextContains("normal cert resolving trace", "Hosting.CertificateAclingManager", "Error at AclAnonymousCertificate, ErrorCode E_FAIL")
+            | invoke TypeAndTextContains("normal cert resolving trace", "Common.CryptoUtility", "Can't get private key filename for certificate. Error: 0x80090014")
+            | invoke TypeAndTextContains("error by design. ignore.", "FileStoreService.StoreTransactionAsyncOperation", "StoreOperation: Error:FABRIC_E_FILE_NOT_FOUND, DeleteAction can't find a file. Error is by design. Ignore this error.")
     }
