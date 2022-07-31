@@ -179,8 +179,7 @@ namespace CollectSFData
 
                 if (!string.IsNullOrEmpty(clusterId))
                 {
-                    // 's-' in prefix may not always be correct
-                    containerPrefix += "s-" + clusterId;
+                    containerPrefix += "-" + clusterId;
                 }
 
                 tablePrefix = containerPrefix + clusterId?.Replace("-", "");
@@ -466,6 +465,11 @@ namespace CollectSFData
                         {
                             files = Directory.GetFiles(Config.CacheLocation, $"*{Constants.EtlExtension}", SearchOption.AllDirectories).ToList();
                         }
+
+                        break;
+                    
+                    case FileTypesEnum.sfextlog:
+                        files = Directory.GetFiles(Config.CacheLocation, $"*{Constants.LogExtension}", SearchOption.AllDirectories).ToList();
 
                         break;
 
