@@ -61,7 +61,7 @@
         <dependency id="Microsoft.Identity.Client.Extensions.Msal" version="2.19.6" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Rest.ClientRuntime" version="2.3.20" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Rest.ClientRuntime.Azure" version="3.3.19" exclude="Build,Analyzers" />
-        <dependency id="Newtonsoft.Json" version="12.0.2" exclude="Build,Analyzers" />
+        <dependency id="Newtonsoft.Json" version="13.0.1" exclude="Build,Analyzers" />
         <dependency id="System.CodeDom" version="4.7.0" exclude="Build,Analyzers" />
         <dependency id="System.Data.SqlClient" version="4.8.2" exclude="Build,Analyzers" />
         <dependency id="System.Diagnostics.DiagnosticSource" version="4.6.0" exclude="Build,Analyzers" />
@@ -86,7 +86,7 @@
         <dependency id="Microsoft.Identity.Client.Extensions.Msal" version="2.19.6" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Rest.ClientRuntime" version="2.3.20" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Rest.ClientRuntime.Azure" version="3.3.19" exclude="Build,Analyzers" />
-        <dependency id="Newtonsoft.Json" version="12.0.2" exclude="Build,Analyzers" />
+        <dependency id="Newtonsoft.Json" version="13.0.1" exclude="Build,Analyzers" />
         <dependency id="System.CodeDom" version="4.7.0" exclude="Build,Analyzers" />
         <dependency id="System.Data.SqlClient" version="4.8.2" exclude="Build,Analyzers" />
         <dependency id="System.Diagnostics.DiagnosticSource" version="4.6.0" exclude="Build,Analyzers" />
@@ -110,7 +110,7 @@
         <dependency id="Microsoft.Identity.Client.Extensions.Msal" version="2.19.6" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Rest.ClientRuntime" version="2.3.20" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Rest.ClientRuntime.Azure" version="3.3.19" exclude="Build,Analyzers" />
-        <dependency id="Newtonsoft.Json" version="12.0.2" exclude="Build,Analyzers" />
+        <dependency id="Newtonsoft.Json" version="13.0.1" exclude="Build,Analyzers" />
         <dependency id="System.CodeDom" version="4.7.0" exclude="Build,Analyzers" />
         <dependency id="System.Data.SqlClient" version="4.8.2" exclude="Build,Analyzers" />
         <dependency id="System.Diagnostics.DiagnosticSource" version="4.6.0" exclude="Build,Analyzers" />
