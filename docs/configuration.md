@@ -50,6 +50,7 @@ Options:
                                         counter
                                         trace
                                         exception
+                                        sfextlog
                                         table
                                         setup
                                         any
@@ -128,6 +129,8 @@ To use a default configuration file without having to specify on the command lin
 - **GatherType** - required. string. options: counter, exception, table, trace, any
   - **counter** - 'counter' will enumerate service fabric performance counter (.blg) blobs from 'fabriccounters*' container.
   - **exception** - 'exception' will enumerate service fabric fabric crash dumps (.dmp) blobs from 'fabriccrashdumps*' container.
+  - **setup** - 'setup' will enumerate service fabric fabric deployer setup (.trace) blobs from 'fabriclogs*' container.
+  - **sfextlog** - 'sfextlog' will enumerate managed service fabric node extension logs (.log) blobs from 'vmextlog*' container.
   - **table** - 'table' will enumerate service fabric events from blob tables 'fabriclogs*'
   - **trace** - 'trace' will enumerate service fabric diagnostic logs (.dtr) zip blobs from 'fabriclogs*'
   - **any** - 'any' without other filters will enumerate all containers for blobs matching criteria.
@@ -303,7 +306,7 @@ user managed identity: 3080722d-0cf6-4552-8e45-c5ccbc3d091f
 {
   "ContainerFilter": "",
   "DeleteCache": true,
-  "GatherType": "[counter|exception|trace|table|any]",
+  "GatherType": "[counter|exception|setup|sfextlog|trace|table|any]",
   "LogDebug": 4,
   "CacheLocation": "<%fast drive path with 100 GB free%>",
   "SasKey": "[account sas uri|service sas uri|sas uri connection string]",
@@ -321,7 +324,7 @@ user managed identity: 3080722d-0cf6-4552-8e45-c5ccbc3d091f
 {
   "ContainerFilter": "",
   "DeleteCache": true,
-  "GatherType": "[counter|exception|trace|table|any]",
+  "GatherType": "[counter|exception|setup|sfextlog|trace|table|any]",
   "LogDebug": 4,
   "CacheLocation": "<%fast drive path with 100 GB free%>",
   "SasKey": "[account sas uri|service sas uri|sas uri connection string]",
@@ -342,7 +345,7 @@ user managed identity: 3080722d-0cf6-4552-8e45-c5ccbc3d091f
 {
   "ContainerFilter": "",
   "DeleteCache": true,
-  "GatherType": "[counter|exception|trace|table|any]",
+  "GatherType": "[counter|exception|setup|sfextlog|trace|table|any]",
   "LogDebug": 4,
   "CacheLocation": "<%fast drive path with 100 GB free%>",
   "SasKey": "[account sas uri|service sas uri|sas uri connection string]",

@@ -223,6 +223,20 @@ namespace CollectSFData.DataFile
             return PopulateCollection<CsvExceptionRecord>(fileObject);
         }
 
+        public FileObjectCollection FormatExtensionFile(FileObject fileObject)
+        {
+            return FormatLogFile<LogExtensionRecord>(fileObject);
+        }
+
+        public FileObjectCollection FormatLogFile<T>(FileObject fileObject) where T : ITraceRecord, new()
+        {
+            Log.Debug($"enter:{fileObject.FileUri}");
+            // handles sfextlog file format
+            // [3104:5] 2022-07-29T14:37:47.147:637947022671478520 [INFO] HandlerHeartbeatWriter - Heartbeat: Ready: New .settings configuration found version 1. Applying config...
+            string newEventPattern = @"^\[\d+:\d+\] [0-9]{2,4}(-|/)[0-9]{1,2}(-|/)[0-9]{1,2}(-|T)[0-9]{1,2}:[0-9]{1,2}:[0-9]{1,2}\.[0-9]{1,3}";
+            return FormatRecord<T>(fileObject, newEventPattern);
+        }
+
         public FileObjectCollection FormatSetupFile(FileObject fileObject)
         {
             return FormatTraceFile<CsvSetupRecord>(fileObject);
@@ -237,47 +251,9 @@ namespace CollectSFData.DataFile
         public FileObjectCollection FormatTraceFile<T>(FileObject fileObject) where T : ITraceRecord, new()
         {
             Log.Debug($"enter:{fileObject.FileUri}");
-            IList<IRecord> records = new List<IRecord>();
             // handles dtr, setup, and deployer file timestamp formats
             string newEventPattern = @"^[0-9]{2,4}(-|/)[0-9]{1,2}(-|/)[0-9]{1,2}(-| )[0-9]{1,2}:[0-9]{1,2}:[0-9]{1,2}";
-            Regex regex = new Regex(newEventPattern, RegexOptions.Compiled);
-            string record = string.Empty;
-
-            try
-            {
-                foreach (string tempLine in fileObject.Stream.ReadLine())
-                {
-                    if (regex.IsMatch(tempLine))
-                    {
-                        // new record, write old record
-                        if (record.Length > 0)
-                        {
-                            records.Add(new T().Populate(fileObject, record, _config.ResourceUri));
-                        }
-
-                        record = string.Empty;
-                    }
-
-                    record += tempLine;
-                }
-
-                // last record
-                if (record.Length > 0)
-                {
-                    records.Add(new T().Populate(fileObject, record, _config.ResourceUri));
-                }
-
-                Log.Debug($"finished format:{fileObject.FileUri}");
-
-                fileObject.Stream.ResetPosition();
-                fileObject.Stream.Write(records);
-                return PopulateCollection<T>(fileObject);
-            }
-            catch (Exception e)
-            {
-                Log.Exception($"file:{fileObject.FileUri} exception:{e}");
-                return new FileObjectCollection() { fileObject };
-            }
+            return FormatRecord<T>(fileObject, newEventPattern);
         }
 
         public FileObjectCollection PopulateCollection<T>(FileObject fileObject) where T : IRecord
@@ -409,6 +385,14 @@ namespace CollectSFData.DataFile
                             return FormatTableFile(fileObject);
                         }
 
+                        break;
+                    }
+                case FileDataTypesEnum.sfextlog:
+                    {
+                        if (fileObject.FileExtensionType.Equals(FileExtensionTypesEnum.log))
+                        {
+                            return FormatExtensionFile(fileObject);
+                        }
                         break;
                     }
                 default:
@@ -735,6 +719,49 @@ namespace CollectSFData.DataFile
             Log.Info($"records: {traceSession.Records.Count()} {csvRecords.Count}");
             traceSession.Dispose();
             return true;
+        }
+
+        private FileObjectCollection FormatRecord<T>(FileObject fileObject, string newEventPattern) where T : ITraceRecord, new()
+        {
+            IList<IRecord> records = new List<IRecord>();
+            Regex regex = new Regex(newEventPattern, RegexOptions.Compiled);
+            string record = string.Empty;
+
+            try
+            {
+                foreach (string tempLine in fileObject.Stream.ReadLine())
+                {
+                    if (regex.IsMatch(tempLine))
+                    {
+                        // new record, write old record
+                        if (record.Length > 0)
+                        {
+                            records.Add(new T().Populate(fileObject, record, _config.ResourceUri));
+                        }
+
+                        record = string.Empty;
+                    }
+
+                    record += tempLine;
+                }
+
+                // last record
+                if (record.Length > 0)
+                {
+                    records.Add(new T().Populate(fileObject, record, _config.ResourceUri));
+                }
+
+                Log.Debug($"finished format:{fileObject.FileUri}");
+
+                fileObject.Stream.ResetPosition();
+                fileObject.Stream.Write(records);
+                return PopulateCollection<T>(fileObject);
+            }
+            catch (Exception e)
+            {
+                Log.Exception($"file:{fileObject.FileUri} exception:{e}");
+                return new FileObjectCollection() { fileObject };
+            }
         }
     }
 }
