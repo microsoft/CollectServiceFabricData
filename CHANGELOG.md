@@ -1,5 +1,16 @@
 # Change log
 
+## 7/31/2022
+
+- fix issue where trace file was wrongly excluded. file was in specified time range by ticks in file name, but last modified date is outside of time range.
+- update all .net versions for newtonsoft.json from 11.0.2 -> 13.0.1 due to security vulnerability
+
+
+## 7/1/2022 
+
+- update newtonsoft.json from 11.0.2 -> 13.0.1 due to security vulnerability
+- remove CollectSFDataGui references from project
+
 ## 03/22/2022
 
 - add explicit reference to microsoft.identity.client 4.42.0 for jarvis error
