@@ -353,6 +353,7 @@ namespace CollectSFData.Azure
             Log.Debug($"enter. current id:{parentId}. results count: {blobResults.Count()}");
             long segmentMinDateTicks = _instance.DiscoveredMinDateTicks;
             long segmentMaxDateTicks = _instance.DiscoveredMaxDateTicks;
+            bool regexUriTicksMatch = false;
 
             foreach (IListBlobItem blob in blobResults)
             {
@@ -386,6 +387,10 @@ namespace CollectSFData.Azure
                         _instance.SetMinMaxDate(ticks);
                         continue;
                     }
+                    else 
+                    {
+                        regexUriTicksMatch = true;
+                    }
                 }
                 else
                 {
@@ -404,7 +409,7 @@ namespace CollectSFData.Azure
                     continue;
                 }
 
-                if (blobRef.Properties.LastModified.HasValue)
+                if (regexUriTicksMatch || blobRef.Properties.LastModified.HasValue)
                 {
                     DateTimeOffset lastModified = blobRef.Properties.LastModified.Value;
                     _instance.SetMinMaxDate(lastModified.Ticks);
@@ -424,7 +429,7 @@ namespace CollectSFData.Azure
                         continue;
                     }
 
-                    if (lastModified >= _config.StartTimeUtc && lastModified <= _config.EndTimeUtc)
+                    if (regexUriTicksMatch || (lastModified >= _config.StartTimeUtc && lastModified <= _config.EndTimeUtc))
                     {
                         _instance.TotalFilesMatched++;
 
