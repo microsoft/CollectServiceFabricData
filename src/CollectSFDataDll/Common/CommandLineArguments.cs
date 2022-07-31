@@ -424,6 +424,7 @@ namespace CollectSFData.Common
                     $"{newLine}counter" +
                     $"{newLine}trace" +
                     $"{newLine}exception" +
+                    $"{newLine}sfextlog" +
                     $"{newLine}table" +
                     $"{newLine}setup" +
                     $"{newLine}any",

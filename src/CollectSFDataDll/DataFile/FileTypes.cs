@@ -22,6 +22,7 @@ namespace CollectSFData.DataFile
         bootstrap,
         data,
         fabriccrashdumps,
+        sfextlog,
         unknown
     }
 
@@ -34,6 +35,7 @@ namespace CollectSFData.DataFile
         dtr,
         etl,
         json,
+        log,
         trace,
         zip
     }
@@ -44,6 +46,7 @@ namespace CollectSFData.DataFile
         any,
         counter,
         exception,
+        sfextlog,
         setup,
         trace,
         table
@@ -91,6 +94,10 @@ namespace CollectSFData.DataFile
             {
                 // using default fabricsetup / fabricdeployer
                 extension = FileDataTypesEnum.fabricsetup;
+            }
+            else if (fileUri.EndsWith(Constants.LogExtension))
+            {
+                extension = FileDataTypesEnum.sfextlog;
             }
             else if (fileUri.EndsWith(Constants.ZipExtension))
             {
@@ -186,6 +193,10 @@ namespace CollectSFData.DataFile
                     knownPrefix = FileTypesKnownUrisPrefix.fabriccrashdump;
                     break;
 
+                case FileTypesEnum.sfextlog:
+                    knownPrefix = FileTypesKnownUrisPrefix.extension;
+                    break;
+
                 case FileTypesEnum.setup:
                 case FileTypesEnum.table:
                 case FileTypesEnum.trace:
@@ -235,6 +246,11 @@ namespace CollectSFData.DataFile
                 case FileDataTypesEnum.table:
                     {
                         fileTypesEnum = FileTypesEnum.table;
+                        break;
+                    }
+                case FileDataTypesEnum.sfextlog:
+                    {
+                        fileTypesEnum = FileTypesEnum.sfextlog;
                         break;
                     }
                 default:
@@ -328,6 +344,12 @@ namespace CollectSFData.DataFile
                         break;
                     }
 
+                case Constants.LogExtension:
+                    {
+                        extension = FileExtensionTypesEnum.log;
+                        break;
+                    }
+
                 case Constants.SetupExtension:
                     {
                         extension = FileExtensionTypesEnum.trace;
@@ -355,9 +377,10 @@ namespace CollectSFData.DataFile
     public class FileTypesKnownUrisPrefix
     {
         public static string any = "";
-        public static string fabriccounter = "fabriccounter";
-        public static string fabriccrashdump = "fabriccrashdump";
-        public static string fabriclog = "fabriclog";
+        public static string extension = "vmextlog";
+        public static string fabriccounter = "fabriccounters";
+        public static string fabriccrashdump = "fabriccrashdumps";
+        public static string fabriclog = "fabriclogs";
         public static string unknown = "unknown";
     }
 }
