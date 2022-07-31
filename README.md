@@ -244,7 +244,7 @@ collectsfdata.exe -type trace -s "https://sflogsxxxxxxxxxxxxx.blob.core.windows.
 
 ```json
 {
-  "GatherType": "[counter|setup|trace|table]", // choose one
+  "GatherType": "[counter|setup|sfextlog|trace|table]", // choose one
   "SasKey": "[account sas uri|service sas uri|sas uri connection string]",
   "StartTimeStamp": null,
   "EndTimeStamp": null,
@@ -258,7 +258,7 @@ collectsfdata.exe -type trace -s "https://sflogsxxxxxxxxxxxxx.blob.core.windows.
 
 ```json
 {
-  "GatherType": "[counter|setup|trace|table]", // choose one
+  "GatherType": "[counter|setup|sfextlog|trace|table]", // choose one
   "SasKey": "[account sas uri|service sas uri|sas uri connection string]",
   "StartTimeStamp": null,
   "EndTimeStamp": null,

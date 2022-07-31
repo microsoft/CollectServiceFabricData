@@ -186,11 +186,36 @@ namespace CollectSFData.DataFile
             // standalone nodename should be surrounded by /
             _nodePattern = $@"(/|\.)(?<nodeName>[^/^\.]+?)(/|\.)({_fileDataTypesPattern}|[^/]+?\.dmp)(/|\.|_|$)";
 
-            if (Regex.IsMatch(fileUri, _nodePattern, RegexOptions.IgnoreCase))
+            switch (FileDataType)
+            {
+                case FileDataTypesEnum.table:
+                    return;
+                case FileDataTypesEnum.fabriccrashdumps:
+                case FileDataTypesEnum.counter:
+                case FileDataTypesEnum.sfextlog:
+                    NodeName = Path.GetFileName(Path.GetDirectoryName(fileUri));
+                    break;
+                case FileDataTypesEnum.fabric:
+                case FileDataTypesEnum.lease:
+                case FileDataTypesEnum.bootstrap:
+                case FileDataTypesEnum.fabricdeployer:
+                case FileDataTypesEnum.fabricsetup:
+                    NodeName = Path.GetFileName(Path.GetDirectoryName(Path.GetDirectoryName(fileUri)));
+                    break;
+                default:
+                    break;
+            }
+
+            if (string.IsNullOrEmpty(NodeName) && Regex.IsMatch(fileUri, _nodePattern, RegexOptions.IgnoreCase))
             {
                 Match match = Regex.Match(fileUri, _nodePattern, RegexOptions.IgnoreCase);
                 NodeName = match.Groups["nodeName"].Value;
                 Log.Debug($"node name: {NodeName}");
+            }
+
+            if (string.IsNullOrEmpty(NodeName))
+            {
+                Log.Error($"unable to determine nodename:{fileUri} using pattern {_nodePattern}");
             }
         }
 
@@ -199,16 +224,8 @@ namespace CollectSFData.DataFile
             if (!string.IsNullOrEmpty(fileUri))
             {
                 fileUri = FileManager.NormalizePath(fileUri);
-                ExtractNodeName(fileUri);
                 FileDataType = FileTypes.MapFileDataTypeUri(fileUri);
-
-                if (string.IsNullOrEmpty(NodeName))
-                {
-                    if (FileDataType != FileDataTypesEnum.table)
-                    {
-                        Log.Error($"unable to determine nodename:{fileUri} using pattern {_nodePattern}");
-                    }
-                }
+                ExtractNodeName(fileUri);
             }
 
             if (!string.IsNullOrEmpty(BaseUri) & Uri.IsWellFormedUriString(fileUri, UriKind.Relative))

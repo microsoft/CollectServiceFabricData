@@ -325,14 +325,14 @@ namespace CollectSFData.Azure
                             Directory.CreateDirectory(Path.GetDirectoryName(fileObject.FileUri));
                         }
 
-                        ((CloudBlockBlob)blob).DownloadToFileAsync(fileObject.FileUri, FileMode.Create, null, blobRequestOptions, null).Wait();
+                        ((CloudBlob)blob).DownloadToFileAsync(fileObject.FileUri, FileMode.Create, null, blobRequestOptions, null).Wait();
                     };
                 }
                 else
                 {
                     fileObject.DownloadAction = () =>
                     {
-                        ((CloudBlockBlob)blob).DownloadToStreamAsync(fileObject.Stream.Get(), null, blobRequestOptions, null).Wait();
+                        ((CloudBlob)blob).DownloadToStreamAsync(fileObject.Stream.Get(), null, blobRequestOptions, null).Wait();
                     };
                 }
 
