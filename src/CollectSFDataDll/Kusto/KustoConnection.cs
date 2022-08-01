@@ -570,6 +570,7 @@ namespace CollectSFData.Kusto
 
                     break;
 
+                case FileTypesEnum.sfextlog:
                 case FileTypesEnum.setup:
                     ingestionJsonString = JsonConvert.SerializeObject(new KustoIngestionMappings(fileObject)
                     {
