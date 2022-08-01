@@ -1,0 +1,11 @@
+.create-or-alter function with (docstring = "[T:string] where T=table name. function to summarize application related health reports by node", folder = "sflogs/application")
+    SummarizeAppUnhealthyReportByNode(T:string) {
+    let extractPattern_ServiceName = @"HealthReport\(([^+]*)";
+    let extractPattern_NodeName = @"NodeName:([^\)]*)";
+    let binLengthTimespan = totimespan("0.00:05:00");
+    TraceAppUnhealthyReport(T)
+    | extend ServiceName = extract(extractPattern_ServiceName, 1, Text, typeof(string))
+    | extend InstanceNodeName = extract(extractPattern_NodeName, 1, Text, typeof(string))
+    | where ServiceName != ""
+    | summarize count() by bin(Timestamp, binLengthTimespan), ServiceName, InstanceNodeName
+}
