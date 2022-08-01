@@ -1,0 +1,7 @@
+.create-or-alter function with (docstring = "[T:string] where T=table name. Function to search for FileStoreService, ImageBuilder activity.", folder = "sflogs/imagestore")
+    TraceImageStore(T:string) {
+    table(T)
+    | where Type startswith "FileStoreService" 
+         or Type startswith "ImageBuilder"
+         or (Type startswith "Client.Begin" and (Type !contains "BeginInternalQuery" and Type !contains "BeginGetApplicationUpgradeProgress" and Type !contains "BeginGetFabricUpgradeProgress"))
+}
