@@ -154,12 +154,10 @@ namespace CollectSFData
 
             ServicePointManager.DefaultConnectionLimit = Config.Threads * Constants.MaxThreadMultiplier;
             ServicePointManager.Expect100Continue = true;
-#if NET5_0_OR_GREATER || NETCOREAPP3_1_OR_GREATER
-            ServicePointManager.SecurityProtocol = SecurityProtocolType.SystemDefault | SecurityProtocolType.Tls12 | SecurityProtocolType.Tls13;
-#elif NET471_OR_GREATER
-            ServicePointManager.SecurityProtocol = SecurityProtocolType.SystemDefault | SecurityProtocolType.Tls12;
-#else
-            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
+#if NET462
+#pragma warning disable CA5398
+            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12; //DevSkim: ignore DS440000,DS144436,DS440020
+#pragma warning restore CA5398
 #endif
             ThreadPool.SetMinThreads(Config.Threads * Constants.MinThreadMultiplier, Config.Threads * Constants.MinThreadMultiplier);
             ThreadPool.SetMaxThreads(Config.Threads * Constants.MaxThreadMultiplier, Config.Threads * Constants.MaxThreadMultiplier);
