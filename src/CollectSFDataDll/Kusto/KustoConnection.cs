@@ -612,7 +612,7 @@ namespace CollectSFData.Kusto
                 ParallelOperationThreadCount = _config.Threads,
             };
 
-            CloudStorageAccount.UseV1MD5 = false;
+            CloudStorageAccount.UseV1MD5 = false; //DevSkim: ignore DS126858. required for jarvis
             CloudBlobContainer blobContainer = new CloudBlobContainer(blobUri);
             CloudBlockBlob blockBlob = blobContainer.GetBlockBlobReference(blobName);
 

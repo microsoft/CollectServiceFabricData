@@ -28,7 +28,7 @@ namespace CollectSFData.Common
         public const string EtwManifestExtension = ".man";
         public const string EtwManifestsUrl = "https://raw.githubusercontent.com/microsoft/CollectServiceFabricData/master/manifests";
         public const string FalseStringPattern = @"(false|0|off|null)";
-        public const string InstanceMetaDataRestUri = "http://169.254.169.254/metadata/instance?api-version=2017-08-01";
+        public const string InstanceMetaDataRestUri = "http://169.254.169.254/metadata/instance?api-version=2017-08-01"; //DevSkim: ignore DS137138 as is used on internal az network for instance metadata
         public const string JsonExtension = ".json";
         public const string KustoUrlPattern = "https://(?<ingest>ingest-){1}(?<clusterName>.+?)\\.(?<location>.+?){0,1}\\.(?<domainName>.+?)/(?<databaseName>.+?){1}(/|$)";
         public const string LogExtension = ".log";
