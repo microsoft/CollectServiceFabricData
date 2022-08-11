@@ -461,6 +461,13 @@ namespace CollectSFData.Azure
                             IngestCallback?.Invoke(fileObject);
                             continue;
                         }
+                        else if(ReturnSourceFileLink && !fileObject.IsSourceFileLinkCompliant())
+                        {
+                            Log.Warning("updating configuration to not use blob as source as incompatible files / configuration detected");
+
+                            ReturnSourceFileLink = false;
+                            _config.KustoUseBlobAsSource = false;
+                        }
 
                         Log.Info($"queueing blob with timestamp: {lastModified}\r\n file: {blob.Uri.AbsolutePath}");
                         InvokeCallback(blob, fileObject, (int)blobRef.Properties.Length);
