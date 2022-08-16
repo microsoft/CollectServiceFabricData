@@ -237,5 +237,6 @@
         TypeAndTextContains(T, "if FM not available, possible vmss-sf resource instance count mismatch", "FMM.Report", "FM service not created because cluster is below expected size"),
         TypeAndTextContains(T, "unsecure cluster (http://)", "Hosting.CertificateAclingManager", "Can't find anonymous certificate. ErrorCode: E_FAIL"),
         TypeAndTextContains(T, "unsecure cluster (http://)", "Hosting.CertificateAclingManager", "Error at AclAnonymousCertificate, ErrorCode E_FAIL"),
-        TypeAndTextContains(T, "possible unsecure cluster (http://)", "Common.CryptoUtility", "Can't get private key filename for certificate. Error: 0x80090014")
+        TypeAndTextContains(T, "possible unsecure cluster (http://)", "Common.CryptoUtility", "Can't get private key filename for certificate. Error: 0x80090014"),
+        TypeContains(T, "replica performance or configuration issue", "RE._ReplicasOps_BuildIdleReplicaFailedEvent")
     }
