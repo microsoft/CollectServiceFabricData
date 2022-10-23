@@ -1,0 +1,30 @@
+.create-or-alter function with (docstring = "[T:string] where T=table name. function to show PLB reconfiguration by PartitionId and Replicas.", folder = "sflogs/reconfiguration")
+    TracePartitionReconfiguration(T:string) {
+    let RegexFilter1 =  @"EventName:\s([^\s]*)";
+    let RegexFilter2 =  @"Category:\s([^\s]*)";
+    let RegexFilter3 =  @"EventInstanceId:\s([^\s]*)";
+    let RegexFilter4 =  @"PartitionId:\s([^\s]*)";
+    let RegexFilter5 =  @"OldPrimaryNodeName:\s(_\w+_\d+)";
+    let RegexFilter6 =  @"OldPrimaryNodeId:\s([a-f\d]*)";
+    let RegexFilter7 =  @"OldSecondaryNodeNames:\s((_\w+_\d+\s)+)";
+    let RegexFilter8 =  @"OldSecondaryNodeIds:\s(([a-f\d]*\s)+)";
+    let RegexFilter9 =  @"NewPrimaryNodeName:\s(_\w+_\d+)";
+    let RegexFilter10 = @"NewPrimaryNodeId:\s([a-z\d]*)";
+    let RegexFilter11 = @"NewSecondaryNodeNames:\s((_\w+_\d+\s)+)";
+    let RegexFilter12 = @"NewSecondaryNodeIds:\s(([a-f\d]*\s)+)";
+    table(T)
+    | where Type == "FM._PartitionsOps_ReconfigurationStartedOperational"
+    | extend EventName = extract(RegexFilter1, 1, Text)
+    | extend Category = extract(RegexFilter2, 1, Text)
+    | extend EventInstanceId = extract(RegexFilter3, 1, Text)
+    | extend PartitionId = extract(RegexFilter4, 1, Text)
+    | extend OldPrimaryNodeName = extract(RegexFilter5, 1, Text)
+    | extend OldPrimaryNodeId = extract(RegexFilter6, 1, Text)
+    | extend OldSecondaryNodeNames = extract(RegexFilter7, 1, Text)
+    | extend OldSecondaryNodeIds = extract(RegexFilter8, 1, Text)
+    | extend NewPrimaryNodeName = extract(RegexFilter9, 1, Text)
+    | extend NewPrimaryNodeId = extract(RegexFilter10, 1, Text)
+    | extend NewSecondaryNodeNames = extract(RegexFilter11, 1, Text)
+    | extend NewSecondaryNodeIds = extract(RegexFilter12, 1, Text)
+    | project Timestamp, EventName, Category, EventInstanceId, PartitionId, OldPrimaryNodeName, OldPrimaryNodeId, OldSecondaryNodeNames, OldSecondaryNodeIds, NewPrimaryNodeName, NewPrimaryNodeId, NewSecondaryNodeNames, NewSecondaryNodeIds
+}

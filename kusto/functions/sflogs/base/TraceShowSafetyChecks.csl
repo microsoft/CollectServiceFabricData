@@ -1,0 +1,15 @@
+.create-or-alter function with (docstring = "[T:string] [typeMatch:string] where T=table name. function to show active SafetyChecks.", folder = "sflogs/base")
+    TraceShowSafetyChecks(T:string) {
+     let pattern_NodeName = @'NodeName=([^,\s]*)';
+	 let pattern_Phase = @'Phase=([^\s]*)';
+	 let pattern_SafetyCheck = @'SafetyCheck=([^,]*)';
+	 let pattern_PartitionId = @'PartitionId=([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})';
+     table(T)
+     | where Text contains "SafetyCheck="
+     | extend NodeReporting = extract(pattern_NodeName, 1, Text, typeof(string))
+	 | extend Phase = extract(pattern_Phase, 1, Text, typeof(string))
+	 | extend SafetyCheck = extract_all(pattern_SafetyCheck, Text)
+	 | extend PartitionId = extract_all(pattern_PartitionId, Text)
+	 | project Timestamp, Type, NodeReporting, Phase, SafetyCheck, PartitionId
+	 | order by Timestamp desc
+}

@@ -75,7 +75,6 @@ namespace CollectSFData.Common
             {
                 if (_isRunning)
                 {
-                    _isRunning = false;
                     _messageList.AddRange(_lastMessageList);
                     _lastMessageList.Clear();
 
@@ -87,6 +86,8 @@ namespace CollectSFData.Common
                     {
                         _taskWriter.Wait(Constants.ThreadSleepMs1000);
                     }
+
+                    _isRunning = false;
                 }
             }
             catch (TaskCanceledException) { }

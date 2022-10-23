@@ -49,7 +49,7 @@ namespace CollectSFData.Azure
 
             try
             {
-                CloudStorageAccount.UseV1MD5 = false;
+                CloudStorageAccount.UseV1MD5 = false; //DevSkim: ignore DS126858. required for jarvis
                 _account = CloudStorageAccount.Parse(_config.SasEndpointInfo.ConnectionString);
                 CloudBlobClient storageClient = _account.CreateCloudBlobClient();
                 _blobClient = storageClient.GetRootContainerReference().ServiceClient;
@@ -325,14 +325,14 @@ namespace CollectSFData.Azure
                             Directory.CreateDirectory(Path.GetDirectoryName(fileObject.FileUri));
                         }
 
-                        ((CloudBlockBlob)blob).DownloadToFileAsync(fileObject.FileUri, FileMode.Create, null, blobRequestOptions, null).Wait();
+                        ((CloudBlob)blob).DownloadToFileAsync(fileObject.FileUri, FileMode.Create, null, blobRequestOptions, null).Wait();
                     };
                 }
                 else
                 {
                     fileObject.DownloadAction = () =>
                     {
-                        ((CloudBlockBlob)blob).DownloadToStreamAsync(fileObject.Stream.Get(), null, blobRequestOptions, null).Wait();
+                        ((CloudBlob)blob).DownloadToStreamAsync(fileObject.Stream.Get(), null, blobRequestOptions, null).Wait();
                     };
                 }
 
@@ -353,6 +353,7 @@ namespace CollectSFData.Azure
             Log.Debug($"enter. current id:{parentId}. results count: {blobResults.Count()}");
             long segmentMinDateTicks = _instance.DiscoveredMinDateTicks;
             long segmentMaxDateTicks = _instance.DiscoveredMaxDateTicks;
+            bool regexUriTicksMatch = false;
 
             foreach (IListBlobItem blob in blobResults)
             {
@@ -386,6 +387,10 @@ namespace CollectSFData.Azure
                         _instance.SetMinMaxDate(ticks);
                         continue;
                     }
+                    else 
+                    {
+                        regexUriTicksMatch = true;
+                    }
                 }
                 else
                 {
@@ -404,7 +409,7 @@ namespace CollectSFData.Azure
                     continue;
                 }
 
-                if (blobRef.Properties.LastModified.HasValue)
+                if (regexUriTicksMatch || blobRef.Properties.LastModified.HasValue)
                 {
                     DateTimeOffset lastModified = blobRef.Properties.LastModified.Value;
                     _instance.SetMinMaxDate(lastModified.Ticks);
@@ -424,7 +429,7 @@ namespace CollectSFData.Azure
                         continue;
                     }
 
-                    if (lastModified >= _config.StartTimeUtc && lastModified <= _config.EndTimeUtc)
+                    if (regexUriTicksMatch || (lastModified >= _config.StartTimeUtc && lastModified <= _config.EndTimeUtc))
                     {
                         _instance.TotalFilesMatched++;
 
@@ -455,6 +460,13 @@ namespace CollectSFData.Azure
                             fileObject.FileUri = blob.Uri.AbsolutePath;
                             IngestCallback?.Invoke(fileObject);
                             continue;
+                        }
+                        else if(ReturnSourceFileLink && !fileObject.IsSourceFileLinkCompliant())
+                        {
+                            Log.Warning("updating configuration to not use blob as source as incompatible files / configuration detected");
+
+                            ReturnSourceFileLink = false;
+                            _config.KustoUseBlobAsSource = false;
                         }
 
                         Log.Info($"queueing blob with timestamp: {lastModified}\r\n file: {blob.Uri.AbsolutePath}");

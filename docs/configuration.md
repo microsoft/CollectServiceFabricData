@@ -50,6 +50,7 @@ Options:
                                         counter
                                         trace
                                         exception
+                                        sfextlog
                                         table
                                         setup
                                         any
@@ -128,6 +129,8 @@ To use a default configuration file without having to specify on the command lin
 - **GatherType** - required. string. options: counter, exception, table, trace, any
   - **counter** - 'counter' will enumerate service fabric performance counter (.blg) blobs from 'fabriccounters*' container.
   - **exception** - 'exception' will enumerate service fabric fabric crash dumps (.dmp) blobs from 'fabriccrashdumps*' container.
+  - **setup** - 'setup' will enumerate service fabric fabric deployer setup (.trace) blobs from 'fabriclogs*' container.
+  - **sfextlog** - 'sfextlog' will enumerate managed service fabric node extension logs (.log) blobs from 'vmextlog*' container.
   - **table** - 'table' will enumerate service fabric events from blob tables 'fabriclogs*'
   - **trace** - 'trace' will enumerate service fabric diagnostic logs (.dtr) zip blobs from 'fabriclogs*'
   - **any** - 'any' without other filters will enumerate all containers for blobs matching criteria.
@@ -303,7 +306,7 @@ user managed identity: 3080722d-0cf6-4552-8e45-c5ccbc3d091f
 {
   "ContainerFilter": "",
   "DeleteCache": true,
-  "GatherType": "[counter|exception|trace|table|any]",
+  "GatherType": "[counter|exception|setup|sfextlog|trace|table|any]",
   "LogDebug": 4,
   "CacheLocation": "<%fast drive path with 100 GB free%>",
   "SasKey": "[account sas uri|service sas uri|sas uri connection string]",
@@ -321,7 +324,7 @@ user managed identity: 3080722d-0cf6-4552-8e45-c5ccbc3d091f
 {
   "ContainerFilter": "",
   "DeleteCache": true,
-  "GatherType": "[counter|exception|trace|table|any]",
+  "GatherType": "[counter|exception|setup|sfextlog|trace|table|any]",
   "LogDebug": 4,
   "CacheLocation": "<%fast drive path with 100 GB free%>",
   "SasKey": "[account sas uri|service sas uri|sas uri connection string]",
@@ -342,7 +345,7 @@ user managed identity: 3080722d-0cf6-4552-8e45-c5ccbc3d091f
 {
   "ContainerFilter": "",
   "DeleteCache": true,
-  "GatherType": "[counter|exception|trace|table|any]",
+  "GatherType": "[counter|exception|setup|sfextlog|trace|table|any]",
   "LogDebug": 4,
   "CacheLocation": "<%fast drive path with 100 GB free%>",
   "SasKey": "[account sas uri|service sas uri|sas uri connection string]",
@@ -374,7 +377,7 @@ NOTE: for standalone clusters a central diagnostic store must be configured
   "DeleteCache": true,
   "GatherType": "trace",
   "LogDebug": 4,
-  "SasKey": "https://sflogsxxxxxxxxxxxxx.blob.core.windows.net/?sv=2017-11-09&ss=bfqt&srt=sco&sp=rwdlacup&se=2018-12-05T23:51:08Z&st=2018-11-05T15:51:08Z&spr=https&sig=VYT1J9Ene1NktyCgsu1gEH%2FN%2BNH9zRhJO05auUPQkSA%3D",
+  "SasKey": "https://sflogsxxxxxxxxxxxxx.blob.core.windows.net/?sv=2017-11-09&ss=bfqt&srt=sco&sp=rwdlacup&se=2018-12-05T23:51:08Z&st=2018-11-05T15:51:08Z&spr=https&sig=VYT1J9Ene1NktyCgsu1gEH%2FN%2B...",
   "StartTimeStamp": "10/31/2018 20:00:00 +00:00",
   "EndTimeStamp": "10/31/2018 22:30:00 +00:00",
   "Threads": 8,
@@ -423,7 +426,7 @@ NOTE: for standalone clusters a central diagnostic store must be configured
   "List": false,
   "LogDebug": 4,
   "CacheLocation": "g:\\cases",
-  "SasKey": "https://sflogsxxxxxxxxxxxxx.blob.core.windows.net/?sv=2017-11-09&ss=bfqt&srt=sco&sp=rwdlacup&se=2018-12-05T23:51:08Z&st=2018-11-05T15:51:08Z&spr=https&sig=VYT1J9Ene1NktyCgsu1gEH%2FN%2BNH9zRhJO05auUPQkSA%3D",
+  "SasKey": "https://sflogsxxxxxxxxxxxxx.blob.core.windows.net/?sv=2017-11-09&ss=bfqt&srt=sco&sp=rwdlacup&se=2018-12-05T23:51:08Z&st=2018-11-05T15:51:08Z&spr=https&sig=VYT1J9Ene1NktyCgsu1gEH...",
   "StartTimeStamp": "10/31/2018 20:00:00 +00:00",
   "EndTimeStamp": "10/31/2018 22:30:00 +00:00",
   "Threads": 8,
@@ -447,7 +450,7 @@ NOTE: for standalone clusters a central diagnostic store must be configured
     "https://sflogsxxxxxxxxxxxxx.blob.core.windows.net/fabriclogs-8de7b13a-4137-454a-9ad5-a356fa0c3159/_nt0_2/Fabric/bc4316ec4b0814dcc367388a46d9903e_fabric_traces_7.2.457.9590_132610909242411002_3_00637522249901331579_0000000000.dtr.zip",
     "c:/temp/trace.dtr.zip"
    ],
-  "SasKey": "https://sflogsxxxxxxxxxxxxx.blob.core.windows.net/?sv=2017-11-09&ss=bfqt&srt=sco&sp=rwdlacup&se=2018-12-05T23:51:08Z&st=2018-11-05T15:51:08Z&spr=https&sig=VYT1J9Ene1NktyCgsu1gEH%2FN%2BNH9zRhJO05auUPQkSA%3D",
+  "SasKey": "https://sflogsxxxxxxxxxxxxx.blob.core.windows.net/?sv=2017-11-09&ss=bfqt&srt=sco&sp=rwdlacup&se=2018-12-05T23:51:08Z&st=2018-11-05T15:51:08Z&spr=https&sig=VYT1J9Ene1NktyCgsu1gEH%2FN%2BN...",
   "Threads": 8,
   "UriFilter": "",
   "NodeFilter": "nt0",
