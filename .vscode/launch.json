@@ -66,7 +66,7 @@
             "console": "internalConsole",
         },
         {
-            "name": "NET 5 Launch (console)",
+            "name": "NET 6 Launch (console)",
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
