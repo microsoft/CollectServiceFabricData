@@ -1,0 +1,19 @@
+.create-or-alter function with (docstring = "[T:string] where T=table name, [N:string] where N=nodeId. Function to find Node by NodeId", folder = "sflogs/hosting")
+    TraceHostingGetNodeNameById(T:string, N:string) {
+    let extractPattern_NodeId = @"([a-z0-9]{32}):";
+    let extractPattern_InstanceName = @"instance\sname:\s([^,]*)";
+    let extractPattern_isSeedNode = @"isSeedNode:\s([^,]*)";
+    let extractPattern_State = @"state:\s([^,]*)";
+    let nodeResult = table(T)
+    | where Type startswith "FabricNode.State"
+    | extend NodeId = extract(extractPattern_NodeId, 1, Text, typeof(string))
+    | extend NodeName = extract(extractPattern_InstanceName, 1, Text, typeof(string))
+    | extend NodeIsSeedNode = extract(extractPattern_isSeedNode, 1, Text, typeof(string))
+    | extend LeaseState = extract(extractPattern_State, 1, Text, typeof(string))
+    | where NodeId == N
+    | project NodeId, NodeName, NodeIsSeedNode, LeaseState, Timestamp
+    | order by Timestamp desc 
+    | distinct NodeName;
+    nodeResult
+    | take 1    
+}

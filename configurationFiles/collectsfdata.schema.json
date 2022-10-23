@@ -209,6 +209,7 @@
         "setup",
         "table",
         "exception",
+        "sfextlog",
         "any"
       ],
       "examples": [
@@ -217,9 +218,10 @@
         "setup",
         "table",
         "exception",
+        "sfextlog",
         "any"
       ],
-      "pattern": "^(trace|counter|setup|table|exception|any)$"
+      "pattern": "^(trace|counter|setup|table|exception|sfextlog|any)$"
     },
     "KustoCluster": {
       "$id": "#/properties/KustoCluster",

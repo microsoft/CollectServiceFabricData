@@ -1,4 +1,4 @@
-.create-or-alter function with (docstring = "[T:string] where T=table name. Function to show Last time FabricGateway was unable to Authenticate, returns Certificate Details it was trying to match.  Requires TableName and ConnectionId", folder = "sflogs/hosting")
+.create-or-alter function with (docstring = "[T:string] where T=table name. [Cid:string] where Cid = connctionid.  Function to show Last time FabricGateway was unable to Authenticate, returns Certificate Details it was trying to match.  Requires TableName and ConnectionId", folder = "sflogs/hosting")
     TraceHostingFabricGatewayExpectedCert(T:string, Cid:string) {
     //Show which certs are expected to be matched to
     let pattern_anyThumbprint = @"([a-fA-F0-9]{40})";

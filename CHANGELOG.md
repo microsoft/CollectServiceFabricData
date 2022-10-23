@@ -1,5 +1,44 @@
 # Change log
 
+## 10/23/2022
+
+- modify example / test sasuris falsely being flagged as secrets.
+
+## 8/11/2022
+
+- Add check to download file if file type is .etl
+
+## 8/3/2022
+
+- modify BlobManager for devskim checks
+    - add comment to ignore use of UseV1MD5 required by jarvis
+    - add additional entropy for token
+- modify Collector to clean up ServicePointManager configuration for devskim
+
+## 7/31/2022
+
+- fix issue where trace file was wrongly excluded. file was in specified time range by ticks in file name, but last modified date is outside of time range.
+- update all .net versions for newtonsoft.json from 11.0.2 -> 13.0.1 due to security vulnerability
+- fix /? not displaying by partial revert ead7b71e
+- adding support for sfextlog type for managed cluster extension logs
+
+## 7/1/2022
+
+- update newtonsoft.json from 11.0.2 -> 13.0.1 due to security vulnerability
+- remove CollectSFDataGui references from project
+
+## 6/2/2022
+
+- modify log.open for file exception
+
+## 4/15/2022
+
+- add version to always be logged at completion
+
+## 4/7/2022
+
+- add support for tls 1.3
+
 ## 03/22/2022
 
 - add explicit reference to microsoft.identity.client 4.42.0 for jarvis error

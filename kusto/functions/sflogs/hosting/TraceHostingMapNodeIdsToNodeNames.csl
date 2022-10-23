@@ -1,0 +1,16 @@
+.create-or-alter function with (docstring = "[T:string] where T=table name, Function to map NodeNames by NodeId", folder = "sflogs/hosting")
+    TraceHostingMapNodeIdsToNodeNames(T:string) {
+    let extractPattern_NodeId = @"([a-z0-9]{32}):";
+    let extractPattern_InstanceName = @"instance\sname:\s([^,]*)";
+    table(T)
+    | where Type startswith "FabricNode.State"
+    | extend NodeId = extract(extractPattern_NodeId, 1, Text, typeof(string))
+    | extend mapNodeName = extract(extractPattern_InstanceName, 1, Text, typeof(string))
+    | extend NodeMapping = strcat('"',NodeId,':',mapNodeName,'"')
+    | partition by mapNodeName
+    (
+        top 1 by Timestamp desc 
+    )
+    | project NodeId, mapNodeName, NodeMapping, Timestamp
+    | order by Timestamp desc     
+}
