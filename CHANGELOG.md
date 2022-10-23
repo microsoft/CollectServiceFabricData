@@ -1,5 +1,20 @@
 # Change log
 
+## 10/23/2022
+
+- modify example / test sasuris falsely being flagged as secrets.
+
+## 8/11/2022
+
+- Add check to download file if file type is .etl
+
+## 8/3/2022
+
+- modify BlobManager for devskim checks
+    - add comment to ignore use of UseV1MD5 required by jarvis
+    - add additional entropy for token
+- modify Collector to clean up ServicePointManager configuration for devskim
+
 ## 7/31/2022
 
 - fix issue where trace file was wrongly excluded. file was in specified time range by ticks in file name, but last modified date is outside of time range.
