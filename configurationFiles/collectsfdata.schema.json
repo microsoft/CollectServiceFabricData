@@ -361,6 +361,9 @@
       "title": "LogAnalyticsKey",
       "description": "key from 'advanced settings' for workspace for ingest",
       "default": null,
+      "examples": [
+        "UFx2MbN23M9p2o8PYPQweSzhgo+8uBPDEt1cSwCKDwtmIpbwOz8rx5U6hlO7bkfuNyGXfFYr5XTGdI5VSk2NBA=="
+      ],
       "pattern": "^(.+)$"
     },
     "LogAnalyticsName": {
