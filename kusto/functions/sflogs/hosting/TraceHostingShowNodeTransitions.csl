@@ -1,0 +1,19 @@
+.create-or-alter function with (docstring = "[T:string] where T=table name, Function to show node transisions, such as when nodes are disabled with restart intent", folder = "sflogs/hosting")
+    TraceHostingShowNodeTransitions(T:string) {
+    let RegexFilter='NodeName=([^,]*), NodeType=([^,]*), NodeState=([^,]*), NodeStatus=([^,]*), NodeDeactivationIntent=([^,]*), Instance=([^]]*)';
+    table(T)
+    | where Type startswith "InfrastructureService.NodeStatusManager"
+    | where Text startswith "Updating NodeStatus"
+    | extend ExtracedNodeDetails = extract_all(RegexFilter, Text)
+    | extend OldDetails=ExtracedNodeDetails[0]
+    | extend NewDetails=ExtracedNodeDetails[1]
+    | extend Node = tostring(OldDetails[0])
+    | extend NodeType = tostring(OldDetails[1])
+    | extend OldState = tostring(OldDetails[2])
+    | extend NewState = tostring(NewDetails[2])
+    | extend OldStatus = tostring(OldDetails[3])
+    | extend NewStatus = tostring(NewDetails[3])
+    | extend OldIntent = tostring(OldDetails[4])
+    | extend NewIntent = tostring(NewDetails[4])
+    | project Timestamp, Level, Node, NodeType, OldState, OldStatus, OldIntent, NewState, NewStatus, NewIntent
+}

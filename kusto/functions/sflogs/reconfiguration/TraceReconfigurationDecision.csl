@@ -1,0 +1,7 @@
+.create-or-alter function with (docstring = "[T:string] where T=table name, D=decisionId. function to dump CRM reconfiguration operations related to DecisionId.", folder = "sflogs/reconfiguration")
+    TraceReconfigurationDecision(T:string, D:string) {
+        table(T)
+        | where Type contains D
+             or Text contains D
+        | order by Timestamp asc
+    }
