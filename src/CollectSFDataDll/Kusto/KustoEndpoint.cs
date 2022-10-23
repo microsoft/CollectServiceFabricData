@@ -39,7 +39,6 @@ namespace CollectSFData.Kusto
 
         public KustoConnectionStringBuilder DatabaseConnection { get; set; }
         public string DatabaseName { get; set; }
-        public bool DeleteSourceOnSuccess { get; set; }
         public KustoRestTable ExtendedPropertiesTable { get; private set; } = new KustoRestTable();
         public List<string> ExtendedResults { get; private set; }
         public string HostName { get; private set; }
@@ -70,8 +69,6 @@ namespace CollectSFData.Kusto
                 Log.Error(errMessage);
                 throw new ArgumentNullException(errMessage);
             }
-
-            DeleteSourceOnSuccess = !_config.KustoUseBlobAsSource;
 
             if (Regex.IsMatch(_config.KustoCluster, Constants.KustoUrlPattern))
             {

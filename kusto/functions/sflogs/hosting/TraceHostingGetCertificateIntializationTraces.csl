@@ -4,6 +4,6 @@
         | where NodeName == N
         | where Type startswith 'LeaseAgent.State'
              or Type contains C
-        | project NodeName, Type, Text, Timestamp
+        | project NodeName, Type, Text, Timestamp, Level
         | order by Timestamp asc;
 }
