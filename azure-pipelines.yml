@@ -25,7 +25,7 @@ variables:
   release_path: .\src\bin\Release
   release_config: .\configurationFiles\collectsfdata.options.json
   target_version: net472
-  github_owner: ${{ github.event.repository.owner.name }}
+ # github_owner: ${{ github.event.repository.owner.name }}
   System.Debug: true
 
 
