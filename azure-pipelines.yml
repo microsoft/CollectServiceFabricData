@@ -15,19 +15,9 @@ pool:
   vmImage: 'windows-latest'
 
 variables:
-  solution: '**/CollectSFData.sln'
-  buildPlatform: 'x64'
-  buildConfiguration: 'Release'
-#
   project_name: CollectSFData
   project_root: .\src
-  artifacts_path: .\src\bin\artifacts
-  release_path: .\src\bin\Release
-  release_config: .\configurationFiles\collectsfdata.options.json
-  target_version: net472
- # github_owner: ${{ github.event.repository.owner.name }}
   System.Debug: true
-
 
 steps:
 - task: PowerShell@2
@@ -72,20 +62,3 @@ steps:
     errorActionPreference: 'continue'
     verbosePreference: 'continue'
     debugPreference: 'continue'
-
-# - task: VSBuild@1
-#   inputs:
-#     solution: '$(solution)'
-#     platform: '$(buildPlatform)'
-#     configuration: '$(buildConfiguration)'
-
-# - task: CopyFiles@2
-#   inputs:
-#     sourceFolder: $(Agent.BuildDirectory) # D:\a\1\s # Optional
-#     contents: '**\bin\**' 
-#     targetFolder: $(Build.ArtifactStagingDirectory) # d:\a\1\a
-#     cleanTargetFolder: true # Optional
-#     overWrite: true # Optional
-#     flattenFolders: false # Optional
-
-# - task: PublishBuildArtifacts@1
