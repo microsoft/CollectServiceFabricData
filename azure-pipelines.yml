@@ -3,7 +3,10 @@
 # Add steps that publish symbols, save build artifacts, and more:
 # https://docs.microsoft.com/azure/devops/pipelines/apps/windows/dot-net
 
-name: collectsfdatabuild
+# windows-latest packages
+# https://github.com/actions/runner-images/blob/main/images/win/Windows2022-Readme.md
+
+name: ADO CI CollectSFData
 
 trigger:
 - master
@@ -15,27 +18,53 @@ variables:
   solution: '**/CollectSFData.sln'
   buildPlatform: 'x64'
   buildConfiguration: 'Release'
+#
+  project_name: CollectSFData
+  project_root: .\src
+  artifacts_path: .\src\bin\artifacts
+  release_path: .\src\bin\Release
+  release_config: .\configurationFiles\collectsfdata.options.json
+  target_version: net472
+  github_owner: ${{ github.event.repository.owner.name }}
 
 steps:
-- task: NuGetToolInstaller@0
-
-- task: NuGetCommand@2
+- task: PowerShell@2
+  displayName: 'agent environment'
   inputs:
-    restoreSolution: '$(solution)'
+    targetType: 'inline'
+    script: |
+      [environment]::getenvironmentvariables().getenumerator()|sort Name
+      dotnet --info
+      dotnet nuget locals all --clear
+    errorActionPreference: 'continue'
+    verbosePreference: 'continue'
+    debugPreference: 'continue'
 
-- task: VSBuild@1
+- task: PowerShell@2
+  displayName: 'dotnet restore'
   inputs:
-    solution: '$(solution)'
-    platform: '$(buildPlatform)'
-    configuration: '$(buildConfiguration)'
+    targetType: 'inline'
+    script: |
+      write-host "dotnet restore `"$env:project_root\$env:project_name\$env:project_name.csproj`" -v detailed"
+      dotnet restore "$env:project_root\$env:project_name\$env:project_name.csproj" -v detailed
+    errorActionPreference: 'continue'
+    verbosePreference: 'continue'
+    debugPreference: 'continue'
 
-- task: CopyFiles@2
-  inputs:
-    sourceFolder: $(Agent.BuildDirectory) # D:\a\1\s # Optional
-    contents: '**\bin\**' 
-    targetFolder: $(Build.ArtifactStagingDirectory) # d:\a\1\a
-    cleanTargetFolder: true # Optional
-    overWrite: true # Optional
-    flattenFolders: false # Optional
 
-- task: PublishBuildArtifacts@1
+# - task: VSBuild@1
+#   inputs:
+#     solution: '$(solution)'
+#     platform: '$(buildPlatform)'
+#     configuration: '$(buildConfiguration)'
+
+# - task: CopyFiles@2
+#   inputs:
+#     sourceFolder: $(Agent.BuildDirectory) # D:\a\1\s # Optional
+#     contents: '**\bin\**' 
+#     targetFolder: $(Build.ArtifactStagingDirectory) # d:\a\1\a
+#     cleanTargetFolder: true # Optional
+#     overWrite: true # Optional
+#     flattenFolders: false # Optional
+
+# - task: PublishBuildArtifacts@1
