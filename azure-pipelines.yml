@@ -25,7 +25,8 @@ variables:
   release_path: .\src\bin\Release
   release_config: .\configurationFiles\collectsfdata.options.json
   target_version: net472
-  github_owner: ${{ github.event.repository.owner.name }}
+  #github_owner: ${{ github.event.repository.owner.name }}
+  System.Debug: true
 
 steps:
 - task: PowerShell@2
@@ -51,6 +52,25 @@ steps:
     verbosePreference: 'continue'
     debugPreference: 'continue'
 
+- task: PowerShell@2
+  displayName: 'dotnet build'
+  inputs:
+    targetType: 'inline'
+    script: |
+      write-host "dotnet build `"$env:project_root\$env:project_name\$env:project_name.csproj`" -v detailed -c Release"
+      dotnet build "$env:project_root\$env:project_name\$env:project_name.csproj" -v detailed -c Release
+    errorActionPreference: 'continue'
+    verbosePreference: 'continue'
+    debugPreference: 'continue'
+
+- task: PowerShell@2
+  displayName: 'dotnet build output'
+  inputs:
+    targetType: 'inline'
+    script: dir -recurse
+    errorActionPreference: 'continue'
+    verbosePreference: 'continue'
+    debugPreference: 'continue'
 
 # - task: VSBuild@1
 #   inputs:
