@@ -421,6 +421,11 @@ namespace CollectSFData.Common
             return HasValue(LogAnalyticsPurge);
         }
 
+        public bool IsUploadConfigured()
+        {
+            return IsKustoConfigured() | IsLogAnalyticsConfigured();
+        }
+
         public void MergeConfig(string optionsFile)
         {
             JObject fileOptions = ReadConfigFile(optionsFile);
@@ -787,7 +792,7 @@ namespace CollectSFData.Common
                 }
             }
 
-            if (IsKustoConfigured() & IsLogAnalyticsConfigured())
+            if (IsUploadConfigured())
             {
                 Log.Error($"kusto and log analytics *cannot* both be enabled. remove configuration for one");
                 retval = false;

@@ -313,7 +313,7 @@ namespace CollectSFData
 
             Log.Last($"{Instance.TotalErrors} errors.", Instance.TotalErrors > 0 ? ConsoleColor.Yellow : ConsoleColor.Green);
             Log.Last($"{Instance.FileObjects.Pending()} files failed to be processed.", Instance.FileObjects.Pending() > 0 ? ConsoleColor.Red : ConsoleColor.Green);
-            Log.Last($"total execution time in minutes: { (DateTime.Now - Instance.StartTime).TotalMinutes.ToString("F2") }");
+            Log.Last($"total execution time in minutes: {(DateTime.Now - Instance.StartTime).TotalMinutes.ToString("F2")}");
         }
 
         private void NoProgressCallback(object state)
@@ -368,7 +368,7 @@ namespace CollectSFData
             Log.Debug("enter");
             fileObject.Status = FileStatus.queued;
 
-            if (Config.IsKustoConfigured() | Config.IsLogAnalyticsConfigured())
+            if (Config.IsUploadConfigured())
             {
                 if (Config.IsKustoConfigured())
                 {
@@ -392,6 +392,12 @@ namespace CollectSFData
         {
             Log.Info("enter");
             List<string> files = new List<string>();
+
+            if (!Config.IsUploadConfigured())
+            {
+                Log.Info("config options not set for upload. returning");
+                return;
+            }
 
             string[] localFiles = Config.FileUris.Where(x => FileTypes.MapFileUriType(x) == FileUriTypesEnum.fileUri).ToArray();
 
@@ -465,7 +471,7 @@ namespace CollectSFData
                         }
 
                         break;
-                    
+
                     case FileTypesEnum.sfextlog:
                         files = Directory.GetFiles(Config.CacheLocation, $"*{Constants.LogExtension}", SearchOption.AllDirectories).ToList();
 
@@ -487,13 +493,20 @@ namespace CollectSFData
             foreach (string file in files)
             {
                 FileObject fileObject = new FileObject(file, Config.CacheLocation) { Status = FileStatus.enumerated };
-                Instance.FileObjects.Add(fileObject);
 
-                Log.Info($"adding file: {fileObject.FileUri}", ConsoleColor.Green);
-
-                if (!Config.List)
+                // only queue if file not already in FileObjects list
+                if (Instance.FileObjects.Add(fileObject))
                 {
-                    QueueForIngest(fileObject);
+                    Log.Info($"adding file: {fileObject.FileUri}", ConsoleColor.Green);
+
+                    if (!Config.List)
+                    {
+                        QueueForIngest(fileObject);
+                    }
+                }
+                else
+                {
+                    Log.Debug($"file {fileObject.FileUri} already in FileObjects. not queueing for ingest.");
                 }
             }
         }
