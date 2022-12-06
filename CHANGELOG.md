@@ -1,5 +1,9 @@
 # Change log
 
+## 12/6/2022
+
+- add check to not requeue processed files in predefined cache location if already in fileobjects object for UploadCacheData().
+
 ## 10/23/2022
 
 - modify example / test sasuris falsely being flagged as secrets.
