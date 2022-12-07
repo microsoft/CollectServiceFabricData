@@ -395,6 +395,8 @@ namespace CollectSFData
 
             if (!Config.IsUploadConfigured())
             {
+                // update status to succeeded if not configured for upload
+                Instance.FileObjects.Where(x => x.Status == FileStatus.formatting).ToList().ForEach(x => x.Status = FileStatus.succeeded);
                 Log.Info("config options not set for upload. returning");
                 return;
             }
