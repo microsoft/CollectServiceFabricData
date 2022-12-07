@@ -798,16 +798,16 @@ namespace CollectSFData.Common
                 retval = false;
             }
 
-            if (!IsKustoConfigured() & !IsLogAnalyticsConfigured() & !IsCacheLocationPreConfigured())
+            if (!IsUploadConfigured() & !IsCacheLocationPreConfigured())
             {
                 Log.Error($"kusto or log analytics or cacheLocation must be configured for file destination.");
                 retval = false;
             }
 
-            if (!IsKustoConfigured() & !IsLogAnalyticsConfigured() & UseMemoryStream)
+            if (!IsUploadConfigured() & UseMemoryStream)
             {
-                Log.Error($"kusto or log analytics must be configured for UseMemoryStream.");
-                retval = false;
+                Log.Warning($"kusto or log analytics must be configured for UseMemoryStream. setting UseMemoryStream to false.");
+                UseMemoryStream = false;
             }
 
             return retval;
