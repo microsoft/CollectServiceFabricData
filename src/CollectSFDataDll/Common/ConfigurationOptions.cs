@@ -792,7 +792,7 @@ namespace CollectSFData.Common
                 }
             }
 
-            if (IsUploadConfigured())
+            if (IsKustoConfigured() & IsLogAnalyticsConfigured())
             {
                 Log.Error($"kusto and log analytics *cannot* both be enabled. remove configuration for one");
                 retval = false;
