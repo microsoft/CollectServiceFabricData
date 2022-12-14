@@ -1,9 +1,0 @@
-.create-or-alter function with (docstring = "[t:string, paritionId:string]
-        where t=table name and paritionId=Parition Id.
-        Return end Timestamp of partition.", folder = "rc-perf")
-    GetPartitionEndTime(t:string, partitionId:string) {
-    let timeRange = table(t)
-    | where Type has partitionId
-    | summarize EndTime = max(Timestamp);
-    toscalar(timeRange | project EndTime);
-}

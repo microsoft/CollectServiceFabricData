@@ -1,6 +1,0 @@
-.create-or-alter function with (docstring = "[R:string] where C=CorrelationId.  Function to query all details related to a specified correlationId.", folder = "cluster")
-    FindCorrelationDetails(C:string) {
-       	cluster('armprod.kusto.windows.net').database('ARMProd').EventServiceEntries
-	| where correlationId == C
-        | project TIMESTAMP, correlationId, operationName, status, subStatus , operationId, resourceUri, properties 
-}
