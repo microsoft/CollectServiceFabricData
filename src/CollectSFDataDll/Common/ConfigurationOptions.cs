@@ -792,22 +792,22 @@ namespace CollectSFData.Common
                 }
             }
 
-            if (IsUploadConfigured())
+            if (IsKustoConfigured() & IsLogAnalyticsConfigured())
             {
                 Log.Error($"kusto and log analytics *cannot* both be enabled. remove configuration for one");
                 retval = false;
             }
 
-            if (!IsKustoConfigured() & !IsLogAnalyticsConfigured() & !IsCacheLocationPreConfigured())
+            if (!IsUploadConfigured() & !IsCacheLocationPreConfigured())
             {
                 Log.Error($"kusto or log analytics or cacheLocation must be configured for file destination.");
                 retval = false;
             }
 
-            if (!IsKustoConfigured() & !IsLogAnalyticsConfigured() & UseMemoryStream)
+            if (!IsUploadConfigured() & UseMemoryStream)
             {
-                Log.Error($"kusto or log analytics must be configured for UseMemoryStream.");
-                retval = false;
+                Log.Warning($"kusto or log analytics must be configured for UseMemoryStream. setting UseMemoryStream to false.");
+                UseMemoryStream = false;
             }
 
             return retval;

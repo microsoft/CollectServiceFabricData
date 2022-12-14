@@ -2,6 +2,11 @@
 
 ## 12/6/2022
 
+- UploadCacheData() set file status from formatting to succeeded if not uploading to kusto or log analytics
+- set usememorystream to false if not uploading to kusto or log analytics
+
+## 12/6/2022 2.9.2212.10615
+
 - add check to not requeue processed files in predefined cache location if already in fileobjects object for UploadCacheData().
 
 ## 10/23/2022
