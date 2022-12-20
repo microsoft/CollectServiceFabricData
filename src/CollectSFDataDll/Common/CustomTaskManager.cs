@@ -246,9 +246,10 @@ namespace CollectSFData.Common
             Log.Info($"added new taskobject to queue:{CallerName} total queued:{QueuedTaskObjects.Count()} throttle ms:{count * 10}");
             TimeSpan delay = new TimeSpan();
 
-            if (taskWait)
+            while (taskWait && !CancellationTokenSource.IsCancellationRequested)
             {
-                taskObject.TaskScheduled.WaitOne();
+                Log.Debug($"queue:{CallerName}, waiting for scheduled task to be set. total queued:{QueuedTaskObjects.Count()} delay:{delay.TotalMilliseconds}ms");
+                taskWait = !taskObject.TaskScheduled.WaitOne(Constants.ThreadSleepMs1000);
             }
 
             Log.Debug($"added new taskobject to queue:{CallerName} total queued:{QueuedTaskObjects.Count()} delay:{delay.TotalMilliseconds}ms");
