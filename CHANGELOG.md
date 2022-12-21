@@ -1,5 +1,10 @@
 # Change log
 
+## 12/21/2022
+
+- add additional counters to no progress check / timeout
+- change noisy debug trace to trivial
+
 ## 12/6/2022
 
 - UploadCacheData() set file status from formatting to succeeded if not uploading to kusto or log analytics

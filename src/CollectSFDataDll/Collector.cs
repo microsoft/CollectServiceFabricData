@@ -23,7 +23,7 @@ namespace CollectSFData
         private int _noProgressCounter = 0;
         private Timer _noProgressTimer;
         private ParallelOptions _parallelConfig;
-        private Tuple<int, int, int, int, int, int, int> _progressTuple = new Tuple<int, int, int, int, int, int, int>(0, 0, 0, 0, 0, 0, 0);
+        private Total _progressTotal = new Total();
 
         public ConfigurationOptions Config { get => Instance.Config; }
 
@@ -326,16 +326,10 @@ namespace CollectSFData
                 return;
             }
 
-            Tuple<int, int, int, int, int, int, int> tuple = new Tuple<int, int, int, int, int, int, int>(
-                Instance.TotalErrors,
-                Instance.TotalFilesDownloaded,
-                Instance.TotalFilesEnumerated,
-                Instance.TotalFilesFormatted,
-                Instance.TotalFilesMatched,
-                Instance.TotalFilesSkipped,
-                Instance.TotalRecords);
+            Total total = Instance.Totals();
+            Log.Highlight($"totals:", total);
 
-            if (tuple.Equals(_progressTuple))
+            if (total.Equals(_progressTotal))
             {
                 if (_noProgressCounter >= Config.NoProgressTimeoutMin)
                 {
@@ -359,7 +353,7 @@ namespace CollectSFData
             else
             {
                 _noProgressCounter = 0;
-                _progressTuple = tuple;
+                _progressTotal = total;
             }
         }
 

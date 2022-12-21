@@ -104,5 +104,31 @@ namespace CollectSFData.Common
             SetMinDate(maxDateTicks);
         }
 
+        public Total Totals()
+        {
+            //total
+            Total total = new Total();
+            total.Converted = TotalFilesConverted;
+            total.Downloaded = TotalFilesDownloaded;
+            total.Enumerated = TotalFilesEnumerated; // dupe
+            total.Errors = TotalErrors;
+            total.Formatted = TotalFilesFormatted;
+            total.Matched = TotalFilesMatched;
+            total.Records = TotalRecords;
+            total.Skipped = TotalFilesSkipped;
+
+            //state
+            total.Downloading = FileObjects.Count(FileStatus.downloading);
+            //total.Enumerated = FileObjects.Count(FileStatus.enumerated); // dupe
+            total.Existing = FileObjects.Count(FileStatus.existing);
+            total.Formatting = FileObjects.Count(FileStatus.formatting);
+            total.Failed = FileObjects.Count(FileStatus.failed); 
+            total.Queued = FileObjects.Count(FileStatus.queued);
+            total.Succeeded = FileObjects.Count(FileStatus.succeeded);
+            total.Unknown = FileObjects.Count(FileStatus.unknown);
+            total.Uploading = FileObjects.Count(FileStatus.uploading);
+
+            return total;
+        }
     }
 }
