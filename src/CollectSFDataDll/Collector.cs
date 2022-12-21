@@ -274,6 +274,11 @@ namespace CollectSFData
             Log.Last($"timed out: {Instance.TimedOut}.");
             Log.Last($"{Instance.FileObjects.StatusString()}", ConsoleColor.Cyan);
 
+            if (Config.List)
+            {
+                Log.Last($"file list:", jsonSerializer: Instance.FileObjects.Select(x => x.FileUri));
+            }
+
             if (Instance.TotalFilesEnumerated > 0)
             {
                 if (Config.FileType != FileTypesEnum.table)
