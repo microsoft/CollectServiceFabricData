@@ -426,7 +426,16 @@ namespace CollectSFData
                 }
                 else
                 {
-                    Log.Error($"configuration set to upload cache files from 'fileUris' count:{Config.FileUris.Length} but no files found");
+                    string logString = $"configuration set to upload cache files from 'fileUris' count:{Config.FileUris.Length} but no files found";
+                    
+                    if(Config.SasEndpointInfo.IsPopulated())
+                    {
+                        Log.Warning(logString);
+                    }
+                    else
+                    {
+                        Log.Error(logString);
+                    }
                 }
             }
             else if (Config.IsCacheLocationPreConfigured())
