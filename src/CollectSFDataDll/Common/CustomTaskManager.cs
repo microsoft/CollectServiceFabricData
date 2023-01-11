@@ -248,7 +248,7 @@ namespace CollectSFData.Common
 
             while (taskWait && !CancellationTokenSource.IsCancellationRequested)
             {
-                Log.Debug($"queue:{CallerName}, waiting for scheduled task to be set. total queued:{QueuedTaskObjects.Count()} delay:{delay.TotalMilliseconds}ms");
+                // do not log in this loop as logging will be disabled on close
                 taskWait = !taskObject.TaskScheduled.WaitOne(Constants.ThreadSleepMs1000);
             }
 
