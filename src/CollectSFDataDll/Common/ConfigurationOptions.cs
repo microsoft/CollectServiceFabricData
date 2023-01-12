@@ -29,6 +29,7 @@ namespace CollectSFData.Common
         private static bool? _cacheLocationPreconfigured = null;
         private static string[] _commandlineArguments = new string[0];
         private static ConfigurationOptions _defaultConfig;
+        private static List<ConfigurationOptions> _instanceList = new List<ConfigurationOptions>();
         private readonly string _tempName = "csfd";
         private string _tempPath;
 
@@ -45,6 +46,21 @@ namespace CollectSFData.Common
                     base.EndTimeStamp = ConvertToUtcTimeString(value);
                 }
             }
+        }
+
+        ~ConfigurationOptions()
+        {
+            if (_instanceList.Contains(this))
+            {
+                _instanceList.Remove(this);
+            }
+        }
+
+        private void Propagate()
+        {
+            // propagate changes to all configuration instances for current consistent configuration
+            _instanceList.ToList().ForEach(x => x.MergeConfig(this));
+            _instanceList.Add(this);
         }
 
         public string ExePath { get; } = $"{Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)}\\{Constants.DefaultOptionsFile}";
@@ -530,6 +546,7 @@ namespace CollectSFData.Common
             }
 
             SetDefaultConfig(Clone());
+            Propagate();
         }
 
         public ConfigurationProperties PropertyClone()
