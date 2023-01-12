@@ -1168,6 +1168,7 @@ namespace CollectSFData.Common
                     if (!_commandlineArguments[0].StartsWith("/?") && !_commandlineArguments[0].StartsWith("-") && _commandlineArguments[0].EndsWith(".json") && File.Exists(_commandlineArguments[0]))
                     {
                         ConfigurationFile = _commandlineArguments[0];
+                        _commandlineArguments = new string[0];
                         MergeConfig(ConfigurationFile);
                         Log.Info($"setting options to {Constants.DefaultOptionsFile}", ConsoleColor.Yellow);
                     }
