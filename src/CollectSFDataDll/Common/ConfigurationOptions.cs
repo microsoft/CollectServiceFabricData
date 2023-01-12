@@ -48,21 +48,6 @@ namespace CollectSFData.Common
             }
         }
 
-        ~ConfigurationOptions()
-        {
-            if (_instanceList.Contains(this))
-            {
-                _instanceList.Remove(this);
-            }
-        }
-
-        private void Propagate()
-        {
-            // propagate changes to all configuration instances for current consistent configuration
-            _instanceList.ToList().ForEach(x => x.MergeConfig(this));
-            _instanceList.Add(this);
-        }
-
         public string ExePath { get; } = $"{Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)}\\{Constants.DefaultOptionsFile}";
 
         public FileTypesEnum FileType { get; private set; }
@@ -142,6 +127,16 @@ namespace CollectSFData.Common
             if (validate)
             {
                 Validate();
+            }
+
+            Propagate();
+        }
+
+        ~ConfigurationOptions()
+        {
+            if (_instanceList.Contains(this))
+            {
+                _instanceList.Remove(this);
             }
         }
 
@@ -546,7 +541,6 @@ namespace CollectSFData.Common
             }
 
             SetDefaultConfig(Clone());
-            Propagate();
         }
 
         public ConfigurationProperties PropertyClone()
@@ -1222,6 +1216,7 @@ namespace CollectSFData.Common
                     return false;
                 }
 
+                Propagate();
                 return true;
             }
             catch (Exception e)
@@ -1230,6 +1225,13 @@ namespace CollectSFData.Common
                 Log.Last(_cmdLineArgs.CmdLineApp.GetHelpText());
                 return false;
             }
+        }
+
+        private void Propagate()
+        {
+            // propagate changes to all configuration instances for current consistent configuration
+            _instanceList.ToList().ForEach(x => x.MergeConfig(this));
+            _instanceList.Add(this);
         }
 
         private JObject ReadConfigFile(string configFile)
