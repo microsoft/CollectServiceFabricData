@@ -61,7 +61,7 @@ namespace CollectSFData.DataFile
                 Level = matchResult.Groups["level"].Value;
                 PID = Convert.ToInt32(matchResult.Groups["pid"].Value);
                 Type = matchResult.Groups["type"].Value;
-                Text = matchResult.Groups["text"].Value.Replace("\"", "'").TrimEnd('\r', '\n');
+                Text = "\"" + matchResult.Groups["text"].Value.TrimStart('\"').TrimEnd('\"', '\r', '\n').Replace("\"", "'") + "\"";
                 NodeName = fileObject.NodeName;
                 FileType = fileObject.FileDataType.ToString();
                 RelativeUri = fileObject.RelativeUri;
