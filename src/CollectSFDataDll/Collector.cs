@@ -43,7 +43,7 @@ namespace CollectSFData
 
         public int Collect()
         {
-            return Collect(new ConfigurationOptions());
+            return Collect(Config);
         }
 
         public int Collect(ConfigurationOptions configurationOptions)

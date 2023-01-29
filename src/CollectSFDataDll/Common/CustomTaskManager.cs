@@ -14,7 +14,7 @@ namespace CollectSFData.Common
     public class CustomTaskManager
     {
         private static SynchronizedList<CustomTaskManager> _allInstances = new SynchronizedList<CustomTaskManager>();
-        private static ConfigurationOptions _config = new ConfigurationOptions();
+        private static ConfigurationOptions _config = ConfigurationOptions.Singleton();
         private static CustomTaskScheduler _customScheduler;
         private static Instance _instance;
         private static Task _taskMonitor = new Task(TaskMonitor);

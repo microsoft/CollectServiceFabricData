@@ -29,9 +29,21 @@ namespace CollectSFData.Common
         private static bool? _cacheLocationPreconfigured = null;
         private static string[] _commandlineArguments = new string[0];
         private static ConfigurationOptions _defaultConfig;
-        private static List<ConfigurationOptions> _instanceList = new List<ConfigurationOptions>();
+        private static ConfigurationOptions _singleton;// = new ConfigurationOptions();
         private readonly string _tempName = "csfd";
         private string _tempPath;
+        private static object _singleLock = new Object();
+
+        public static ConfigurationOptions Singleton()
+        {
+                lock (_singleLock)
+                {
+                    if(_singleton == null) {
+                        _singleton = new ConfigurationOptions();
+                    }
+                    return _singleton;
+                }
+        }
 
         public X509Certificate2 ClientCertificate { get; set; }
 
@@ -127,16 +139,6 @@ namespace CollectSFData.Common
             if (validate)
             {
                 Validate();
-            }
-
-            Propagate();
-        }
-
-        ~ConfigurationOptions()
-        {
-            if (_instanceList.Contains(this))
-            {
-                _instanceList.Remove(this);
             }
         }
 
@@ -1217,7 +1219,6 @@ namespace CollectSFData.Common
                     return false;
                 }
 
-                Propagate();
                 return true;
             }
             catch (Exception e)
@@ -1226,13 +1227,6 @@ namespace CollectSFData.Common
                 Log.Last(_cmdLineArgs.CmdLineApp.GetHelpText());
                 return false;
             }
-        }
-
-        private void Propagate()
-        {
-            // propagate changes to all configuration instances for current consistent configuration
-            _instanceList.ToList().ForEach(x => x.MergeConfig(this));
-            _instanceList.Add(this);
         }
 
         private JObject ReadConfigFile(string configFile)

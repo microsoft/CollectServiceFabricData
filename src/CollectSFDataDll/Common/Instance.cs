@@ -28,7 +28,7 @@ namespace CollectSFData.Common
         public int TotalFilesMatched { get; set; }
         public int TotalFilesSkipped { get; set; }
         public int TotalRecords { get; set; }
-        protected internal ConfigurationOptions Config { get; private set; } = new ConfigurationOptions();
+        protected internal ConfigurationOptions Config { get; private set; } = ConfigurationOptions.Singleton();
         protected internal CustomTaskManager TaskManager { get; private set; }
 
         static Instance()
@@ -49,12 +49,11 @@ namespace CollectSFData.Common
         {
             TaskManager = new CustomTaskManager() { Instance = this };
 
-            if (configurationOptions == null)
+            if (configurationOptions != null)
             {
-                configurationOptions = new ConfigurationOptions();
+                Config.MergeConfig(configurationOptions);
             }
 
-            Config = configurationOptions;
             Log.Config = Config;
             DiscoveredMaxDateTicks = DateTime.MinValue.Ticks;
             DiscoveredMinDateTicks = DateTime.MaxValue.Ticks;
