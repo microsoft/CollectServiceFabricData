@@ -13,10 +13,7 @@ using System.Linq;
 using System.Reactive.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading;
 using Tx.Windows;
-using Tools.EtlReader;
-using System.Fabric.Strings;
 
 namespace CollectSFData.DataFile
 {
