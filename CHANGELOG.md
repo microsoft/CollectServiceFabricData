@@ -1,5 +1,9 @@
 # Change log
 
+## 
+
+- migrate from .net472 default to .net48 default
+
 ## 02/05/2023
 
 - fix configuration class inconsistencies in base classes

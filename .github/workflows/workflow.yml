@@ -6,7 +6,7 @@ env:
   artifacts_path: .\src\bin\artifacts
   release_path: .\src\bin\Release
   release_config: .\configurationFiles\collectsfdata.options.json
-  target_version: net472
+  target_version: net48
   github_owner: ${{ github.event.repository.owner.name }}
 
 on:

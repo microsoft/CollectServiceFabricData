@@ -10,6 +10,7 @@ creates $nuget ps object with functions an properties to manage nuget packages
 # -allversions is broken in nuget.exe
 
 .EXAMPLE
+[net.servicePointManager]::Expect100Continue = $true;[net.servicePointManager]::SecurityProtocol = [net.SecurityProtocolType]::Tls12;
 invoke-webRequest "https://raw.githubusercontent.com/microsoft/CollectServiceFabricData/master/scripts/nuget-functions.ps1" -outFile "$pwd/nuget-functions.ps1";
 .\nuget-functions.ps1;
 $nuget
@@ -43,7 +44,7 @@ class NugetObj {
 
             if (!(test-path $this.nuget)) {
                 write-host "downloading nuget"
-                invoke-webRequest $nugetDownloadUrl -outFile  $this.nuget
+                [net.webclient]::new().DownloadFile($nugetDownloadUrl, $this.nuget)
             }
         }
         else {
@@ -101,7 +102,9 @@ class NugetObj {
                 mkdir $packageDirectory
             }
 
-            $this.locals.Add($packageDirectoryName, $packageDirectory)
+            if(!($this.locals.Contains($packageDirectoryName))) {
+                $this.locals.Add($packageDirectoryName, $packageDirectory)
+            }
         }
 
         if ((test-path $this.nugetFallbackFolder)) {
@@ -299,7 +302,7 @@ class NugetObj {
     }
 
     [string[]] GetDirectories([string]$sourcePath, [string]$sourcePattern) {
-        write-host "getdirectories: $sourcePath $sourcePattern"
+        write-host "getdirectories: $sourcePath\$sourcePattern"
         if (!(test-path $sourcePath)) {
             $sourcePath = $this.EnumLocalsPath($sourcePath)
         }
@@ -338,7 +341,12 @@ class NugetObj {
         $outputDirectory = $null
         if ($packagesDirectory) { 
             if (!(test-path $packagesDirectory)) {
-                $packagesDirectory = $this.EnumLocalsPath($packagesDirectory)
+                write-host "checking: $packagesDirectory"
+                $outputDirectory = $this.EnumLocalsPath($packagesDirectory)
+                if (!$outputDirectory) {
+                    write-host "creating path: $packagesDirectory"
+                    mkdir $packagesDirectory
+                }    
             }
             $outputDirectory = " -directdownload -outputdirectory $packagesDirectory" 
         }
