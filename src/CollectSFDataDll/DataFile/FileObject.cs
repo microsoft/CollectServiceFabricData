@@ -54,7 +54,7 @@ namespace CollectSFData.DataFile
         {
             get
             {
-                Log.Debug($"fileobject:status:get:{_fileObjectStatus}:{RelativeUri}");
+                Log.Trivial($"fileobject:status:get:{_fileObjectStatus}:{RelativeUri}");
                 return _fileObjectStatus;
             }
             set

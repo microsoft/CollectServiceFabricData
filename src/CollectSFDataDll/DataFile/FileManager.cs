@@ -13,10 +13,7 @@ using System.Linq;
 using System.Reactive.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading;
 using Tx.Windows;
-using Tools.EtlReader;
-using System.Fabric.Strings;
 
 namespace CollectSFData.DataFile
 {
@@ -653,71 +650,6 @@ namespace CollectSFData.DataFile
 
             fileObject.Stream.Write(csvRecords);
             Log.Info($"records: {records.Count()} {csvRecords.Count}");
-            return true;
-        }
-
-        public bool TxEtl(FileObject fileObject, string outputFile)
-        {
-            // this forces blg output timestamps to use local capture timezone which is utc for azure
-            // Tx module is not able to determine with PDH api blg source timezone
-            // todo: verify if needed for etl...
-            //TimeUtil.DateTimeKind = DateTimeKind.Unspecified;
-
-            DateTime startTime = DateTime.Now;
-            IObservable<EtwNativeEvent> observable = default(IObservable<EtwNativeEvent>);
-            TraceObserver<EtwNativeEvent> traceSession = default(TraceObserver<EtwNativeEvent>);
-            //List<EtwNativeEvent> records = new List<EtwNativeEvent>();
-            List<DtrTraceRecord> csvRecords = new List<DtrTraceRecord>();
-
-            // todo: verify if needed for etl...testing pdh found invalid data when using concurrently
-            // lock (_lockObj)
-            // {
-            Log.Debug($"observable creating: {fileObject.FileUri}");
-            observable = EtwObservable.FromFiles(fileObject.FileUri);
-
-            Log.Debug($"observable created: {fileObject.FileUri}");
-            traceSession = ReadTraceRecords(observable);
-            Log.Debug($"finished total ms: {DateTime.Now.Subtract(startTime).TotalMilliseconds} reading: {fileObject.FileUri}");
-            //    records = traceSession.Records;
-            // }
-
-            //foreach (EtwNativeEvent record in records)
-            foreach (EtwNativeEvent record in traceSession.Records)
-            {
-                //Log.Info("record", record);
-                //if (!string.IsNullOrEmpty(record.Value.ToString()))
-                //{
-                //    string counterValue = record.Value.ToString() == "NaN" ? "0" : record.Value.ToString();
-
-                //    try
-                //    {
-                //        csvRecords.Add(new CsvCounterRecord()
-                //        {
-                //            Timestamp = record.Timestamp,
-                //            CounterName = record.CounterPath.Replace("\"", "").Trim(),
-                //            CounterValue = Decimal.Parse(counterValue, NumberStyles.AllowExponent | NumberStyles.AllowDecimalPoint),
-                //            Object = record.CounterSet?.Replace("\"", "").Trim(),
-                //            Counter = record.CounterName.Replace("\"", "").Trim(),
-                //            Instance = record.Instance?.Replace("\"", "").Trim(),
-                //            NodeName = fileObject.NodeName,
-                //            FileType = fileObject.FileDataType.ToString(),
-                //            RelativeUri = fileObject.RelativeUri
-                //        });
-                //    }
-                //    catch (Exception ex)
-                //    {
-                //        Log.Exception($"stringValue:{counterValue} exception:{ex}", record);
-                //    }
-                //}
-                //else
-                //{
-                //    Log.Warning($"empty counter value:", record);
-                //}
-            }
-
-            fileObject.Stream.Write(csvRecords);
-            Log.Info($"records: {traceSession.Records.Count()} {csvRecords.Count}");
-            traceSession.Dispose();
             return true;
         }
 

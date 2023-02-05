@@ -4,6 +4,7 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
+
         {
             "name": "Launch and Debug hosted blazor web assembly",
             "request": "launch",
@@ -62,6 +63,21 @@
                 "1"
             ],
             "cwd": "${workspaceFolder}/src/bin/Debug/netcoreapp3.1",
+            "stopAtEntry": false,
+            "console": "internalConsole",
+        },
+        {
+            "name": ".NET Core 60 Launch with Args (console)",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/src/bin/Debug/net6.0/CollectSFData.dll",
+            "args": [
+                //"${input:args}"
+                //"-config",
+                //".\\local.json"
+            ],
+            "cwd": "${workspaceFolder}/src/bin/Debug/net6.0",
             "stopAtEntry": false,
             "console": "internalConsole",
         },

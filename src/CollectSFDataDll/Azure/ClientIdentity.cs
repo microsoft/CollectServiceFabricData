@@ -69,22 +69,7 @@ namespace CollectSFData.Azure
             bool retval = false;
             try
             {
-                ManagedIdentityCredential managedCredential = new ManagedIdentityCredential(managedClientId, new TokenCredentialOptions
-                {
-                    Diagnostics = {
-                        ApplicationId = Constants.ApplicationName,
-                        IsDistributedTracingEnabled = true,
-                        IsLoggingContentEnabled = true,
-                        IsLoggingEnabled = true,
-                        LoggedHeaderNames = {
-                            "x-ms-request-id"
-                        },
-                        LoggedQueryParameters = {
-                            "api-version"
-                        }
-                    }
-                });
-
+                ManagedIdentityCredential managedCredential = new ManagedIdentityCredential(managedClientId, new TokenCredentialOptions());
                 ManagedIdentityToken = managedCredential.GetTokenAsync(new TokenRequestContext(new string[1] { $"{Constants.ManagementAzureCom}/.default" })).Result;
 
                 retval = true;

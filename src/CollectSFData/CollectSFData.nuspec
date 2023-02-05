@@ -39,7 +39,6 @@
         <dependency id="Newtonsoft.Json" version="13.0.1" exclude="Build,Analyzers" />
         <dependency id="System.CodeDom" version="4.7.0" exclude="Build,Analyzers" />
         <dependency id="System.Data.SqlClient" version="4.8.2" exclude="Build,Analyzers" />
-        <dependency id="System.Diagnostics.DiagnosticSource" version="4.6.0" exclude="Build,Analyzers" />
         <dependency id="System.Reactive" version="4.0.0" exclude="Build,Analyzers" />
         <dependency id="System.Security.Cryptography.Cng" version="4.7.0" exclude="Build,Analyzers" />
         <dependency id="System.Security.Cryptography.ProtectedData" version="4.7.0" exclude="Build,Analyzers" />
@@ -64,7 +63,6 @@
         <dependency id="Newtonsoft.Json" version="13.0.1" exclude="Build,Analyzers" />
         <dependency id="System.CodeDom" version="4.7.0" exclude="Build,Analyzers" />
         <dependency id="System.Data.SqlClient" version="4.8.2" exclude="Build,Analyzers" />
-        <dependency id="System.Diagnostics.DiagnosticSource" version="4.6.0" exclude="Build,Analyzers" />
         <dependency id="System.Reactive" version="4.0.0" exclude="Build,Analyzers" />
         <dependency id="System.Security.Cryptography.Cng" version="4.7.0" exclude="Build,Analyzers" />
         <dependency id="System.Security.Cryptography.ProtectedData" version="4.7.0" exclude="Build,Analyzers" />
@@ -89,7 +87,6 @@
         <dependency id="Newtonsoft.Json" version="13.0.1" exclude="Build,Analyzers" />
         <dependency id="System.CodeDom" version="4.7.0" exclude="Build,Analyzers" />
         <dependency id="System.Data.SqlClient" version="4.8.2" exclude="Build,Analyzers" />
-        <dependency id="System.Diagnostics.DiagnosticSource" version="4.6.0" exclude="Build,Analyzers" />
         <dependency id="System.Reactive" version="4.0.0" exclude="Build,Analyzers" />
         <dependency id="System.Security.Cryptography.Cng" version="4.7.0" exclude="Build,Analyzers" />
         <dependency id="System.Security.Cryptography.ProtectedData" version="4.7.0" exclude="Build,Analyzers" />
@@ -113,7 +110,6 @@
         <dependency id="Newtonsoft.Json" version="13.0.1" exclude="Build,Analyzers" />
         <dependency id="System.CodeDom" version="4.7.0" exclude="Build,Analyzers" />
         <dependency id="System.Data.SqlClient" version="4.8.2" exclude="Build,Analyzers" />
-        <dependency id="System.Diagnostics.DiagnosticSource" version="4.6.0" exclude="Build,Analyzers" />
         <dependency id="System.Reactive" version="4.0.0" exclude="Build,Analyzers" />
         <dependency id="System.Security.Cryptography.Cng" version="4.7.0" exclude="Build,Analyzers" />
         <dependency id="System.Security.Cryptography.ProtectedData" version="4.7.0" exclude="Build,Analyzers" />

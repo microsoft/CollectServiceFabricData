@@ -1,5 +1,17 @@
 # Change log
 
+## 02/05/2023
+
+- fix configuration class inconsistencies in base classes
+- remove System.Diagnostic.DiagnosticSource from GetManagedIdentity
+- add functionality to remove failed and succeeded kusto ingestion queue messages if over 1 day old to prevent having to continually enumerate and process all stale messages.
+- fix hang on trace retry for failed csv traces
+
+## 12/21/2022
+
+- add additional counters to no progress check / timeout
+- change noisy debug trace to trivial
+
 ## 12/6/2022
 
 - UploadCacheData() set file status from formatting to succeeded if not uploading to kusto or log analytics
