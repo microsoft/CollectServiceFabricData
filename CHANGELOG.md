@@ -1,5 +1,10 @@
 # Change log
 
+## 02/05/2023
+
+- fix configuration class inconsistencies in base classes
+- remove System.Diagnostic.DiagnosticSource from GetManagedIdentity
+
 ## 12/21/2022
 
 - add additional counters to no progress check / timeout
