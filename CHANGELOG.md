@@ -1,10 +1,15 @@
 # Change log
 
-## 
-
-- migrate from .net472 default to .net48 default
-
 ## 02/05/2023
+
+- migrate from default target framework .net472 to .net48
+- migrate from .net6.0 to .net 7.0
+- current .net target builds:
+    - net462
+    - net48
+    - net7.0
+
+## 02/05/2023 v2.9.2302.10517
 
 - fix configuration class inconsistencies in base classes
 - remove System.Diagnostic.DiagnosticSource from GetManagedIdentity
