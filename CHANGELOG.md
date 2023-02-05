@@ -4,6 +4,8 @@
 
 - fix configuration class inconsistencies in base classes
 - remove System.Diagnostic.DiagnosticSource from GetManagedIdentity
+- add functionality to remove failed and succeeded kusto ingestion queue messages if over 1 day old to prevent having to continually enumerate and process all stale messages.
+- fix hang on trace retry for failed csv traces
 
 ## 12/21/2022
 
