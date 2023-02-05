@@ -52,6 +52,7 @@ namespace CollectSFData.Common
             if (configurationOptions != null)
             {
                 Config.MergeConfig(configurationOptions);
+                Config.Validate();
             }
 
             Log.Config = Config;
