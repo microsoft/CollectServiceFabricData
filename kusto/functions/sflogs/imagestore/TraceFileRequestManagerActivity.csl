@@ -1,0 +1,22 @@
+.create-or-alter function with (docstring = "[T:string] where T=table name. Function to show all RequestManager activty.", folder = "sflogs/imagestore")
+    TraceFileRequestManagerActivity(T:string) {
+    let rx_action = @'Action:([^,]*)';
+    let rx_session = @'SessionId:([^\s]*)';
+    let rx_path = @'StoreRelativePath:([^\s]*)';
+    let rx_timeout = @'Timeout:([^\s]*)';
+    let rx_activity = @'ActivityId:([^\s]*)';
+    let rx_message = @'MessageId:([^\s]*)';
+    let rx_state = @'State:(.*)';
+    table(T)
+    | where Type startswith "FileStoreService.RequestManager@"
+    | where Text startswith "ProcessRequest:"
+    | extend action = extract(rx_action, 1, Text)
+    | extend sessionId = extract(rx_session, 1, Text)
+    | extend storeRelativePath = extract(rx_path, 1, Text)
+    | extend timeout = extract(rx_timeout, 1, Text)
+    | extend activityId = extract(rx_activity, 1, Text)
+    | extend messageId = extract(rx_message, 1, Text)
+    | extend state = extract(rx_state, 1, Text)
+    | project Timestamp, action, storeRelativePath, sessionId, timeout, activityId, messageId, state, NodeName, Type, Text
+    | where action !in ('ListAction','CheckExistenceAction','GetFileTransferEndpointsAction')
+}

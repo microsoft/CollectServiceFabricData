@@ -238,5 +238,8 @@
         TypeAndTextContains(T, "unsecure cluster (http://)", "Hosting.CertificateAclingManager", "Can't find anonymous certificate. ErrorCode: E_FAIL"),
         TypeAndTextContains(T, "unsecure cluster (http://)", "Hosting.CertificateAclingManager", "Error at AclAnonymousCertificate, ErrorCode E_FAIL"),
         TypeAndTextContains(T, "possible unsecure cluster (http://)", "Common.CryptoUtility", "Can't get private key filename for certificate. Error: 0x80090014"),
-        TypeContains(T, "replica performance or configuration issue", "RE._ReplicasOps_BuildIdleReplicaFailedEvent")
+        TypeContains(T, "replica performance or configuration issue", "RE._ReplicasOps_BuildIdleReplicaFailedEvent"),
+        TypeContains(T, "possible FM deadlock issue. queue full.","FM.QueueFull_Failure"),
+        TypeAndTextContains(T, "customer application code issue.", "Api.Finish", "Error = 2148734227"),
+        TypeAndTextContains(T, "certificate revoked", "Transport.SecurityContext", "FABRIC_E_CONNECTION_DENIED: 0x80092010")
     }

@@ -1,0 +1,6 @@
+.create-or-alter function with (docstring = "[T:string] where T=table name. function to graph TReplicator PhysicalLogWriterFlushEnd and visualize avg LogWriter flush latency by NodeName.", folder = "sflogs/performance")
+    TraceReplicatorFlushAvgLatencyGraph(T:string) {
+    TraceReplicatorFlushAvgLatency(T)
+    | summarize max(toint(avgLatencyMs)) by bin(Timestamp,10s), NodeName
+    | render timechart
+}

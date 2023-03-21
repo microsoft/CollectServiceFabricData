@@ -1,0 +1,4 @@
+.create-or-alter function with (docstring = "[dateString:string] where longTime=long type epoch time in ms. function to generate iso datetime from unix epoch time in ms.", folder = "sflogs/base")
+    FromEpochTimeMs(longTime:long=0) {
+        datetime(1970-01-01) + longTime * 1ms
+    }

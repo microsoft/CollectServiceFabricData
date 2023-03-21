@@ -4,7 +4,7 @@
     table(T)
     | where Type startswith 'FabricGateway' or Type startswith "HttpGateway" or Type startswith "EntreeServiceProxy"
     | summarize count() by bin(Timestamp, binLengthTimespan), NodeName        
-    | partition by NodeName
+    | partition hint.strategy=shuffle by NodeName
         (
         top 1 by Timestamp desc
         )

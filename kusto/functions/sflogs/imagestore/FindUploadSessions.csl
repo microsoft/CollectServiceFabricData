@@ -1,0 +1,12 @@
+.create-or-alter function with (docstring = "[T:string] where T=table name. [A:string] where A=ApplicatioName. Function to find File Upload sessions.", folder = "sflogs/imagestore")
+    FindUploadSessions(T:string) {
+    let regex_path = @'storeRelativePath:([^\s]*)';
+    let regex_sessionId = @'sessionId:([a-fA-F0-9]{8}\-[a-fA-F0-9]{4}\-[a-fA-F0-9]{4}\-[a-fA-F0-9]{4}\-[a-fA-F0-9]{12})';
+    let regex_Ip = @'endpoint:(\d+.\d+.\d+.\d+):(\d+)';    
+    table(T)
+    | where Type startswith "FileStoreService.Client.FileUploader" and Text startswith "UploadFile called"
+    | extend storeRelativePath = extract(regex_path, 1, Text, typeof(string))
+    | extend sessionId = extract(regex_sessionId, 1, Text, typeof(string))
+    | extend endpoint  = extract(regex_Ip, 1, Text, typeof(string))
+    | project Timestamp, sessionId, storeRelativePath, Type, Text, PID, TID, NodeName
+}
