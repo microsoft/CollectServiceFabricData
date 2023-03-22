@@ -1,5 +1,12 @@
 # Change log
 
+## 03/22/2023
+
+- add datetime format specifier token option to LogFile
+    -log|--logFile [string] file name and path to save console output.
+        can optionally specify .net datetime format specifier inside '<>'.
+        example: collectsfdata-\<yyyy-MM-dd-HH-mm-ss\>.log
+
 ## 02/05/2023
 
 - migrate from default target framework .net472 to .net48

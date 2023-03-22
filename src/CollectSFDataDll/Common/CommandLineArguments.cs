@@ -513,7 +513,9 @@ namespace CollectSFData.Common
                     CommandOptionType.SingleValue);
 
             LogFile = CmdLineApp.Option("-log|--logFile",
-                    "[string] file name and path to save console output",
+                    "[string] file name and path to save console output." +
+                    $"{newLine} can optionally specify .net datetime format specifier inside '<>'." +
+                    $"{newLine} example: collectsfdata-<yyyy-MM-dd-HH-mm-ss>.log",
                     CommandOptionType.SingleValue);
 
             NodeFilter = CmdLineApp.Option("-nf|--nodeFilter",

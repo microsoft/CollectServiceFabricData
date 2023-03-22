@@ -245,7 +245,7 @@ namespace CollectSFData.Common
             return timeString;
         }
 
-        public bool CreateDirectory(string directory)
+        public static bool CreateDirectory(string directory)
         {
             try
             {
@@ -988,7 +988,7 @@ namespace CollectSFData.Common
             }
         }
 
-        private void CheckLogFile()
+        public bool CheckLogFile()
         {
             if (LogDebug == LoggingLevel.Verbose && !HasValue(LogFile))
             {
@@ -999,9 +999,19 @@ namespace CollectSFData.Common
             if (HasValue(LogFile))
             {
                 LogFile = FileManager.NormalizePath(LogFile);
-                CreateDirectory(Path.GetDirectoryName(LogFile));
+
+                if(Regex.IsMatch(LogFile,@"<.+>")) 
+                {
+                    string timePattern = Regex.Match(LogFile, @"<(.+?)>").Groups[1].Value;
+                    LogFile = Regex.Replace(LogFile, @"<.+?>", DateTime.Now.ToString(timePattern));
+                    Log.Info($"replaced datetime token {timePattern}: new LogFile name:{LogFile}");
+                }
+
                 Log.Info($"setting output log file to: {LogFile}");
+                return CreateDirectory(Path.GetDirectoryName(LogFile));
             }
+
+            return true;
         }
 
         private string CleanTableName(string tableName, bool withGatherType = false)

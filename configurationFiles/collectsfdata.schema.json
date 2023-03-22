@@ -456,10 +456,11 @@
       "$id": "#/properties/LogFile",
       "type": "string",
       "title": "LogFile",
-      "description": "path and file name to log output",
+      "description": "path and file name to log output. can optionally specify .net datetime format specifier inside '<>'. example: collectsfdata-<yyyy-MM-dd-HH-mm-ss>.log",
       "default": "",
       "examples": [
-        "c:\\temp\\collectsfdata.log"
+        "c:\\temp\\collectsfdata.log",
+        "c:\\temp\\collectsfdata-<yyyy-MM-dd-HH-mm-ss>.log"
       ],
       "pattern": "^(.+)$"
     },
