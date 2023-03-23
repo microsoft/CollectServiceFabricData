@@ -4,6 +4,7 @@
 // ------------------------------------------------------------
 
 using CollectSFData.Common;
+using CollectSFData.DataFile;
 using Microsoft.Identity.Client;
 using System;
 using System.IO;
@@ -29,17 +30,7 @@ namespace CollectSFData.Azure
             _appDataFolder = $"{Environment.GetEnvironmentVariable("LOCALAPPDATA")}\\{_friendlyName}";
             CacheFilePath = $"{_appDataFolder}\\{_friendlyName}.msalcache.bin3";
 
-            try
-            {
-                if (!Directory.Exists(_appDataFolder))
-                {
-                    Directory.CreateDirectory(_appDataFolder);
-                }
-            }
-            catch
-            {
-                Log.Warning($"unable to create directory {_appDataFolder}");
-            }
+            FileManager.CreateDirectory(_appDataFolder);
         }
 
         public static void AfterAccessNotification(TokenCacheNotificationArgs args)

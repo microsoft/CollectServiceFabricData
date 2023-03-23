@@ -209,8 +209,8 @@ namespace CollectSFData.DataFile
         {
             fileUri = fileUri ?? _fileObject.FileUri;
             Open(true);
-
-            Directory.CreateDirectory(Path.GetDirectoryName(fileUri));
+            
+            FileManager.CreateDirectory(Path.GetDirectoryName(fileUri));
             Log.Info($"writing memoryStream ({_memoryStream.Length} bytes) to file: {fileUri}", ConsoleColor.Green);
 
             using (FileStream fileStream = File.OpenWrite(fileUri))

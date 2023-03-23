@@ -245,34 +245,6 @@ namespace CollectSFData.Common
             return timeString;
         }
 
-        public static bool CreateDirectory(string directory)
-        {
-            try
-            {
-                if (string.IsNullOrEmpty(directory))
-                {
-                    return false;
-                }
-
-                if (!Directory.Exists(directory))
-                {
-                    Log.Info($"creating directory:{directory}");
-                    Directory.CreateDirectory(directory);
-                }
-                else
-                {
-                    Log.Debug($"directory exists:{directory}");
-                }
-
-                return true;
-            }
-            catch (Exception e)
-            {
-                Log.Exception($"exception:{e}");
-                return false;
-            }
-        }
-
         public void DisplayStatus()
         {
             Log.Min($"      Gathering: {FileType.ToString()}", ConsoleColor.White);
@@ -320,7 +292,7 @@ namespace CollectSFData.Common
             Dictionary<string, string> headers = new Dictionary<string, string>();
             headers.Add("User-Agent", $"{Constants.ApplicationName}");
 
-            if (!CreateDirectory(EtwManifestsCache))
+            if (!FileManager.CreateDirectory(EtwManifestsCache))
             {
                 return;
             }
@@ -937,7 +909,7 @@ namespace CollectSFData.Common
 
             if (!Directory.Exists(CacheLocation))
             {
-                CreateDirectory(CacheLocation);
+                FileManager.CreateDirectory(CacheLocation);
             }
             else if (Directory.Exists(CacheLocation)
                 & Directory.GetFileSystemEntries(CacheLocation).Length > 0
@@ -947,7 +919,7 @@ namespace CollectSFData.Common
                 // add working dir to outputlocation so it can be deleted
                 string workDirPath = $"{CacheLocation}{Path.GetFileName(Path.GetTempFileName())}";
                 Log.Warning($"outputlocation not empty and DeleteCache is enabled, creating work subdir {workDirPath}");
-                CreateDirectory(workDirPath);
+                FileManager.CreateDirectory(workDirPath);
                 CacheLocation = workDirPath;
             }
 
@@ -983,7 +955,7 @@ namespace CollectSFData.Common
             if (!Directory.Exists(EtwManifestsCache) || Directory.GetFiles(EtwManifestsCache).Length < 1)
             {
                 Log.Info($"creating EtwManifestsCache:{EtwManifestsCache}");
-                CreateDirectory(EtwManifestsCache);
+                FileManager.CreateDirectory(EtwManifestsCache);
                 DownloadEtwManifests();
             }
         }
@@ -1008,7 +980,7 @@ namespace CollectSFData.Common
                 }
 
                 Log.Info($"setting output log file to: {LogFile}");
-                return CreateDirectory(Path.GetDirectoryName(LogFile));
+                return FileManager.CreateDirectory(Path.GetDirectoryName(LogFile));
             }
 
             return true;

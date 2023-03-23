@@ -30,6 +30,38 @@ namespace CollectSFData.DataFile
             _config = _instance.Config;
         }
 
+        public static bool CreateDirectory(string directory)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(directory))
+                {
+                    return false;
+                }
+
+                if (!Directory.Exists(directory))
+                {
+                    Log.Info($"creating directory:{directory}");
+                    Directory.CreateDirectory(directory);
+                }
+                else
+                {
+                    Log.Debug($"directory exists:{directory}");
+                }
+
+                // remove read only attributes
+                DirectoryInfo dirInfo = new DirectoryInfo(directory);
+                dirInfo.Attributes &= ~FileAttributes.ReadOnly;
+
+                return true;
+            }
+            catch (Exception e)
+            {
+                Log.Exception($"exception:{e}");
+                return false;
+            }
+        }
+
         public static string NormalizePath(string path, string directorySeparator = "/")
         {
             if (string.IsNullOrEmpty(path))
