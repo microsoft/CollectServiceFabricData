@@ -427,8 +427,8 @@ namespace CollectSFData
                 else
                 {
                     string logString = $"configuration set to upload cache files from 'fileUris' count:{Config.FileUris.Length} but no files found";
-                    
-                    if(Config.SasEndpointInfo.IsPopulated())
+
+                    if (Config.SasEndpointInfo.IsPopulated())
                     {
                         Log.Warning(logString);
                     }
@@ -443,47 +443,47 @@ namespace CollectSFData
                 switch (Config.FileType)
                 {
                     case FileTypesEnum.counter:
-                        files = Instance.FileMgr.GetFiles(Config.CacheLocation, $"*{Constants.PerfCtrExtension}");
+                        files = Instance.FileMgr.GetFiles(Config.CacheLocation, Constants.PerfCtrExtension);
 
                         if (files.Count < 1)
                         {
-                            files = Instance.FileMgr.GetFiles(Config.CacheLocation, $"*{Constants.PerfCsvExtension}");
+                            files = Instance.FileMgr.GetFiles(Config.CacheLocation, Constants.PerfCsvExtension);
                         }
 
                         break;
 
                     case FileTypesEnum.setup:
-                        files = Instance.FileMgr.GetFiles(Config.CacheLocation, $"*{Constants.SetupExtension}");
+                        files = Instance.FileMgr.GetFiles(Config.CacheLocation, Constants.SetupExtension);
 
                         break;
 
                     case FileTypesEnum.table:
-                        files = Instance.FileMgr.GetFiles(Config.CacheLocation, $"*{Constants.TableExtension}");
+                        files = Instance.FileMgr.GetFiles(Config.CacheLocation, Constants.TableExtension);
 
                         break;
 
                     case FileTypesEnum.trace:
-                        files = Instance.FileMgr.GetFiles(Config.CacheLocation, $"*{Constants.DtrExtension}{Constants.ZipExtension}");
+                        files = Instance.FileMgr.GetFiles(Config.CacheLocation, Constants.DtrExtension + Constants.ZipExtension);
 
                         if (files.Count < 1)
                         {
-                            files = Instance.FileMgr.GetFiles(Config.CacheLocation, $"*{Constants.DtrExtension}");
+                            files = Instance.FileMgr.GetFiles(Config.CacheLocation, Constants.DtrExtension);
                         }
 
                         if (files.Count < 1)
                         {
-                            files = Instance.FileMgr.GetFiles(Config.CacheLocation, $"*{Constants.EtlExtension}{Constants.ZipExtension}");
+                            files = Instance.FileMgr.GetFiles(Config.CacheLocation, Constants.EtlExtension + Constants.ZipExtension);
                         }
 
                         if (files.Count < 1)
                         {
-                            files = Instance.FileMgr.GetFiles(Config.CacheLocation, $"*{Constants.EtlExtension}");
+                            files = Instance.FileMgr.GetFiles(Config.CacheLocation, Constants.EtlExtension);
                         }
 
                         break;
 
                     case FileTypesEnum.sfextlog:
-                        files = Instance.FileMgr.GetFiles(Config.CacheLocation, $"*{Constants.LogExtension}");
+                        files = Instance.FileMgr.GetFiles(Config.CacheLocation, Constants.LogExtension);
 
                         break;
 
