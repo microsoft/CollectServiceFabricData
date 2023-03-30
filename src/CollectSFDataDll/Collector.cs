@@ -443,47 +443,47 @@ namespace CollectSFData
                 switch (Config.FileType)
                 {
                     case FileTypesEnum.counter:
-                        files = Directory.GetFiles(Config.CacheLocation, $"*{Constants.PerfCtrExtension}", SearchOption.AllDirectories).ToList();
+                        files = Instance.FileMgr.GetFiles(Config.CacheLocation, $"*{Constants.PerfCtrExtension}");
 
                         if (files.Count < 1)
                         {
-                            files = Directory.GetFiles(Config.CacheLocation, $"*{Constants.PerfCsvExtension}", SearchOption.AllDirectories).ToList();
+                            files = Instance.FileMgr.GetFiles(Config.CacheLocation, $"*{Constants.PerfCsvExtension}");
                         }
 
                         break;
 
                     case FileTypesEnum.setup:
-                        files = Directory.GetFiles(Config.CacheLocation, $"*{Constants.SetupExtension}", SearchOption.AllDirectories).ToList();
+                        files = Instance.FileMgr.GetFiles(Config.CacheLocation, $"*{Constants.SetupExtension}");
 
                         break;
 
                     case FileTypesEnum.table:
-                        files = Directory.GetFiles(Config.CacheLocation, $"*{Constants.TableExtension}", SearchOption.AllDirectories).ToList();
+                        files = Instance.FileMgr.GetFiles(Config.CacheLocation, $"*{Constants.TableExtension}");
 
                         break;
 
                     case FileTypesEnum.trace:
-                        files = Directory.GetFiles(Config.CacheLocation, $"*{Constants.DtrExtension}{Constants.ZipExtension}", SearchOption.AllDirectories).ToList();
+                        files = Instance.FileMgr.GetFiles(Config.CacheLocation, $"*{Constants.DtrExtension}{Constants.ZipExtension}");
 
                         if (files.Count < 1)
                         {
-                            files = Directory.GetFiles(Config.CacheLocation, $"*{Constants.DtrExtension}", SearchOption.AllDirectories).ToList();
+                            files = Instance.FileMgr.GetFiles(Config.CacheLocation, $"*{Constants.DtrExtension}");
                         }
 
                         if (files.Count < 1)
                         {
-                            files = Directory.GetFiles(Config.CacheLocation, $"*{Constants.EtlExtension}{Constants.ZipExtension}", SearchOption.AllDirectories).ToList();
+                            files = Instance.FileMgr.GetFiles(Config.CacheLocation, $"*{Constants.EtlExtension}{Constants.ZipExtension}");
                         }
 
                         if (files.Count < 1)
                         {
-                            files = Directory.GetFiles(Config.CacheLocation, $"*{Constants.EtlExtension}", SearchOption.AllDirectories).ToList();
+                            files = Instance.FileMgr.GetFiles(Config.CacheLocation, $"*{Constants.EtlExtension}");
                         }
 
                         break;
 
                     case FileTypesEnum.sfextlog:
-                        files = Directory.GetFiles(Config.CacheLocation, $"*{Constants.LogExtension}", SearchOption.AllDirectories).ToList();
+                        files = Instance.FileMgr.GetFiles(Config.CacheLocation, $"*{Constants.LogExtension}");
 
                         break;
 

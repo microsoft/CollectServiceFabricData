@@ -285,6 +285,25 @@ namespace CollectSFData.DataFile
             return FormatRecord<T>(fileObject, newEventPattern);
         }
 
+        public List<string> GetFiles(string filePath, string filePattern, bool includeSubDirectories = true)
+        {
+            Log.Info($"enter:filePath{filePath} subdir:{includeSubDirectories}");
+            List<string> files = new List<string>();
+            SearchOption subDirectories = includeSubDirectories ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
+
+            if(Directory.Exists(filePath)) 
+            {
+                files.AddRange(Directory.GetFiles(filePath, $"*{filePattern}", subDirectories));
+            }
+            else
+            {
+                Log.Warning($"directory does not exist:filePath{filePath}");
+            }
+            
+            Log.Info($"exit:filePath{filePath} subdir:{includeSubDirectories} files:", files);
+            return files;
+        }
+
         public FileObjectCollection PopulateCollection<T>(FileObject fileObject) where T : IRecord
         {
             FileObjectCollection collection = new FileObjectCollection() { fileObject };
