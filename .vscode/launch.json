@@ -67,7 +67,7 @@
             "console": "internalConsole",
         },
         {
-            "name": ".NET Core 60 Launch with Args (console)",
+            "name": ".NET Core 7 Launch with Args (console)",
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
@@ -82,7 +82,7 @@
             "console": "internalConsole",
         },
         {
-            "name": "NET 6 Launch (console)",
+            "name": "NET 7 Launch (console)",
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
