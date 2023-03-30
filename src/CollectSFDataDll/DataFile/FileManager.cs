@@ -285,7 +285,7 @@ namespace CollectSFData.DataFile
             return FormatRecord<T>(fileObject, newEventPattern);
         }
 
-        public List<string> GetFiles(string filePath, string filePattern, bool includeSubDirectories = true)
+        public List<string> GetFilesByExtension(string filePath, string fileExtensionPattern, bool includeSubDirectories = true)
         {
             Log.Info($"enter:filePath{filePath} subdir:{includeSubDirectories}");
             List<string> files = new List<string>();
@@ -293,7 +293,7 @@ namespace CollectSFData.DataFile
 
             if(Directory.Exists(filePath)) 
             {
-                files.AddRange(Directory.GetFiles(filePath, $"*{filePattern}", subDirectories));
+                files.AddRange(Directory.GetFiles(filePath, $"*{fileExtensionPattern}", subDirectories));
             }
             else
             {
