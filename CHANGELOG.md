@@ -1,5 +1,10 @@
 # Change log
 
+## 04/07/2023
+
+- revert net7.0 changes to net6.0 as vs sdk has issues with net7.0. vscode however works
+    - net7.0 can be built with vscode and scripts\dotnet-build.ps1
+
 ## 03/22/2023
 
 - add datetime format specifier token option to LogFile

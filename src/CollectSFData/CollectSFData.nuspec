@@ -91,7 +91,7 @@
         <dependency id="System.Security.Cryptography.Cng" version="4.7.0" exclude="Build,Analyzers" />
         <dependency id="System.Security.Cryptography.ProtectedData" version="4.7.0" exclude="Build,Analyzers" />
       </group>
-      <group targetFramework=".net7.0">
+      <group targetFramework=".net6.0">
         <dependency id="Azure.Security.KeyVault.Certificates" version="4.1.0" exclude="Build,Analyzers" />
         <dependency id="Azure.Security.KeyVault.Keys" version="4.1.0" exclude="Build,Analyzers" />
         <dependency id="Azure.Security.KeyVault.Secrets" version="4.1.0" exclude="Build,Analyzers" />
@@ -181,23 +181,23 @@
     <file src="..\bin\$configuration$\netcoreapp3.1\*.pdb" target="lib\netcoreapp3.1" />
     <file src="..\bin\$configuration$\netcoreapp3.1\Etlreader.dll" target="lib\netcoreapp3.1" />
     <file src="..\bin\$configuration$\netcoreapp3.1\System.Fabric.Strings.dll" target="lib\netcoreapp3.1" />
-    <!-- net7.0 tools -->
+    <!-- net6.0 tools -->
     <!-- 
-    <file src="..\bin\$configuration$\net7.0\*.exe" target="tools\net7.0" />
-    <file src="..\bin\$configuration$\net7.0\*.runtimeconfig.json" target="tools\net7.0" />
-    <file src="..\bin\$configuration$\net7.0\*.dll" target="tools\net7.0" />
-    <file src="..\bin\$configuration$\net7.0\*.pdb" target="tools\net7.0" />
-    <file src="..\bin\$configuration$\net7.0\manifests\*.man" target="tools\net7.0\manifests" />
-    <file src="..\bin\$configuration$\net7.0\*.config" target="tools\net7.0" />
-    <file src="..\..\configurationFiles\collectsfdata.options.json" target="tools\net7.0" />
+    <file src="..\bin\$configuration$\net6.0\*.exe" target="tools\net6.0" />
+    <file src="..\bin\$configuration$\net6.0\*.runtimeconfig.json" target="tools\net6.0" />
+    <file src="..\bin\$configuration$\net6.0\*.dll" target="tools\net6.0" />
+    <file src="..\bin\$configuration$\net6.0\*.pdb" target="tools\net6.0" />
+    <file src="..\bin\$configuration$\net6.0\manifests\*.man" target="tools\net6.0\manifests" />
+    <file src="..\bin\$configuration$\net6.0\*.config" target="tools\net6.0" />
+    <file src="..\..\configurationFiles\collectsfdata.options.json" target="tools\net6.0" />
     -->
-    <!-- net7.0 lib -->
-    <file src="..\bin\$configuration$\net7.0\CollectSFDataDll.dll" target="lib\net7.0" />
-    <file src="..\bin\$configuration$\net7.0\Sf.Tx.Core.dll" target="lib\net7.0" />
-    <file src="..\bin\$configuration$\net7.0\Sf.Tx.Windows.dll" target="lib\net7.0" />
-    <file src="..\bin\$configuration$\net7.0\*.pdb" target="lib\net7.0" />
-    <file src="..\bin\$configuration$\net7.0\Etlreader.dll" target="lib\net7.0" />
-    <file src="..\bin\$configuration$\net7.0\System.Fabric.Strings.dll" target="lib\net7.0" />
+    <!-- net6.0 lib -->
+    <file src="..\bin\$configuration$\net6.0\CollectSFDataDll.dll" target="lib\net6.0" />
+    <file src="..\bin\$configuration$\net6.0\Sf.Tx.Core.dll" target="lib\net6.0" />
+    <file src="..\bin\$configuration$\net6.0\Sf.Tx.Windows.dll" target="lib\net6.0" />
+    <file src="..\bin\$configuration$\net6.0\*.pdb" target="lib\net6.0" />
+    <file src="..\bin\$configuration$\net6.0\Etlreader.dll" target="lib\net6.0" />
+    <file src="..\bin\$configuration$\net6.0\System.Fabric.Strings.dll" target="lib\net6.0" />
     <!-- icon -->
     <file src="..\FabricSupport.png" target="images\" />
   </files>
