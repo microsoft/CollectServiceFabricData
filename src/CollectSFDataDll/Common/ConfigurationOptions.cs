@@ -145,7 +145,6 @@ namespace CollectSFData.Common
         public void CheckPublicIp()
         {
             Http http = Http.ClientFactory();
-            http.DisplayError = false;
             JToken ipAddress = null;
 
             try
@@ -171,7 +170,6 @@ namespace CollectSFData.Common
         {
             string response = $"\r\n\tlocal running version: {Version}";
             Http http = Http.ClientFactory();
-            http.DisplayError = false;
 
             Dictionary<string, string> headers = new Dictionary<string, string>();
             headers.Add("User-Agent", $"{Constants.ApplicationName}");
@@ -287,7 +285,6 @@ namespace CollectSFData.Common
         {
             Log.Info($"Checking EtwManifestsCache:{Constants.EtwManifestsUrlIndex}");
             Http http = Http.ClientFactory();
-            http.DisplayError = false;
 
             Dictionary<string, string> headers = new Dictionary<string, string>();
             headers.Add("User-Agent", $"{Constants.ApplicationName}");

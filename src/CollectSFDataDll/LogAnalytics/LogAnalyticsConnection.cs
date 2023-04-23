@@ -402,17 +402,13 @@ namespace CollectSFData.LogAnalytics
                             uri: uri,
                             authToken: _laArm.BearerToken,
                             jsonBody: jsonBody,
-                            httpMethod: HttpMethod.Post);
+                            httpMethod: HttpMethod.Post,
+                            displayError: displayError);
 
                 Log.Info($"{_httpClient.Response?.ReasonPhrase}");
 
                 if (!_httpClient.Success)
                 {
-                    if (displayError)
-                    {
-                        Log.Error("unsuccessful response:", _httpClient.Response);
-                    }
-
                     return null;
                 }
                 else
