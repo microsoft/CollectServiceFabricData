@@ -241,5 +241,6 @@
         TypeContains(T, "replica performance or configuration issue", "RE._ReplicasOps_BuildIdleReplicaFailedEvent"),
         TypeContains(T, "possible FM deadlock issue. queue full.","FM.QueueFull_Failure"),
         TypeAndTextContains(T, "customer application code issue.", "Api.Finish", "Error = 2148734227"),
-        TypeAndTextContains(T, "certificate revoked", "Transport.SecurityContext", "FABRIC_E_CONNECTION_DENIED: 0x80092010")
+        TypeAndTextContains(T, "certificate revoked", "Transport.SecurityContext", "FABRIC_E_CONNECTION_DENIED: 0x80092010"),
+        TypeAndTextContains(T, "possible issue if file:StartStopNode.txt is present on node. file will cause node to be in a Status == Down and HealthState == Error", "TestabilityComponent.NodeTestabilitySubsystem", "Killing node on command RestartNode")
     }

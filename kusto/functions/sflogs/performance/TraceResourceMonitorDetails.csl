@@ -1,0 +1,24 @@
+.create-or-alter function with (docstring = "[T:string] where T=table name. function to graph ResourceMonitor CPU and Memory details for tracked processes.", folder = "sflogs/performance")
+    TraceResourceMonitorDetails(T:string) {
+    let regx_Application = @"(fabric:\/[\w]*)";
+    let regx_ServicePackage = @"service\spackage\s([\w]*)";
+    let regx_CodePackage = @"code\spackage\s([\w]*)";
+    let regx_NodeId = @"on\snode\s([a-fA-F0-9]*)";
+    let regx_AvgCpuCores = @"average\scpu\susage\s([0-9\.E\-\+]*)";
+    let regx_AvgMemory = @"average\smemory\susage\s([0-9\.E\-\+]*)\s([\w]*)";
+    let regx_RawCpuCores = @"raw\scpu\susage\s([0-9\.E\-\+]*)";
+    let regx_RawMemory = @"raw\smemory\susage\s([0-9\.E\-\+]*)\s([\w]*)";
+    table(T)
+    | where Type startswith "ResourceMonitor.ResourceUsageReportSharedHost"
+    | extend Application = extract(regx_Application, 1, Text)
+    | extend ServicePackage = extract(regx_ServicePackage, 1, Text)
+    | extend CodePackage = extract(regx_CodePackage, 1, Text)
+    | extend NodeId      = extract(regx_NodeId, 1, Text)
+    | extend AvgCpuCores = extract(regx_AvgCpuCores, 1, Text)
+    | extend AvgMemory   = extract(regx_AvgMemory, 1, Text)
+    | extend AvgMemoryUnit   = extract(regx_AvgMemory, 2, Text)
+    | extend RawCpuCores = extract(regx_RawCpuCores, 1, Text)
+    | extend RawMemory   = extract(regx_RawMemory, 1, Text)
+    | extend RawMemoryUnit   = extract(regx_RawMemory, 2, Text)
+    | project Timestamp, Application, ServicePackage, CodePackage, NodeId, AvgCpuCores, AvgMemory, AvgMemoryUnit, RawCpuCores, RawMemory, RawMemoryUnit
+}

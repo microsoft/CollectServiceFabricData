@@ -128,4 +128,7 @@
             | invoke TypeAndTextContains("docker container service warnings when not installed.", "Hosting.ContainerActivator", "InvokeContainerApiOperation failed with error=FABRIC_E_SERVICE_OFFLINE.")
             | invoke TypeAndTextContains("docker container service warnings when not installed.", "Hosting.ProcessActivationManager", "GetImages(): Failed communication with docker with error=FABRIC_E_SERVICE_OFFLINE")
             | invoke TypeAndTextContains("docker container service warnings when not installed.", "Hosting.LocalResourceManager", "Failed to get images with error: FABRIC_E_SERVICE_OFFLINE.")
+            | invoke TypeAndTextContains("not an error","FabricDCA.WindowsFabric_ServiceFabricEtlFile","Unable to decode ETW event. The event will be skipped.")
+            | invoke TypeAndTextContains("not an error","General.RSMessage","RSMessage::GetActivityId Missing activity id header")
+            | invoke TypeAndTextContains("file not found not usually an error.","General.File@File.GetAttributes","GetAttributes failed with the following error 0x80070002 for the path:")
     }

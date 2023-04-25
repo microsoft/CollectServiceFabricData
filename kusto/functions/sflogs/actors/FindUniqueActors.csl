@@ -1,0 +1,12 @@
+.create-or-alter function with (docstring = "[T:string] where T=table name", folder = "sflogs/actors")
+    FindUniqueActors(T:string) {
+    let extractPattern_ActorDetails = @'{([a-f0-9]{8}\-[a-f0-9]{4}\-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})}:([0-9]{18}):Long_([\-0-9]{1,20})'; 
+    table(T)
+    | where Type startswith "ActorFramework.ActorBase@"
+    | extend partitionId = extract(extractPattern_ActorDetails, 1, Type, typeof(string))
+    | extend replicaId = extract(extractPattern_ActorDetails, 2, Type, typeof(string))
+    | extend actorId = extract(extractPattern_ActorDetails, 3, Type, typeof(string))
+    | project Type, Text,  partitionId, replicaId, actorId
+    | summarize by partitionId, actorId
+    | order by partitionId, actorId
+}

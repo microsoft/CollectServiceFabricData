@@ -1,5 +1,5 @@
-.create-or-alter function with (docstring = "[T:string] where T=table name. Function to show all RequestManager activty.", folder = "sflogs/imagestore")
-    TraceFileRequestManagerActivity(T:string) {
+.create-or-alter function with (docstring = "[T:string] where T=table name, [F:string] where F=file name. Function to show all RequestManager activty.", folder = "sflogs/imagestore")
+    TraceFileRequestManagerActivityByFile(T:string, F:string) {
     let rx_action = @'Action:([^,]*)';
     let rx_session = @'SessionId:([^\s]*)';
     let rx_path = @'StoreRelativePath:([^\s]*)';
@@ -10,7 +10,7 @@
     table(T)
     | where (Type startswith "FileStoreService.RequestManager@" and Text startswith "ProcessRequest:")
        or (Type startswith "FileStoreService.FileAsyncOperation" and (Text contains "StoreTransaction for TransitionTo"))
-       //or (Type startswith "FileStoreService.ServiceCommunicationHandler" and Text startswith "DownloadChunkContentRequest")
+       or (Type startswith "FileStoreService" and Text contains F)
     | extend action = extract(rx_action, 1, Text)
     | extend sessionId = extract(rx_session, 1, Text)
     | extend storeRelativePath = extract(rx_path, 1, Text)

@@ -2,5 +2,5 @@
     TraceUploadDetailsBySession(T:string, S:string) {
     table(T)
     | where Type contains S or  Text contains S
-    | project Timestamp, Type, Text, NodeName
+    | project Timestamp, Type, Text, NodeName, Level
 }
