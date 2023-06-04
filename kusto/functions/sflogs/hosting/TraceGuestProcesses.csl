@@ -1,4 +1,4 @@
-.create-or-alter function with (docstring = "[T:string] where T=table name. function to search service fabric sflogs for guest process id's", folder = "sflogs")
+.create-or-alter function with (docstring = "[T:string] where T=table name. function to search service fabric sflogs for guest process id's", folder = "sflogs/hosting")
     TraceGuestProcesses(T:string) {
     let minTimestamp = toscalar(table(T)|top 1 by Timestamp asc|project Timestamp);
     let maxTimestamp = toscalar(table(T)|top 1 by Timestamp desc|project Timestamp);
@@ -10,9 +10,10 @@
     | project startTimestamp=Timestamp, userProcess, processName, NodeName, Timestamp);
     //
     let userEnd = materialize(table(T)
-        | where Type contains 'process' and Text contains 'createprocess' and Text contains 'processid:' and Text contains 'processHandle'
-        | extend userProcess = extract(@".+CtrlCSender.+?(\d+?)\.",1,Text)
-        | project endTimestamp=Timestamp, userProcess, NodeName, Timestamp);
+        | where Type contains "Hosting._ApplicationsOps_ProcessExitedOperational"
+        | extend processName = extract(@"ExeName=(.+),", 1, Text)
+        | extend userProcess = extract(@"ProcessId=(\\d+),", 1, Text)
+        | project endTimestamp=Timestamp, userProcess, processName, NodeName, Timestamp);
     //
     let userStartJoin = materialize (userStart
         | join kind=leftouter userEnd 
