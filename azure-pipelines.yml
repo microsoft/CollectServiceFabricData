@@ -32,30 +32,30 @@ steps:
     verbosePreference: 'continue'
     debugPreference: 'continue'
 
-- task: PowerShell@2
-  displayName: 'dotnet restore'
-  inputs:
-    targetType: 'inline'
-    script: |
-      #write-host "dotnet restore `"$env:project_root\$env:project_name\$env:project_name.csproj`" -v detailed"
-      #dotnet restore "$env:project_root\$env:project_name\$env:project_name.csproj" -v detailed
-      nuget
-      write-host "nuget update -self"
-      nuget update -self
-      nuget
-      write-host "nuget restore `"$env:project_root\$env:project_name\$env:project_name.csproj`" -ConfigFile `".\nuget.config`" -NonInteractive -Verbosity Detailed"
-      nuget restore "$env:project_root\$env:project_name\$env:project_name.csproj" -ConfigFile ".\nuget.config" -NonInteractive -Verbosity Detailed
-    errorActionPreference: 'continue'
-    verbosePreference: 'continue'
-    debugPreference: 'continue'
-
-# - task: NuGetRestore@1
-#   displayName: 'NuGet restore'
+# - task: PowerShell@2
+#   displayName: 'dotnet restore'
 #   inputs:
-#     solution: '$(project_root)/$(project_name).sln'
-#     # solution: '$(project_root)/$(project_name)/$(project_name).csproj'
-#     selectOrConfig: 'config'
-#     verbosity: Detailed
+#     targetType: 'inline'
+#     script: |
+#       #write-host "dotnet restore `"$env:project_root\$env:project_name\$env:project_name.csproj`" -v detailed"
+#       #dotnet restore "$env:project_root\$env:project_name\$env:project_name.csproj" -v detailed
+#       nuget
+#       write-host "nuget update -self"
+#       nuget update -self
+#       nuget
+#       write-host "nuget restore `"$env:project_root\$env:project_name\$env:project_name.csproj`" -ConfigFile `".\nuget.config`" -NonInteractive -Verbosity Detailed"
+#       nuget restore "$env:project_root\$env:project_name\$env:project_name.csproj" -ConfigFile ".\nuget.config" -NonInteractive -Verbosity Detailed
+#     errorActionPreference: 'continue'
+#     verbosePreference: 'continue'
+#     debugPreference: 'continue'
+
+- task: NuGetRestore@1
+  displayName: 'NuGet restore'
+  inputs:
+    solution: '$(project_root)/$(project_name).sln'
+    # solution: '$(project_root)/$(project_name)/$(project_name).csproj'
+    selectOrConfig: 'config'
+    verbosity: Detailed
 
 - task: PowerShell@2
   displayName: 'dotnet build'
