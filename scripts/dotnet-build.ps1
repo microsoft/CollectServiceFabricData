@@ -233,6 +233,7 @@ function upload-packages() {
     $nugetPackages = $nugetPackages -join ";"
     write-host "nuget push $nugetPackages -source $projectPackagePath" -ForegroundColor Green
     nuget push $nugetPackages -source $projectPackagePath
+    
 }
 
 main
