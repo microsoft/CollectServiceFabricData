@@ -248,7 +248,7 @@ namespace CollectSFData.DataFile.Tests
             throw new NotImplementedException();
             string tempPath = TestUtilities.TempDir;
             string outputFile = $"{tempPath}/txetltest.json";
-            string[] inputFiles = Directory.GetFiles("", $"{TestUtilities.TestDataFilesDir}/fabric_counters*.blg", SearchOption.AllDirectories);
+            string[] inputFiles = Directory.GetFiles("", $"{TestUtilities.TestDir}/fabric_counters*.blg", SearchOption.AllDirectories);
             string inputFile = inputFiles[0];
             string logFile = $"{tempPath}\\etl.log";
             Assert.IsTrue(File.Exists(inputFile));
@@ -283,7 +283,7 @@ namespace CollectSFData.DataFile.Tests
             string manifestPath = $"{TestUtilities.SolutionDir}/manifests";
             string tempPath = TestUtilities.TempDir;
             string outputFile = $"{tempPath}/txetltest.json";
-            string[] inputFiles = Directory.GetFiles("", $"{TestUtilities.TestDataFilesDir}/fabric_traces_*.etl", SearchOption.AllDirectories);
+            string[] inputFiles = Directory.GetFiles("", $"{TestUtilities.TestDir}/fabric_traces_*.etl", SearchOption.AllDirectories);
             string inputFile = inputFiles[0];
             string logFile = $"{tempPath}\\etl.log";
             Assert.IsTrue(Directory.Exists(manifestPath));
