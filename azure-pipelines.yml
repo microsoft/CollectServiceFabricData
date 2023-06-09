@@ -43,7 +43,7 @@ steps:
       write-host "nuget update -self"
       nuget update -self
       nuget
-      write-host "nuget restore `"$env:project_root\$env:project_name\$env:project_name.csproj`" -ConfigFile `"$env:project_root\nuget.config`"
+      write-host "nuget restore `"$env:project_root\$env:project_name\$env:project_name.csproj`" -ConfigFile `"$env:project_root\nuget.config`""
       nuget restore "$env:project_root\$env:project_name\$env:project_name.csproj" -ConfigFile "$env:project_root\nuget.config"
     errorActionPreference: 'continue'
     verbosePreference: 'continue'
