@@ -32,16 +32,11 @@ steps:
     verbosePreference: 'continue'
     debugPreference: 'continue'
 
-- task: PowerShell@2
-  displayName: 'dotnet restore'
+- task: NuGetRestore@1
+  displayName: 'NuGet restore'
   inputs:
-    targetType: 'inline'
-    script: |
-      write-host "dotnet restore `"$env:project_root\$env:project_name\$env:project_name.csproj`" -v detailed"
-      dotnet restore "$env:project_root\$env:project_name\$env:project_name.csproj" -v detailed
-    errorActionPreference: 'continue'
-    verbosePreference: 'continue'
-    debugPreference: 'continue'
+    solution: '$(project_root)/$(project_name).sln'
+    selectOrConfig: 'config'
 
 - task: PowerShell@2
   displayName: 'dotnet build'
