@@ -11,7 +11,8 @@ param(
     [string]$projectDir = (resolve-path "$psscriptroot/../src"),
     [string]$nugetFallbackFolder = "$($env:userprofile)/.dotnet/NuGetFallbackFolder",
     [switch]$clean,
-    [switch]$replace
+    [switch]$replace,
+    [string]$projectPackagePath = 'https://servicefabricsupport.pkgs.visualstudio.com/Tools/_packaging/CollectServiceFabricData_PublicPackages/nuget/v3/index.json'
 )
 
 $ErrorActionPreference = 'continue'
@@ -59,6 +60,7 @@ function main() {
         $csproj = create-tempProject -projectFile $csproj
         $dllcsproj = create-tempProject -projectFile $dllcsproj
         $nuspecFile = create-nuspec $targetFrameworks
+        #upload-packages
         
         write-host "dotnet restore $csproj" -ForegroundColor Green
         dotnet restore $csproj
@@ -223,6 +225,14 @@ function create-tempProject($projectFile) {
     }
 
     return $projectFile
+}
+
+function upload-packages() {
+    $nugetPackages = "$projectDir/bin/$configuration/*.nupkg"
+    $nugetPackages = (resolve-path $nugetPackages)
+    $nugetPackages = $nugetPackages -join ";"
+    write-host "nuget push $nugetPackages -source $projectPackagePath" -ForegroundColor Green
+    nuget push $nugetPackages -source $projectPackagePath
 }
 
 main
