@@ -49,13 +49,34 @@ steps:
 #     verbosePreference: 'continue'
 #     debugPreference: 'continue'
 
-- task: NuGetRestore@1
-  displayName: 'NuGet restore'
+# NuGet v2
+# Restore, pack, or push NuGet packages, or run a NuGet command. Supports NuGet.org and authenticated feeds like Azure Artifacts and MyGet. Uses NuGet.exe and works with .NET Framework apps. For .NET Core and .NET Standard apps, use the .NET Core task.
+- task: NuGetCommand@2
   inputs:
-    solution: '$(project_root)/$(project_name).sln'
-    # solution: '$(project_root)/$(project_name)/$(project_name).csproj'
-    selectOrConfig: 'config'
-    verbosity: Detailed
+    command: 'restore'
+    restoreSolution: '$(project_root)/$(project_name).sln'
+    #configuration: '$(BuildConfiguration)' # string. Alias: configurationToPack. Optional. Use when command = pack. Configuration to package. Default: $(BuildConfiguration).
+    #arguments: # string. Required when command = custom. Command and arguments. 
+  # Feeds and authentication
+    feedsToUse: 'config'
+    #vstsFeed: # string. Alias: feedRestore. Optional. Use when selectOrConfig = select. Use packages from this Azure Artifacts/TFS feed. 
+    #includeNuGetOrg: true # boolean. Optional. Use when selectOrConfig = select. Use packages from NuGet.org. Default: true.
+    nugetConfigPath: './nuget.config'
+    noCache: true # boolean. Disable local cache. Default: false.
+    #disableParallelProcessing: false # boolean. Disable parallel processing. Default: false.
+    #restoreDirectory: # string. Alias: packagesDirectory. Destination directory. 
+    verbosityRestore: 'Detailed'
+  # Advanced
+    #buildProperties: # string. Additional build properties. 
+    #basePath: # string. Base path. 
+
+# - task: NuGetRestore@1
+#   displayName: 'NuGet restore'
+#   inputs:
+#     solution: '$(project_root)/$(project_name).sln'
+#     # solution: '$(project_root)/$(project_name)/$(project_name).csproj'
+#     selectOrConfig: 'config'
+#     verbosity: Detailed
 
 - task: PowerShell@2
   displayName: 'dotnet build'
