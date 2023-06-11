@@ -34,8 +34,15 @@ jobs:
           dotnet nuget locals all --clear
 
       - name: dotnet restore
-        shell: cmd
-        run: dotnet restore %project_root%\%project_name%\%project_name%.csproj -v detailed
+        shell: powershell
+        run: |
+          # delete ado internal nuget config for external build
+          $adoInternalNugetConfig = "$($env:project_root\Nuget.Config)"
+          if(Test-Path $adoInternalNugetConfig) {
+            write-host "deleting ado internal nuget config: $adoInternalNugetConfig"
+            del $adoInternalNugetConfig
+          }
+          dotnet restore %project_root%\%project_name%\%project_name%.csproj -v detailed
 
       - name: dotnet build / pack
         shell: cmd
