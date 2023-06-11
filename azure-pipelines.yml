@@ -1,0 +1,56 @@
+# used for internal ado builds
+
+name: ADO CI CollectSFData
+
+trigger:
+- master
+
+pool:
+  vmImage: 'windows-latest'
+
+variables:
+  project_name: CollectSFData
+  project_root: .\src
+  System.Debug: true
+
+steps:
+- task: PowerShell@2
+  displayName: 'agent environment'
+  inputs:
+    targetType: 'inline'
+    script: |
+      [environment]::getenvironmentvariables().getenumerator()|sort Name
+      dotnet --info
+      dotnet nuget locals all --clear
+    errorActionPreference: 'continue'
+    verbosePreference: 'continue'
+    debugPreference: 'continue'
+
+- task: NuGetCommand@2
+  inputs:
+    command: 'restore'
+    restoreSolution: '$(project_root)/$(project_name).sln'
+    feedsToUse: 'config'
+    nugetConfigPath: './nuget.config'
+    noCache: false
+    verbosityRestore: 'Detailed'
+
+- task: PowerShell@2
+  displayName: 'dotnet build'
+  inputs:
+    targetType: 'inline'
+    script: |
+      write-host "dotnet build `"$env:project_root\$env:project_name\$env:project_name.csproj`" -v detailed -c Release"
+      dotnet build "$env:project_root\$env:project_name\$env:project_name.csproj" -v detailed -c Release
+    errorActionPreference: 'continue'
+    verbosePreference: 'continue'
+    debugPreference: 'continue'
+
+- task: PowerShell@2
+  displayName: 'dotnet build output'
+  inputs:
+    targetType: 'inline'
+    script: dir -recurse
+    errorActionPreference: 'continue'
+    verbosePreference: 'continue'
+    debugPreference: 'continue'

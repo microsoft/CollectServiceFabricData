@@ -1,5 +1,5 @@
 {
     "dotnet-test-explorer.testProjectPath": "**/*Test.csproj",
-    "audioCues.volume": 0,
-    "dotnet.defaultSolution": "src\\CollectSFData.sln"
+    "dotnet.defaultSolution": "src\\CollectSFData.sln",
+    "audioCues.volume": 0
 }

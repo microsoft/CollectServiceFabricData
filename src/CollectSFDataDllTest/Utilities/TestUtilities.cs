@@ -33,7 +33,7 @@ namespace CollectSFDataDllTest.Utilities
         public static string SolutionDir => $"{WorkingDir}\\..\\..\\..\\..\\..\\..";
         public static string TempDir => $"{WorkingDir}\\..\\..\\Temp";
         public static string TestConfigurationsDir => $"{WorkingDir}\\..\\..\\..\\..\\TestConfigurations";
-        public static string TestDataFilesDir => $"{WorkingDir}\\..\\..\\..\\..\\TestDataFiles";
+        public static string TestDir => $"{WorkingDir}\\..\\..\\..\\..\\Tst";
         public static TestProperties TestProperties { get; set; }
         public static string TestPropertiesFile => $"{Environment.GetEnvironmentVariable("LOCALAPPDATA")}\\collectsfdata\\collectSfDataDllTestProperties.json";
         public static string TestPropertiesSetupScript => $"{ScriptsDir}\\setup-test-env.ps1";
