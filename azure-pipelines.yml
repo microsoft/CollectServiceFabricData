@@ -1,10 +1,4 @@
-# .NET Desktop
-# Build and run tests for .NET Desktop or Windows classic desktop solutions.
-# Add steps that publish symbols, save build artifacts, and more:
-# https://docs.microsoft.com/azure/devops/pipelines/apps/windows/dot-net
-
-# windows-latest packages
-# https://github.com/actions/runner-images/blob/main/images/win/Windows2022-Readme.md
+# used for internal ado builds
 
 name: ADO CI CollectSFData
 
@@ -32,51 +26,14 @@ steps:
     verbosePreference: 'continue'
     debugPreference: 'continue'
 
-# - task: PowerShell@2
-#   displayName: 'dotnet restore'
-#   inputs:
-#     targetType: 'inline'
-#     script: |
-#       #write-host "dotnet restore `"$env:project_root\$env:project_name\$env:project_name.csproj`" -v detailed"
-#       #dotnet restore "$env:project_root\$env:project_name\$env:project_name.csproj" -v detailed
-#       nuget
-#       write-host "nuget update -self"
-#       nuget update -self
-#       nuget
-#       write-host "nuget restore `"$env:project_root\$env:project_name\$env:project_name.csproj`" -ConfigFile `".\nuget.config`" -NonInteractive -Verbosity Detailed"
-#       nuget restore "$env:project_root\$env:project_name\$env:project_name.csproj" -ConfigFile ".\nuget.config" -NonInteractive -Verbosity Detailed
-#     errorActionPreference: 'continue'
-#     verbosePreference: 'continue'
-#     debugPreference: 'continue'
-
-# NuGet v2
-# Restore, pack, or push NuGet packages, or run a NuGet command. Supports NuGet.org and authenticated feeds like Azure Artifacts and MyGet. Uses NuGet.exe and works with .NET Framework apps. For .NET Core and .NET Standard apps, use the .NET Core task.
 - task: NuGetCommand@2
   inputs:
     command: 'restore'
     restoreSolution: '$(project_root)/$(project_name).sln'
-    #configuration: '$(BuildConfiguration)' # string. Alias: configurationToPack. Optional. Use when command = pack. Configuration to package. Default: $(BuildConfiguration).
-    #arguments: # string. Required when command = custom. Command and arguments. 
-  # Feeds and authentication
     feedsToUse: 'config'
-    #vstsFeed: # string. Alias: feedRestore. Optional. Use when selectOrConfig = select. Use packages from this Azure Artifacts/TFS feed. 
-    #includeNuGetOrg: true # boolean. Optional. Use when selectOrConfig = select. Use packages from NuGet.org. Default: true.
     nugetConfigPath: './nuget.config'
-    noCache: false # boolean. Disable local cache. Default: false.
-    #disableParallelProcessing: false # boolean. Disable parallel processing. Default: false.
-    #restoreDirectory: # string. Alias: packagesDirectory. Destination directory. 
+    noCache: false
     verbosityRestore: 'Detailed'
-  # Advanced
-    #buildProperties: # string. Additional build properties. 
-    #basePath: # string. Base path. 
-
-# - task: NuGetRestore@1
-#   displayName: 'NuGet restore'
-#   inputs:
-#     solution: '$(project_root)/$(project_name).sln'
-#     # solution: '$(project_root)/$(project_name)/$(project_name).csproj'
-#     selectOrConfig: 'config'
-#     verbosity: Detailed
 
 - task: PowerShell@2
   displayName: 'dotnet build'
