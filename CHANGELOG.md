@@ -1,25 +1,28 @@
 # Change log
 
-## 04/07/2023
+## 06/11/2023
 
-- revert net7.0 changes to net6.0 as vs sdk has issues with net7.0. vscode however works
-    - net7.0 can be built with vscode and scripts\dotnet-build.ps1
+- add internal ado pipeline yaml for central feed service compliance
+- add latest kusto functions
+
+## 04/23/2023
+
+- fix for managedIdentity tcp timeout
 
 ## 03/22/2023
 
 - add datetime format specifier token option to LogFile
-    -log|--logFile [string] file name and path to save console output.
-        can optionally specify .net datetime format specifier inside '<>'.
-        example: collectsfdata-\<yyyy-MM-dd-HH-mm-ss\>.log
+  -log|--logFile [string] file name and path to save console output.
+      can optionally specify .net datetime format specifier inside '<>'.
+      example: collectsfdata-\<yyyy-MM-dd-HH-mm-ss\>.log
+- add check to remove readonly attributes on configured directories
 
 ## 02/05/2023
 
 - migrate from default target framework .net472 to .net48
-- migrate from .net6.0 to .net 7.0
 - current .net target builds:
-    - net462
-    - net48
-    - net7.0
+  - net462
+  - net48
 
 ## 02/05/2023 v2.9.2302.10517
 
