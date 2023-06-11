@@ -1,0 +1,4 @@
+.create-or-alter function with (docstring = "[dateString:string] where dateTime=time string in iso format. function to generate unix epoch in ms from iso datetime.", folder = "sflogs/base")
+    ToEpochTimeMs(dateString:string="") {
+        (todatetime(dateString) - datetime(1970-01-01)) / 1ms
+    }

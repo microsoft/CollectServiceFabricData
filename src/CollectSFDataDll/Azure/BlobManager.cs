@@ -320,11 +320,7 @@ namespace CollectSFData.Azure
                 {
                     fileObject.DownloadAction = () =>
                     {
-                        if (!Directory.Exists(Path.GetDirectoryName(fileObject.FileUri)))
-                        {
-                            Directory.CreateDirectory(Path.GetDirectoryName(fileObject.FileUri));
-                        }
-
+                        FileManager.CreateDirectory(fileObject.FileUri);
                         ((CloudBlob)blob).DownloadToFileAsync(fileObject.FileUri, FileMode.Create, null, blobRequestOptions, null).Wait();
                     };
                 }

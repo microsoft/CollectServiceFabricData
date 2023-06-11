@@ -1,6 +1,30 @@
 # Change log
 
+## 06/11/2023
+
+- add internal ado pipeline yaml for central feed service compliance
+- add latest kusto functions
+
+## 04/23/2023
+
+- fix for managedIdentity tcp timeout
+
+## 03/22/2023
+
+- add datetime format specifier token option to LogFile
+  -log|--logFile [string] file name and path to save console output.
+      can optionally specify .net datetime format specifier inside '<>'.
+      example: collectsfdata-\<yyyy-MM-dd-HH-mm-ss\>.log
+- add check to remove readonly attributes on configured directories
+
 ## 02/05/2023
+
+- migrate from default target framework .net472 to .net48
+- current .net target builds:
+  - net462
+  - net48
+
+## 02/05/2023 v2.9.2302.10517
 
 - fix configuration class inconsistencies in base classes
 - remove System.Diagnostic.DiagnosticSource from GetManagedIdentity

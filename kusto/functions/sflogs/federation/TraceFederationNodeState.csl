@@ -1,0 +1,15 @@
+.create-or-alter function with (docstring = "[T:string] where T=table name. function to show distict Node State properties", folder = "sflogs/federation")
+    TraceFederationNodeState(T:string) {
+    let pattern_NodeId = @'([a-f0-9]{31,32})';
+    let pattern_NodeName = @'instance name:\s([^,]*)';
+    let pattern_isSeedNode = @'isSeedNode:\s([^,]*)';
+    let pattern_IpAddress = @'([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})';
+        table(T)
+        | where Type startswith 'FabricNode.State'
+        | extend NodeId = extract(pattern_NodeId, 1, Type)
+        | extend NodeName = extract(pattern_NodeName, 1, Text)
+        | extend IsSeedNode = extract(pattern_isSeedNode,1 , Text)
+        | extend IpAddress = tostring(extract_all(pattern_IpAddress, Text)[0])
+        | distinct NodeId, NodeName, IsSeedNode, IpAddress
+        | order by NodeName asc
+}

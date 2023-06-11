@@ -42,17 +42,6 @@ namespace CollectSFData.Common
             new DecoderExceptionFallback()
         );
 
-        public static ConfigurationOptions Config
-        {
-            set
-            {
-                _config = value;
-                _logFile = CheckLogFile(_config.LogFile) ? _config.LogFile : string.Empty;
-                _logDebug = _config.LogDebug;
-                Open();
-            }
-        }
-
         public static bool IsConsole { get; set; }
         private static CancellationTokenSource _taskWriterCancellationToken => CustomTaskManager.CancellationTokenSource;
 
@@ -199,6 +188,8 @@ namespace CollectSFData.Common
         {
             if (!_isRunning)
             {
+                _logFile = CheckLogFile() ? _config.LogFile : string.Empty;
+                _logDebug = _config.LogDebug;
                 _taskWriter = new Task(TaskWriter, _taskWriterCancellationToken.Token);
                 _taskWriter.Start();
                 _isRunning = true;
@@ -213,11 +204,11 @@ namespace CollectSFData.Common
             }
         }
 
-        private static bool CheckLogFile(string logFile)
+        private static bool CheckLogFile()
         {
             try
             {
-                if (string.IsNullOrEmpty(logFile))
+                if (string.IsNullOrEmpty(_config.LogFile))
                 {
                     _logFileEnabled = false;
                     return true;
@@ -225,13 +216,11 @@ namespace CollectSFData.Common
 
                 if (!_logFileEnabled)
                 {
-                    string directoryName = Path.GetDirectoryName(logFile);
-                    if (!string.IsNullOrEmpty(directoryName) && !Directory.Exists(directoryName))
+                    if (_config.CheckLogFile() && !File.Exists(_config.LogFile))
                     {
-                        Directory.CreateDirectory(directoryName);
+                        File.Create(_config.LogFile).Close();
                     }
 
-                    File.Create(logFile).Close();
                     _logFileEnabled = true;
                 }
 

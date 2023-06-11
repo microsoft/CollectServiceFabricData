@@ -1,11 +1,13 @@
 .create-or-alter function with (docstring = "[T:string] where T=table name. function to extract reverse proxy request return codes.", folder = "sflogs/reverse-proxy")
     TraceReverseProxyRequestsReturnCodes(T:string) {
-        let extractPattern_StatusCode = @'(status code\s=\s)(\d+)';
+        let extractPattern_StatusCode = @'(status code = )(\d+)';
         let extractPattern_requestId = @'([a-z0-9]{8}\-[a-z0-9]{4}\-[a-z0-9]{4}\-[a-z0-9]{4}\-[a-z0-9]{12})';
+        let extractPattern_InnerError = @'(?:, error|, internal error) = (.+?)(,|$)';
         table(T)
         | where Type contains "ReverseProxy"
-        | where Text contains "status code"
+        | where Text contains 'status code' or Text contains 'internal error'
         | extend statusCode = extract(extractPattern_StatusCode, 2, Text, typeof(string))
         | extend requestId = extract(extractPattern_requestId, 1, Text, typeof(string))
-        | project Timestamp , TID , PID , Level , Type , Text , NodeName , FileType, statusCode, requestId
+        | extend innerError = extract(extractPattern_InnerError, 1, Text)
+        | project Timestamp , TID , PID , Level , Type , Text , NodeName , FileType, statusCode, requestId, innerError, ResponseTimestamp=Timestamp
     }

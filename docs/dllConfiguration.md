@@ -378,7 +378,7 @@ C:.
 |   |       Sf.Tx.Core.dll
 |   |       Sf.Tx.Windows.dll
 |   |
-|   +---net472
+|   +---net48
 |   |       CollectSFDataDll.dll
 |   |       Sf.Tx.Core.dll
 |   |       Sf.Tx.Windows.dll
@@ -526,7 +526,7 @@ C:.
 |   |       System.Xml.XPath.dll
 |   |       System.Xml.XPath.XDocument.dll
 |   |
-|   +---net472
+|   +---net48
 |   |       CollectSFData.exe
 |   |       CollectSFData.exe.config
 |   |       collectsfdata.options.json

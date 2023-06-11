@@ -456,10 +456,11 @@
       "$id": "#/properties/LogFile",
       "type": "string",
       "title": "LogFile",
-      "description": "path and file name to log output",
+      "description": "path and file name to log output. can optionally specify .net datetime format specifier inside '<>'. example: collectsfdata-<yyyy-MM-dd-HH-mm-ss>.log",
       "default": "",
       "examples": [
-        "c:\\temp\\collectsfdata.log"
+        "c:\\temp\\collectsfdata.log",
+        "c:\\temp\\collectsfdata-<yyyy-MM-dd-HH-mm-ss>.log"
       ],
       "pattern": "^(.+)$"
     },
@@ -499,9 +500,10 @@
       "default": null,
       "examples": [
         null,
-        "/subscriptions/{{subscriptionId}}/resourceGroups/{{resourceGroup}}/Microsoft.ServiceFabric/clusters/{{clusterName}}"
+        "/subscriptions/{{subscriptionId}}/resourceGroups/{{resourceGroup}}/Microsoft.ServiceFabric/clusters/{{clusterName}}",
+        "/subscriptions/{{subscriptionId}}/resourceGroups/{{resourceGroup}}/Microsoft.ServiceFabric/managedClusters/{{clusterName}}"
       ],
-      "pattern": "^(/subscriptions/[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}/resourceGroups/\\w+/providers/Microsoft.ServiceFabric/clusters/.+)$"
+      "pattern": "^(/subscriptions/[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}/resourceGroups/\\w+/providers/Microsoft.ServiceFabric/(clusters|managedClusters)/.+)$"
     },
     "SasKey": {
       "$id": "#/properties/SasKey",

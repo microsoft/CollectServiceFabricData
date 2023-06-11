@@ -30,6 +30,38 @@ namespace CollectSFData.DataFile
             _config = _instance.Config;
         }
 
+        public static bool CreateDirectory(string directory)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(directory))
+                {
+                    return false;
+                }
+
+                if (!Directory.Exists(directory))
+                {
+                    Log.Info($"creating directory:{directory}");
+                    Directory.CreateDirectory(directory);
+                }
+                else
+                {
+                    Log.Debug($"directory exists:{directory}");
+                }
+
+                // remove read only attributes
+                DirectoryInfo dirInfo = new DirectoryInfo(directory);
+                dirInfo.Attributes &= ~FileAttributes.ReadOnly;
+
+                return true;
+            }
+            catch (Exception e)
+            {
+                Log.Exception($"exception:{e}");
+                return false;
+            }
+        }
+
         public static string NormalizePath(string path, string directorySeparator = "/")
         {
             if (string.IsNullOrEmpty(path))
@@ -251,6 +283,25 @@ namespace CollectSFData.DataFile
             // handles dtr, setup, and deployer file timestamp formats
             string newEventPattern = @"^[0-9]{2,4}(-|/)[0-9]{1,2}(-|/)[0-9]{1,2}(-| )[0-9]{1,2}:[0-9]{1,2}:[0-9]{1,2}";
             return FormatRecord<T>(fileObject, newEventPattern);
+        }
+
+        public List<string> GetFilesByExtension(string filePath, string fileExtensionPattern, bool includeSubDirectories = true)
+        {
+            Log.Info($"enter:filePath{filePath} subdir:{includeSubDirectories}");
+            List<string> files = new List<string>();
+            SearchOption subDirectories = includeSubDirectories ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
+
+            if(Directory.Exists(filePath)) 
+            {
+                files.AddRange(Directory.GetFiles(filePath, $"*{fileExtensionPattern}", subDirectories));
+            }
+            else
+            {
+                Log.Warning($"directory does not exist:filePath{filePath}");
+            }
+            
+            Log.Info($"exit:filePath{filePath} subdir:{includeSubDirectories} files:", files);
+            return files;
         }
 
         public FileObjectCollection PopulateCollection<T>(FileObject fileObject) where T : IRecord

@@ -1,0 +1,4 @@
+.create-or-alter function with (docstring = "[timestamp:datetime] where timestamp is datetime. function to format datetime into iso format.", folder = "sflogs/base")
+    ToIsoTimeFormat(timestamp:datetime) {
+        format_datetime(timestamp,'yyyy-MM-dd hh:mm:ss.ffff')
+    }

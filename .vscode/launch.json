@@ -4,51 +4,6 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
-
-        {
-            "name": "Launch and Debug hosted blazor web assembly",
-            "request": "launch",
-            "browser": "edge",
-            "type": "blazorwasm",
-            //"program": "${workspaceFolder}src/CollectSFDataGui/Client/bin/Debug/net6.0/CollectSFData.exe",
-            "program": "${workspaceFolder}src/CollectSFDataGui/Client/bin/Debug/net6.0/CollectSFDataGui.Client.dll",
-            "cwd": "${workspaceFolder}/src/CollectSFDataGui/Client/bin/Debug/net6.0"
-        },
-        {
-            "name": "Attach to Edge",
-            "port": 5000,
-            "request": "attach",
-            "type": "pwa-msedge",
-            "webRoot": "${workspaceFolder}/src/CollectSFDataGui/bin/Debug/net6.0/wwwroot"
-        },
-        {
-            "name": ".NET Core Launch (web)",
-            "type": "coreclr",
-            "request": "launch",
-            "justMyCode": false,
-            "preLaunchTask": "build",
-            "program": "${workspaceFolder}/src/CollectSFDataGui/bin/Debug/net6.0/wwwroot/_framework/CollectSFDataGui.dll",
-            "args": [],
-            "cwd": "${workspaceFolder}",
-            "stopAtEntry": false,
-            "serverReadyAction": {
-                "action": "openExternally",
-                "pattern": "\\bNow listening on:\\s+(https?://\\S+)"
-            },
-            "env": {
-                "ASPNETCORE_ENVIRONMENT": "Development"
-            },
-            "sourceFileMap": {
-                "/Views": "${workspaceFolder}/Views"
-            }
-        },
-        {
-            "name": "Launch Edge",
-            "request": "launch",
-            "type": "pwa-msedge",
-            "url": "http://localhost:5002",
-            "webRoot": "${workspaceFolder}/src/CollectSFDataGui/wwwroot"
-        },
         {
             "name": ".NET Core 31 Launch with Args (console)",
             "type": "coreclr",
@@ -67,7 +22,7 @@
             "console": "internalConsole",
         },
         {
-            "name": ".NET Core 60 Launch with Args (console)",
+            "name": ".NET Core 6 Launch with Args (console)",
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",

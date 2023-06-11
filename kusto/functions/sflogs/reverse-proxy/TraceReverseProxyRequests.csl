@@ -11,12 +11,12 @@
     let extractPattern_Client = @'remote\s\(client\)\saddress\s=\s(\d{0,3}\.\d{0,3}\.\d{0,3}\.\d{0,3})';
     let extractPattern_ResolvedIp = @'resolved\sservice\surl\s=\sHttp\:\/\/(\d{0,3}\.\d{0,3}\.\d{0,3}\.\d{0,3})';
     table(T)
+    //| where Type == "ReverseProxy.RequestReceived"
     | where Type contains "ReverseProxy"
-    //| where Text !contains "status code"
     | extend requestId = extract(extractPattern_requestId, 1, Text, typeof(string))
     | extend client = extract(extractPattern_Client, 1, Text)
     | extend resolvedIp = extract(extractPattern_ResolvedIp, 1, Text)
-    | extend serviceUrls = extract_all(extractPattern_ServiceUrls, Text)        
+    | extend serviceUrls = extract_all(extractPattern_ServiceUrls, Text)
     | extend serviceUrl = tostring(array_slice(serviceUrls, 0, 0)[0])
     | extend verb = extract(extractPattern_Verb, 2, Text, typeof(string))
     | extend fwdToUrl = tostring(array_slice(serviceUrls, 1, 1)[0])
@@ -24,7 +24,7 @@
     | extend serviceName = extract(extractPattern_AppServiceNames, 2, serviceUrl)
     | extend controllerName = extract(extractPattern_ControllerMethodNames, 1, serviceUrl)
     | extend methodName = extract(extractPattern_ControllerMethodNames, 2, serviceUrl)
-    | project Timestamp , TID , PID , Level , Type , Text , NodeName , FileType, requestId, serviceUrl, verb, fwdToUrl, appName, serviceName, controllerName, methodName, client, resolvedIp
-    | limit 95000
+    | join kind=leftouter TraceReverseProxyRequestsReturnCodes(T) on requestId
+    | project Timestamp , TID , PID , Level , Type , Text , NodeName , FileType, requestId, serviceUrl, verb, fwdToUrl, appName, serviceName, controllerName, methodName, client, resolvedIp, statusCode, innerError, ResponseTimestamp
     | order by Timestamp asc
 }

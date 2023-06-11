@@ -145,7 +145,6 @@ namespace CollectSFData.Common
         public void CheckPublicIp()
         {
             Http http = Http.ClientFactory();
-            http.DisplayError = false;
             JToken ipAddress = null;
 
             try
@@ -171,7 +170,6 @@ namespace CollectSFData.Common
         {
             string response = $"\r\n\tlocal running version: {Version}";
             Http http = Http.ClientFactory();
-            http.DisplayError = false;
 
             Dictionary<string, string> headers = new Dictionary<string, string>();
             headers.Add("User-Agent", $"{Constants.ApplicationName}");
@@ -245,34 +243,6 @@ namespace CollectSFData.Common
             return timeString;
         }
 
-        public bool CreateDirectory(string directory)
-        {
-            try
-            {
-                if (string.IsNullOrEmpty(directory))
-                {
-                    return false;
-                }
-
-                if (!Directory.Exists(directory))
-                {
-                    Log.Info($"creating directory:{directory}");
-                    Directory.CreateDirectory(directory);
-                }
-                else
-                {
-                    Log.Debug($"directory exists:{directory}");
-                }
-
-                return true;
-            }
-            catch (Exception e)
-            {
-                Log.Exception($"exception:{e}");
-                return false;
-            }
-        }
-
         public void DisplayStatus()
         {
             Log.Min($"      Gathering: {FileType.ToString()}", ConsoleColor.White);
@@ -315,12 +285,11 @@ namespace CollectSFData.Common
         {
             Log.Info($"Checking EtwManifestsCache:{Constants.EtwManifestsUrlIndex}");
             Http http = Http.ClientFactory();
-            http.DisplayError = false;
 
             Dictionary<string, string> headers = new Dictionary<string, string>();
             headers.Add("User-Agent", $"{Constants.ApplicationName}");
 
-            if (!CreateDirectory(EtwManifestsCache))
+            if (!FileManager.CreateDirectory(EtwManifestsCache))
             {
                 return;
             }
@@ -937,7 +906,7 @@ namespace CollectSFData.Common
 
             if (!Directory.Exists(CacheLocation))
             {
-                CreateDirectory(CacheLocation);
+                FileManager.CreateDirectory(CacheLocation);
             }
             else if (Directory.Exists(CacheLocation)
                 & Directory.GetFileSystemEntries(CacheLocation).Length > 0
@@ -947,7 +916,7 @@ namespace CollectSFData.Common
                 // add working dir to outputlocation so it can be deleted
                 string workDirPath = $"{CacheLocation}{Path.GetFileName(Path.GetTempFileName())}";
                 Log.Warning($"outputlocation not empty and DeleteCache is enabled, creating work subdir {workDirPath}");
-                CreateDirectory(workDirPath);
+                FileManager.CreateDirectory(workDirPath);
                 CacheLocation = workDirPath;
             }
 
@@ -983,12 +952,12 @@ namespace CollectSFData.Common
             if (!Directory.Exists(EtwManifestsCache) || Directory.GetFiles(EtwManifestsCache).Length < 1)
             {
                 Log.Info($"creating EtwManifestsCache:{EtwManifestsCache}");
-                CreateDirectory(EtwManifestsCache);
+                FileManager.CreateDirectory(EtwManifestsCache);
                 DownloadEtwManifests();
             }
         }
 
-        private void CheckLogFile()
+        public bool CheckLogFile()
         {
             if (LogDebug == LoggingLevel.Verbose && !HasValue(LogFile))
             {
@@ -999,9 +968,19 @@ namespace CollectSFData.Common
             if (HasValue(LogFile))
             {
                 LogFile = FileManager.NormalizePath(LogFile);
-                CreateDirectory(Path.GetDirectoryName(LogFile));
+
+                if(Regex.IsMatch(LogFile,@"<.+>")) 
+                {
+                    string timePattern = Regex.Match(LogFile, @"<(.+?)>").Groups[1].Value;
+                    LogFile = Regex.Replace(LogFile, @"<.+?>", DateTime.Now.ToString(timePattern));
+                    Log.Info($"replaced datetime token {timePattern}: new LogFile name:{LogFile}");
+                }
+
                 Log.Info($"setting output log file to: {LogFile}");
+                return FileManager.CreateDirectory(Path.GetDirectoryName(LogFile));
             }
+
+            return true;
         }
 
         private string CleanTableName(string tableName, bool withGatherType = false)

@@ -55,7 +55,7 @@ namespace CollectSFData.Common
                 Config.Validate();
             }
 
-            Log.Config = Config;
+            Log.Open();
             DiscoveredMaxDateTicks = DateTime.MinValue.Ticks;
             DiscoveredMinDateTicks = DateTime.MaxValue.Ticks;
             FileObjects = new FileObjectCollection();

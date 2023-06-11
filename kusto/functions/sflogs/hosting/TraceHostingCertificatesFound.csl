@@ -7,7 +7,7 @@
          or (Type startswith "Transport.SecurityCredentials" and Text startswith "credentials sorted:")
     | extend Certificate = extract(pattern_anyThumbprint, 1, Text, typeof(string))
     | order by Timestamp desc
-    | partition by NodeName
+    | partition hint.strategy=shuffle by NodeName
         (
         top 10 by Timestamp desc
         )

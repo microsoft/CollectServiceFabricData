@@ -3,13 +3,14 @@
 
 #>
 param(
-    [ValidateSet('net472', 'netcoreapp2.2', 'netcoreapp3.1', 'net6.0', 'net462')]
-    [string[]]$targetFrameworks = @('net472', 'netcoreapp3.1', 'net6.0', 'net462'),
+    [ValidateSet('net48', 'netcoreapp2.2', 'netcoreapp3.1', 'net6.0', 'net7.0', 'net462')]
+    [string[]]$targetFrameworks = @('net48', 'netcoreapp3.1', 'net6.0', 'net7.0', 'net462'),
     [ValidateSet('all', 'debug', 'release')]
     $configuration = 'all',
     [switch]$publish,
     [string]$projectDir = (resolve-path "$psscriptroot/../src"),
-    [string]$nugetFallbackFolder = "$($env:userprofile)/.dotnet/NuGetFallbackFolder",
+    [string]$nugetPackageName = 'Microsoft.ServiceFabric.CollectSFData',
+    [string]$nugetFallbackFolder = "$($env:userprofile)/.nuget/packages" , #"$($env:userprofile)/.dotnet/NuGetFallbackFolder", # "$($env:userprofile)/.nuget/packages"
     [switch]$clean,
     [switch]$replace
 )
@@ -108,15 +109,18 @@ function build-configuration($configuration) {
 
     $nugetFile = "$projectDir/bin/$configuration/*.nupkg"
     $nugetFile = (resolve-path $nugetFile)[-1]
-    
+    $nugetFunctions = "$pwd/nuget-functions.ps1"
+
     if ((test-path $nugetFile)) {
-        write-host "nuget add $nugetFile -source $nugetFallbackFolder" -ForegroundColor Green
-        if (!(test-path "nuget.exe")) {
-            [net.servicePointManager]::Expect100Continue = $true;[net.servicePointManager]::SecurityProtocol = [net.SecurityProtocolType]::Tls12;
-            invoke-webRequest "https://aka.ms/nuget-functions.ps1" -outFile "$pwd/nuget-functions.ps1";
-            .\nuget-functions.ps1;
+        if (!(test-path $nugetFunctions)) {
+            [net.servicePointManager]::Expect100Continue = $true; [net.servicePointManager]::SecurityProtocol = [net.SecurityProtocolType]::Tls12;
+            invoke-webRequest "https://aka.ms/nuget-functions.ps1" -outFile $nugetFunctions;
         }
-        nuget add $nugetFile -source $nugetFallbackFolder
+
+        . $nugetFunctions
+        #write-host "nuget add $nugetFile -source $nugetFallbackFolder" -ForegroundColor Green
+        #nuget add $nugetFile -source $nugetFallbackFolder
+        $nuget.AddPackage($nugetPackageName, $nugetFile, $nugetFallbackFolder)
     }
 }
 

@@ -1,0 +1,13 @@
+.create-or-alter function with (docstring = "[T:string] where T=table name. Function to search service fabric sflogs for CM UpgradeStart and return the related ActivityId.", folder = "sflogs/upgrade")
+    FindUpgradeActivity(T:string) {
+     let pattern_Activity = @'([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}):([0-9]{18})\)\+([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})';
+     let pattern_UpgradeType = @'upgrade\sstart:\s([Application|Fabric]*)UpgradeContext';
+     table(T)
+     | where Type startswith "CM.UpgradeStart"
+     | extend PartitionId = extract(pattern_Activity, 1, Text, typeof(string))
+     | extend ReplicaId = extract(pattern_Activity, 2, Text, typeof(string))
+     | extend ActivityId = extract(pattern_Activity, 3, Text, typeof(string))
+     | extend UpgradeType = extract(pattern_UpgradeType, 1, Text, typeof(string))
+     | project Timestamp, PartitionId, ReplicaId, ActivityId, UpgradeType
+     | summarize min(Timestamp) by ActivityId, PartitionId, UpgradeType
+}

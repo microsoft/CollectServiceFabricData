@@ -19,9 +19,7 @@ namespace CollectSFData.Common
     {
         private readonly HttpClient _httpClient;
 
-        private readonly CustomTaskManager _httpTasks = new CustomTaskManager();
-
-        public bool DisplayError { get; set; }
+        //private readonly CustomTaskManager _httpTasks = new CustomTaskManager();
 
         public HttpContentHeaders Headers { get; set; }
 
@@ -48,29 +46,45 @@ namespace CollectSFData.Common
             return new Http();
         }
 
+        public static void ConnectCallback(IAsyncResult asyncResult)
+        {
+            TcpClient client = (TcpClient)asyncResult.AsyncState;
+
+            try
+            {
+                client.EndConnect(asyncResult);
+            }
+            catch (Exception e)
+            {
+                Log.Debug($"exception callback:{e}");
+            }
+            finally
+            {
+                asyncResult.AsyncWaitHandle?.Dispose();
+                client.Dispose();
+            }
+        }
+
         public bool CheckConnectivity(string uri)
         {
             try
             {
+                bool ret = true;
                 Uri uriType = new Uri(uri);
                 string host = uriType.Host;
-                int portNumber =uriType.Port;
+                int portNumber = uriType.Port;
 
-                using (TcpClient client = new TcpClient())
+                TcpClient client = new TcpClient();
+                IAsyncResult asyncResult = client.BeginConnect(host, portNumber, new AsyncCallback(ConnectCallback), client);
+
+                if (!asyncResult.AsyncWaitHandle.WaitOne(Constants.ThreadSleepMs100, false) | !client.Connected)
                 {
-                    IAsyncResult asyncResult = client.BeginConnect(host, portNumber, null, null);
-                    using(asyncResult.AsyncWaitHandle)
-                    {
-                        if(!asyncResult.AsyncWaitHandle.WaitOne(Constants.ThreadSleepMs1000, false) | !client.Connected)
-                        {
-                            Log.Debug($"timed out ({Constants.ThreadSleepMs100}ms) pinging host:{host}:{portNumber}");
-                            return false;
-                        }
-                    }
-
-                    Log.Info($"successful pinging host:{host}:{portNumber}", ConsoleColor.Green);
-                    return true;
+                    Log.Info($"timed out ({Constants.ThreadSleepMs100}ms) pinging host:{host}:{portNumber}");
+                    ret = false;
                 }
+
+                Log.Info($"pinging host success:{ret} host:{host}:{portNumber}", ConsoleColor.Green);
+                return ret;
             }
             catch (SocketException e)
             {
@@ -87,7 +101,8 @@ namespace CollectSFData.Common
             HttpMethod httpMethod = null,
             Dictionary<string, string> headers = null,
             HttpStatusCode okStatus = HttpStatusCode.OK,
-            bool expectJsonResult = true)
+            bool expectJsonResult = true,
+            bool displayError = true)
         {
             HttpContent httpContent = default(HttpContent);
             httpMethod = httpMethod ?? Method;
@@ -125,7 +140,9 @@ namespace CollectSFData.Common
                     }
                 }
 
-                Response = _httpTasks.TaskFunction((httpresponse) => _httpClient.SendAsync(request).Result).Result as HttpResponseMessage;
+                //Response = _httpTasks.TaskFunction((httpResponse) => _httpClient.SendAsync(request).Result).Result as HttpResponseMessage;
+                Response = _httpClient.SendAsync(request).Result;
+
                 Log.Info($"response status: {Response.StatusCode}", ConsoleColor.DarkMagenta, ConsoleColor.Black);
                 StatusCode = Response.StatusCode;
 
@@ -153,7 +170,7 @@ namespace CollectSFData.Common
                     return Success = true;
                 }
 
-                if (DisplayError)
+                if (displayError)
                 {
                     Log.Error("unsuccessful response:", Response);
                 }
@@ -168,7 +185,11 @@ namespace CollectSFData.Common
             }
             catch (Exception e)
             {
-                Log.Exception($"post exception:{e}");
+                if (displayError)
+                {
+                    Log.Exception($"post exception:{e}");
+                }
+
                 return Success = false;
             }
         }

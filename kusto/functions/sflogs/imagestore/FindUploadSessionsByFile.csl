@@ -1,0 +1,14 @@
+.create-or-alter function with (docstring = "[T:string] where T=table name. [F:string] where F=FileName. Function to find sessions by Filename.", folder = "sflogs/imagestore")
+    FindUploadSessionsByFile(T:string, F:string) {
+    let regex_sessionId = @'sessionId:([a-fA-F0-9]{8}\-[a-fA-F0-9]{4}\-[a-fA-F0-9]{4}\-[a-fA-F0-9]{4}\-[a-fA-F0-9]{12})';
+    table(T)
+    | where Type startswith "FileStoreService"
+        or Type startswith "HttpGateway"
+    | where Type contains F or  Text contains F
+    | extend sessionId = extract(regex_sessionId, 1, Text, typeof(string))
+    | where sessionId != ""
+    | project Timestamp, Type, Text, NodeName, PID, TID, Level, sessionId
+    | summarize min(Timestamp) by sessionId
+    | distinct F, min_Timestamp, sessionId
+    | order by min_Timestamp asc
+}

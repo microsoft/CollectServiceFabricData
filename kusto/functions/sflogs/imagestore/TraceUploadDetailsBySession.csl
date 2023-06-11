@@ -1,0 +1,6 @@
+.create-or-alter function with (docstring = "[T:string] where T=table name. [S:string] where S=SessionId. Function to find detailed File Upload traces.", folder = "sflogs/imagestore")
+    TraceUploadDetailsBySession(T:string, S:string) {
+    table(T)
+    | where Type contains S or  Text contains S
+    | project Timestamp, Type, Text, NodeName, Level
+}

@@ -1,9 +1,10 @@
 .create-or-alter function with (docstring = "[T:string] [typeMatch:string] function to split Type column into TypeName and TypeId", folder = "sflogs/base")
-    TraceTypeNameAndIdView(T:string, typeMatch:string=".") {
+    TraceTypeNameAndIdView(T:string, typeMatch:string="") {
         table(T)
-        | where Type matches regex strcat('((?i)',typeMatch,')')
-        //| where Type contains typeMatch
-        | extend TypeId = extract(".+?@(.+)", 1, Type)
-        | extend TypeName = iif(Type contains "@", extract("(.+?)@", 1, Type), Type)
+        | where iif(isempty(typeMatch), true, Type matches regex strcat('((?i)', typeMatch,')'))
+        | extend split = indexof(Type,'@')
+        | extend TypeId = iif(split > 0, substring(Type, split + 1) ,'')
+        | extend TypeName = iif(split > 0, substring(Type, 0, split) ,Type)
+        | project-away split
         | order by Timestamp asc
     }

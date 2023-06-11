@@ -68,7 +68,7 @@ Use the below steps to setup environment for use with CollectSFData.
 1. Download latest release from nuget or github release:  
     a. nuget  
       1. nuget install Microsoft.ServiceFabric.CollectSFData  
-      1. cd .\Microsoft.ServiceFabric.CollectSFData.{{ version }}\lib\net472
+      1. cd .\Microsoft.ServiceFabric.CollectSFData.{{ version }}\lib\net48
 
     b. github  
       1. [collectsfdata.zip](https://github.com/microsoft/CollectServiceFabricData/releases/latest)  
@@ -132,7 +132,7 @@ Options:
                                          and leave this blank.
                                          example: https://clusterkeyvault.vault.azure.net/
   -rg|--azureResourceGroup           [string] azure resource group name / used for log analytics actions.
-  -loc|--azureResourceGroupLocation  [string] azure resource group location / used for log analytics actions.
+  -loc|--azureResourceGroupLocation  [string] azure resource group location / used for MSAL and log analytics actions.
   -sub|--azureSubscriptionId         [string] azure subscription id / used for log analytics actions.
   -tenant|--azureTenantId            [string] azure tenant id for use with kusto AAD authentication
   -cache|--cacheLocation             [string] Write files to this output location. e.g. "C:\Perfcounters\Output"
@@ -142,7 +142,7 @@ Options:
   -cf|--containerFilter              [string] string / regex to filter container names
   -dc|--deleteCache                  [bool] delete downloaded blobs from local disk at end of execution.
   -to|--stop                         [DateTime] end time range to collect data to. default is now.
-                                         example: "06/01/2021 09:01:23 -04:00"
+                                         example: "03/22/2023 18:24:01 -04:00"
   -mc|--etwManifestsCache            [string] local folder path to use for manifest cache .man files.
   -ex|--examples                     [bool] show example commands
   -uris|--fileUris                   [string[]] optional comma separated string array list of files to ingest.
@@ -152,6 +152,7 @@ Options:
                                         counter
                                         trace
                                         exception
+                                        sfextlog
                                         table
                                         setup
                                         any
@@ -186,7 +187,9 @@ Options:
                                          workspace with LogAnalyticsCreate. default is PerGB2018
   -debug|--logDebug                  [int] 0-disabled, 1-exception, 2-error, 3-warning, 4-info, 5-debug.
                                          use logdebug levels for troubleshooting utility
-  -log|--logFile                     [string] file name and path to save console output
+  -log|--logFile                     [string] file name and path to save console output.
+                                         can optionally specify .net datetime format specifier inside '<>'.
+                                         example: collectsfdata-<yyyy-MM-dd-HH-mm-ss>.log
   -nf|--nodeFilter                   [string] string / regex Filter on node name or any string in blob url
                                          (case-insensitive comparison)
   -timeout|--noProgressTimeoutMin    [int] no progress timer in minutes. set to 0 to disable timeout.
@@ -197,7 +200,7 @@ Options:
                                          specify file name 'collectsfdata.options.json' to create default configuration file.
   -from|--start                      [DateTime] start time range to collect data from.
                                          default is -2 hours.
-                                         example: "06/01/2021 07:01:23 -04:00"
+                                         example: "03/22/2023 16:24:01 -04:00"
   -t|--threads                       [int] override default number of threads equal to processor count.
   -u|--unique                        [bool] default true to query for fileuri before ingestion to prevent duplicates
   -uf|--uriFilter                    [string] string / regex filter for storage account blob uri.

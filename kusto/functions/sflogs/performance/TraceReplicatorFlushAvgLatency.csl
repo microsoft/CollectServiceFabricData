@@ -1,20 +1,14 @@
-.create-or-alter function with (docstring = "[T:string] where T=table name. function to graph TReplicator PhysicalLogWriterFlushEndWarning and visualize avg LogWriter flush latency by NodeName.", folder = "sflogs/performance")
+.create-or-alter function with (docstring = "[T:string] where T=table name. function to parse TReplicator PhysicalLogWriterFlushEnd status.", folder = "sflogs/performance")
     TraceReplicatorFlushAvgLatency(T:string) {
-    let regex_Records = @'Records:\s(\d+)';
-    let regex_LatencySensitive = @'LatencySensitiveRecords:\s(\d+)';
-    let regex_FlushTimeMs = @'FlushTime\(ms\):\s(\d+)';
-    let regex_SerializationTimeMs = @'SerializationTime\(ms\):\s(\d+)';
-    let regex_avgBytesSec = @'Avg. Byte/sec:\s(\d+.\d+)';
-    let regex_avgLatency = @'Avg. Latency Milliseconds:\s(\d+.\d+)';
     table(T)
-    | where Type startswith "TReplicator.PhysicalLogWriterFlushEndWarning"
-    | extend  records = extract(regex_Records, 1, Text)
-    | extend  latencySensitiveRecords = extract(regex_LatencySensitive, 1, Text)
-    | extend  flushTimeMs = extract(regex_FlushTimeMs, 1, Text)
-    | extend  serializationTimeMs = extract(regex_SerializationTimeMs, 1, Text)
-    | extend  avgBytesSec = extract(regex_avgBytesSec, 1, Text, typeof(double))
-    | extend  avgLatency = extract(regex_avgLatency, 1, Text, typeof(double))
-    | project Timestamp, Type, Text, NodeName, records, latencySensitiveRecords, flushTimeMs, serializationTimeMs, avgBytesSec, avgLatency
-    | summarize max(avgLatency) by xtime=bin(Timestamp,60s), NodeName
-    | render timechart;
+    | where Type startswith "TReplicator.PhysicalLogWriterFlushEnd"
+    | parse kind=regex flags=Ui Text with * 
+            @'Flushed Bytes: ' flushedBytes
+            @' Records: ' records
+            @' LatencySensitiveRecords: ' sensitiveRecords
+            @' FlushTime\(ms\): ' flushTimeMs
+            @' SerializationTime\(ms\): ' serializationTimeMs
+            @' Avg. Byte/sec: ' avgByteSec
+            @' Avg. Latency Milliseconds: ' avgLatencyMs
+            @'. WritePosition: ' writePosition '$'
 }

@@ -136,7 +136,7 @@ To use a default configuration file without having to specify on the command lin
   - **any** - 'any' without other filters will enumerate all containers for blobs matching criteria.
 - **List** - bool. default false. if true, lists the blobs meeting all criteria for download but does not download the file.
 - **LogDebug** - int. default 4. if > 0, logs additional 'debug' output to console for troubleshooting. 0-disabled, 1-exception, 2-error, 3-warning, 4-info, 5-debug.
-- **LogFile** - optional. string. default null. if populated with file and path, will log all console output to specified file. file is recreated every execution if exists.
+- **LogFile** - optional. string. default null. if populated with file and path, will log all console output to specified file. file is recreated every execution if exists. can optionally specify .net datetime format specifier inside '<>'. example: collectsfdata-\<yyyy-MM-dd-HH-mm-ss\>.log.
 - **NodeFilter** -  optional. string / regex. if populated uses client side searching for blobs after enumeration before download.
 - **NoProgressTimeoutMin** - optional. int. default 10. if no progress has been made during given timeout, utility will exit. set to 0 to disable.
 - **ResourceUri** - optional. string. used internally for resource tracking.

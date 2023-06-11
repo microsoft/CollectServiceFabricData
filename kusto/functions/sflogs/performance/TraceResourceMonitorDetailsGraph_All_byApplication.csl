@@ -1,0 +1,6 @@
+.create-or-alter function with (docstring = "[T:string] where T=table name. function to graph ResourceMonitor CPU and Memory details for tracked processes.", folder = "sflogs/performance")
+    TraceResourceMonitorDetailsGraph_All_byApplication(T:string) {
+    TraceResourceMonitorDetails(T)
+    | summarize  max(toint(AvgMemory)), max(toint(AvgCpuCores)) by bin(Timestamp,60s), Application
+    | render timechart
+}

@@ -10,6 +10,7 @@ creates $nuget ps object with functions an properties to manage nuget packages
 # -allversions is broken in nuget.exe
 
 .EXAMPLE
+[net.servicePointManager]::Expect100Continue = $true;[net.servicePointManager]::SecurityProtocol = [net.SecurityProtocolType]::Tls12;
 invoke-webRequest "https://raw.githubusercontent.com/microsoft/CollectServiceFabricData/master/scripts/nuget-functions.ps1" -outFile "$pwd/nuget-functions.ps1";
 .\nuget-functions.ps1;
 $nuget
@@ -43,7 +44,7 @@ class NugetObj {
 
             if (!(test-path $this.nuget)) {
                 write-host "downloading nuget"
-                invoke-webRequest $nugetDownloadUrl -outFile  $this.nuget
+                [net.webclient]::new().DownloadFile($nugetDownloadUrl, $this.nuget)
             }
         }
         else {
@@ -55,6 +56,34 @@ class NugetObj {
         }
         $this.EnumSources()
         $this.EnumLocals()
+    }
+
+    <#
+        AddPackage adds a package to a local store on disk and expands files
+        $packageName is name of package
+        $nugetPackagePath is source path of package (.nupkg) to add
+        $targetDirectory is the destination path or 'locals' name
+    #>
+    [string[]] AddPackage([string]$packageName, [string]$nugetPackagePath, [string]$targetDirectory) {
+        if (!(test-path $targetDirectory)) {
+            write-host "checking: $targetDirectory"
+            $outputDirectory = $this.EnumLocalsPath($targetDirectory)
+            if (!$outputDirectory) {
+                write-host "creating path: $targetDirectory"
+                mkdir $targetDirectory
+            }
+        }
+
+        $outputDirectory = " -source $targetDirectory" 
+
+        write-host "nuget add $nugetPackagePath$outputDirectory -expand -verbosity $($this.verbose)" -ForegroundColor magenta
+        $this.ExecuteNuget("add $nugetPackagePath$outputDirectory -expand -verbosity $($this.verbose)")
+
+        write-host "add finished. checking $targetDirectory for $packageName" -ForegroundColor darkmagenta
+        return $this.GetDirectories("$targetDirectory/$packageName",'*')
+
+        write-host "add finished. checking cache." -ForegroundColor darkmagenta
+        return $this.EnumPackages($packageName, $nugetPackagePath)
     }
 
     [string[]] AddSourceNugetOrg() {
@@ -101,7 +130,9 @@ class NugetObj {
                 mkdir $packageDirectory
             }
 
-            $this.locals.Add($packageDirectoryName, $packageDirectory)
+            if (!($this.locals.Contains($packageDirectoryName))) {
+                $this.locals.Add($packageDirectoryName, $packageDirectory)
+            }
         }
 
         if ((test-path $this.nugetFallbackFolder)) {
@@ -299,12 +330,14 @@ class NugetObj {
     }
 
     [string[]] GetDirectories([string]$sourcePath, [string]$sourcePattern) {
-        write-host "getdirectories: $sourcePath $sourcePattern"
+        write-host "getdirectories: $sourcePath\$sourcePattern"
         if (!(test-path $sourcePath)) {
             $sourcePath = $this.EnumLocalsPath($sourcePath)
         }
 
-        return @([io.directory]::GetDirectories("$sourcePath", $sourcePattern, [io.searchOption]::TopDirectoryOnly))
+        $results = @([io.directory]::GetDirectories("$sourcePath", $sourcePattern, [io.searchOption]::AllDirectories))
+        write-host "returning directory list: $($results | out-string)"
+        return $results
     }
 
     [string[]] GetFiles([string]$sourcePattern) {
@@ -338,7 +371,12 @@ class NugetObj {
         $outputDirectory = $null
         if ($packagesDirectory) { 
             if (!(test-path $packagesDirectory)) {
-                $packagesDirectory = $this.EnumLocalsPath($packagesDirectory)
+                write-host "checking: $packagesDirectory"
+                $outputDirectory = $this.EnumLocalsPath($packagesDirectory)
+                if (!$outputDirectory) {
+                    write-host "creating path: $packagesDirectory"
+                    mkdir $packagesDirectory
+                }    
             }
             $outputDirectory = " -directdownload -outputdirectory $packagesDirectory" 
         }
