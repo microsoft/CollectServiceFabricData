@@ -62,7 +62,7 @@ steps:
     #vstsFeed: # string. Alias: feedRestore. Optional. Use when selectOrConfig = select. Use packages from this Azure Artifacts/TFS feed. 
     #includeNuGetOrg: true # boolean. Optional. Use when selectOrConfig = select. Use packages from NuGet.org. Default: true.
     nugetConfigPath: './nuget.config'
-    noCache: true # boolean. Disable local cache. Default: false.
+    noCache: false # boolean. Disable local cache. Default: false.
     #disableParallelProcessing: false # boolean. Disable parallel processing. Default: false.
     #restoreDirectory: # string. Alias: packagesDirectory. Destination directory. 
     verbosityRestore: 'Detailed'
