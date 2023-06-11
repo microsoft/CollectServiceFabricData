@@ -37,7 +37,7 @@ jobs:
         shell: powershell
         run: |
           # delete ado internal nuget config for external build
-          $adoInternalNugetConfig = "$env:project_root\Nuget.Config"
+          $adoInternalNugetConfig = ".\Nuget.Config"
           if(Test-Path $adoInternalNugetConfig) {
             write-host "deleting ado internal nuget config: $adoInternalNugetConfig"
             del $adoInternalNugetConfig
