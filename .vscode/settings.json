@@ -1,3 +1,4 @@
 {
-    "dotnet-test-explorer.testProjectPath": "**/*Test.csproj"
+    "dotnet-test-explorer.testProjectPath": "**/*Test.csproj",
+    "dotnet.defaultSolution": "src\\CollectSFData.sln"
 }
