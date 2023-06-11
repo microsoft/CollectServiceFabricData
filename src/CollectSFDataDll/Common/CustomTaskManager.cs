@@ -14,7 +14,7 @@ namespace CollectSFData.Common
     public class CustomTaskManager
     {
         private static SynchronizedList<CustomTaskManager> _allInstances = new SynchronizedList<CustomTaskManager>();
-        private static ConfigurationOptions _config = new ConfigurationOptions();
+        private static ConfigurationOptions _config = ConfigurationOptions.Singleton();
         private static CustomTaskScheduler _customScheduler;
         private static Instance _instance;
         private static Task _taskMonitor = new Task(TaskMonitor);
@@ -246,9 +246,10 @@ namespace CollectSFData.Common
             Log.Info($"added new taskobject to queue:{CallerName} total queued:{QueuedTaskObjects.Count()} throttle ms:{count * 10}");
             TimeSpan delay = new TimeSpan();
 
-            if (taskWait)
+            while (taskWait && !CancellationTokenSource.IsCancellationRequested)
             {
-                taskObject.TaskScheduled.WaitOne();
+                // do not log in this loop as logging will be disabled on close
+                taskWait = !taskObject.TaskScheduled.WaitOne(Constants.ThreadSleepMs1000);
             }
 
             Log.Debug($"added new taskobject to queue:{CallerName} total queued:{QueuedTaskObjects.Count()} delay:{delay.TotalMilliseconds}ms");

@@ -29,8 +29,21 @@ namespace CollectSFData.Common
         private static bool? _cacheLocationPreconfigured = null;
         private static string[] _commandlineArguments = new string[0];
         private static ConfigurationOptions _defaultConfig;
+        private static ConfigurationOptions _singleton;// = new ConfigurationOptions();
         private readonly string _tempName = "csfd";
         private string _tempPath;
+        private static object _singleLock = new Object();
+
+        public static ConfigurationOptions Singleton()
+        {
+                lock (_singleLock)
+                {
+                    if(_singleton == null) {
+                        _singleton = new ConfigurationOptions();
+                    }
+                    return _singleton;
+                }
+        }
 
         public X509Certificate2 ClientCertificate { get; set; }
 
@@ -1157,6 +1170,7 @@ namespace CollectSFData.Common
                     if (!_commandlineArguments[0].StartsWith("/?") && !_commandlineArguments[0].StartsWith("-") && _commandlineArguments[0].EndsWith(".json") && File.Exists(_commandlineArguments[0]))
                     {
                         ConfigurationFile = _commandlineArguments[0];
+                        _commandlineArguments = new string[0];
                         MergeConfig(ConfigurationFile);
                         Log.Info($"setting options to {Constants.DefaultOptionsFile}", ConsoleColor.Yellow);
                     }

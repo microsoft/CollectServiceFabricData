@@ -28,7 +28,7 @@ namespace CollectSFData.Common
         public int TotalFilesMatched { get; set; }
         public int TotalFilesSkipped { get; set; }
         public int TotalRecords { get; set; }
-        protected internal ConfigurationOptions Config { get; private set; } = new ConfigurationOptions();
+        protected internal ConfigurationOptions Config { get; private set; } = ConfigurationOptions.Singleton();
         protected internal CustomTaskManager TaskManager { get; private set; }
 
         static Instance()
@@ -49,12 +49,12 @@ namespace CollectSFData.Common
         {
             TaskManager = new CustomTaskManager() { Instance = this };
 
-            if (configurationOptions == null)
+            if (configurationOptions != null)
             {
-                configurationOptions = new ConfigurationOptions();
+                Config.MergeConfig(configurationOptions);
+                Config.Validate();
             }
 
-            Config = configurationOptions;
             Log.Config = Config;
             DiscoveredMaxDateTicks = DateTime.MinValue.Ticks;
             DiscoveredMinDateTicks = DateTime.MaxValue.Ticks;
@@ -104,5 +104,31 @@ namespace CollectSFData.Common
             SetMinDate(maxDateTicks);
         }
 
+        public Total Totals()
+        {
+            //total
+            Total total = new Total();
+            total.Converted = TotalFilesConverted;
+            total.Downloaded = TotalFilesDownloaded;
+            total.Enumerated = TotalFilesEnumerated; // dupe
+            total.Errors = TotalErrors;
+            total.Formatted = TotalFilesFormatted;
+            total.Matched = TotalFilesMatched;
+            total.Records = TotalRecords;
+            total.Skipped = TotalFilesSkipped;
+
+            //state
+            total.Downloading = FileObjects.Count(FileStatus.downloading);
+            //total.Enumerated = FileObjects.Count(FileStatus.enumerated); // dupe
+            total.Existing = FileObjects.Count(FileStatus.existing);
+            total.Formatting = FileObjects.Count(FileStatus.formatting);
+            total.Failed = FileObjects.Count(FileStatus.failed); 
+            total.Queued = FileObjects.Count(FileStatus.queued);
+            total.Succeeded = FileObjects.Count(FileStatus.succeeded);
+            total.Unknown = FileObjects.Count(FileStatus.unknown);
+            total.Uploading = FileObjects.Count(FileStatus.uploading);
+
+            return total;
+        }
     }
 }

@@ -18,7 +18,7 @@ namespace CollectSFData.Common
     public class Log
     {
         public static int LogErrors = 0;
-        private static ConfigurationOptions _config = new ConfigurationOptions();
+        private static ConfigurationOptions _config = ConfigurationOptions.Singleton();
         private static bool _isRunning;
         private static JsonSerializerSettings _jsonSerializerSettings;
         private static SynchronizedList<LogMessage> _lastMessageList = new SynchronizedList<LogMessage>();

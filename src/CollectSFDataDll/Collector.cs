@@ -23,7 +23,7 @@ namespace CollectSFData
         private int _noProgressCounter = 0;
         private Timer _noProgressTimer;
         private ParallelOptions _parallelConfig;
-        private Tuple<int, int, int, int, int, int, int> _progressTuple = new Tuple<int, int, int, int, int, int, int>(0, 0, 0, 0, 0, 0, 0);
+        private Total _progressTotal = new Total();
 
         public ConfigurationOptions Config { get => Instance.Config; }
 
@@ -43,7 +43,7 @@ namespace CollectSFData
 
         public int Collect()
         {
-            return Collect(new ConfigurationOptions());
+            return Collect(Config);
         }
 
         public int Collect(ConfigurationOptions configurationOptions)
@@ -274,6 +274,11 @@ namespace CollectSFData
             Log.Last($"timed out: {Instance.TimedOut}.");
             Log.Last($"{Instance.FileObjects.StatusString()}", ConsoleColor.Cyan);
 
+            if (Config.List)
+            {
+                Log.Last($"file list:", jsonSerializer: Instance.FileObjects.Select(x => x.FileUri));
+            }
+
             if (Instance.TotalFilesEnumerated > 0)
             {
                 if (Config.FileType != FileTypesEnum.table)
@@ -326,16 +331,10 @@ namespace CollectSFData
                 return;
             }
 
-            Tuple<int, int, int, int, int, int, int> tuple = new Tuple<int, int, int, int, int, int, int>(
-                Instance.TotalErrors,
-                Instance.TotalFilesDownloaded,
-                Instance.TotalFilesEnumerated,
-                Instance.TotalFilesFormatted,
-                Instance.TotalFilesMatched,
-                Instance.TotalFilesSkipped,
-                Instance.TotalRecords);
+            Total total = Instance.Totals();
+            Log.Highlight($"totals:", total);
 
-            if (tuple.Equals(_progressTuple))
+            if (total.Equals(_progressTotal))
             {
                 if (_noProgressCounter >= Config.NoProgressTimeoutMin)
                 {
@@ -359,7 +358,7 @@ namespace CollectSFData
             else
             {
                 _noProgressCounter = 0;
-                _progressTuple = tuple;
+                _progressTotal = total;
             }
         }
 
@@ -427,7 +426,16 @@ namespace CollectSFData
                 }
                 else
                 {
-                    Log.Error($"configuration set to upload cache files from 'fileUris' count:{Config.FileUris.Length} but no files found");
+                    string logString = $"configuration set to upload cache files from 'fileUris' count:{Config.FileUris.Length} but no files found";
+                    
+                    if(Config.SasEndpointInfo.IsPopulated())
+                    {
+                        Log.Warning(logString);
+                    }
+                    else
+                    {
+                        Log.Error(logString);
+                    }
                 }
             }
             else if (Config.IsCacheLocationPreConfigured())

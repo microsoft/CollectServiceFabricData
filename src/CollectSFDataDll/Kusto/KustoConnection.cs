@@ -410,9 +410,9 @@ namespace CollectSFData.Kusto
                 foreach (CloudQueueMessage success in successes)
                 {
                     KustoSuccessMessage message = JsonConvert.DeserializeObject<KustoSuccessMessage>(success.AsString);
-                    Log.Debug("success:", message);
+                    Log.Debug("success message:", message);
 
-                    if (message.Table.Equals(tableName))
+                    if (message.Table.Equals(tableName) || (message.SucceededOn > DateTime.MinValue && message.SucceededOn < DateTime.Now.AddDays(-1)))
                     {
                         RemoveMessageFromQueue(Endpoint.IngestionResources.SuccessNotificationsQueue, success);
                     }
@@ -429,10 +429,10 @@ namespace CollectSFData.Kusto
 
                 foreach (CloudQueueMessage error in errors)
                 {
-                    KustoSuccessMessage message = JsonConvert.DeserializeObject<KustoSuccessMessage>(error.AsString);
-                    Log.Debug("error:", message);
+                    KustoErrorMessage message = JsonConvert.DeserializeObject<KustoErrorMessage>(error.AsString);
+                    Log.Debug("error message:", message);
 
-                    if (message.Table.Equals(tableName))
+                    if (message.Table.Equals(tableName) || (message.FailedOn > DateTime.MinValue && message.FailedOn < DateTime.Now.AddDays(-1)))
                     {
                         RemoveMessageFromQueue(Endpoint.IngestionResources.FailureNotificationsQueue, error);
                     }
