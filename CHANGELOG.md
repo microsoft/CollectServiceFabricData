@@ -4,6 +4,7 @@
 
 - add internal ado pipeline yaml for central feed service compliance
 - add latest kusto functions
+- delete ado internal nuget.config for external build
 
 ## 04/23/2023
 
