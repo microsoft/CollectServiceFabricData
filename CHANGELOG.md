@@ -1,6 +1,6 @@
 # Change log
 
-## 06/11/2023 v2.9.2306.11116
+2## 06/11/2023 v2.9.2306.11116
 
 - add internal ado pipeline yaml for central feed service compliance
 - add latest kusto functions
