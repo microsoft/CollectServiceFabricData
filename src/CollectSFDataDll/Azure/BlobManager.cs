@@ -5,8 +5,9 @@
 
 using CollectSFData.Common;
 using CollectSFData.DataFile;
-using Microsoft.Azure.Storage;
-using Microsoft.Azure.Storage.Blob;
+using Azure.Storage;
+using Azure.Storage.Blobs;
+using Azure.Storage.Blobs.Models;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -22,7 +23,7 @@ namespace CollectSFData.Azure
         private readonly CustomTaskManager _blobChildTasks = new CustomTaskManager() { CreationOptions = TaskCreationOptions.AttachedToParent };
         private readonly CustomTaskManager _blobTasks = new CustomTaskManager();
         private CloudStorageAccount _account;
-        private CloudBlobClient _blobClient;
+        private BlobContainerClient _blobClient;
         private ConfigurationOptions _config;
         private string _fileFilterPattern = @"(?:.+_){6}(\d{20})_";
         private Instance _instance;

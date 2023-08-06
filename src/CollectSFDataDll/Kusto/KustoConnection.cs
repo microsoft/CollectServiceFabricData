@@ -5,9 +5,11 @@
 
 using CollectSFData.Common;
 using CollectSFData.DataFile;
-using Microsoft.Azure.Storage;
-using Microsoft.Azure.Storage.Blob;
-using Microsoft.Azure.Storage.Queue;
+using Azure.Storage;
+using Azure.Storage.Blobs;
+using Azure.Storage.Blobs.Models;
+using Azure.Storage.Queues;
+using Azure.Storage.Queues.Models;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -311,13 +313,13 @@ namespace CollectSFData.Kusto
             Log.Debug($"files ingested:{successUris.Count}");
         }
 
-        private IEnumerable<CloudQueueMessage> PopTopMessagesFromQueue(string queueUriWithSas, int count = _maxMessageCount)
+        private IEnumerable<QueueMessage> PopTopMessagesFromQueue(string queueUriWithSas, int count = _maxMessageCount)
         {
             List<string> messages = Enumerable.Empty<string>().ToList();
-            CloudQueue queue = new CloudQueue(new Uri(queueUriWithSas));
-            IEnumerable<CloudQueueMessage> messagesFromQueue = queue.GetMessages(count);
+            QueueClient queue = new QueueClient(new Uri(queueUriWithSas));
+            IEnumerable<QueueMessage> messagesFromQueue = queue.GetMessages(count);
 
-            foreach (CloudQueueMessage m in messagesFromQueue)
+            foreach (QueueMessage m in messagesFromQueue)
             {
                 messages.Add(m.AsString);
             }
@@ -328,8 +330,8 @@ namespace CollectSFData.Kusto
         private void PostMessageToQueue(string queueUriWithSas, KustoIngestionMessage message, FileObject fileObject)
         {
             Log.Info($"post: {queueUriWithSas ?? "(null ingest uri)"}", ConsoleColor.Magenta);
-            CloudQueue queue = new CloudQueue(new Uri(queueUriWithSas));
-            CloudQueueMessage queueMessage = new CloudQueueMessage(JsonConvert.SerializeObject(message));
+            QueueClient queue = new QueueClient(new Uri(queueUriWithSas));
+            QueueMessage queueMessage = new QueueMessage(JsonConvert.SerializeObject(message));
             OperationContext context = new OperationContext() { ClientRequestID = message.Id };
 
             queue.AddMessage(queueMessage, _messageTimeToLive, null, null, context);
@@ -405,9 +407,9 @@ namespace CollectSFData.Kusto
 
             while (true)
             {
-                IEnumerable<CloudQueueMessage> successes = PopTopMessagesFromQueue(Endpoint.IngestionResources.SuccessNotificationsQueue);
+                IEnumerable<QueueMessage> successes = PopTopMessagesFromQueue(Endpoint.IngestionResources.SuccessNotificationsQueue);
 
-                foreach (CloudQueueMessage success in successes)
+                foreach (QueueMessage success in successes)
                 {
                     KustoSuccessMessage message = JsonConvert.DeserializeObject<KustoSuccessMessage>(success.AsString);
                     Log.Debug("success message:", message);
@@ -425,9 +427,9 @@ namespace CollectSFData.Kusto
 
             while (true)
             {
-                IEnumerable<CloudQueueMessage> errors = PopTopMessagesFromQueue(Endpoint.IngestionResources.FailureNotificationsQueue);
+                IEnumerable<QueueMessage> errors = PopTopMessagesFromQueue(Endpoint.IngestionResources.FailureNotificationsQueue);
 
-                foreach (CloudQueueMessage error in errors)
+                foreach (QueueMessage error in errors)
                 {
                     KustoErrorMessage message = JsonConvert.DeserializeObject<KustoErrorMessage>(error.AsString);
                     Log.Debug("error message:", message);
@@ -449,9 +451,9 @@ namespace CollectSFData.Kusto
             // read success notifications
             while (true)
             {
-                IEnumerable<CloudQueueMessage> successes = PopTopMessagesFromQueue(Endpoint.IngestionResources.SuccessNotificationsQueue);
+                IEnumerable<QueueMessage> successes = PopTopMessagesFromQueue(Endpoint.IngestionResources.SuccessNotificationsQueue);
 
-                foreach (CloudQueueMessage success in successes)
+                foreach (QueueMessage success in successes)
                 {
                     KustoSuccessMessage message = JsonConvert.DeserializeObject<KustoSuccessMessage>(success.AsString);
                     Log.Debug("success:", message);
@@ -480,9 +482,9 @@ namespace CollectSFData.Kusto
             while (true)
             {
                 // read failure notifications
-                IEnumerable<CloudQueueMessage> errors = PopTopMessagesFromQueue(Endpoint.IngestionResources.FailureNotificationsQueue);
+                IEnumerable<QueueMessage> errors = PopTopMessagesFromQueue(Endpoint.IngestionResources.FailureNotificationsQueue);
 
-                foreach (CloudQueueMessage error in errors)
+                foreach (QueueMessage error in errors)
                 {
                     KustoErrorMessage message = JsonConvert.DeserializeObject<KustoErrorMessage>(error.AsString);
                     Log.Debug("error:", message);
@@ -532,11 +534,11 @@ namespace CollectSFData.Kusto
             Log.Info($"exiting {_instance.FileObjects.Count(FileStatus.uploading)}", _instance.FileObjects.FindAll(FileStatus.uploading));
         }
 
-        private void RemoveMessageFromQueue(string queueUriWithSas, CloudQueueMessage message)
+        private void RemoveMessageFromQueue(string queueUriWithSas, QueueMessage message)
         {
             try
             {
-                CloudQueue queue = new CloudQueue(new Uri(queueUriWithSas));
+                QueueClient queue = new QueueClient(new Uri(queueUriWithSas));
                 queue.DeleteMessage(message);
                 Log.Debug($"Removed message from queue:", message);
             }
