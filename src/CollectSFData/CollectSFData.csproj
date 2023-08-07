@@ -116,7 +116,7 @@
       <Version>2.19.6</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.Rest.ClientRuntime">
-      <Version>2.3.20</Version>
+      <Version>2.3.24</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.Rest.ClientRuntime.Azure">
       <Version>3.3.19</Version>
