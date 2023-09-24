@@ -1,5 +1,9 @@
 # Change log
 
+## 09/24/2023 v2.9.2309.12421
+
+- update dependencies for component governance
+
 ## 06/11/2023 v2.9.2306.11116
 
 - add internal ado pipeline yaml for central feed service compliance
