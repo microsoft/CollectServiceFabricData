@@ -31,11 +31,15 @@
   </PropertyGroup>
   <ItemGroup Condition=" '$(TargetFramework)' == 'net462'">
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <PackageReference Include="Microsoft.Azure.Kusto.Data" Version="7.1.1" />
+    <PackageReference Include="Microsoft.Azure.Kusto.Ingest" Version="7.1.1" />
   </ItemGroup>
   <ItemGroup Condition=" '$(TargetFramework)' != 'net462'">
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3">
       <TreatAsUsed>true</TreatAsUsed>
     </PackageReference>
+    <PackageReference Include="Microsoft.Azure.Kusto.Data" Version="8.0.1" />
+    <PackageReference Include="Microsoft.Azure.Kusto.Ingest" Version="8.0.1" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Azure.Security.KeyVault.Certificates">
