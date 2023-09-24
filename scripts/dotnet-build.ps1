@@ -8,7 +8,7 @@ param(
     [ValidateSet('all', 'debug', 'release')]
     $configuration = 'all',
     [switch]$publish,
-    [string]$projectDir = (resolve-path "$psscriptroot/../src"),
+    [string]$projectDir = (resolve-path "$psscriptroot/../src").Path,
     [string]$nugetPackageName = 'Microsoft.ServiceFabric.CollectSFData',
     [string]$nugetFallbackFolder = "$($env:userprofile)/.nuget/packages" , #"$($env:userprofile)/.dotnet/NuGetFallbackFolder", # "$($env:userprofile)/.nuget/packages"
     [switch]$clean,
@@ -60,6 +60,7 @@ function main() {
         $csproj = create-tempProject -projectFile $csproj
         $dllcsproj = create-tempProject -projectFile $dllcsproj
         $nuspecFile = create-nuspec $targetFrameworks
+        rename-nugetConfig
         
         write-host "dotnet restore $csproj" -ForegroundColor Green
         dotnet restore $csproj
@@ -80,14 +81,18 @@ function main() {
         if ($global:tempFiles) {
             foreach ($file in $global:tempFiles) {
                 if (!(test-path $file)) {
-                    write-error "original csproj missing"
+                    write-error "original file:$file missing"
                 }
                 else {
                     $tempFile = $file.replace(".oem", "")
-                    write-host "removing temp file $tempFile" -ForegroundColor Cyan
-                    remove-item $tempFile -Force
+                    if((test-path $tempFile)) {
+                        write-host "removing temp file $tempFile" -ForegroundColor Cyan
+                        write-host "remove-item $tempFile -Force"
+                        remove-item $tempFile -Force
+                    }
 
                     write-host "renaming original file $file" -ForegroundColor Cyan
+                    write-host "rename-Item $file $tempFile -Force"
                     rename-Item $file $tempFile -Force
                 }
             }
@@ -122,6 +127,21 @@ function build-configuration($configuration) {
         #nuget add $nugetFile -source $nugetFallbackFolder
         $nuget.AddPackage($nugetPackageName, $nugetFile, $nugetFallbackFolder)
     }
+}
+
+function rename-nugetConfig() {
+    # rename nuget.config to nuget.config.oem to prevent nuget from using it for internal packages
+    $nugetConfig = (resolve-path "$projectDir/../nuget.config").Path
+    if (!(test-path $nugetConfig)) {
+        write-warning "$nugetConfig does not exist"
+        return
+    }
+    $tempConfig = $nugetConfig.Replace(".oem", "").Replace(".config", ".config.oem")
+    write-host "renaming $nugetConfig to $tempConfig" -ForegroundColor Yellow
+    move-item $nugetConfig $tempConfig -Force
+    write-host "adding temp file $tempConfig to list" -ForegroundColor Yellow
+    [void]$global:tempFiles.add($tempConfig)
+
 }
 
 function create-nuspec($targetFrameworks) {
