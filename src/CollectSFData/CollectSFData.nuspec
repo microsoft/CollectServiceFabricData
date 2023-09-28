@@ -23,10 +23,6 @@
         <dependency id="Azure.Security.KeyVault.Certificates" version="4.1.0" exclude="Build,Analyzers" />
         <dependency id="Azure.Security.KeyVault.Keys" version="4.1.0" exclude="Build,Analyzers" />
         <dependency id="Azure.Security.KeyVault.Secrets" version="4.1.0" exclude="Build,Analyzers" />
-        <dependency id="Microsoft.Azure.KeyVault.Core" version="3.0.4" exclude="Build,Analyzers" />
-        <dependency id="Microsoft.Azure.Kusto.Data" version="7.1.1" exclude="Build,Analyzers" />
-        <dependency id="Microsoft.Azure.Kusto.Ingest" version="7.1.1" exclude="Build,Analyzers" />
-        <dependency id="Microsoft.Azure.Services.AppAuthentication" version="1.6.1" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Azure.Storage.Blob" version="11.1.0" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Azure.Storage.Common" version="11.1.0" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Azure.Storage.Queue" version="11.1.0" exclude="Build,Analyzers" />
@@ -34,23 +30,15 @@
         <dependency id="Azure.Identity" version="1.5.0" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Identity.Client" version="4.42.0" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Identity.Client.Extensions.Msal" version="2.19.6" exclude="Build,Analyzers" />
-        <dependency id="Microsoft.Rest.ClientRuntime" version="2.3.24" exclude="Build,Analyzers" />
-        <dependency id="Microsoft.Rest.ClientRuntime.Azure" version="3.3.19" exclude="Build,Analyzers" />
         <dependency id="Newtonsoft.Json" version="13.0.1" exclude="Build,Analyzers" />
         <dependency id="System.CodeDom" version="4.7.0" exclude="Build,Analyzers" />
-        <dependency id="System.Data.SqlClient" version="4.8.2" exclude="Build,Analyzers" />
         <dependency id="System.Reactive" version="4.0.0" exclude="Build,Analyzers" />
         <dependency id="System.Security.Cryptography.Cng" version="4.7.0" exclude="Build,Analyzers" />
-        <dependency id="System.Security.Cryptography.ProtectedData" version="4.7.0" exclude="Build,Analyzers" />
       </group>
       <group targetFramework=".NETFramework4.8.0">
         <dependency id="Azure.Security.KeyVault.Certificates" version="4.1.0" exclude="Build,Analyzers" />
         <dependency id="Azure.Security.KeyVault.Keys" version="4.1.0" exclude="Build,Analyzers" />
         <dependency id="Azure.Security.KeyVault.Secrets" version="4.1.0" exclude="Build,Analyzers" />
-        <dependency id="Microsoft.Azure.KeyVault.Core" version="3.0.4" exclude="Build,Analyzers" />
-        <dependency id="Microsoft.Azure.Kusto.Data" version="8.0.1" exclude="Build,Analyzers" />
-        <dependency id="Microsoft.Azure.Kusto.Ingest" version="8.0.1" exclude="Build,Analyzers" />
-        <dependency id="Microsoft.Azure.Services.AppAuthentication" version="1.6.1" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Azure.Storage.Blob" version="11.1.0" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Azure.Storage.Common" version="11.1.0" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Azure.Storage.Queue" version="11.1.0" exclude="Build,Analyzers" />
@@ -58,23 +46,15 @@
         <dependency id="Azure.Identity" version="1.5.0" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Identity.Client" version="4.42.0" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Identity.Client.Extensions.Msal" version="2.19.6" exclude="Build,Analyzers" />
-        <dependency id="Microsoft.Rest.ClientRuntime" version="2.3.24" exclude="Build,Analyzers" />
-        <dependency id="Microsoft.Rest.ClientRuntime.Azure" version="3.3.19" exclude="Build,Analyzers" />
         <dependency id="Newtonsoft.Json" version="13.0.1" exclude="Build,Analyzers" />
         <dependency id="System.CodeDom" version="4.7.0" exclude="Build,Analyzers" />
-        <dependency id="System.Data.SqlClient" version="4.8.2" exclude="Build,Analyzers" />
         <dependency id="System.Reactive" version="4.0.0" exclude="Build,Analyzers" />
         <dependency id="System.Security.Cryptography.Cng" version="4.7.0" exclude="Build,Analyzers" />
-        <dependency id="System.Security.Cryptography.ProtectedData" version="4.7.0" exclude="Build,Analyzers" />
       </group>
       <group targetFramework=".NETCoreApp3.1">
         <dependency id="Azure.Security.KeyVault.Certificates" version="4.1.0" exclude="Build,Analyzers" />
         <dependency id="Azure.Security.KeyVault.Keys" version="4.1.0" exclude="Build,Analyzers" />
         <dependency id="Azure.Security.KeyVault.Secrets" version="4.1.0" exclude="Build,Analyzers" />
-        <dependency id="Microsoft.Azure.KeyVault.Core" version="3.0.4" exclude="Build,Analyzers" />
-        <dependency id="Microsoft.Azure.Kusto.Data" version="8.0.1" exclude="Build,Analyzers" />
-        <dependency id="Microsoft.Azure.Kusto.Ingest" version="8.0.1" exclude="Build,Analyzers" />
-        <dependency id="Microsoft.Azure.Services.AppAuthentication" version="1.6.1" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Azure.Storage.Blob" version="11.1.0" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Azure.Storage.Common" version="11.1.0" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Azure.Storage.Queue" version="11.1.0" exclude="Build,Analyzers" />
@@ -82,22 +62,15 @@
         <dependency id="Azure.Identity" version="1.5.0" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Identity.Client" version="4.42.0" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Identity.Client.Extensions.Msal" version="2.19.6" exclude="Build,Analyzers" />
-        <dependency id="Microsoft.Rest.ClientRuntime" version="2.3.24" exclude="Build,Analyzers" />
-        <dependency id="Microsoft.Rest.ClientRuntime.Azure" version="3.3.19" exclude="Build,Analyzers" />
         <dependency id="Newtonsoft.Json" version="13.0.1" exclude="Build,Analyzers" />
         <dependency id="System.CodeDom" version="4.7.0" exclude="Build,Analyzers" />
-        <dependency id="System.Data.SqlClient" version="4.8.2" exclude="Build,Analyzers" />
         <dependency id="System.Reactive" version="4.0.0" exclude="Build,Analyzers" />
         <dependency id="System.Security.Cryptography.Cng" version="4.7.0" exclude="Build,Analyzers" />
-        <dependency id="System.Security.Cryptography.ProtectedData" version="4.7.0" exclude="Build,Analyzers" />
       </group>
       <group targetFramework=".net6.0">
         <dependency id="Azure.Security.KeyVault.Certificates" version="4.1.0" exclude="Build,Analyzers" />
         <dependency id="Azure.Security.KeyVault.Keys" version="4.1.0" exclude="Build,Analyzers" />
         <dependency id="Azure.Security.KeyVault.Secrets" version="4.1.0" exclude="Build,Analyzers" />
-        <dependency id="Microsoft.Azure.KeyVault.Core" version="3.0.4" exclude="Build,Analyzers" />
-        <dependency id="Microsoft.Azure.Kusto.Data" version="8.0.1" exclude="Build,Analyzers" />
-        <dependency id="Microsoft.Azure.Kusto.Ingest" version="8.0.1" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Azure.Storage.Blob" version="11.1.0" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Azure.Storage.Common" version="11.1.0" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Azure.Storage.Queue" version="11.1.0" exclude="Build,Analyzers" />
@@ -105,14 +78,10 @@
         <dependency id="Azure.Identity" version="1.5.0" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Identity.Client" version="4.42.0" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Identity.Client.Extensions.Msal" version="2.19.6" exclude="Build,Analyzers" />
-        <dependency id="Microsoft.Rest.ClientRuntime" version="2.3.24" exclude="Build,Analyzers" />
-        <dependency id="Microsoft.Rest.ClientRuntime.Azure" version="3.3.19" exclude="Build,Analyzers" />
         <dependency id="Newtonsoft.Json" version="13.0.1" exclude="Build,Analyzers" />
         <dependency id="System.CodeDom" version="4.7.0" exclude="Build,Analyzers" />
-        <dependency id="System.Data.SqlClient" version="4.8.2" exclude="Build,Analyzers" />
         <dependency id="System.Reactive" version="4.0.0" exclude="Build,Analyzers" />
         <dependency id="System.Security.Cryptography.Cng" version="4.7.0" exclude="Build,Analyzers" />
-        <dependency id="System.Security.Cryptography.ProtectedData" version="4.7.0" exclude="Build,Analyzers" />
       </group>
     </dependencies>
     <frameworkAssemblies>
