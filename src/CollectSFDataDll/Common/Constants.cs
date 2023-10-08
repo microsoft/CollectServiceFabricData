@@ -43,6 +43,8 @@ namespace CollectSFData.Common
         public const string PerfCtrExtension = ".blg";
         public const string PublicIpUrl = "https://ipinfo.io/json";
         public const int RetryCount = 10;
+        public const int RetryDelay = 3;
+        public const int RetryMaxDelay = 30;
         public const string SchemaFile = "https://raw.githubusercontent.com/microsoft/CollectServiceFabricData/master/configurationFiles/collectsfdata.schema.json";
         public const string SetupExtension = ".trace";
         public const string TableExtension = ".table.csv";
@@ -60,5 +62,6 @@ namespace CollectSFData.Common
         public static readonly string ApplicationName = AppDomain.CurrentDomain.FriendlyName;
         public static readonly string EtwManifestsUrlIndex = $"{EtwManifestsUrl}/index.json";
         public static readonly DateTime UnixEpochMinValue = new DateTime(1601,1,1);
+        
     }
 }
