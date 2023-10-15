@@ -5,13 +5,16 @@
 
 using CollectSFData.Common;
 using CollectSFData.DataFile;
-using Microsoft.WindowsAzure.Storage.Table;
+using Azure;
+using Azure.Data.Tables;
+using Azure.Data.Tables.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Linq.Expressions;
 
 namespace CollectSFData.Azure
 {
@@ -20,11 +23,12 @@ namespace CollectSFData.Azure
         private readonly CustomTaskManager _tableTasks = new CustomTaskManager();
         private ConfigurationOptions _config;
         private Instance _instance;
-        private CloudTableClient _tableClient;
+        //private TableClient _tableClient;
+        private TableServiceClient _tableServiceClient;
 
         public Action<FileObject> IngestCallback { get; set; }
 
-        public List<CloudTable> TableList { get; set; } = new List<CloudTable>();
+        public List<TableItem> TableList { get; set; } = new List<TableItem>();
 
         public TableManager(Instance instance)
         {
@@ -34,8 +38,8 @@ namespace CollectSFData.Azure
 
         public bool Connect()
         {
-            TableContinuationToken tableToken = null;
-            CancellationToken cancellationToken = new CancellationToken();
+            //TableContinuationToken tableToken = null;
+            //CancellationToken cancellationToken = new CancellationToken();
 
             if (!_config.SasEndpointInfo.IsPopulated())
             {
@@ -45,18 +49,21 @@ namespace CollectSFData.Azure
 
             try
             {
-                CloudTable table = new CloudTable(new Uri(_config.SasEndpointInfo.TableEndpoint + _config.SasEndpointInfo.SasToken));
-                _tableClient = table.ServiceClient;
+                //CloudTable table = new CloudTable(new Uri(_config.SasEndpointInfo.TableEndpoint + _config.SasEndpointInfo.SasToken));
+                _tableServiceClient = new TableServiceClient(new Uri(_config.SasEndpointInfo.TableEndpoint + _config.SasEndpointInfo.SasToken));
+                //_tableClient = table.ServiceClient;
+                TableList.AddRange(_tableServiceClient.Query(x => x.Name.StartsWith(FileTypesKnownUrisPrefix.fabriclog), Constants.MaxResults, _tableTasks.CancellationToken));
 
-                TableResultSegment tables = _tableClient.ListTablesSegmentedAsync(
-                    null,
-                    Constants.MaxResults,
-                    tableToken,
-                    new TableRequestOptions(),
-                    null,
-                    cancellationToken).Result;
 
-                TableList.AddRange(tables);
+                //TableResultSegment tables = _tableClient.ListTablesSegmentedAsync(
+                //    null,
+                //    Constants.MaxResults,
+                //    tableToken,
+                //    new TableRequestOptions(),
+                //    null,
+                //    cancellationToken).Result;
+
+                //TableList.AddRange(tables);
                 return true;
             }
             catch (Exception e)
@@ -69,31 +76,14 @@ namespace CollectSFData.Azure
 
         public void DownloadTables(string tablePrefix = "")
         {
-            Log.Info($"enumerating tables: with prefix {tablePrefix}");
-            int resultsCount = 0;
-            TableContinuationToken token = new TableContinuationToken();
-            tablePrefix = string.IsNullOrEmpty(_config.UriFilter) ? tablePrefix : _config.UriFilter;
+            Log.Info($"downloading tables: with prefix {tablePrefix}");
+            Pageable<TableItem> tables = _tableServiceClient.Query(x => x.Name.StartsWith(tablePrefix), Constants.MaxResults, _tableTasks.CancellationToken);
 
-            while (token != null)
+            foreach (TableItem table in tables)
             {
-                try
-                {
-                    Task<TableResultSegment> tableSegment = _tableClient.ListTablesSegmentedAsync(tablePrefix, Constants.MaxResults, token, null, null);
-                    Task<TableResultSegment> task = DownloadTablesSegment(tableSegment, _config.ContainerFilter);
+                EnumerateTable(table, Constants.TableMaxResults);
 
-                    token = task.Result.ContinuationToken;
-                    resultsCount += task.Result.Results.Count;
-                }
-                catch (Exception e)
-                {
-                    Log.Exception($"exception in table enumeration { e }");
-                    break;
-                }
             }
-
-            Log.Info("finished table enumeration");
-            _tableTasks.Wait();
-            Log.Highlight($"processed table count:{ resultsCount.ToString("#,#") } minutes:{ (DateTime.Now - _instance.StartTime).TotalMinutes.ToString("F3") } ");
         }
 
         public string QueryTablesForClusterId()
@@ -166,48 +156,127 @@ namespace CollectSFData.Azure
             return tableSegment;
         }
 
-        private IEnumerable<List<CsvTableRecord>> EnumerateTable(CloudTable cloudTable, int maxResults = Constants.TableMaxResults, bool limitResults = false)
+        private IEnumerable<List<CsvTableRecord>> EnumerateTable(TableItem table, int maxResults = Constants.TableMaxResults, bool limitResults = false)
         {
-            Log.Info($"enumerating table: {cloudTable.Name}", ConsoleColor.Yellow);
-            TableContinuationToken token = new TableContinuationToken();
-            List<CsvTableRecord> results = new List<CsvTableRecord>();
-            int tableRecords = 0;
-            TableQuery query = GenerateTimeQuery(maxResults);
-            _instance.TotalFilesEnumerated++;
+            Log.Info($"enumerating table: {table.Name}");
+            int resultsCount = 0;
+            string continuationToken = null;
+            bool moreResultsAvailable = true;
 
-            while (token != null)
+            while (moreResultsAvailable)
             {
-                Log.Info($"querying table:{cloudTable.Name} total:{tableRecords}", query);
-#if NETCOREAPP
-                TableQuerySegment tableSegment = cloudTable.ExecuteQuerySegmentedAsync(query, token, null, null).Result;
-#else
-                TableQuerySegment<DynamicTableEntity> tableSegment = cloudTable.ExecuteQuerySegmentedAsync(query, token, null, null).Result;
-#endif
-                token = tableSegment.ContinuationToken;
-
-                results.AddRange(FormatRecordResults(cloudTable, tableSegment));
-                tableRecords += results.Count;
-
-                if (results.Count == 0)
+                try
                 {
+                    TableClient tableClient = _tableServiceClient.GetTableClient(table.Name);
+                    Page<TableEntity> page = tableClient
+                       .Query<TableEntity>()
+                       .AsPages(continuationToken, pageSizeHint: Constants.TableMaxResults)
+                       .FirstOrDefault(); // Note: Since the pageSizeHint only limits the number of results in a single page, we explicitly only enumerate the first page.
+
+                    if (page == null)
+                    {
+                        break;
+                    }
+
+                    continuationToken = page.ContinuationToken;
+
+                    IReadOnlyList<TableEntity> pageResults = page.Values;
+                    moreResultsAvailable = pageResults.Any() && continuationToken != null;
+                    resultsCount += pageResults.Count;
+
+                    if (_config.List)
+                    {
+                        Log.Info($"cloudtable: {table.Name} results: {pageResults.Count}");
+                        continue;
+                    }
+
+                    _tableTasks.QueueTaskAction(()=> EnumerateTableRecords(pageResults));
+
+                }
+                catch (Exception e)
+                {
+                    Log.Exception($"exception in table enumeration {e}");
                     break;
                 }
 
-                if (limitResults && (maxResults -= tableSegment.Results.Count) <= 0)
-                {
-                    break;
-                }
+            }
+            Log.Info("finished table enumeration");
+            _tableTasks.Wait();
+            Log.Highlight($"processed table count:{resultsCount.ToString("#,#")} minutes:{(DateTime.Now - _instance.StartTime).TotalMinutes.ToString("F3")} ");
 
-                if (results.Count >= maxResults)
-                {
-                    Log.Info($"yielding chunk {results.Count}", ConsoleColor.DarkCyan);
-                    yield return results;
-                    results.Clear();
-                }
+        }
+//        private IEnumerable<List<CsvTableRecord>> EnumerateTable(CloudTable cloudTable, int maxResults = Constants.TableMaxResults, bool limitResults = false)
+//        {
+//            Log.Info($"enumerating table: {cloudTable.Name}", ConsoleColor.Yellow);
+//            TableContinuationToken token = new TableContinuationToken();
+//            List<CsvTableRecord> results = new List<CsvTableRecord>();
+//            int tableRecords = 0;
+//            TableQuery query = GenerateTimeQuery(maxResults);
+//            _instance.TotalFilesEnumerated++;
+
+//            while (token != null)
+//            {
+//                Log.Info($"querying table:{cloudTable.Name} total:{tableRecords}", query);
+//#if NETCOREAPP
+//                TableQuerySegment tableSegment = cloudTable.ExecuteQuerySegmentedAsync(query, token, null, null).Result;
+//#else
+//                TableQuerySegment<DynamicTableEntity> tableSegment = cloudTable.ExecuteQuerySegmentedAsync(query, token, null, null).Result;
+//#endif
+//                token = tableSegment.ContinuationToken;
+
+//                results.AddRange(FormatRecordResults(cloudTable, tableSegment));
+//                tableRecords += results.Count;
+
+//                if (results.Count == 0)
+//                {
+//                    break;
+//                }
+
+//                if (limitResults && (maxResults -= tableSegment.Results.Count) <= 0)
+//                {
+//                    break;
+//                }
+
+//                if (results.Count >= maxResults)
+//                {
+//                    Log.Info($"yielding chunk {results.Count}", ConsoleColor.DarkCyan);
+//                    yield return results;
+//                    results.Clear();
+//                }
+//            }
+
+//            Log.Info($"return: table {cloudTable.Name} records count:{tableRecords} query:", null, ConsoleColor.DarkCyan, query);
+//            yield return results;
+//        }
+
+        private void EnumerateTableRecords(IReadOnlyList<TableEntity> pageResults)
+        {
+            if (pageResults.Count < 1)
+            {
+                return;
             }
 
-            Log.Info($"return: table {cloudTable.Name} records count:{tableRecords} query:", null, ConsoleColor.DarkCyan, query);
-            yield return results;
+            foreach (TableEntity result in pageResults)
+            {
+
+
+
+                string relativeUri = $"{_config.StartTimeUtc.Ticks}-{_config.EndTimeUtc.Ticks}-{pageResults[0].TableName}.{pageResults.Count}{Constants.TableExtension}";
+                FileObject fileObject = new FileObject(relativeUri, _config.CacheLocation) { Status = FileStatus.enumerated };
+
+                if (_instance.FileObjects.FindByUriFirstOrDefault(relativeUri).Status == FileStatus.existing)
+                {
+                    Log.Info($"{relativeUri} already exists. skipping", ConsoleColor.DarkYellow);
+                    return;
+                }
+
+                _instance.FileObjects.Add(fileObject);
+                pageResults.ToList().ForEach(x => x.RelativeUri = relativeUri);
+                fileObject.Stream.Write(pageResults);
+
+                _instance.TotalFilesDownloaded++;
+                IngestCallback?.Invoke(fileObject);
+            }
         }
 
         private void EnumerateTableRecords(CloudTable cloudTable, string urlFilterPattern)
