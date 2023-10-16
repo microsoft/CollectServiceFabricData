@@ -172,7 +172,7 @@ namespace CollectSFData.Azure
             //}
         }
 
-        private void DownloadBlobsFromDirectory(Uri containerDirectory)
+        private void DownloadBlobsFromDirectory(BlobClient containerDirectory)
         {
             Log.Info($"enumerating:{containerDirectory}", ConsoleColor.Cyan);
             _blobTasks.TaskAction(() => QueueBlobSegmentDownload(EnumerateContainerBlobPages(containerDirectory)));
@@ -190,7 +190,7 @@ namespace CollectSFData.Azure
         //    DownloadBlobsFromContainer(container);
         //}
 
-        private IEnumerable<Uri> EnumerateContainerBlobPages(Uri containerUri)
+        private IEnumerable<Uri> EnumerateContainerBlobPages(BlobContainerClient containerUri)
         {
             Log.Info($"enter containerUri: {containerUri}");
             string continuationToken = null;
@@ -219,14 +219,13 @@ namespace CollectSFData.Azure
             }
         }
 
-        private List<Uri> EnumerateContainerBlobs(Page<BlobHierarchyItem> blobHierarchyItems)
+        private List<BlobClient> EnumerateContainerBlobs(IEnumerable<BlobClient> blobHierarchyItems)
         {
-            Log.Info($"enter. items count: {blobHierarchyItems.Values.Count()}");
-            List<Uri> blobItems = new List<Uri>();
-            var etag = blobHierarchyItems.GetRawResponse().Headers.ETag;
-            BlobUriBuilder builder = new BlobUriBuilder(blobHierarchyItems.GetRawResponse().Request.Uri);
+            Log.Info($"enter. items count: {blobHierarchyItems.Count()}");
+            List<BlobClient> blobItems = new List<BlobClient>();
+            
 
-            foreach (BlobHierarchyItem blobHierarchyItem in blobHierarchyItems.Values)
+            foreach (BlobClient blobHierarchyItem in blobHierarchyItems)
             {
                 var blobName = blobHierarchyItem.Prefix;
 
@@ -472,7 +471,7 @@ namespace CollectSFData.Azure
             IngestCallback?.Invoke(fileObject);
         }
 
-        private void QueueBlobSegmentDownload(IEnumerable<Uri> blobUris)
+        private void QueueBlobSegmentDownload(IEnumerable<BlobClient> blobUris)
         {
             int parentId = Thread.CurrentThread.ManagedThreadId;
             Log.Debug($"enter. current id:{parentId}. results count: {blobUris.Count()}");
