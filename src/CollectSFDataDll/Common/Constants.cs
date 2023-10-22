@@ -34,6 +34,7 @@ namespace CollectSFData.Common
         public const string LogExtension = ".log";
         public const string ManagementAzureCom = "https://management.azure.com";
         public const int MaxCsvTransmitBytes = 1024 * 1024 * 100;
+        public const int MaxEnumerationResults = 500;
         public const int MaxJsonTransmitBytes = 1024 * 1024 * 25;
         public const int MaxResults = 5000;
         public const int MaxStreamTransmitBytes = 1024 * 1024 * 1024;
