@@ -13,6 +13,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
+//using Microsoft.OData.Edm;
+//using System.Data.Entity.Core.Metadata.Edm;
 using System.Threading.Tasks;
 using System.Linq.Expressions;
 
@@ -383,55 +385,55 @@ namespace CollectSFData.Azure
             Dictionary<string, string> convertedEntities = new Dictionary<string, string>();
             string entityString = null;
 
-            foreach (KeyValuePair<string, EntityProperty> prop in tableEntity.Properties)
+            foreach (KeyValuePair<string, object> prop in tableEntity)
             {
                 // Log.Debug($"kvp:{prop.Key}");
                 object entity = null;
 
-                switch (prop.Value.PropertyType)
+                switch (prop.Value)
                 {
-                    case EdmType.Binary:
-                        entity = prop.Value.BinaryValue;
+                    case BinaryData binaryData:
+                        entity = binaryData;
                         entityString = Convert.ToBoolean(entity).ToString();
                         break;
 
-                    case EdmType.Boolean:
-                        entity = prop.Value.BooleanValue;
+                    case bool boolValue:
+                        entity = boolValue;
                         entityString = Convert.ToBoolean(entity).ToString();
                         break;
 
-                    case EdmType.DateTime:
-                        entity = prop.Value.DateTime;
+                    case DateTime dateValue:
+                        entity = dateValue;
                         entityString = Convert.ToDateTime(entity).ToString(Constants.DateTimeFormat);
                         break;
 
-                    case EdmType.Double:
-                        entity = prop.Value.DoubleValue;
+                    case Double doubleValue:
+                        entity = doubleValue;
                         entityString = Convert.ToDouble(entity).ToString();
                         break;
 
-                    case EdmType.Guid:
-                        entity = prop.Value.GuidValue;
+                    case Guid guidValue:
+                        entity = guidValue;
                         entityString = entity.ToString();
                         break;
 
-                    case EdmType.Int32:
-                        entity = prop.Value.Int32Value;
+                    case Int32 int32Value:
+                        entity = int32Value;
                         entityString = Convert.ToInt32(entity).ToString();
                         break;
 
-                    case EdmType.Int64:
-                        entity = prop.Value.Int64Value;
+                    case Int64 int64Value:
+                        entity = int64Value;
                         entityString = Convert.ToInt64(entity).ToString();
                         break;
 
-                    case EdmType.String:
-                        entity = prop.Value.StringValue;
+                    case String stringValue:
+                        entity = stringValue;
                         entityString = entity.ToString();
                         break;
 
                     default:
-                        Log.Error($"unknown edmtype:{prop.Value.PropertyType}");
+                        Log.Error($"unknown edmtype:{prop.Value.GetType()}");
                         break;
                 }
 
