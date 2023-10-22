@@ -58,7 +58,7 @@
       <Version>1.1.1</Version>
     </PackageReference>
     <PackageReference Include="Azure.Identity">
-      <Version>1.10.1</Version>
+      <Version>1.10.2</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.Identity.Client.Extensions.Msal">
       <Version>4.56.0</Version>
