@@ -13,10 +13,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
-//using Microsoft.OData.Edm;
-//using System.Data.Entity.Core.Metadata.Edm;
-using System.Threading.Tasks;
-using System.Linq.Expressions;
 
 namespace CollectSFData.Azure
 {
@@ -25,8 +21,6 @@ namespace CollectSFData.Azure
         private readonly CustomTaskManager _tableTasks = new CustomTaskManager();
         private ConfigurationOptions _config;
         private Instance _instance;
-
-        //private TableClient _tableClient;
         private TableServiceClient _tableServiceClient;
 
         public Action<FileObject> IngestCallback { get; set; }
@@ -41,9 +35,6 @@ namespace CollectSFData.Azure
 
         public bool Connect()
         {
-            //TableContinuationToken tableToken = null;
-            //CancellationToken cancellationToken = new CancellationToken();
-
             if (!_config.SasEndpointInfo.IsPopulated())
             {
                 Log.Warning("no table or token info. exiting:", _config.SasEndpointInfo);
@@ -52,20 +43,8 @@ namespace CollectSFData.Azure
 
             try
             {
-                //CloudTable table = new CloudTable(new Uri(_config.SasEndpointInfo.TableEndpoint + _config.SasEndpointInfo.SasToken));
                 _tableServiceClient = new TableServiceClient(new Uri(_config.SasEndpointInfo.TableEndpoint + _config.SasEndpointInfo.SasToken));
-                //_tableClient = table.ServiceClient;
                 TableList.AddRange(_tableServiceClient.Query(x => x.Name.StartsWith(FileTypesKnownUrisPrefix.fabriclog), Constants.MaxResults, _tableTasks.CancellationToken));
-
-                //TableResultSegment tables = _tableClient.ListTablesSegmentedAsync(
-                //    null,
-                //    Constants.MaxResults,
-                //    tableToken,
-                //    new TableRequestOptions(),
-                //    null,
-                //    cancellationToken).Result;
-
-                //TableList.AddRange(tables);
                 return true;
             }
             catch (Exception e)
@@ -147,17 +126,6 @@ namespace CollectSFData.Azure
             return clusterId;
         }
 
-        //private Task<TableResultSegment> DownloadTablesSegment(Task<TableResultSegment> tableSegment, string urlFilterPattern)
-        //{
-        //    foreach (CloudTable cloudTable in tableSegment.Result.Results)
-        //    {
-        //        _tableTasks.QueueTaskAction(() => EnumerateTableRecords(cloudTable, urlFilterPattern));
-        //    }
-
-        //    return tableSegment;
-        //}
-
-        //private IEnumerable<List<CsvTableRecord>> EnumerateTable(TableItem table, int maxResults = Constants.TableMaxResults, bool limitResults = false)
         private int EnumerateTable(TableItem table, int maxResults = Constants.TableMaxResults, bool limitResults = false)
         {
             Log.Info($"enumerating table: {table.Name}");
@@ -210,50 +178,6 @@ namespace CollectSFData.Azure
             return resultsCount;
         }
 
-        //        private IEnumerable<List<CsvTableRecord>> EnumerateTable(CloudTable cloudTable, int maxResults = Constants.TableMaxResults, bool limitResults = false)
-        //        {
-        //            Log.Info($"enumerating table: {cloudTable.Name}", ConsoleColor.Yellow);
-        //            TableContinuationToken token = new TableContinuationToken();
-        //            List<CsvTableRecord> results = new List<CsvTableRecord>();
-        //            int tableRecords = 0;
-        //            TableQuery query = GenerateTimeQuery(maxResults);
-        //            _instance.TotalFilesEnumerated++;
-
-        //            while (token != null)
-        //            {
-        //                Log.Info($"querying table:{cloudTable.Name} total:{tableRecords}", query);
-        //#if NETCOREAPP
-        //                TableQuerySegment tableSegment = cloudTable.ExecuteQuerySegmentedAsync(query, token, null, null).Result;
-        //#else
-        //                TableQuerySegment<DynamicTableEntity> tableSegment = cloudTable.ExecuteQuerySegmentedAsync(query, token, null, null).Result;
-        //#endif
-        //                token = tableSegment.ContinuationToken;
-
-        //                results.AddRange(FormatRecordResults(cloudTable, tableSegment));
-        //                tableRecords += results.Count;
-
-        //                if (results.Count == 0)
-        //                {
-        //                    break;
-        //                }
-
-        //                if (limitResults && (maxResults -= tableSegment.Results.Count) <= 0)
-        //                {
-        //                    break;
-        //                }
-
-        //                if (results.Count >= maxResults)
-        //                {
-        //                    Log.Info($"yielding chunk {results.Count}", ConsoleColor.DarkCyan);
-        //                    yield return results;
-        //                    results.Clear();
-        //                }
-        //            }
-
-        //            Log.Info($"return: table {cloudTable.Name} records count:{tableRecords} query:", null, ConsoleColor.DarkCyan, query);
-        //            yield return results;
-        //        }
-
         private void EnumerateTableRecords(IReadOnlyList<TableEntity> tableEntities, string tableName)
         {
             if (tableEntities.Count < 1)
@@ -270,59 +194,12 @@ namespace CollectSFData.Azure
                 return;
             }
 
-            //foreach (TableEntity entity in tableEntities)
-            //{
             _instance.FileObjects.Add(fileObject);
-            //tableEntities.ToList().ForEach(x => x.RelativeUri = relativeUri);
             fileObject.Stream.Write(FormatRecordResults(relativeUri, tableEntities));
-            //fileObject.Stream.Write(tableEntities);
 
             _instance.TotalFilesDownloaded++;
             IngestCallback?.Invoke(fileObject);
-            //}
         }
-
-        //private void EnumerateTableRecords(CloudTable cloudTable, string urlFilterPattern)
-        //{
-        //    if (string.IsNullOrEmpty(urlFilterPattern) || Regex.IsMatch(cloudTable.Uri.ToString(), urlFilterPattern, RegexOptions.IgnoreCase))
-        //    {
-        //        int chunkCount = 0;
-
-        //        foreach (IList<CsvTableRecord> resultsChunk in EnumerateTable(cloudTable, Constants.TableMaxResults))
-        //        {
-        //            if (resultsChunk.Count < 1)
-        //            {
-        //                continue;
-        //            }
-
-        //            if (_config.List)
-        //            {
-        //                Log.Info($"cloudtable: {cloudTable.Name} results: {resultsChunk.Count}");
-        //                continue;
-        //            }
-
-        //            string relativeUri = $"{_config.StartTimeUtc.Ticks}-{_config.EndTimeUtc.Ticks}-{cloudTable.Name}.{chunkCount++}{Constants.TableExtension}";
-        //            FileObject fileObject = new FileObject(relativeUri, _config.CacheLocation) { Status = FileStatus.enumerated };
-
-        //            if (_instance.FileObjects.FindByUriFirstOrDefault(relativeUri).Status == FileStatus.existing)
-        //            {
-        //                Log.Info($"{relativeUri} already exists. skipping", ConsoleColor.DarkYellow);
-        //                continue;
-        //            }
-
-        //            _instance.FileObjects.Add(fileObject);
-        //            resultsChunk.ToList().ForEach(x => x.RelativeUri = relativeUri);
-        //            fileObject.Stream.Write(resultsChunk);
-
-        //            _instance.TotalFilesDownloaded++;
-        //            IngestCallback?.Invoke(fileObject);
-        //        }
-        //    }
-        //    else
-        //    {
-        //        _instance.TotalFilesSkipped++;
-        //    }
-        //}
 
         private List<CsvTableRecord> FormatRecordResults(string relativeUri, IReadOnlyList<TableEntity> tableEntities)
         {
@@ -366,19 +243,6 @@ namespace CollectSFData.Azure
 
             return csvRecords;
         }
-
-        //private TableQuery GenerateTimeQuery(int maxResults = Constants.TableMaxResults)
-        //{
-        //    TableQuery query = new TableQuery();
-        //    string startDate = TableQuery.GenerateFilterConditionForDate("Timestamp", QueryComparisons.GreaterThanOrEqual, _config.StartTimeUtc);
-        //    string endDate = TableQuery.GenerateFilterConditionForDate("Timestamp", QueryComparisons.LessThanOrEqual, _config.EndTimeUtc);
-
-        //    query.FilterString = TableQuery.CombineFilters(startDate, TableOperators.And, endDate);
-        //    query.TakeCount = Math.Min(maxResults, Constants.MaxResults);
-        //    Log.Info("query string:", ConsoleColor.Cyan, null, query);
-
-        //    return query;
-        //}
 
         private Dictionary<string, string> MapEntitiesTypes(TableEntity tableEntity)
         {
@@ -446,7 +310,6 @@ namespace CollectSFData.Azure
         private bool TableRecordExists(string tableName)
         {
             // first record is header
-            //bool recordExists = EnumerateTable(_tableClient.GetTableReference(tableName), 1, true).Count() > 1;
             bool recordExists = EnumerateTable(new TableItem(tableName), 1, true) > 0;
 
             Log.Highlight($"record exists in table:{recordExists}");

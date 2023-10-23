@@ -9,30 +9,21 @@ using Azure;
 using Azure.Storage;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
-using Azure.Storage.Sas;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
-using System.Threading.Tasks;
 using Azure.Core;
-using System.ComponentModel;
 
 namespace CollectSFData.Azure
 {
     public class BlobManager
     {
-        //private readonly CustomTaskManager _blobChildTasks = new CustomTaskManager() { CreationOptions = TaskCreationOptions.AttachedToParent };
         private readonly CustomTaskManager _blobTasks = new CustomTaskManager();
-
         private BlobClientOptions _blobClientOptions;
         private BlobServiceClient _blobServiceClient;
-
-        //private BlobContainerClient _blobContainerClient;
         private ConfigurationOptions _config;
-
         private string _fileFilterPattern = @"(?:.+_){6}(\d{20})_";
         private Instance _instance;
         private string _pathDelimiter = "/";
@@ -69,16 +60,7 @@ namespace CollectSFData.Azure
 
             try
             {
-                //CloudStorageAccount.UseV1MD5 = false; //DevSkim: ignore DS126858. required for jarvis
-                //_blobServiceClient = CloudStorageAccount.Parse(_config.SasEndpointInfo.ConnectionString);
-
                 _blobServiceClient = new BlobServiceClient(_config.SasEndpointInfo.ConnectionString, _blobClientOptions);
-                //CloudBlobClient storageClient = _blobServiceClient.CreateCloudBlobClient();
-                //_blobContainerClient = storageClient.GetRootContainerReference().ServiceClient;
-
-                //_blobContainerClient = _blobServiceClient.GetBlobContainerClient(_config.SasEndpointInfo.AbsolutePath);
-
-                // no communication with storage account until here:
                 EnumerateContainers(null, true);
                 return true;
             }
@@ -145,7 +127,6 @@ namespace CollectSFData.Azure
 
             Log.Info("waiting for download tasks");
             _blobTasks.Wait();
-            //_blobChildTasks.Wait();
         }
 
         public void DownloadFiles(string[] uris)
@@ -163,7 +144,6 @@ namespace CollectSFData.Azure
                     }
                     else
                     {
-                        //blobItems.Add(_blobContainerClient.GetBlobReferenceFromServer(new Uri(uri)));
                         blobItems.Add(CreateBlobClient(uri));
                     }
                 }
@@ -178,7 +158,6 @@ namespace CollectSFData.Azure
 
             Log.Info("waiting for download tasks");
             _blobTasks.Wait();
-            //_blobChildTasks.Wait();
         }
 
         public List<BlobClient> EnumerateContainerBlobPages(BlobContainerClient containerClient, string prefix = "")
@@ -236,89 +215,13 @@ namespace CollectSFData.Azure
         {
             Log.Info($"enumerating:{containerClient.Name}", ConsoleColor.Black, ConsoleColor.Cyan);
             _blobTasks.TaskAction(() => QueueBlobSegmentDownload(EnumerateContainerBlobPages(containerClient)));
-            //_blobTasks.TaskAction(() => QueueBlobSegmentDownload(EnumerateContainerBlobPages(CreateBlobContainerClient(containerClient.Uri))));
-
-            //foreach (IEnumerable<Uri> blobItem in EnumerateContainerBlobs(containerClient.Uri))
-            //{
-            //    _blobTasks.TaskAction(() => QueueBlobSegmentDownload(blobItem));
-            //}
         }
 
         private void DownloadBlobsFromDirectory(BlobClient containerDirectory)
         {
             Log.Info($"enumerating:{containerDirectory}", ConsoleColor.Cyan);
             _blobTasks.TaskAction(() => QueueBlobSegmentDownload(EnumerateContainerBlobPages(CreateBlobContainerClient(containerDirectory.Uri))));
-            //_blobTasks.TaskAction(() => QueueBlobSegmentDownload(EnumerateContainerBlobPages(CreateBlobContainerClient(containerDirectory.Uri))));
-
-            //foreach (BlobItem segment in EnumerateDirectoryBlobs(directory))
-            //{
-            //    _blobChildTasks.TaskAction(() => QueueBlobSegmentDownload(segment.Results));
-            //}
         }
-
-        //private void DownloadContainer(BlobContainerClient container)
-        //{
-        //    Log.Info($"enter:{container.Name}");
-
-        //    DownloadBlobsFromContainer(container);
-        //}
-        //private IEnumerable<BlobClient> EnumerateContainerBlobs(Page<BlobHierarchyItem> blobHierarchyItems)
-        //{
-        //    Log.Info($"enter. items count: {blobHierarchyItems.Values.Count}");
-        //    List<BlobClient> blobItems = new List<BlobClient>();
-
-        //    foreach (BlobHierarchyItem blobItem in blobHierarchyItems.Values)
-        //    {
-        //        var blobName = blobItem.Prefix;
-
-        //        if (blobItem.IsBlob)
-        //        {
-        //            blobName = blobItem.Blob.Name;
-        //            Log.Info($"blob Name:{blobName}");
-
-        //            blobItems.Add(CreateBlobClient(blobItem));
-        //            // containerClient.GetBlobs(BlobTraits.All, BlobStates.All, blobPrefix, _blobTasks.CancellationToken).AsEnumerable<BlobItem>();
-        //            //var blobProperties = blobClient.GetProperties();
-        //            //var blobDownloadInfo = blobClient.DownloadTo(outputFile);
-        //        }
-        //        else
-        //        {
-        //            Log.Info($"directory Name:{blobName}");
-
-        //            //blobItems.AddRange(EnumerateContainerBlobs(new Uri(containerUri.AbsolutePath + _pathDelimiter + blobName)));
-        //            DownloadBlobsFromDirectory(CreateBlobClient(containerUri.AbsolutePath + _pathDelimiter + blobName));
-        //            //blobItems.AddRange(_blobTasks.TaskFunction((List<BlobClient>) => EnumerateContainerBlobs()).Result);
-        //        }
-        //    }
-
-        //    BlobItem resultSegment = default(BlobItem);
-        //string blobToken = null;
-
-        //while (!_blobTasks.CancellationToken.IsCancellationRequested)
-        //{
-        //    resultSegment = _blobTasks.TaskFunction((BlobItem) =>
-
-        //    blobContainerClient.ListBlobsSegmentedAsync(
-        //        null,
-        //        false,
-        //        BlobListingDetails.None,
-        //        Constants.MaxResults,
-        //        blobToken,
-        //        null,
-        //        null).Result as BlobItem).Result as BlobItem;
-
-        //    blobToken = resultSegment.ContinuationToken;
-        //    yield return resultSegment;
-
-        //    if (blobToken == null)
-        //    {
-        //        break;
-        //    }
-        //}
-
-        //Log.Info($"exit ");// {containerClient.Uri}");
-        //    return blobItems.AsEnumerable<BlobClient>();
-        //}
 
         private List<BlobContainerClient> EnumerateContainers(string containerPrefix = "", bool testConnectivity = false)
         {
@@ -386,7 +289,6 @@ namespace CollectSFData.Azure
             if (_config.SasEndpointInfo.AbsolutePath.Length > 1)
             {
                 Log.Info("absolute path sas");
-                //BlobContainerClient container = new BlobContainerClient(new Uri(_blobServiceClient.BlobEndpoint + _config.SasEndpointInfo.AbsolutePath + "?" + _blobServiceClient.Credentials.SASToken));
                 BlobContainerClient blobContainerClient = _blobServiceClient.GetBlobContainerClient(_config.SasEndpointInfo.AbsolutePath);
 
                 // force connection / error
@@ -420,35 +322,6 @@ namespace CollectSFData.Azure
             return ContainerList;
         }
 
-        //private IEnumerable<BlobItem> EnumerateDirectoryBlobs(CloudBlobDirectory cloudBlobDirectory)
-        //{
-        //    Log.Info($"enter {cloudBlobDirectory.Uri}");
-        //    BlobItem resultSegment = default(BlobItem);
-        //    BlobContinuationToken blobToken = null;
-
-        //    while (!_blobChildTasks.CancellationToken.IsCancellationRequested)
-        //    {
-        //        resultSegment = _blobChildTasks.TaskFunction((BlobItem) =>
-        //        cloudBlobDirectory.ListBlobsSegmentedAsync(
-        //            false,
-        //            BlobListingDetails.None,
-        //            Constants.MaxResults,
-        //            blobToken,
-        //            null,
-        //            null).Result as BlobItem).Result as BlobItem;
-
-        //        blobToken = resultSegment.ContinuationToken;
-        //        yield return resultSegment;
-
-        //        if (blobToken == null)
-        //        {
-        //            break;
-        //        }
-        //    }
-
-        //    Log.Info($"exit {cloudBlobDirectory.Uri}");
-        //}
-
         private Page<BlobHierarchyItem> GetBlobsByHierarchy(BlobContainerClient containerClient, string prefix = "")
         {
             Log.Debug($"enter containerInfo: {containerClient.Uri} prefix:{prefix}");
@@ -469,23 +342,12 @@ namespace CollectSFData.Azure
         {
             if (!fileObject.Exists)
             {
-                //BlobRequestOptions blobRequestOptions = new BlobRequestOptions()
-                //{
-                //    RetryPolicy = new IngestRetryPolicy(),
-                //    ParallelOperationThreadCount = _config.Threads
-                //};
-
                 BlobDownloadToOptions _blobDownloadToOptions = new BlobDownloadToOptions()
                 {
                     Conditions = new BlobRequestConditions()
                     {
                         IfModifiedSince = fileObject.LastModified
                     }
-                    //},
-                    //TransferOptions = new StorageTransferOptions()
-                    //{
-                    //    MaximumConcurrency = _config.Threads
-                    //}
                 };
 
                 StorageTransferOptions _storageTransferOptions = new StorageTransferOptions()
@@ -503,7 +365,6 @@ namespace CollectSFData.Azure
                     fileObject.DownloadAction = () =>
                     {
                         FileManager.CreateDirectory(fileObject.FileUri);
-                        //((CloudBlob)blob).DownloadToFileAsync(fileObject.FileUri, FileMode.Create, null, blobRequestOptions, null).Wait();
                         blob.DownloadToAsync(fileObject.FileUri, _blobRequestConditions, _storageTransferOptions, _blobTasks.CancellationToken).Wait();
                     };
                 }
@@ -511,7 +372,6 @@ namespace CollectSFData.Azure
                 {
                     fileObject.DownloadAction = () =>
                     {
-                        //((CloudBlob)blob).DownloadToStreamAsync(fileObject.Stream.Get(), null, blobRequestOptions, null).Wait();
                         blob.DownloadToAsync(fileObject.Stream.Get(), _blobRequestConditions, _storageTransferOptions, _blobTasks.CancellationToken).Wait();
                     };
                 }
@@ -537,22 +397,8 @@ namespace CollectSFData.Azure
 
             foreach (BlobClient blobClient in blobClients)
             {
-                //BlobClient blobClient = null;
                 Response<BlobProperties> blobProperties = null;
                 Log.Debug($"parent id:{parentId} current Id:{Thread.CurrentThread.ManagedThreadId}");
-
-                //if (blob is CloudBlobDirectory)
-                //{
-                //    if (!string.IsNullOrEmpty(_config.NodeFilter) && !Regex.IsMatch(blob.Uri.ToString(), _config.NodeFilter, RegexOptions.IgnoreCase))
-                //    {
-                //        Log.Debug($"blob:{blob.Uri} does not match nodeFilter pattern:{_config.NodeFilter}, skipping...");
-                //        continue;
-                //    }
-
-                //    DownloadBlobsFromDirectory(blob as CloudBlobDirectory);
-                //    Log.Debug("blob is directory.");
-                //    continue;
-                //}
 
                 _instance.TotalFilesEnumerated++;
 
@@ -581,8 +427,6 @@ namespace CollectSFData.Azure
                 try
                 {
                     Log.Debug($"file Blob: {blobClient}");
-                    // blobRef = blob.Container.ServiceClient.GetBlobReferenceFromServerAsync(blob.Uri).Result;
-                    //blobClient = new BlobClient(blobClient, _blobClientOptions);
                     blobProperties = blobClient.GetProperties(new BlobRequestConditions { }, _blobTasks.CancellationToken);
                 }
                 catch (Exception se)
