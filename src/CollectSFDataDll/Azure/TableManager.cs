@@ -41,10 +41,41 @@ namespace CollectSFData.Azure
                 return false;
             }
 
+            return EnumerateTables();
+        }
+
+        public void DownloadTables(string tablePrefix = "")
+        {
+            Log.Info($"downloading tables: with prefix {tablePrefix}");
+            if (!EnumerateTables(tablePrefix))
+            {
+                Log.Warning("error enumerating tables.");
+                return;
+            }
+
+            foreach (TableItem table in TableList)
+            {
+                EnumerateTable(table, Constants.TableMaxResults);
+            }
+        }
+
+        public bool EnumerateTables(string prefix = "")
+        {
             try
             {
+                TableList = new List<TableItem>();
                 _tableServiceClient = new TableServiceClient(new Uri(_config.SasEndpointInfo.TableEndpoint + _config.SasEndpointInfo.SasToken));
-                TableList.AddRange(_tableServiceClient.Query(x => x.Name.StartsWith(FileTypesKnownUrisPrefix.fabriclog), Constants.MaxResults, _tableTasks.CancellationToken));
+                Pageable<TableItem> tables = _tableServiceClient.Query(x => x.Name != "", Constants.MaxEnumerationResults, _tableTasks.CancellationToken);
+                foreach (TableItem table in tables)
+                {
+                    if (!string.IsNullOrEmpty(prefix) && !Regex.IsMatch(table.Name, prefix))
+                    {
+                        Log.Info($"skipping table {table.Name}. does not match {prefix}.");
+                        continue;
+                    }
+                    TableList.Add(table);
+                }
+
                 return true;
             }
             catch (Exception e)
@@ -55,20 +86,9 @@ namespace CollectSFData.Azure
             }
         }
 
-        public void DownloadTables(string tablePrefix = "")
-        {
-            Log.Info($"downloading tables: with prefix {tablePrefix}");
-            Pageable<TableItem> tables = _tableServiceClient.Query(x => x.Name.StartsWith(tablePrefix), Constants.MaxResults, _tableTasks.CancellationToken);
-
-            foreach (TableItem table in tables)
-            {
-                EnumerateTable(table, Constants.TableMaxResults);
-            }
-        }
-
         public string QueryTablesForClusterId()
         {
-            string tablePattern = FileTypesKnownUrisPrefix.fabriclog + "(?<guidString>[A-Fa-f0-9]{32})GlobalTime$";
+            string tablePattern = Constants.TableNamePattern;
             Log.Info($"querying table names for pattern:{tablePattern}", ConsoleColor.Green);
             string clusterId = null;
 
