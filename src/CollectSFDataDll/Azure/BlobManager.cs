@@ -183,9 +183,6 @@ namespace CollectSFData.Azure
                     }
                     else
                     {
-                        //blobItems.AddRange(EnumerateContainerBlobPages(containerClient, item.Prefix));
-                        //_blobTasks.QueueTaskAction(() => QueueBlobSegmentDownload(EnumerateContainerBlobPages(containerClient, item.Prefix)));
-                        //blobItems.AddRange(DownloadBlobsFromDirectory(containerClient, item.Prefix));
                         DownloadBlobsFromDirectory(containerClient, item.Prefix);
                     }
                 }
@@ -219,14 +216,12 @@ namespace CollectSFData.Azure
         {
             Log.Info($"enumerating:{containerClient.Name}", ConsoleColor.Black, ConsoleColor.Cyan);
             _blobTasks.QueueTaskAction(() => QueueBlobSegmentDownload(EnumerateContainerBlobPages(containerClient)));
-            //QueueBlobSegmentDownload(EnumerateContainerBlobPages(containerClient));
         }
 
         private void DownloadBlobsFromDirectory(BlobContainerClient containerDirectory, string prefix = "")
         {
             Log.Info($"enumerating:{containerDirectory}", ConsoleColor.Cyan);
             _blobTasks.QueueTaskAction(() => QueueBlobSegmentDownload(EnumerateContainerBlobPages(containerDirectory, prefix)));
-            //QueueBlobSegmentDownload(EnumerateContainerBlobPages(containerDirectory, prefix));
         }
 
         private List<BlobContainerClient> EnumerateContainers(string containerPrefix = "", bool testConnectivity = false)
@@ -361,10 +356,7 @@ namespace CollectSFData.Azure
                     MaximumConcurrency = _config.Threads
                 };
 
-                BlobRequestConditions _blobRequestConditions = new BlobRequestConditions()
-                {
-                    //IfModifiedSince = fileObject.LastModified
-                };
+                BlobRequestConditions _blobRequestConditions = new BlobRequestConditions();
 
                 if (sourceLength > Constants.MaxStreamTransmitBytes)
                 {
