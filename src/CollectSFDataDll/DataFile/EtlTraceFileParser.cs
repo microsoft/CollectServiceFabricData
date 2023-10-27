@@ -128,7 +128,7 @@ namespace CollectSFData.DataFile
             _traceDispatcher = traceDispatcher;
 
 
-            using (var reader = new TraceFileEventReader(fileName))
+            using (TraceFileEventReader reader = new TraceFileEventReader(fileName))
             {
                 TraceSessionMetaData = reader.ReadTraceSessionMetadata();
                 if (TraceSessionMetaData.StartTime > endTime | (TraceSessionMetaData.EndTime < startTime & (TraceSessionMetaData.EndTime != Constants.UnixEpochMinValue)))

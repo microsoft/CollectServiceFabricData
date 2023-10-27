@@ -460,7 +460,7 @@ namespace CollectSFData.DataFile
             int recordsCount = 0;
             DateTime startTime = DateTime.Now;
 
-            var action = new Action<DtrTraceRecord>((trace) =>
+            Action<DtrTraceRecord> action = new Action<DtrTraceRecord>((trace) =>
             {
                 trace.FileType = fileObject.FileDataType.ToString();
                 trace.NodeName = fileObject.NodeName;
