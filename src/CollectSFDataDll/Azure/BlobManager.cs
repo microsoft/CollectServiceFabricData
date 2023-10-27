@@ -183,7 +183,10 @@ namespace CollectSFData.Azure
                     }
                     else
                     {
-                        blobItems.AddRange(EnumerateContainerBlobPages(containerClient, item.Prefix));
+                        //blobItems.AddRange(EnumerateContainerBlobPages(containerClient, item.Prefix));
+                        //_blobTasks.QueueTaskAction(() => QueueBlobSegmentDownload(EnumerateContainerBlobPages(containerClient, item.Prefix)));
+                        //blobItems.AddRange(DownloadBlobsFromDirectory(containerClient, prefix));
+                        DownloadBlobsFromDirectory(containerClient, item.Prefix);
                     }
                 }
             }
@@ -215,14 +218,16 @@ namespace CollectSFData.Azure
         private void DownloadBlobsFromContainer(BlobContainerClient containerClient)
         {
             Log.Info($"enumerating:{containerClient.Name}", ConsoleColor.Black, ConsoleColor.Cyan);
-            _blobTasks.TaskAction(() => QueueBlobSegmentDownload(EnumerateContainerBlobPages(containerClient)));
+            _blobTasks.QueueTaskAction(() => QueueBlobSegmentDownload(EnumerateContainerBlobPages(containerClient)));
             //QueueBlobSegmentDownload(EnumerateContainerBlobPages(containerClient));
         }
 
-        private void DownloadBlobsFromDirectory(BlobClient containerDirectory)
+        //private void DownloadBlobsFromDirectory(BlobClient containerDirectory)
+        private void DownloadBlobsFromDirectory(BlobContainerClient containerDirectory, string prefix = "")
         {
             Log.Info($"enumerating:{containerDirectory}", ConsoleColor.Cyan);
-            _blobTasks.TaskAction(() => QueueBlobSegmentDownload(EnumerateContainerBlobPages(CreateBlobContainerClient(containerDirectory.Uri))));
+            //_blobTasks.QueueTaskAction(() => QueueBlobSegmentDownload(EnumerateContainerBlobPages(CreateBlobContainerClient(containerDirectory.Uri))));
+            _blobTasks.QueueTaskAction(() => QueueBlobSegmentDownload(EnumerateContainerBlobPages(containerDirectory, prefix)));
             //QueueBlobSegmentDownload(EnumerateContainerBlobPages(CreateBlobContainerClient(containerDirectory.Uri)));
         }
 
