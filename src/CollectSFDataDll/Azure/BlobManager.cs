@@ -108,6 +108,7 @@ namespace CollectSFData.Azure
             {
                 blobUri = new Uri($"{blobUri.Scheme}://{blobUri.Host}{blobUri.AbsolutePath + _pathDelimiter + prefix}{blobUri.Query}");
             }
+            Log.Debug($"exit: {blobUri}");
             return new BlobClient(blobUri, _blobClientOptions);
         }
 
@@ -163,18 +164,18 @@ namespace CollectSFData.Azure
         public List<BlobClient> EnumerateContainerBlobPages(BlobContainerClient containerClient, string prefix = "")
         {
             Log.Info($"enter containerUri: {containerClient.Name}");
-            string continuationToken = null;
+            string continuationToken = "";
             bool moreResultsAvailable = true;
             List<BlobClient> blobItems = new List<BlobClient>();
             Page<BlobHierarchyItem> blobHierarchyItems = default;
 
             while (!_blobTasks.CancellationToken.IsCancellationRequested && moreResultsAvailable)
             {
-                blobHierarchyItems = GetBlobsByHierarchy(containerClient, prefix);
+                blobHierarchyItems = GetBlobsByHierarchy(containerClient, prefix, continuationToken);
                 continuationToken = blobHierarchyItems.ContinuationToken;
-                moreResultsAvailable = blobHierarchyItems.Values.Any() && continuationToken != null;
+                moreResultsAvailable = blobHierarchyItems.Values.Any() && !string.IsNullOrEmpty(continuationToken);
 
-                foreach (var item in blobHierarchyItems.Values)
+                foreach (BlobHierarchyItem item in blobHierarchyItems.Values)
                 {
                     if (item.IsBlob)
                     {
@@ -215,17 +216,19 @@ namespace CollectSFData.Azure
         {
             Log.Info($"enumerating:{containerClient.Name}", ConsoleColor.Black, ConsoleColor.Cyan);
             _blobTasks.TaskAction(() => QueueBlobSegmentDownload(EnumerateContainerBlobPages(containerClient)));
+            //QueueBlobSegmentDownload(EnumerateContainerBlobPages(containerClient));
         }
 
         private void DownloadBlobsFromDirectory(BlobClient containerDirectory)
         {
             Log.Info($"enumerating:{containerDirectory}", ConsoleColor.Cyan);
             _blobTasks.TaskAction(() => QueueBlobSegmentDownload(EnumerateContainerBlobPages(CreateBlobContainerClient(containerDirectory.Uri))));
+            //QueueBlobSegmentDownload(EnumerateContainerBlobPages(CreateBlobContainerClient(containerDirectory.Uri)));
         }
 
         private List<BlobContainerClient> EnumerateContainers(string containerPrefix = "", bool testConnectivity = false)
         {
-            var blobContainers = default(Pageable<BlobContainerItem>);
+            Pageable<BlobContainerItem> blobContainers = default(Pageable<BlobContainerItem>);
             string containerFilter = string.Empty;
 
             if (!string.IsNullOrEmpty(_config.ContainerFilter))
@@ -278,7 +281,7 @@ namespace CollectSFData.Azure
                     Log.Warning("no results");
                 }
 
-                return null;
+                return ContainerList;
             }
             catch (Exception e)
             {
@@ -292,7 +295,7 @@ namespace CollectSFData.Azure
                 BlobContainerClient blobContainerClient = _blobServiceClient.GetBlobContainerClient(_config.SasEndpointInfo.AbsolutePath);
 
                 // force connection / error
-                var containerProperties = blobContainerClient.GetProperties(new BlobRequestConditions(), _blobTasks.CancellationToken);
+                Response<BlobContainerProperties> containerProperties = blobContainerClient.GetProperties(new BlobRequestConditions(), _blobTasks.CancellationToken);
                 Log.Debug("containerProperties:", containerProperties.Value.Metadata);
 
                 if (blobContainerClient.GetBlobs(BlobTraits.None, BlobStates.None, null, _blobTasks.CancellationToken).Any())
@@ -322,16 +325,16 @@ namespace CollectSFData.Azure
             return ContainerList;
         }
 
-        private Page<BlobHierarchyItem> GetBlobsByHierarchy(BlobContainerClient containerClient, string prefix = "")
+        private Page<BlobHierarchyItem> GetBlobsByHierarchy(BlobContainerClient containerClient, string prefix = "", string continuationToken = "")
         {
             Log.Debug($"enter containerInfo: {containerClient.Uri} prefix:{prefix}");
             Page<BlobHierarchyItem> blobItems = containerClient.GetBlobsByHierarchy(
-                BlobTraits.All,
-                BlobStates.All,
+                BlobTraits.None,
+                BlobStates.None,
                 _pathDelimiter,
                 prefix,
-                new CancellationToken())
-            .AsPages(string.Empty, Constants.MaxEnumerationResults)
+                _blobTasks.CancellationToken)
+            .AsPages(continuationToken, Constants.MaxEnumerationResults)
             .FirstOrDefault(); // since setting max results, only one page should be returned
 
             Log.Debug($"exit containerInfo: {containerClient.Uri} prefix:{prefix} count:{blobItems.Values.Count()}");
