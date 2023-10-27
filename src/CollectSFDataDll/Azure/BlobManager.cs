@@ -185,7 +185,7 @@ namespace CollectSFData.Azure
                     {
                         //blobItems.AddRange(EnumerateContainerBlobPages(containerClient, item.Prefix));
                         //_blobTasks.QueueTaskAction(() => QueueBlobSegmentDownload(EnumerateContainerBlobPages(containerClient, item.Prefix)));
-                        //blobItems.AddRange(DownloadBlobsFromDirectory(containerClient, prefix));
+                        //blobItems.AddRange(DownloadBlobsFromDirectory(containerClient, item.Prefix));
                         DownloadBlobsFromDirectory(containerClient, item.Prefix);
                     }
                 }
@@ -222,18 +222,16 @@ namespace CollectSFData.Azure
             //QueueBlobSegmentDownload(EnumerateContainerBlobPages(containerClient));
         }
 
-        //private void DownloadBlobsFromDirectory(BlobClient containerDirectory)
         private void DownloadBlobsFromDirectory(BlobContainerClient containerDirectory, string prefix = "")
         {
             Log.Info($"enumerating:{containerDirectory}", ConsoleColor.Cyan);
-            //_blobTasks.QueueTaskAction(() => QueueBlobSegmentDownload(EnumerateContainerBlobPages(CreateBlobContainerClient(containerDirectory.Uri))));
             _blobTasks.QueueTaskAction(() => QueueBlobSegmentDownload(EnumerateContainerBlobPages(containerDirectory, prefix)));
-            //QueueBlobSegmentDownload(EnumerateContainerBlobPages(CreateBlobContainerClient(containerDirectory.Uri)));
+            //QueueBlobSegmentDownload(EnumerateContainerBlobPages(containerDirectory, prefix));
         }
 
         private List<BlobContainerClient> EnumerateContainers(string containerPrefix = "", bool testConnectivity = false)
         {
-            Pageable<BlobContainerItem> blobContainers = default(Pageable<BlobContainerItem>);
+            Pageable<BlobContainerItem> blobContainers = default;
             string containerFilter = string.Empty;
 
             if (!string.IsNullOrEmpty(_config.ContainerFilter))
@@ -365,7 +363,7 @@ namespace CollectSFData.Azure
 
                 BlobRequestConditions _blobRequestConditions = new BlobRequestConditions()
                 {
-                    IfModifiedSince = fileObject.LastModified
+                    //IfModifiedSince = fileObject.LastModified
                 };
 
                 if (sourceLength > Constants.MaxStreamTransmitBytes)
