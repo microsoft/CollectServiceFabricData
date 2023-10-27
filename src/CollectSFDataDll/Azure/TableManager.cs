@@ -55,7 +55,7 @@ namespace CollectSFData.Azure
 
             foreach (TableItem table in TableList)
             {
-                EnumerateTable(table, Constants.TableMaxResults);
+                EnumerateTable(table, Constants.MaxEnumerationResults);
             }
         }
 
@@ -146,25 +146,27 @@ namespace CollectSFData.Azure
             return clusterId;
         }
 
-        private int EnumerateTable(TableItem table, int maxResults = Constants.TableMaxResults, bool limitResults = false)
+        private int EnumerateTable(TableItem table, int maxResults = Constants.MaxEnumerationResults, bool limitResults = false)
         {
             Log.Info($"enumerating table: {table.Name}");
             int resultsCount = 0;
-            string continuationToken = null;
+            string continuationToken = "";
+            int iteration = 0;
             bool moreResultsAvailable = true;
             if (limitResults)
             {
                 maxResults = 1;
             }
 
-            while (moreResultsAvailable)
+            try
             {
-                try
+                TableClient tableClient = _tableServiceClient.GetTableClient(table.Name);
+
+                while (!_tableTasks.CancellationToken.IsCancellationRequested && moreResultsAvailable)
                 {
-                    TableClient tableClient = _tableServiceClient.GetTableClient(table.Name);
                     Page<TableEntity> page = tableClient
                        .Query<TableEntity>()
-                       .AsPages(continuationToken, pageSizeHint: maxResults)
+                       .AsPages(continuationToken, maxResults)
                        .FirstOrDefault(); // Note: Since the pageSizeHint only limits the number of results in a single page, we explicitly only enumerate the first page.
 
                     if (page == null)
@@ -175,7 +177,7 @@ namespace CollectSFData.Azure
                     continuationToken = page.ContinuationToken;
 
                     IReadOnlyList<TableEntity> pageResults = page.Values;
-                    moreResultsAvailable = pageResults.Any() && continuationToken != null;
+                    moreResultsAvailable = pageResults.Any() && !string.IsNullOrEmpty(continuationToken);
                     resultsCount += pageResults.Count;
 
                     if (_config.List)
@@ -184,28 +186,30 @@ namespace CollectSFData.Azure
                         continue;
                     }
 
-                    _tableTasks.QueueTaskAction(() => EnumerateTableRecords(pageResults, table.Name));
+                    _tableTasks.QueueTaskAction(() => EnumerateTableRecords(pageResults, table.Name, iteration++));
                 }
-                catch (Exception e)
-                {
-                    Log.Exception($"exception in table enumeration {e}");
-                    break;
-                }
+
+                Log.Info("finished table enumeration");
+                _tableTasks.Wait();
+                Log.Highlight($"processed table count:{resultsCount.ToString("#,#")} minutes:{(DateTime.Now - _instance.StartTime).TotalMinutes.ToString("F3")} ");
+                return resultsCount;
             }
-            Log.Info("finished table enumeration");
-            _tableTasks.Wait();
-            Log.Highlight($"processed table count:{resultsCount.ToString("#,#")} minutes:{(DateTime.Now - _instance.StartTime).TotalMinutes.ToString("F3")} ");
-            return resultsCount;
+            catch (Exception e)
+            {
+                Log.Exception($"exception in table enumeration {e}");
+                return 0;
+            }
         }
 
-        private void EnumerateTableRecords(IReadOnlyList<TableEntity> tableEntities, string tableName)
+        private void EnumerateTableRecords(IReadOnlyList<TableEntity> tableEntities, string tableName, int tableEntitiesCount)
         {
+            Log.Debug($"table:{tableName} records:{tableEntities.Count}");
             if (tableEntities.Count < 1)
             {
                 return;
             }
 
-            string relativeUri = $"{_config.StartTimeUtc.Ticks}-{_config.EndTimeUtc.Ticks}-{tableName}.{tableEntities.Count}{Constants.TableExtension}";
+            string relativeUri = $"{_config.StartTimeUtc.Ticks}-{_config.EndTimeUtc.Ticks}-{tableName}.{tableEntitiesCount}{Constants.TableExtension}";
             FileObject fileObject = new FileObject(relativeUri, _config.CacheLocation) { Status = FileStatus.enumerated };
 
             if (_instance.FileObjects.FindByUriFirstOrDefault(relativeUri).Status == FileStatus.existing)
@@ -271,7 +275,7 @@ namespace CollectSFData.Azure
 
             foreach (KeyValuePair<string, object> prop in tableEntity)
             {
-                // Log.Debug($"kvp:{prop.Key}");
+                Log.Trivial($"kvp:{prop.Key}");
                 object entity = null;
 
                 switch (prop.Value)
@@ -283,37 +287,42 @@ namespace CollectSFData.Azure
 
                     case bool boolValue:
                         entity = boolValue;
-                        entityString = Convert.ToBoolean(entity).ToString();
+                        entityString = boolValue.ToString();
                         break;
 
                     case DateTime dateValue:
                         entity = dateValue;
-                        entityString = Convert.ToDateTime(entity).ToString(Constants.DateTimeFormat);
+                        entityString = dateValue.ToString(Constants.DateTimeFormat);
                         break;
 
-                    case Double doubleValue:
+                    case DateTimeOffset dateTimeOffsetValue:
+                        entity = dateTimeOffsetValue;
+                        entityString = dateTimeOffsetValue.ToUniversalTime().ToString(Constants.DateTimeFormat);
+                        break;
+
+                    case double doubleValue:
                         entity = doubleValue;
-                        entityString = Convert.ToDouble(entity).ToString();
+                        entityString = doubleValue.ToString();
                         break;
 
                     case Guid guidValue:
                         entity = guidValue;
-                        entityString = entity.ToString();
+                        entityString = guidValue.ToString();
                         break;
 
-                    case Int32 int32Value:
+                    case int int32Value:
                         entity = int32Value;
-                        entityString = Convert.ToInt32(entity).ToString();
+                        entityString = int32Value.ToString();
                         break;
 
-                    case Int64 int64Value:
+                    case long int64Value:
                         entity = int64Value;
-                        entityString = Convert.ToInt64(entity).ToString();
+                        entityString = int64Value.ToString();
                         break;
 
-                    case String stringValue:
+                    case string stringValue:
                         entity = stringValue;
-                        entityString = entity.ToString();
+                        entityString = stringValue;
                         break;
 
                     default:
