@@ -546,7 +546,7 @@ namespace CollectSFData.Kusto
             try
             {
                 QueueClient queue = new QueueClient(new Uri(queueUriWithSas));
-                result = queue.DeleteMessage(message.MessageId,message.PopReceipt,_kustoTasks.CancellationToken);
+                result = queue.DeleteMessage(message.MessageId, message.PopReceipt, _kustoTasks.CancellationToken);
                 Log.Debug($"Removed message from queue:", message);
             }
             catch (Exception e)
@@ -615,32 +615,21 @@ namespace CollectSFData.Kusto
         {
             Log.Info($"uploading: {fileObject.Stream.Get().Length} bytes to {fileObject.FileUri} to {blobContainerUri}", ConsoleColor.Magenta);
             Uri blobUri = new Uri(blobContainerUri);
-
-            //BlobRequestOptions blobRequestOptions = new BlobRequestOptions()
-            //{
-            //    RetryPolicy = new IngestRetryPolicy(),
-            //    ParallelOperationThreadCount = _config.Threads,
-            //};
-
-            //CloudStorageAccount.UseV1MD5 = false; //DevSkim: ignore DS126858. required for jarvis
-            //CloudBlobContainer blobContainer = new CloudBlobContainer(blobUri);
-            //CloudBlockBlob blockBlob = blobContainer.GetBlockBlobReference(blobName);
-
             BlobClient blobClient = _blobManager.CreateBlobClient(blobUri);
-
 
             if (!_kustoTasks.CancellationToken.IsCancellationRequested)
             {
-                //if (_config.UseMemoryStream)
-                //{
+                if (_config.UseMemoryStream)
+                {
                     //_kustoTasks.TaskAction(() => blockBlob.UploadFromStreamAsync(fileObject.Stream.Get(), null, blobRequestOptions, null).Wait()).Wait();
                     _kustoTasks.TaskAction(() => blobClient.Upload(fileObject.Stream.Get(), true)).Wait();
                     fileObject.Stream.Dispose();
-                //}
-                //else
-                //{
-                //    _kustoTasks.TaskAction(() => blockBlob.UploadFromFileAsync(fileObject.FileUri, null, blobRequestOptions, null).Wait()).Wait();
-                //}
+                }
+                else
+                {
+                    //_kustoTasks.TaskAction(() => blockBlob.UploadFromFileAsync(fileObject.FileUri, null, blobRequestOptions, null).Wait()).Wait();
+                    _kustoTasks.TaskAction(() => blobClient.Upload(fileObject.FileUri, true)).Wait();
+                }
 
                 Log.Info($"uploaded: {fileObject.FileUri} to {blobContainerUri}", ConsoleColor.DarkMagenta);
                 return $"{blobClient.Uri.AbsoluteUri}{blobUri.Query}";
