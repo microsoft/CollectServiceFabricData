@@ -8,9 +8,9 @@ To report issue with collectsfdata, create a new issue in github repo [new issue
 
 ### CollectSFData / CollectSFDataDll
 
-Visual Studio 2019 with .net 4.7.2 / .netcoreapp3.1 / net5  
+Visual Studio 2019 with .net 4.6.2 / net6.0 / net8.0
 or  
-Visual Studio Code with .net 4.7.2 / .netcoreapp3.1 / net5  
+Visual Studio Code with .net 4.6.2 / net6.0 / net8.0
 
 ### **launch.json**
 
@@ -70,9 +70,9 @@ to build a specific configuration:
 
 ## CollectSFDataDllTest
 
-Visual Studio Code with .netcoreapp3.1 / net5 and powershell 7.0+
+Visual Studio Code with .net6.0 / net5 and powershell 7.0+
 or
-Visual Studio 2019 with .netcoreapp3.1 / net5 and powershell 7.0+
+Visual Studio 2019 with .net6.0 / net5 and powershell 7.0+
 
 ### App registration (user) setup
 

@@ -406,7 +406,7 @@ C:\MICROSOFT.SERVICEFABRIC.COLLECTSFDATA.3.0.2310.12302
 │   │       Sf.Tx.Windows.pdb
 │   │       System.Fabric.Strings.dll
 │   │
-│   └───netcoreapp3.1
+│   └───net8.0
 │           CollectSFData.pdb
 │           CollectSFDataDll.dll
 │           CollectSFDataDll.pdb
