@@ -35,6 +35,7 @@ namespace CollectSFData.Azure
 
         public static void AfterAccessNotification(TokenCacheNotificationArgs args)
         {
+#if OS_WINDOWS
             try
             {
                 if (args.HasStateChanged)
@@ -52,10 +53,12 @@ namespace CollectSFData.Azure
             {
                 Log.Warning($"unable to write file {CacheFilePath}");
             }
+#endif
         }
 
         public static void BeforeAccessNotification(TokenCacheNotificationArgs args)
         {
+#if OS_WINDOWS
             try
             {
                 lock (_fileLock)
@@ -71,6 +74,7 @@ namespace CollectSFData.Azure
             {
                 Log.Warning($"unable to read file {CacheFilePath}");
             }
+#endif
         }
 
         public static void EnableSerialization(ITokenCache tokenCache)
