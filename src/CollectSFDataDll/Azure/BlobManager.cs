@@ -87,20 +87,6 @@ namespace CollectSFData.Azure
             }
         }
 
-        public BlobClient CreateBlobClient(BlobHierarchyItem blobHierarchyItem)
-        {
-            try
-            {
-                Log.Debug($"enter: {blobHierarchyItem.Blob.Name}");
-                return CreateBlobClient(blobHierarchyItem.Blob.Name);
-            }
-            catch (Exception e)
-            {
-                Log.Exception($"{e}");
-                return null;
-            }
-        }
-
         public BlobClient CreateBlobClient(Uri blobUri, string prefix = "")
         {
             Log.Debug($"enter: {blobUri}");
@@ -110,12 +96,6 @@ namespace CollectSFData.Azure
             }
             Log.Debug($"exit: {blobUri}");
             return new BlobClient(blobUri, _blobClientOptions);
-        }
-
-        public BlobContainerClient CreateBlobContainerClient(Uri blobContainerUri)
-        {
-            Log.Debug($"enter: {blobContainerUri}");
-            return new BlobContainerClient(blobContainerUri, _blobClientOptions);
         }
 
         public void DownloadContainers(string containerPrefix = "")
