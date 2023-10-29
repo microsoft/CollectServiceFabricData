@@ -19,6 +19,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using CollectSFData.Azure;
+using Azure.Core;
 
 namespace CollectSFData.Kusto
 {
@@ -334,13 +335,23 @@ namespace CollectSFData.Kusto
         private void PostMessageToQueue(string queueUriWithSas, KustoIngestionMessage message, FileObject fileObject)
         {
             Log.Info($"post: {queueUriWithSas ?? "(null ingest uri)"}", ConsoleColor.Magenta);
-            QueueClient queueClient = new QueueClient(new Uri(queueUriWithSas));
-            string queueMessage = JsonConvert.SerializeObject(message);
+            QueueClientOptions queueClientOptions = new QueueClientOptions()
+            {
+                MessageEncoding = QueueMessageEncoding.Base64,
+                Retry =
+                    {
+                        Mode = RetryMode.Exponential,
+                        MaxRetries = Constants.RetryCount,
+                        Delay = TimeSpan.FromSeconds(Constants.RetryDelay),
+                        MaxDelay = TimeSpan.FromSeconds(Constants.RetryMaxDelay)
+                    }
+            };
 
-            //QueueMessage queueMessage = new QueueMessage(JsonConvert.SerializeObject(message));
-            //OperationContext context = new OperationContext() { ClientRequestID = message.Id };
-            Response<SendReceipt> sendReceipt = queueClient.SendMessage(queueMessage, _messageTimeToLive, null, _kustoTasks.CancellationToken);
-            //queueClient.AddMessage(queueMessage, _messageTimeToLive, null, null, context);
+            QueueClient queueClient = new QueueClient(new Uri(queueUriWithSas), queueClientOptions);
+
+            string queueMessage = JsonConvert.SerializeObject(message);
+            Response<SendReceipt> sendReceipt = queueClient.SendMessage(queueMessage, null, _messageTimeToLive, _kustoTasks.CancellationToken);
+
             fileObject.Status = FileStatus.uploading;
             fileObject.MessageId = message.Id;
             Log.Info($"fileobject uploading FileUri:{fileObject.FileUri} RelativeUri: {fileObject.RelativeUri} message id: {message.Id}", ConsoleColor.Cyan, null, sendReceipt);
@@ -614,24 +625,41 @@ namespace CollectSFData.Kusto
         private string UploadFileToBlobContainer(FileObject fileObject, string blobContainerUri, string containerName, string blobName)
         {
             Log.Info($"uploading: {fileObject.Stream.Get().Length} bytes to {fileObject.FileUri} to {blobContainerUri}", ConsoleColor.Magenta);
+            
             Uri blobUri = new Uri(blobContainerUri);
+            Response<BlobContentInfo> response = default;
             BlobClient blobClient = _blobManager.CreateBlobClient(blobUri);
+            BlobContainerClient blobContainerClient = _blobManager.CreateBlobContainerClient(blobUri);
+
+            BlobHttpHeaders blobHttpHeaders = new BlobHttpHeaders()
+            {
+                ContentType = "application/octet-stream",
+            };
+            BlobRequestConditions blobRequestConditions = new BlobRequestConditions()
+            {
+                //IfMatch = "*"
+            };
+            BlobUploadOptions blobUploadOptions = new BlobUploadOptions()
+            {
+                HttpHeaders = blobHttpHeaders,
+                Conditions = blobRequestConditions
+            };
 
             if (!_kustoTasks.CancellationToken.IsCancellationRequested)
             {
                 if (_config.UseMemoryStream)
                 {
-                    //_kustoTasks.TaskAction(() => blockBlob.UploadFromStreamAsync(fileObject.Stream.Get(), null, blobRequestOptions, null).Wait()).Wait();
                     _kustoTasks.TaskAction(() => blobClient.Upload(fileObject.Stream.Get(), true)).Wait();
+                    //response = blobClient.Upload(fileObject.Stream.Get(), blobUploadOptions, _kustoTasks.CancellationToken);
                     fileObject.Stream.Dispose();
                 }
                 else
                 {
-                    //_kustoTasks.TaskAction(() => blockBlob.UploadFromFileAsync(fileObject.FileUri, null, blobRequestOptions, null).Wait()).Wait();
                     _kustoTasks.TaskAction(() => blobClient.Upload(fileObject.FileUri, true)).Wait();
+                    //response = blobClient.Upload(fileObject.FileUri, true);
                 }
 
-                Log.Info($"uploaded: {fileObject.FileUri} to {blobContainerUri}", ConsoleColor.DarkMagenta);
+                Log.Info($"uploaded: {fileObject.FileUri} to {blobContainerUri}", ConsoleColor.DarkMagenta, null, response);
                 return $"{blobClient.Uri.AbsoluteUri}{blobUri.Query}";
             }
             else
