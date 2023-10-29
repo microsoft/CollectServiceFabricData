@@ -47,7 +47,7 @@ namespace CollectSFData.Kusto
             _config = _instance.Config;
             _kustoTasks = new CustomTaskManager();
             _blobManager = new BlobManager(instance);
-            _blobManager.Connect();
+            //_blobManager.Connect();
         }
 
         public void AddFile(FileObject fileObject)
@@ -241,7 +241,7 @@ namespace CollectSFData.Kusto
             string ingestionMapping = SetIngestionMapping(fileObject);
             Tuple<string, string> nextQueues = GetNextIngestionQueue();
             string ingestionQueue = nextQueues.Item1;
-            string tempContainer = nextQueues.Item2;
+            Uri tempContainer = new Uri(nextQueues.Item2);
 
             if (_config.KustoUseBlobAsSource && fileObject.IsSourceFileLinkCompliant())
             {
@@ -622,50 +622,13 @@ namespace CollectSFData.Kusto
             return ingestionJsonString;
         }
 
-        private string UploadFileToBlobContainer(FileObject fileObject, string blobContainerUri, string containerName, string blobName)
+        private string UploadFileToBlobContainer(FileObject fileObject, Uri blobContainerUri, string containerName, string blobName)
         {
             Log.Info($"uploading: {fileObject.Stream.Get().Length} bytes to {fileObject.FileUri} to {blobContainerUri}", ConsoleColor.Magenta);
             
-            Uri blobUri = new Uri(blobContainerUri);
-            Response<BlobContentInfo> response = default;
-            BlobClient blobClient = _blobManager.CreateBlobClient(blobUri);
-            BlobContainerClient blobContainerClient = _blobManager.CreateBlobContainerClient(blobUri);
-
-            BlobHttpHeaders blobHttpHeaders = new BlobHttpHeaders()
-            {
-                ContentType = "application/octet-stream",
-            };
-            BlobRequestConditions blobRequestConditions = new BlobRequestConditions()
-            {
-                //IfMatch = "*"
-            };
-            BlobUploadOptions blobUploadOptions = new BlobUploadOptions()
-            {
-                HttpHeaders = blobHttpHeaders,
-                Conditions = blobRequestConditions
-            };
-
-            if (!_kustoTasks.CancellationToken.IsCancellationRequested)
-            {
-                if (_config.UseMemoryStream)
-                {
-                    _kustoTasks.TaskAction(() => blobClient.Upload(fileObject.Stream.Get(), true)).Wait();
-                    //response = blobClient.Upload(fileObject.Stream.Get(), blobUploadOptions, _kustoTasks.CancellationToken);
-                    fileObject.Stream.Dispose();
-                }
-                else
-                {
-                    _kustoTasks.TaskAction(() => blobClient.Upload(fileObject.FileUri, true)).Wait();
-                    //response = blobClient.Upload(fileObject.FileUri, true);
-                }
-
-                Log.Info($"uploaded: {fileObject.FileUri} to {blobContainerUri}", ConsoleColor.DarkMagenta, null, response);
-                return $"{blobClient.Uri.AbsoluteUri}{blobUri.Query}";
-            }
-            else
-            {
-                return $"task cancelled:{blobClient.Uri.AbsoluteUri}{blobUri.Query}";
-            }
+            string blobUri = _blobManager.UploadFile(fileObject, blobContainerUri, containerName + "/" + blobName);
+            Log.Debug($"returning: {blobUri}");
+            return blobUri;
         }
     }
 }

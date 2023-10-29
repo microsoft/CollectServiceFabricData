@@ -22,6 +22,9 @@ namespace CollectSFData.Azure
     {
         private readonly CustomTaskManager _blobTasks = new CustomTaskManager();
         private BlobClientOptions _blobClientOptions;
+        private BlobHttpHeaders _blobHttpHeaders;
+        private BlobRequestConditions _blobRequestConditions;
+        private BlobUploadOptions _blobUploadOptions;
         private BlobServiceClient _blobServiceClient;
         private ConfigurationOptions _config;
         private string _fileFilterPattern = @"(?:.+_){6}(\d{20})_";
@@ -47,6 +50,18 @@ namespace CollectSFData.Azure
                         Delay = TimeSpan.FromSeconds(Constants.RetryDelay),
                         MaxDelay = TimeSpan.FromSeconds(Constants.RetryMaxDelay)
                     }
+            };
+
+            _blobHttpHeaders = new BlobHttpHeaders()
+            {
+                ContentType = "application/octet-stream",
+            };
+
+            _blobRequestConditions = new BlobRequestConditions();
+            _blobUploadOptions = new BlobUploadOptions()
+            {
+                HttpHeaders = _blobHttpHeaders,
+                Conditions = _blobRequestConditions
             };
         }
 
@@ -96,6 +111,12 @@ namespace CollectSFData.Azure
             }
             Log.Debug($"exit: {blobUri}");
             return new BlobClient(blobUri, _blobClientOptions);
+        }
+
+        public BlobContainerClient CreateBlobContainerClient(Uri blobContainerUri)
+        {
+            Log.Debug($"enter: {blobContainerUri}");
+            return new BlobContainerClient(blobContainerUri, _blobClientOptions);
         }
 
         public void DownloadContainers(string containerPrefix = "")
@@ -170,10 +191,26 @@ namespace CollectSFData.Azure
             return blobItems;
         }
 
-        public void UploadFile(FileObject fileObject, Uri uri)
+        public string UploadFile(FileObject fileObject, Uri blobContainerUri, string blobName)
         {
-            BlobClient blobClient = new BlobClient(uri, _blobClientOptions);
-            blobClient.UploadAsync(fileObject.Stream.Get(), _blobTasks.CancellationToken).Wait();
+            Response<BlobContentInfo> response = default;
+
+            BlobContainerClient blobContainerClient = CreateBlobContainerClient(blobContainerUri);
+            BlobClient blobClient = blobContainerClient.GetBlobClient(blobName);
+
+            if (_config.UseMemoryStream)
+            {
+                response = blobClient.Upload(fileObject.Stream.Get(), _blobUploadOptions, _blobTasks.CancellationToken);
+                fileObject.Stream.Dispose();
+            }
+            else
+            {
+                response = blobClient.Upload(fileObject.FileUri, _blobUploadOptions, _blobTasks.CancellationToken);
+            }
+
+            // todo: something with response?
+            Log.Info($"uploaded: {fileObject.FileUri} to {blobContainerUri}", ConsoleColor.DarkMagenta, null, response.GetRawResponse());
+            return $"{blobClient.Uri.AbsoluteUri}{blobContainerUri.Query}";
         }
 
         private void AddContainerToList(string containerName)
