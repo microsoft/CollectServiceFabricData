@@ -347,6 +347,27 @@ namespace CollectSFData.Kusto
                     }
             };
 
+            queueClientOptions.MessageDecodingFailed += async (QueueMessageDecodingFailedEventArgs args) =>
+            {
+                if (args.PeekedMessage != null)
+                {
+                    Log.Error($"PostMessageToQueue:Invalid message has been peeked, message id={args.PeekedMessage.MessageId} body={args.PeekedMessage.Body}");
+                }
+                else if (args.ReceivedMessage != null)
+                {
+                    Log.Error($"PostMessageToQueue:Invalid message has been received, message id={args.ReceivedMessage.MessageId} body={args.ReceivedMessage.Body}");
+
+                    if (args.IsRunningSynchronously)
+                    {
+                        args.Queue.DeleteMessage(args.ReceivedMessage.MessageId, args.ReceivedMessage.PopReceipt);
+                    }
+                    else
+                    {
+                        await args.Queue.DeleteMessageAsync(args.ReceivedMessage.MessageId, args.ReceivedMessage.PopReceipt);
+                    }
+                }
+            };
+
             QueueClient queueClient = new QueueClient(new Uri(queueUriWithSas), queueClientOptions);
 
             string queueMessage = JsonConvert.SerializeObject(message);

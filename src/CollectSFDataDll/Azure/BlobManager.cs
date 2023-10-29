@@ -197,15 +197,19 @@ namespace CollectSFData.Azure
 
             BlobContainerClient blobContainerClient = CreateBlobContainerClient(blobContainerUri);
             BlobClient blobClient = blobContainerClient.GetBlobClient(blobName);
+            BlobUriBuilder blobUriBuilder = new BlobUriBuilder(blobContainerUri);
+            blobUriBuilder.BlobName = blobName;
+
+            BlobClient blobClient1 = CreateBlobClient(blobUriBuilder.ToUri());
 
             if (_config.UseMemoryStream)
             {
-                response = blobClient.Upload(fileObject.Stream.Get(), _blobUploadOptions, _blobTasks.CancellationToken);
+                response = blobClient1.Upload(fileObject.Stream.Get(), _blobUploadOptions, _blobTasks.CancellationToken);
                 fileObject.Stream.Dispose();
             }
             else
             {
-                response = blobClient.Upload(fileObject.FileUri, _blobUploadOptions, _blobTasks.CancellationToken);
+                response = blobClient1.Upload(fileObject.FileUri, _blobUploadOptions, _blobTasks.CancellationToken);
             }
 
             // todo: something with response?
