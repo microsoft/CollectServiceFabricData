@@ -165,9 +165,9 @@ namespace CollectSFData.Azure
                 while (!_tableTasks.CancellationToken.IsCancellationRequested && moreResultsAvailable)
                 {
                     Page<TableEntity> page = tableClient
-                       .Query<TableEntity>()
+                       .Query<TableEntity>(r => r.Timestamp >= _config.StartTimeUtc && r.Timestamp <= _config.EndTimeUtc)
                        .AsPages(continuationToken, maxResults)
-                       .FirstOrDefault(); // Note: Since the pageSizeHint only limits the number of results in a single page, we explicitly only enumerate the first page.
+                       .FirstOrDefault(); // since setting max results, only one page should be returned
 
                     if (page == null)
                     {
