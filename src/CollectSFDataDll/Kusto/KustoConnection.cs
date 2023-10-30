@@ -15,6 +15,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -369,7 +370,6 @@ namespace CollectSFData.Kusto
             };
 
             QueueClient queueClient = new QueueClient(new Uri(queueUriWithSas), queueClientOptions);
-
             string queueMessage = JsonConvert.SerializeObject(message);
             Response<SendReceipt> sendReceipt = queueClient.SendMessage(queueMessage, null, _messageTimeToLive, _kustoTasks.CancellationToken);
 
@@ -449,7 +449,8 @@ namespace CollectSFData.Kusto
 
                 foreach (QueueMessage success in successes)
                 {
-                    KustoSuccessMessage message = JsonConvert.DeserializeObject<KustoSuccessMessage>(success.ToString());
+                    string messageText = Encoding.UTF8.GetString(Convert.FromBase64String(success.MessageText));
+                    KustoSuccessMessage message = JsonConvert.DeserializeObject<KustoSuccessMessage>(messageText);
                     Log.Debug("success message:", message);
 
                     if (message.Table.Equals(tableName) || (message.SucceededOn > DateTime.MinValue && message.SucceededOn < DateTime.Now.AddDays(-1)))
@@ -469,7 +470,8 @@ namespace CollectSFData.Kusto
 
                 foreach (QueueMessage error in errors)
                 {
-                    KustoErrorMessage message = JsonConvert.DeserializeObject<KustoErrorMessage>(error.ToString());
+                    string messageText = Encoding.UTF8.GetString(Convert.FromBase64String(error.MessageText));
+                    KustoErrorMessage message = JsonConvert.DeserializeObject<KustoErrorMessage>(messageText);
                     Log.Debug("error message:", message);
 
                     if (message.Table.Equals(tableName) || (message.FailedOn > DateTime.MinValue && message.FailedOn < DateTime.Now.AddDays(-1)))
@@ -493,7 +495,8 @@ namespace CollectSFData.Kusto
 
                 foreach (QueueMessage success in successes)
                 {
-                    KustoSuccessMessage message = JsonConvert.DeserializeObject<KustoSuccessMessage>(success.ToString());
+                    string messageText = Encoding.UTF8.GetString(Convert.FromBase64String(success.MessageText));
+                    KustoSuccessMessage message = JsonConvert.DeserializeObject<KustoSuccessMessage>(messageText);
                     Log.Debug("success:", message);
                     FileObject fileObject = _instance.FileObjects.FindByMessageId(message.IngestionSourceId);
 
@@ -524,7 +527,8 @@ namespace CollectSFData.Kusto
 
                 foreach (QueueMessage error in errors)
                 {
-                    KustoErrorMessage message = JsonConvert.DeserializeObject<KustoErrorMessage>(error.ToString());
+                    string messageText = Encoding.UTF8.GetString(Convert.FromBase64String(error.MessageText));
+                    KustoErrorMessage message = JsonConvert.DeserializeObject<KustoErrorMessage>(messageText);
                     Log.Debug("error:", message);
                     FileObject fileObject = _instance.FileObjects.FindByMessageId(message.IngestionSourceId);
 
@@ -646,7 +650,7 @@ namespace CollectSFData.Kusto
         private string UploadFileToBlobContainer(FileObject fileObject, Uri blobContainerUri, string containerName, string blobName)
         {
             Log.Info($"uploading: {fileObject.Stream.Get().Length} bytes to {fileObject.FileUri} to {blobContainerUri}", ConsoleColor.Magenta);
-            
+
             string blobUri = _blobManager.UploadFile(fileObject, blobContainerUri, containerName + "/" + blobName);
             Log.Debug($"returning: {blobUri}");
             return blobUri;

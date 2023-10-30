@@ -24,8 +24,8 @@ namespace CollectSFData.Azure
         private BlobClientOptions _blobClientOptions;
         private BlobHttpHeaders _blobHttpHeaders;
         private BlobRequestConditions _blobRequestConditions;
-        private BlobUploadOptions _blobUploadOptions;
         private BlobServiceClient _blobServiceClient;
+        private BlobUploadOptions _blobUploadOptions;
         private ConfigurationOptions _config;
         private string _fileFilterPattern = @"(?:.+_){6}(\d{20})_";
         private Instance _instance;
@@ -214,7 +214,7 @@ namespace CollectSFData.Azure
 
             // todo: something with response?
             Log.Info($"uploaded: {fileObject.FileUri} to {blobContainerUri}", ConsoleColor.DarkMagenta, null, response.GetRawResponse());
-            return $"{blobClient.Uri.AbsoluteUri}{blobContainerUri.Query}";
+            return $"{blobClient.Uri.AbsoluteUri}";// {blobContainerUri.Query}";
         }
 
         private void AddContainerToList(string containerName)
