@@ -359,281 +359,340 @@ private static int Main(string[] args)
 
 ### NuGet Package Layout
 
-The current layout of nuget package looks similar to below. 
-Both .net framework and .net core versions are provided in both exe and dll format. 
+The current layout of nuget package looks similar to below.
+Both .net framework and .net core versions are provided in both exe and dll format.
 The exe's are located in the 'tools' directory and include all the required dependent dll's for direct use from command line.
 Binaries are signed.
 
 ```text
-C:\MICROSOFT.SERVICEFABRIC.COLLECTSFDATA.3.0.2310.12302
-│   Microsoft.ServiceFabric.CollectSFData.nuspec
-│   [Content_Types].xml
-│
-├───images
-│       FabricSupport.png
-│
-├───lib
-│   ├───net462
-│   │       CollectSFData.pdb
-│   │       CollectSFDataDll.dll
-│   │       CollectSFDataDll.pdb
-│   │       EtlReader.dll
-│   │       Sf.Tx.Core.dll
-│   │       Sf.Tx.Core.pdb
-│   │       Sf.Tx.Windows.dll
-│   │       Sf.Tx.Windows.pdb
-│   │       System.Fabric.Strings.dll
-│   │
-│   ├───net48
-│   │       CollectSFData.pdb
-│   │       CollectSFDataDll.dll
-│   │       CollectSFDataDll.pdb
-│   │       EtlReader.dll
-│   │       Sf.Tx.Core.dll
-│   │       Sf.Tx.Core.pdb
-│   │       Sf.Tx.Windows.dll
-│   │       Sf.Tx.Windows.pdb
-│   │       System.Fabric.Strings.dll
-│   │
-│   ├───net6.0
-│   │       CollectSFData.pdb
-│   │       CollectSFDataDll.dll
-│   │       CollectSFDataDll.pdb
-│   │       EtlReader.dll
-│   │       Sf.Tx.Core.dll
-│   │       Sf.Tx.Core.pdb
-│   │       Sf.Tx.Windows.dll
-│   │       Sf.Tx.Windows.pdb
-│   │       System.Fabric.Strings.dll
-│   │
-│   └───net8.0
-│           CollectSFData.pdb
-│           CollectSFDataDll.dll
-│           CollectSFDataDll.pdb
-│           EtlReader.dll
-│           Sf.Tx.Core.dll
-│           Sf.Tx.Core.pdb
-│           Sf.Tx.Windows.dll
-│           Sf.Tx.Windows.pdb
-│           System.Fabric.Strings.dll
-│
-├───package
-│   └───services
-│       └───metadata
-│           └───core-properties
-│                   bc779c3ece4d4ca98eead56cf556ce42.psmdcp
-│
-├───tools
-│   ├───net462
-│   │   │   Azure.Core.dll
-│   │   │   Azure.Data.Tables.dll
-│   │   │   Azure.Identity.dll
-│   │   │   Azure.Security.KeyVault.Certificates.dll
-│   │   │   Azure.Security.KeyVault.Keys.dll
-│   │   │   Azure.Security.KeyVault.Secrets.dll
-│   │   │   Azure.Storage.Blobs.dll
-│   │   │   Azure.Storage.Common.dll
-│   │   │   Azure.Storage.Queues.dll
-│   │   │   CollectSFData.exe
-│   │   │   CollectSFData.exe.config
-│   │   │   collectsfdata.options.json
-│   │   │   CollectSFData.pdb
-│   │   │   CollectSFDataDll.dll
-│   │   │   CollectSFDataDll.pdb
-│   │   │   EtlReader.dll
-│   │   │   Kusto.Cloud.Platform.dll
-│   │   │   Kusto.Data.dll
-│   │   │   Microsoft.Azure.KeyVault.Core.dll
-│   │   │   Microsoft.Bcl.AsyncInterfaces.dll
-│   │   │   Microsoft.Extensions.CommandLineUtils.dll
-│   │   │   Microsoft.Identity.Client.dll
-│   │   │   Microsoft.Identity.Client.Extensions.Msal.dll
-│   │   │   Microsoft.IdentityModel.Abstractions.dll
-│   │   │   Microsoft.IdentityModel.Clients.ActiveDirectory.dll
-│   │   │   Microsoft.IO.RecyclableMemoryStream.dll
-│   │   │   Microsoft.Win32.Primitives.dll
-│   │   │   Microsoft.WindowsAzure.Storage.dll
-│   │   │   netstandard.dll
-│   │   │   Newtonsoft.Json.dll
-│   │   │   Sf.Tx.Core.dll
-│   │   │   Sf.Tx.Core.pdb
-│   │   │   Sf.Tx.Windows.dll
-│   │   │   Sf.Tx.Windows.pdb
-│   │   │   System.AppContext.dll
-│   │   │   System.Buffers.dll
-│   │   │   System.CodeDom.dll
-│   │   │   System.Collections.Concurrent.dll
-│   │   │   System.Collections.dll
-│   │   │   System.Collections.Immutable.dll
-│   │   │   System.Collections.NonGeneric.dll
-│   │   │   System.Collections.Specialized.dll
-│   │   │   System.ComponentModel.dll
-│   │   │   System.ComponentModel.EventBasedAsync.dll
-│   │   │   System.ComponentModel.Primitives.dll
-│   │   │   System.ComponentModel.TypeConverter.dll
-│   │   │   System.Console.dll
-│   │   │   System.Data.Common.dll
-│   │   │   System.Data.SqlClient.dll
-│   │   │   System.Diagnostics.Contracts.dll
-│   │   │   System.Diagnostics.Debug.dll
-│   │   │   System.Diagnostics.DiagnosticSource.dll
-│   │   │   System.Diagnostics.FileVersionInfo.dll
-│   │   │   System.Diagnostics.Process.dll
-│   │   │   System.Diagnostics.StackTrace.dll
-│   │   │   System.Diagnostics.TextWriterTraceListener.dll
-│   │   │   System.Diagnostics.Tools.dll
-│   │   │   System.Diagnostics.TraceSource.dll
-│   │   │   System.Diagnostics.Tracing.dll
-│   │   │   System.Drawing.Primitives.dll
-│   │   │   System.Dynamic.Runtime.dll
-│   │   │   System.Fabric.Strings.dll
-│   │   │   System.Globalization.Calendars.dll
-│   │   │   System.Globalization.dll
-│   │   │   System.Globalization.Extensions.dll
-│   │   │   System.IO.Compression.dll
-│   │   │   System.IO.Compression.ZipFile.dll
-│   │   │   System.IO.dll
-│   │   │   System.IO.FileSystem.AccessControl.dll
-│   │   │   System.IO.FileSystem.dll
-│   │   │   System.IO.FileSystem.DriveInfo.dll
-│   │   │   System.IO.FileSystem.Primitives.dll
-│   │   │   System.IO.FileSystem.Watcher.dll
-│   │   │   System.IO.Hashing.dll
-│   │   │   System.IO.IsolatedStorage.dll
-│   │   │   System.IO.MemoryMappedFiles.dll
-│   │   │   System.IO.Pipes.dll
-│   │   │   System.IO.UnmanagedMemoryStream.dll
-│   │   │   System.Linq.dll
-│   │   │   System.Linq.Expressions.dll
-│   │   │   System.Linq.Parallel.dll
-│   │   │   System.Linq.Queryable.dll
-│   │   │   System.Memory.Data.dll
-│   │   │   System.Memory.dll
-│   │   │   System.Net.Http.dll
-│   │   │   System.Net.NameResolution.dll
-│   │   │   System.Net.NetworkInformation.dll
-│   │   │   System.Net.Ping.dll
-│   │   │   System.Net.Primitives.dll
-│   │   │   System.Net.Requests.dll
-│   │   │   System.Net.Security.dll
-│   │   │   System.Net.Sockets.dll
-│   │   │   System.Net.WebHeaderCollection.dll
-│   │   │   System.Net.WebSockets.Client.dll
-│   │   │   System.Net.WebSockets.dll
-│   │   │   System.Numerics.Vectors.dll
-│   │   │   System.ObjectModel.dll
-│   │   │   System.Reactive.dll
-│   │   │   System.Reactive.Linq.dll
-│   │   │   System.Reflection.dll
-│   │   │   System.Reflection.Extensions.dll
-│   │   │   System.Reflection.Primitives.dll
-│   │   │   System.Resources.Reader.dll
-│   │   │   System.Resources.ResourceManager.dll
-│   │   │   System.Resources.Writer.dll
-│   │   │   System.Runtime.CompilerServices.Unsafe.dll
-│   │   │   System.Runtime.CompilerServices.VisualC.dll
-│   │   │   System.Runtime.dll
-│   │   │   System.Runtime.Extensions.dll
-│   │   │   System.Runtime.Handles.dll
-│   │   │   System.Runtime.InteropServices.dll
-│   │   │   System.Runtime.InteropServices.RuntimeInformation.dll
-│   │   │   System.Runtime.Numerics.dll
-│   │   │   System.Runtime.Serialization.Formatters.dll
-│   │   │   System.Runtime.Serialization.Json.dll
-│   │   │   System.Runtime.Serialization.Primitives.dll
-│   │   │   System.Runtime.Serialization.Xml.dll
-│   │   │   System.Security.AccessControl.dll
-│   │   │   System.Security.Claims.dll
-│   │   │   System.Security.Cryptography.Algorithms.dll
-│   │   │   System.Security.Cryptography.Csp.dll
-│   │   │   System.Security.Cryptography.Encoding.dll
-│   │   │   System.Security.Cryptography.Primitives.dll
-│   │   │   System.Security.Cryptography.ProtectedData.dll
-│   │   │   System.Security.Cryptography.X509Certificates.dll
-│   │   │   System.Security.Principal.dll
-│   │   │   System.Security.Principal.Windows.dll
-│   │   │   System.Security.SecureString.dll
-│   │   │   System.Text.Encoding.dll
-│   │   │   System.Text.Encoding.Extensions.dll
-│   │   │   System.Text.Encodings.Web.dll
-│   │   │   System.Text.Json.dll
-│   │   │   System.Text.RegularExpressions.dll
-│   │   │   System.Threading.dll
-│   │   │   System.Threading.Overlapped.dll
-│   │   │   System.Threading.Tasks.dll
-│   │   │   System.Threading.Tasks.Extensions.dll
-│   │   │   System.Threading.Tasks.Parallel.dll
-│   │   │   System.Threading.Thread.dll
-│   │   │   System.Threading.ThreadPool.dll
-│   │   │   System.Threading.Timer.dll
-│   │   │   System.ValueTuple.dll
-│   │   │   System.Xml.ReaderWriter.dll
-│   │   │   System.Xml.XDocument.dll
-│   │   │   System.Xml.XmlDocument.dll
-│   │   │   System.Xml.XmlSerializer.dll
-│   │   │   System.Xml.XPath.dll
-│   │   │   System.Xml.XPath.XDocument.dll
-│   │   │
-│   │   └───manifests
-│   │           Microsoft-WindowsFabric-Events_9.1.1833.9590.man
-│   │           Microsoft-WindowsFabric-KtlEvents_9.1.1833.9590.man
-│   │           Microsoft-WindowsFabric-LeaseEvents_9.1.1833.9590.man
-│   │
-│   └───netcoreapp3.1
-│       │   Azure.Core.dll
-│       │   Azure.Data.Tables.dll
-│       │   Azure.Identity.dll
-│       │   Azure.Security.KeyVault.Certificates.dll
-│       │   Azure.Security.KeyVault.Keys.dll
-│       │   Azure.Security.KeyVault.Secrets.dll
-│       │   Azure.Storage.Blobs.dll
-│       │   Azure.Storage.Common.dll
-│       │   Azure.Storage.Queues.dll
-│       │   CollectSFData.dll
-│       │   CollectSFData.dll.config
-│       │   CollectSFData.exe
-│       │   collectsfdata.options.json
-│       │   CollectSFData.pdb
-│       │   CollectSFData.runtimeconfig.json
-│       │   CollectSFDataDll.dll
-│       │   CollectSFDataDll.pdb
-│       │   EtlReader.dll
-│       │   Kusto.Cloud.Platform.dll
-│       │   Kusto.Cloud.Platform.Msal.dll
-│       │   Kusto.Data.dll
-│       │   Microsoft.Bcl.AsyncInterfaces.dll
-│       │   Microsoft.Extensions.CommandLineUtils.dll
-│       │   Microsoft.Identity.Client.dll
-│       │   Microsoft.Identity.Client.Extensions.Msal.dll
-│       │   Microsoft.IdentityModel.Abstractions.dll
-│       │   Microsoft.IO.RecyclableMemoryStream.dll
-│       │   Newtonsoft.Json.dll
-│       │   Sf.Tx.Core.dll
-│       │   Sf.Tx.Core.pdb
-│       │   Sf.Tx.Windows.dll
-│       │   Sf.Tx.Windows.pdb
-│       │   System.CodeDom.dll
-│       │   System.Collections.Immutable.dll
-│       │   System.Fabric.Strings.dll
-│       │   System.Formats.Asn1.dll
-│       │   System.IO.FileSystem.AccessControl.dll
-│       │   System.IO.Hashing.dll
-│       │   System.Memory.Data.dll
-│       │   System.Reactive.dll
-│       │   System.Reactive.Linq.dll
-│       │   System.Runtime.CompilerServices.Unsafe.dll
-│       │   System.Security.AccessControl.dll
-│       │   System.Security.Cryptography.Cng.dll
-│       │   System.Security.Cryptography.ProtectedData.dll
-│       │   System.Security.Principal.Windows.dll
-│       │   System.Text.Encodings.Web.dll
-│       │   System.Text.Json.dll
-│       │
-│       └───manifests
-│               Microsoft-WindowsFabric-Events_9.1.1833.9590.man
-│               Microsoft-WindowsFabric-KtlEvents_9.1.1833.9590.man
-│               Microsoft-WindowsFabric-LeaseEvents_9.1.1833.9590.man
-│
-└───_rels
-        .rels
+\RELEASE
+|   Microsoft.ServiceFabric.CollectSFData.3.0.2310.13022.nupkg
+|
++---net462
+|   |   Azure.Core.dll
+|   |   Azure.Data.Tables.dll
+|   |   Azure.Identity.dll
+|   |   Azure.Security.KeyVault.Certificates.dll
+|   |   Azure.Security.KeyVault.Keys.dll
+|   |   Azure.Security.KeyVault.Secrets.dll
+|   |   Azure.Storage.Blobs.dll
+|   |   Azure.Storage.Common.dll
+|   |   Azure.Storage.Queues.dll
+|   |   CollectSFData.exe
+|   |   CollectSFData.exe.config
+|   |   CollectSFData.pdb
+|   |   CollectSFDataDll.dll
+|   |   CollectSFDataDll.pdb
+|   |   EtlReader.dll
+|   |   Kusto.Cloud.Platform.dll
+|   |   Kusto.Data.dll
+|   |   Microsoft.Azure.KeyVault.Core.dll
+|   |   Microsoft.Bcl.AsyncInterfaces.dll
+|   |   Microsoft.Extensions.CommandLineUtils.dll
+|   |   Microsoft.Identity.Client.dll
+|   |   Microsoft.Identity.Client.Extensions.Msal.dll
+|   |   Microsoft.IdentityModel.Abstractions.dll
+|   |   Microsoft.IdentityModel.Clients.ActiveDirectory.dll
+|   |   Microsoft.IO.RecyclableMemoryStream.dll
+|   |   Microsoft.Win32.Primitives.dll
+|   |   Microsoft.WindowsAzure.Storage.dll
+|   |   netstandard.dll
+|   |   Newtonsoft.Json.dll
+|   |   Sf.Tx.Core.dll
+|   |   Sf.Tx.Core.pdb
+|   |   Sf.Tx.Windows.dll
+|   |   Sf.Tx.Windows.pdb
+|   |   System.AppContext.dll
+|   |   System.Buffers.dll
+|   |   System.CodeDom.dll
+|   |   System.Collections.Concurrent.dll
+|   |   System.Collections.dll
+|   |   System.Collections.Immutable.dll
+|   |   System.Collections.NonGeneric.dll
+|   |   System.Collections.Specialized.dll
+|   |   System.ComponentModel.dll
+|   |   System.ComponentModel.EventBasedAsync.dll
+|   |   System.ComponentModel.Primitives.dll
+|   |   System.ComponentModel.TypeConverter.dll
+|   |   System.Console.dll
+|   |   System.Data.Common.dll
+|   |   System.Data.SqlClient.dll
+|   |   System.Diagnostics.Contracts.dll
+|   |   System.Diagnostics.Debug.dll
+|   |   System.Diagnostics.DiagnosticSource.dll
+|   |   System.Diagnostics.FileVersionInfo.dll
+|   |   System.Diagnostics.Process.dll
+|   |   System.Diagnostics.StackTrace.dll
+|   |   System.Diagnostics.TextWriterTraceListener.dll
+|   |   System.Diagnostics.Tools.dll
+|   |   System.Diagnostics.TraceSource.dll
+|   |   System.Diagnostics.Tracing.dll
+|   |   System.Drawing.Primitives.dll
+|   |   System.Dynamic.Runtime.dll
+|   |   System.Fabric.Strings.dll
+|   |   System.Globalization.Calendars.dll
+|   |   System.Globalization.dll
+|   |   System.Globalization.Extensions.dll
+|   |   System.IO.Compression.dll
+|   |   System.IO.Compression.ZipFile.dll
+|   |   System.IO.dll
+|   |   System.IO.FileSystem.AccessControl.dll
+|   |   System.IO.FileSystem.dll
+|   |   System.IO.FileSystem.DriveInfo.dll
+|   |   System.IO.FileSystem.Primitives.dll
+|   |   System.IO.FileSystem.Watcher.dll
+|   |   System.IO.Hashing.dll
+|   |   System.IO.IsolatedStorage.dll
+|   |   System.IO.MemoryMappedFiles.dll
+|   |   System.IO.Pipes.dll
+|   |   System.IO.UnmanagedMemoryStream.dll
+|   |   System.Linq.dll
+|   |   System.Linq.Expressions.dll
+|   |   System.Linq.Parallel.dll
+|   |   System.Linq.Queryable.dll
+|   |   System.Memory.Data.dll
+|   |   System.Memory.dll
+|   |   System.Net.Http.dll
+|   |   System.Net.NameResolution.dll
+|   |   System.Net.NetworkInformation.dll
+|   |   System.Net.Ping.dll
+|   |   System.Net.Primitives.dll
+|   |   System.Net.Requests.dll
+|   |   System.Net.Security.dll
+|   |   System.Net.Sockets.dll
+|   |   System.Net.WebHeaderCollection.dll
+|   |   System.Net.WebSockets.Client.dll
+|   |   System.Net.WebSockets.dll
+|   |   System.Numerics.Vectors.dll
+|   |   System.ObjectModel.dll
+|   |   System.Reactive.dll
+|   |   System.Reactive.Linq.dll
+|   |   System.Reflection.dll
+|   |   System.Reflection.Extensions.dll
+|   |   System.Reflection.Primitives.dll
+|   |   System.Resources.Reader.dll
+|   |   System.Resources.ResourceManager.dll
+|   |   System.Resources.Writer.dll
+|   |   System.Runtime.CompilerServices.Unsafe.dll
+|   |   System.Runtime.CompilerServices.VisualC.dll
+|   |   System.Runtime.dll
+|   |   System.Runtime.Extensions.dll
+|   |   System.Runtime.Handles.dll
+|   |   System.Runtime.InteropServices.dll
+|   |   System.Runtime.InteropServices.RuntimeInformation.dll
+|   |   System.Runtime.Numerics.dll
+|   |   System.Runtime.Serialization.Formatters.dll
+|   |   System.Runtime.Serialization.Json.dll
+|   |   System.Runtime.Serialization.Primitives.dll
+|   |   System.Runtime.Serialization.Xml.dll
+|   |   System.Security.AccessControl.dll
+|   |   System.Security.Claims.dll
+|   |   System.Security.Cryptography.Algorithms.dll
+|   |   System.Security.Cryptography.Csp.dll
+|   |   System.Security.Cryptography.Encoding.dll
+|   |   System.Security.Cryptography.Primitives.dll
+|   |   System.Security.Cryptography.ProtectedData.dll
+|   |   System.Security.Cryptography.X509Certificates.dll
+|   |   System.Security.Principal.dll
+|   |   System.Security.Principal.Windows.dll
+|   |   System.Security.SecureString.dll
+|   |   System.Text.Encoding.dll
+|   |   System.Text.Encoding.Extensions.dll
+|   |   System.Text.Encodings.Web.dll
+|   |   System.Text.Json.dll
+|   |   System.Text.RegularExpressions.dll
+|   |   System.Threading.dll
+|   |   System.Threading.Overlapped.dll
+|   |   System.Threading.Tasks.dll
+|   |   System.Threading.Tasks.Extensions.dll
+|   |   System.Threading.Tasks.Parallel.dll
+|   |   System.Threading.Thread.dll
+|   |   System.Threading.ThreadPool.dll
+|   |   System.Threading.Timer.dll
+|   |   System.ValueTuple.dll
+|   |   System.Xml.ReaderWriter.dll
+|   |   System.Xml.XDocument.dll
+|   |   System.Xml.XmlDocument.dll
+|   |   System.Xml.XmlSerializer.dll
+|   |   System.Xml.XPath.dll
+|   |   System.Xml.XPath.XDocument.dll
+|   |
+|   \---manifests
+|           Microsoft-WindowsFabric-Events_10.0.1816.9590.man
+|           Microsoft-WindowsFabric-KtlEvents_10.0.1816.9590.man
+|           Microsoft-WindowsFabric-LeaseEvents_10.0.1816.9590.man
+|
++---net48
+|   |   Azure.Core.dll
+|   |   Azure.Data.Tables.dll
+|   |   Azure.Identity.dll
+|   |   Azure.Security.KeyVault.Certificates.dll
+|   |   Azure.Security.KeyVault.Keys.dll
+|   |   Azure.Security.KeyVault.Secrets.dll
+|   |   Azure.Storage.Blobs.dll
+|   |   Azure.Storage.Common.dll
+|   |   Azure.Storage.Queues.dll
+|   |   CollectSFData.exe
+|   |   CollectSFData.exe.config
+|   |   CollectSFData.pdb
+|   |   CollectSFDataDll.dll
+|   |   CollectSFDataDll.pdb
+|   |   EtlReader.dll
+|   |   Kusto.Cloud.Platform.dll
+|   |   Kusto.Cloud.Platform.Msal.dll
+|   |   Kusto.Data.dll
+|   |   Microsoft.Azure.KeyVault.Core.dll
+|   |   Microsoft.Bcl.AsyncInterfaces.dll
+|   |   Microsoft.Extensions.CommandLineUtils.dll
+|   |   Microsoft.Identity.Client.dll
+|   |   Microsoft.Identity.Client.Extensions.Msal.dll
+|   |   Microsoft.IdentityModel.Abstractions.dll
+|   |   Microsoft.IO.RecyclableMemoryStream.dll
+|   |   Newtonsoft.Json.dll
+|   |   Sf.Tx.Core.dll
+|   |   Sf.Tx.Core.pdb
+|   |   Sf.Tx.Windows.dll
+|   |   Sf.Tx.Windows.pdb
+|   |   System.Buffers.dll
+|   |   System.CodeDom.dll
+|   |   System.Collections.Immutable.dll
+|   |   System.Diagnostics.DiagnosticSource.dll
+|   |   System.Fabric.Strings.dll
+|   |   System.IO.FileSystem.AccessControl.dll
+|   |   System.IO.Hashing.dll
+|   |   System.Memory.Data.dll
+|   |   System.Memory.dll
+|   |   System.Numerics.Vectors.dll
+|   |   System.Reactive.dll
+|   |   System.Reactive.Linq.dll
+|   |   System.Runtime.CompilerServices.Unsafe.dll
+|   |   System.Security.AccessControl.dll
+|   |   System.Security.Cryptography.ProtectedData.dll
+|   |   System.Security.Principal.Windows.dll
+|   |   System.Text.Encodings.Web.dll
+|   |   System.Text.Json.dll
+|   |   System.Threading.Tasks.Extensions.dll
+|   |   System.ValueTuple.dll
+|   |
+|   \---manifests
+|           Microsoft-WindowsFabric-Events_10.0.1816.9590.man
+|           Microsoft-WindowsFabric-KtlEvents_10.0.1816.9590.man
+|           Microsoft-WindowsFabric-LeaseEvents_10.0.1816.9590.man
+|
++---net6.0
+|   |   Azure.Core.dll
+|   |   Azure.Data.Tables.dll
+|   |   Azure.Identity.dll
+|   |   Azure.Security.KeyVault.Certificates.dll
+|   |   Azure.Security.KeyVault.Keys.dll
+|   |   Azure.Security.KeyVault.Secrets.dll
+|   |   Azure.Storage.Blobs.dll
+|   |   Azure.Storage.Common.dll
+|   |   Azure.Storage.Queues.dll
+|   |   CollectSFData.deps.json
+|   |   CollectSFData.dll
+|   |   CollectSFData.dll.config
+|   |   CollectSFData.exe
+|   |   CollectSFData.pdb
+|   |   CollectSFData.runtimeconfig.json
+|   |   CollectSFDataDll.deps.json
+|   |   CollectSFDataDll.dll
+|   |   CollectSFDataDll.pdb
+|   |   EtlReader.dll
+|   |   Kusto.Cloud.Platform.dll
+|   |   Kusto.Cloud.Platform.Msal.dll
+|   |   Kusto.Data.dll
+|   |   Microsoft.Bcl.AsyncInterfaces.dll
+|   |   Microsoft.Extensions.CommandLineUtils.dll
+|   |   Microsoft.Identity.Client.dll
+|   |   Microsoft.Identity.Client.Extensions.Msal.dll
+|   |   Microsoft.IdentityModel.Abstractions.dll
+|   |   Microsoft.IO.RecyclableMemoryStream.dll
+|   |   Newtonsoft.Json.dll
+|   |   Sf.Tx.Core.dll
+|   |   Sf.Tx.Core.pdb
+|   |   Sf.Tx.Windows.dll
+|   |   Sf.Tx.Windows.pdb
+|   |   System.CodeDom.dll
+|   |   System.Collections.Immutable.dll
+|   |   System.Diagnostics.DiagnosticSource.dll
+|   |   System.Fabric.Strings.dll
+|   |   System.IO.Hashing.dll
+|   |   System.Memory.Data.dll
+|   |   System.Reactive.dll
+|   |   System.Reactive.Linq.dll
+|   |   System.Runtime.InteropServices.WindowsRuntime.dll
+|   |   System.Security.Cryptography.ProtectedData.dll
+|   |   System.Text.Encodings.Web.dll
+|   |   System.Text.Json.dll
+|   |
+|   +---manifests
+|   |       Microsoft-WindowsFabric-Events_10.0.1816.9590.man
+|   |       Microsoft-WindowsFabric-KtlEvents_10.0.1816.9590.man
+|   |       Microsoft-WindowsFabric-LeaseEvents_10.0.1816.9590.man
+|   |
+|   \---runtimes
+|       +---browser
+|       |   \---lib
+|       |       \---net6.0
+|       |               System.Text.Encodings.Web.dll
+|       |
+|       \---win
+|           \---lib
+|               \---net6.0
+|                       System.Security.Cryptography.ProtectedData.dll
+|
+\---net8.0
+    |   Azure.Core.dll
+    |   Azure.Data.Tables.dll
+    |   Azure.Identity.dll
+    |   Azure.Security.KeyVault.Certificates.dll
+    |   Azure.Security.KeyVault.Keys.dll
+    |   Azure.Security.KeyVault.Secrets.dll
+    |   Azure.Storage.Blobs.dll
+    |   Azure.Storage.Common.dll
+    |   Azure.Storage.Queues.dll
+    |   CollectSFData.deps.json
+    |   CollectSFData.dll
+    |   CollectSFData.dll.config
+    |   CollectSFData.exe
+    |   CollectSFData.pdb
+    |   CollectSFData.runtimeconfig.json
+    |   CollectSFDataDll.deps.json
+    |   CollectSFDataDll.dll
+    |   CollectSFDataDll.pdb
+    |   EtlReader.dll
+    |   Kusto.Cloud.Platform.dll
+    |   Kusto.Cloud.Platform.Msal.dll
+    |   Kusto.Data.dll
+    |   Microsoft.Bcl.AsyncInterfaces.dll
+    |   Microsoft.Extensions.CommandLineUtils.dll
+    |   Microsoft.Identity.Client.dll
+    |   Microsoft.Identity.Client.Extensions.Msal.dll
+    |   Microsoft.IdentityModel.Abstractions.dll
+    |   Microsoft.IO.RecyclableMemoryStream.dll
+    |   Newtonsoft.Json.dll
+    |   Sf.Tx.Core.dll
+    |   Sf.Tx.Core.pdb
+    |   Sf.Tx.Windows.dll
+    |   Sf.Tx.Windows.pdb
+    |   System.CodeDom.dll
+    |   System.Fabric.Strings.dll
+    |   System.IO.Hashing.dll
+    |   System.Memory.Data.dll
+    |   System.Reactive.dll
+    |   System.Reactive.Linq.dll
+    |   System.Runtime.InteropServices.WindowsRuntime.dll
+    |   System.Security.Cryptography.ProtectedData.dll
+    |
+    +---manifests
+    |       Microsoft-WindowsFabric-Events_10.0.1816.9590.man
+    |       Microsoft-WindowsFabric-KtlEvents_10.0.1816.9590.man
+    |       Microsoft-WindowsFabric-LeaseEvents_10.0.1816.9590.man
+    |
+    \---runtimes
+        \---win
+            \---lib
+                \---net7.0
+                        System.Security.Cryptography.ProtectedData.dll
 ```
