@@ -245,7 +245,7 @@ namespace CollectSFData.DataFile.Tests
         [Test()]
         public void TxBlgTest()
         {
-            throw new NotImplementedException();
+            //throw new NotImplementedException();
             string tempPath = TestUtilities.TempDir;
             string outputFile = $"{tempPath}/txetltest.json";
             string[] inputFiles = Directory.GetFiles("", $"{TestUtilities.TestDir}/fabric_counters*.blg", SearchOption.AllDirectories);

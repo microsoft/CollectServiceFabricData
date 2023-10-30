@@ -5,17 +5,22 @@
 
 using CollectSFData.Common;
 using CollectSFData.DataFile;
-using Microsoft.Azure.Storage;
-using Microsoft.Azure.Storage.Blob;
-using Microsoft.Azure.Storage.Queue;
+using Azure;
+using Azure.Storage.Blobs;
+using Azure.Storage.Blobs.Models;
+using Azure.Storage.Queues;
+using Azure.Storage.Queues.Models;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using CollectSFData.Azure;
+using Azure.Core;
 
 namespace CollectSFData.Kusto
 {
@@ -26,6 +31,7 @@ namespace CollectSFData.Kusto
         private readonly TimeSpan _messageTimeToLive = new TimeSpan(0, 1, 0, 0);
         private readonly CancellationTokenSource _tokenSource = new CancellationTokenSource();
         private bool _appendingToExistingTableUnique;
+        private BlobManager _blobManager;
         private ConfigurationOptions _config;
         private object _enumeratorLock = new object();
         private DateTime _failureQueryTime;
@@ -41,6 +47,8 @@ namespace CollectSFData.Kusto
             _instance = instance ?? throw new ArgumentNullException(nameof(instance));
             _config = _instance.Config;
             _kustoTasks = new CustomTaskManager();
+            _blobManager = new BlobManager(instance);
+            //_blobManager.Connect();
         }
 
         public void AddFile(FileObject fileObject)
@@ -234,7 +242,7 @@ namespace CollectSFData.Kusto
             string ingestionMapping = SetIngestionMapping(fileObject);
             Tuple<string, string> nextQueues = GetNextIngestionQueue();
             string ingestionQueue = nextQueues.Item1;
-            string tempContainer = nextQueues.Item2;
+            Uri tempContainer = new Uri(nextQueues.Item2);
 
             if (_config.KustoUseBlobAsSource && fileObject.IsSourceFileLinkCompliant())
             {
@@ -311,15 +319,15 @@ namespace CollectSFData.Kusto
             Log.Debug($"files ingested:{successUris.Count}");
         }
 
-        private IEnumerable<CloudQueueMessage> PopTopMessagesFromQueue(string queueUriWithSas, int count = _maxMessageCount)
+        private IEnumerable<QueueMessage> PopTopMessagesFromQueue(string queueUriWithSas, int count = _maxMessageCount)
         {
             List<string> messages = Enumerable.Empty<string>().ToList();
-            CloudQueue queue = new CloudQueue(new Uri(queueUriWithSas));
-            IEnumerable<CloudQueueMessage> messagesFromQueue = queue.GetMessages(count);
+            QueueClient queueClient = new QueueClient(new Uri(queueUriWithSas));
+            IEnumerable<QueueMessage> messagesFromQueue = queueClient.ReceiveMessages(count).Value;
 
-            foreach (CloudQueueMessage m in messagesFromQueue)
+            foreach (QueueMessage queueMessage in messagesFromQueue)
             {
-                messages.Add(m.AsString);
+                messages.Add(queueMessage.ToString());
             }
 
             return messagesFromQueue;
@@ -328,14 +336,46 @@ namespace CollectSFData.Kusto
         private void PostMessageToQueue(string queueUriWithSas, KustoIngestionMessage message, FileObject fileObject)
         {
             Log.Info($"post: {queueUriWithSas ?? "(null ingest uri)"}", ConsoleColor.Magenta);
-            CloudQueue queue = new CloudQueue(new Uri(queueUriWithSas));
-            CloudQueueMessage queueMessage = new CloudQueueMessage(JsonConvert.SerializeObject(message));
-            OperationContext context = new OperationContext() { ClientRequestID = message.Id };
+            QueueClientOptions queueClientOptions = new QueueClientOptions()
+            {
+                MessageEncoding = QueueMessageEncoding.Base64,
+                Retry =
+                    {
+                        Mode = RetryMode.Exponential,
+                        MaxRetries = Constants.RetryCount,
+                        Delay = TimeSpan.FromSeconds(Constants.RetryDelay),
+                        MaxDelay = TimeSpan.FromSeconds(Constants.RetryMaxDelay)
+                    }
+            };
 
-            queue.AddMessage(queueMessage, _messageTimeToLive, null, null, context);
+            queueClientOptions.MessageDecodingFailed += async (QueueMessageDecodingFailedEventArgs args) =>
+            {
+                if (args.PeekedMessage != null)
+                {
+                    Log.Error($"PostMessageToQueue:Invalid message has been peeked, message id={args.PeekedMessage.MessageId} body={args.PeekedMessage.Body}");
+                }
+                else if (args.ReceivedMessage != null)
+                {
+                    Log.Error($"PostMessageToQueue:Invalid message has been received, message id={args.ReceivedMessage.MessageId} body={args.ReceivedMessage.Body}");
+
+                    if (args.IsRunningSynchronously)
+                    {
+                        args.Queue.DeleteMessage(args.ReceivedMessage.MessageId, args.ReceivedMessage.PopReceipt);
+                    }
+                    else
+                    {
+                        await args.Queue.DeleteMessageAsync(args.ReceivedMessage.MessageId, args.ReceivedMessage.PopReceipt);
+                    }
+                }
+            };
+
+            QueueClient queueClient = new QueueClient(new Uri(queueUriWithSas), queueClientOptions);
+            string queueMessage = JsonConvert.SerializeObject(message);
+            Response<SendReceipt> sendReceipt = queueClient.SendMessage(queueMessage, null, _messageTimeToLive, _kustoTasks.CancellationToken);
+
             fileObject.Status = FileStatus.uploading;
             fileObject.MessageId = message.Id;
-            Log.Info($"fileobject uploading FileUri:{fileObject.FileUri} RelativeUri: {fileObject.RelativeUri} message id: {message.Id}", ConsoleColor.Cyan);
+            Log.Info($"fileobject uploading FileUri:{fileObject.FileUri} RelativeUri: {fileObject.RelativeUri} message id: {message.Id}", ConsoleColor.Cyan, null, sendReceipt);
         }
 
         private KustoIngestionMessage PrepareIngestionMessage(string blobUriWithSas, long blobSizeBytes, string ingestionMapping)
@@ -405,11 +445,12 @@ namespace CollectSFData.Kusto
 
             while (true)
             {
-                IEnumerable<CloudQueueMessage> successes = PopTopMessagesFromQueue(Endpoint.IngestionResources.SuccessNotificationsQueue);
+                IEnumerable<QueueMessage> successes = PopTopMessagesFromQueue(Endpoint.IngestionResources.SuccessNotificationsQueue);
 
-                foreach (CloudQueueMessage success in successes)
+                foreach (QueueMessage success in successes)
                 {
-                    KustoSuccessMessage message = JsonConvert.DeserializeObject<KustoSuccessMessage>(success.AsString);
+                    string messageText = Encoding.UTF8.GetString(Convert.FromBase64String(success.MessageText));
+                    KustoSuccessMessage message = JsonConvert.DeserializeObject<KustoSuccessMessage>(messageText);
                     Log.Debug("success message:", message);
 
                     if (message.Table.Equals(tableName) || (message.SucceededOn > DateTime.MinValue && message.SucceededOn < DateTime.Now.AddDays(-1)))
@@ -425,11 +466,12 @@ namespace CollectSFData.Kusto
 
             while (true)
             {
-                IEnumerable<CloudQueueMessage> errors = PopTopMessagesFromQueue(Endpoint.IngestionResources.FailureNotificationsQueue);
+                IEnumerable<QueueMessage> errors = PopTopMessagesFromQueue(Endpoint.IngestionResources.FailureNotificationsQueue);
 
-                foreach (CloudQueueMessage error in errors)
+                foreach (QueueMessage error in errors)
                 {
-                    KustoErrorMessage message = JsonConvert.DeserializeObject<KustoErrorMessage>(error.AsString);
+                    string messageText = Encoding.UTF8.GetString(Convert.FromBase64String(error.MessageText));
+                    KustoErrorMessage message = JsonConvert.DeserializeObject<KustoErrorMessage>(messageText);
                     Log.Debug("error message:", message);
 
                     if (message.Table.Equals(tableName) || (message.FailedOn > DateTime.MinValue && message.FailedOn < DateTime.Now.AddDays(-1)))
@@ -449,11 +491,12 @@ namespace CollectSFData.Kusto
             // read success notifications
             while (true)
             {
-                IEnumerable<CloudQueueMessage> successes = PopTopMessagesFromQueue(Endpoint.IngestionResources.SuccessNotificationsQueue);
+                IEnumerable<QueueMessage> successes = PopTopMessagesFromQueue(Endpoint.IngestionResources.SuccessNotificationsQueue);
 
-                foreach (CloudQueueMessage success in successes)
+                foreach (QueueMessage success in successes)
                 {
-                    KustoSuccessMessage message = JsonConvert.DeserializeObject<KustoSuccessMessage>(success.AsString);
+                    string messageText = Encoding.UTF8.GetString(Convert.FromBase64String(success.MessageText));
+                    KustoSuccessMessage message = JsonConvert.DeserializeObject<KustoSuccessMessage>(messageText);
                     Log.Debug("success:", message);
                     FileObject fileObject = _instance.FileObjects.FindByMessageId(message.IngestionSourceId);
 
@@ -461,7 +504,7 @@ namespace CollectSFData.Kusto
                     {
                         fileObject.Status = FileStatus.succeeded;
                         RemoveMessageFromQueue(Endpoint.IngestionResources.SuccessNotificationsQueue, success);
-                        Log.Info($"Ingestion completed total:({_instance.FileObjects.Count()}/{_instance.FileObjects.Count(FileStatus.uploading)}): {JsonConvert.DeserializeObject(success.AsString)}", ConsoleColor.Green);
+                        Log.Info($"Ingestion completed total:({_instance.FileObjects.Count()}/{_instance.FileObjects.Count(FileStatus.uploading)}): {JsonConvert.DeserializeObject(success.ToString())}", ConsoleColor.Green);
                     }
                     else if (message.SucceededOn + _messageTimeToLive < DateTime.Now)
                     {
@@ -480,11 +523,12 @@ namespace CollectSFData.Kusto
             while (true)
             {
                 // read failure notifications
-                IEnumerable<CloudQueueMessage> errors = PopTopMessagesFromQueue(Endpoint.IngestionResources.FailureNotificationsQueue);
+                IEnumerable<QueueMessage> errors = PopTopMessagesFromQueue(Endpoint.IngestionResources.FailureNotificationsQueue);
 
-                foreach (CloudQueueMessage error in errors)
+                foreach (QueueMessage error in errors)
                 {
-                    KustoErrorMessage message = JsonConvert.DeserializeObject<KustoErrorMessage>(error.AsString);
+                    string messageText = Encoding.UTF8.GetString(Convert.FromBase64String(error.MessageText));
+                    KustoErrorMessage message = JsonConvert.DeserializeObject<KustoErrorMessage>(messageText);
                     Log.Debug("error:", message);
                     FileObject fileObject = _instance.FileObjects.FindByMessageId(message.IngestionSourceId);
 
@@ -492,7 +536,7 @@ namespace CollectSFData.Kusto
                     {
                         fileObject.Status = FileStatus.failed;
                         RemoveMessageFromQueue(Endpoint.IngestionResources.FailureNotificationsQueue, error);
-                        Log.Error($"Ingestion error total:({_instance.FileObjects.Count(FileStatus.failed)}): {JsonConvert.DeserializeObject(error.AsString)}");
+                        Log.Error($"Ingestion error total:({_instance.FileObjects.Count(FileStatus.failed)}): {JsonConvert.DeserializeObject(error.ToString())}");
                     }
                     else if (message.FailedOn + _messageTimeToLive < DateTime.Now)
                     {
@@ -532,17 +576,18 @@ namespace CollectSFData.Kusto
             Log.Info($"exiting {_instance.FileObjects.Count(FileStatus.uploading)}", _instance.FileObjects.FindAll(FileStatus.uploading));
         }
 
-        private void RemoveMessageFromQueue(string queueUriWithSas, CloudQueueMessage message)
+        private void RemoveMessageFromQueue(string queueUriWithSas, QueueMessage message)
         {
+            Response result = null;
             try
             {
-                CloudQueue queue = new CloudQueue(new Uri(queueUriWithSas));
-                queue.DeleteMessage(message);
+                QueueClient queue = new QueueClient(new Uri(queueUriWithSas));
+                result = queue.DeleteMessage(message.MessageId, message.PopReceipt, _kustoTasks.CancellationToken);
                 Log.Debug($"Removed message from queue:", message);
             }
             catch (Exception e)
             {
-                Log.Exception($"{e}");
+                Log.Exception($"{e}", result);
             }
         }
 
@@ -602,39 +647,13 @@ namespace CollectSFData.Kusto
             return ingestionJsonString;
         }
 
-        private string UploadFileToBlobContainer(FileObject fileObject, string blobContainerUri, string containerName, string blobName)
+        private string UploadFileToBlobContainer(FileObject fileObject, Uri blobContainerUri, string containerName, string blobName)
         {
             Log.Info($"uploading: {fileObject.Stream.Get().Length} bytes to {fileObject.FileUri} to {blobContainerUri}", ConsoleColor.Magenta);
-            Uri blobUri = new Uri(blobContainerUri);
-            BlobRequestOptions blobRequestOptions = new BlobRequestOptions()
-            {
-                RetryPolicy = new IngestRetryPolicy(),
-                ParallelOperationThreadCount = _config.Threads,
-            };
 
-            CloudStorageAccount.UseV1MD5 = false; //DevSkim: ignore DS126858. required for jarvis
-            CloudBlobContainer blobContainer = new CloudBlobContainer(blobUri);
-            CloudBlockBlob blockBlob = blobContainer.GetBlockBlobReference(blobName);
-
-            if (!_kustoTasks.CancellationToken.IsCancellationRequested)
-            {
-                if (_config.UseMemoryStream)
-                {
-                    _kustoTasks.TaskAction(() => blockBlob.UploadFromStreamAsync(fileObject.Stream.Get(), null, blobRequestOptions, null).Wait()).Wait();
-                    fileObject.Stream.Dispose();
-                }
-                else
-                {
-                    _kustoTasks.TaskAction(() => blockBlob.UploadFromFileAsync(fileObject.FileUri, null, blobRequestOptions, null).Wait()).Wait();
-                }
-
-                Log.Info($"uploaded: {fileObject.FileUri} to {blobContainerUri}", ConsoleColor.DarkMagenta);
-                return $"{blockBlob.Uri.AbsoluteUri}{blobUri.Query}";
-            }
-            else
-            {
-                return $"task cancelled:{blockBlob.Uri.AbsoluteUri}{blobUri.Query}";
-            }
+            string blobUri = _blobManager.UploadFile(fileObject, blobContainerUri, containerName + "/" + blobName);
+            Log.Debug($"returning: {blobUri}");
+            return blobUri;
         }
     }
 }

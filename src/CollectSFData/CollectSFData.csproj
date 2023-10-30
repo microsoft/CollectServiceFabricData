@@ -1,8 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>netcoreapp3.1;net462;net48;net6.0</TargetFrameworks>
+    <TargetFrameworks>net462;net48;net6.0</TargetFrameworks>
     <Platforms>x64</Platforms>
-    <RuntimeIdentifiers>win-x64;ubuntu.18.04-x64</RuntimeIdentifiers>
+    <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
     <PlatformTarget>x64</PlatformTarget>
     <ProjectGuid>{E910AD37-507C-480F-BEC5-6E5F2B9A3155}</ProjectGuid>
     <OutputType>Exe</OutputType>
@@ -16,7 +16,7 @@
     <GenerateAssemblyCompanyAttribute>true</GenerateAssemblyCompanyAttribute>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <NoWarn>7035</NoWarn>
-    <VersionSuffix>2.9.$([System.DateTime]::UtcNow.ToString("yyMM")).1$([System.DateTime]::UtcNow.ToString("ddHH"))</VersionSuffix>
+    <VersionSuffix>3.0.$([System.DateTime]::UtcNow.ToString("yyMM")).1$([System.DateTime]::UtcNow.ToString("ddHH"))</VersionSuffix>
     <AssemblyVersion>$(VersionSuffix)</AssemblyVersion>
     <Version>$(VersionSuffix)</Version>
     <FileVersion>$(VersionSuffix)</FileVersion>

@@ -5,13 +5,14 @@
 
 using CollectSFData.Common;
 using CollectSFData.DataFile;
-using Microsoft.WindowsAzure.Storage.Table;
+using Azure;
+using Azure.Data.Tables;
+using Azure.Data.Tables.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace CollectSFData.Azure
 {
@@ -20,11 +21,11 @@ namespace CollectSFData.Azure
         private readonly CustomTaskManager _tableTasks = new CustomTaskManager();
         private ConfigurationOptions _config;
         private Instance _instance;
-        private CloudTableClient _tableClient;
+        private TableServiceClient _tableServiceClient;
 
         public Action<FileObject> IngestCallback { get; set; }
 
-        public List<CloudTable> TableList { get; set; } = new List<CloudTable>();
+        public List<TableItem> TableList { get; set; } = new List<TableItem>();
 
         public TableManager(Instance instance)
         {
@@ -34,29 +35,47 @@ namespace CollectSFData.Azure
 
         public bool Connect()
         {
-            TableContinuationToken tableToken = null;
-            CancellationToken cancellationToken = new CancellationToken();
-
             if (!_config.SasEndpointInfo.IsPopulated())
             {
                 Log.Warning("no table or token info. exiting:", _config.SasEndpointInfo);
                 return false;
             }
 
+            return EnumerateTables();
+        }
+
+        public void DownloadTables(string tablePrefix = "")
+        {
+            Log.Info($"downloading tables: with prefix {tablePrefix}");
+            if (!EnumerateTables(tablePrefix))
+            {
+                Log.Warning("error enumerating tables.");
+                return;
+            }
+
+            foreach (TableItem table in TableList)
+            {
+                EnumerateTable(table, Constants.MaxEnumerationResults);
+            }
+        }
+
+        public bool EnumerateTables(string prefix = "")
+        {
             try
             {
-                CloudTable table = new CloudTable(new Uri(_config.SasEndpointInfo.TableEndpoint + _config.SasEndpointInfo.SasToken));
-                _tableClient = table.ServiceClient;
+                TableList = new List<TableItem>();
+                _tableServiceClient = new TableServiceClient(new Uri(_config.SasEndpointInfo.TableEndpoint + _config.SasEndpointInfo.SasToken));
+                Pageable<TableItem> tables = _tableServiceClient.Query(x => x.Name != "", Constants.MaxEnumerationResults, _tableTasks.CancellationToken);
+                foreach (TableItem table in tables)
+                {
+                    if (!string.IsNullOrEmpty(prefix) && !Regex.IsMatch(table.Name, prefix))
+                    {
+                        Log.Info($"skipping table {table.Name}. does not match {prefix}.");
+                        continue;
+                    }
+                    TableList.Add(table);
+                }
 
-                TableResultSegment tables = _tableClient.ListTablesSegmentedAsync(
-                    null,
-                    Constants.MaxResults,
-                    tableToken,
-                    new TableRequestOptions(),
-                    null,
-                    cancellationToken).Result;
-
-                TableList.AddRange(tables);
                 return true;
             }
             catch (Exception e)
@@ -67,38 +86,9 @@ namespace CollectSFData.Azure
             }
         }
 
-        public void DownloadTables(string tablePrefix = "")
-        {
-            Log.Info($"enumerating tables: with prefix {tablePrefix}");
-            int resultsCount = 0;
-            TableContinuationToken token = new TableContinuationToken();
-            tablePrefix = string.IsNullOrEmpty(_config.UriFilter) ? tablePrefix : _config.UriFilter;
-
-            while (token != null)
-            {
-                try
-                {
-                    Task<TableResultSegment> tableSegment = _tableClient.ListTablesSegmentedAsync(tablePrefix, Constants.MaxResults, token, null, null);
-                    Task<TableResultSegment> task = DownloadTablesSegment(tableSegment, _config.ContainerFilter);
-
-                    token = task.Result.ContinuationToken;
-                    resultsCount += task.Result.Results.Count;
-                }
-                catch (Exception e)
-                {
-                    Log.Exception($"exception in table enumeration { e }");
-                    break;
-                }
-            }
-
-            Log.Info("finished table enumeration");
-            _tableTasks.Wait();
-            Log.Highlight($"processed table count:{ resultsCount.ToString("#,#") } minutes:{ (DateTime.Now - _instance.StartTime).TotalMinutes.ToString("F3") } ");
-        }
-
         public string QueryTablesForClusterId()
         {
-            string tablePattern = FileTypesKnownUrisPrefix.fabriclog + "(?<guidString>[A-Fa-f0-9]{32})GlobalTime$";
+            string tablePattern = Constants.TableNamePattern;
             Log.Info($"querying table names for pattern:{tablePattern}", ConsoleColor.Green);
             string clusterId = null;
 
@@ -156,123 +146,103 @@ namespace CollectSFData.Azure
             return clusterId;
         }
 
-        private Task<TableResultSegment> DownloadTablesSegment(Task<TableResultSegment> tableSegment, string urlFilterPattern)
+        private int EnumerateTable(TableItem table, int maxResults = Constants.MaxEnumerationResults, bool limitResults = false)
         {
-            foreach (CloudTable cloudTable in tableSegment.Result.Results)
+            Log.Info($"enumerating table: {table.Name}");
+            int resultsCount = 0;
+            string continuationToken = "";
+            int iteration = 0;
+            bool moreResultsAvailable = true;
+            if (limitResults)
             {
-                _tableTasks.QueueTaskAction(() => EnumerateTableRecords(cloudTable, urlFilterPattern));
+                maxResults = 1;
             }
 
-            return tableSegment;
-        }
-
-        private IEnumerable<List<CsvTableRecord>> EnumerateTable(CloudTable cloudTable, int maxResults = Constants.TableMaxResults, bool limitResults = false)
-        {
-            Log.Info($"enumerating table: {cloudTable.Name}", ConsoleColor.Yellow);
-            TableContinuationToken token = new TableContinuationToken();
-            List<CsvTableRecord> results = new List<CsvTableRecord>();
-            int tableRecords = 0;
-            TableQuery query = GenerateTimeQuery(maxResults);
-            _instance.TotalFilesEnumerated++;
-
-            while (token != null)
+            try
             {
-                Log.Info($"querying table:{cloudTable.Name} total:{tableRecords}", query);
-#if NETCOREAPP
-                TableQuerySegment tableSegment = cloudTable.ExecuteQuerySegmentedAsync(query, token, null, null).Result;
-#else
-                TableQuerySegment<DynamicTableEntity> tableSegment = cloudTable.ExecuteQuerySegmentedAsync(query, token, null, null).Result;
-#endif
-                token = tableSegment.ContinuationToken;
+                TableClient tableClient = _tableServiceClient.GetTableClient(table.Name);
 
-                results.AddRange(FormatRecordResults(cloudTable, tableSegment));
-                tableRecords += results.Count;
-
-                if (results.Count == 0)
+                while (!_tableTasks.CancellationToken.IsCancellationRequested && moreResultsAvailable)
                 {
-                    break;
-                }
+                    Page<TableEntity> page = tableClient
+                       .Query<TableEntity>(r => r.Timestamp >= _config.StartTimeUtc && r.Timestamp <= _config.EndTimeUtc)
+                       .AsPages(continuationToken, maxResults)
+                       .FirstOrDefault(); // since setting max results, only one page should be returned
 
-                if (limitResults && (maxResults -= tableSegment.Results.Count) <= 0)
-                {
-                    break;
-                }
-
-                if (results.Count >= maxResults)
-                {
-                    Log.Info($"yielding chunk {results.Count}", ConsoleColor.DarkCyan);
-                    yield return results;
-                    results.Clear();
-                }
-            }
-
-            Log.Info($"return: table {cloudTable.Name} records count:{tableRecords} query:", null, ConsoleColor.DarkCyan, query);
-            yield return results;
-        }
-
-        private void EnumerateTableRecords(CloudTable cloudTable, string urlFilterPattern)
-        {
-            if (string.IsNullOrEmpty(urlFilterPattern) || Regex.IsMatch(cloudTable.Uri.ToString(), urlFilterPattern, RegexOptions.IgnoreCase))
-            {
-                int chunkCount = 0;
-
-                foreach (IList<CsvTableRecord> resultsChunk in EnumerateTable(cloudTable, Constants.TableMaxResults))
-                {
-                    if (resultsChunk.Count < 1)
+                    if (page == null)
                     {
-                        continue;
+                        break;
                     }
+
+                    continuationToken = page.ContinuationToken;
+
+                    IReadOnlyList<TableEntity> pageResults = page.Values;
+                    moreResultsAvailable = pageResults.Any() && !string.IsNullOrEmpty(continuationToken);
+                    resultsCount += pageResults.Count;
 
                     if (_config.List)
                     {
-                        Log.Info($"cloudtable: {cloudTable.Name} results: {resultsChunk.Count}");
+                        Log.Info($"cloudtable: {table.Name} results: {pageResults.Count}");
                         continue;
                     }
 
-                    string relativeUri = $"{_config.StartTimeUtc.Ticks}-{_config.EndTimeUtc.Ticks}-{cloudTable.Name}.{chunkCount++}{Constants.TableExtension}";
-                    FileObject fileObject = new FileObject(relativeUri, _config.CacheLocation) { Status = FileStatus.enumerated };
-
-                    if (_instance.FileObjects.FindByUriFirstOrDefault(relativeUri).Status == FileStatus.existing)
-                    {
-                        Log.Info($"{relativeUri} already exists. skipping", ConsoleColor.DarkYellow);
-                        continue;
-                    }
-
-                    _instance.FileObjects.Add(fileObject);
-                    resultsChunk.ToList().ForEach(x => x.RelativeUri = relativeUri);
-                    fileObject.Stream.Write(resultsChunk);
-
-                    _instance.TotalFilesDownloaded++;
-                    IngestCallback?.Invoke(fileObject);
+                    _tableTasks.QueueTaskAction(() => EnumerateTableRecords(pageResults, table.Name, iteration++));
                 }
+
+                Log.Info("finished table enumeration");
+                _tableTasks.Wait();
+                Log.Highlight($"processed table count:{resultsCount.ToString("#,#")} minutes:{(DateTime.Now - _instance.StartTime).TotalMinutes.ToString("F3")} ");
+                return resultsCount;
             }
-            else
+            catch (Exception e)
             {
-                _instance.TotalFilesSkipped++;
+                Log.Exception($"exception in table enumeration {e}");
+                return 0;
             }
         }
 
-#if NETCOREAPP
-
-        private List<CsvTableRecord> FormatRecordResults(CloudTable cloudTable, TableQuerySegment tableSegment)
-#else
-        private List<CsvTableRecord> FormatRecordResults(CloudTable cloudTable, TableQuerySegment<DynamicTableEntity> tableSegment)
-#endif
+        private void EnumerateTableRecords(IReadOnlyList<TableEntity> tableEntities, string tableName, int tableEntitiesCount)
         {
-            List<CsvTableRecord> results = new List<CsvTableRecord>();
-
-            foreach (DynamicTableEntity result in tableSegment.Results.OrderBy(x => x.Timestamp))
+            Log.Debug($"table:{tableName} records:{tableEntities.Count}");
+            if (tableEntities.Count < 1)
             {
-                foreach (KeyValuePair<string, string> entity in MapEntitiesTypes(result))
+                return;
+            }
+
+            string relativeUri = $"{_config.StartTimeUtc.Ticks}-{_config.EndTimeUtc.Ticks}-{tableName}.{tableEntitiesCount}{Constants.TableExtension}";
+            FileObject fileObject = new FileObject(relativeUri, _config.CacheLocation) { Status = FileStatus.enumerated };
+
+            if (_instance.FileObjects.FindByUriFirstOrDefault(relativeUri).Status == FileStatus.existing)
+            {
+                Log.Info($"{relativeUri} already exists. skipping", ConsoleColor.DarkYellow);
+                return;
+            }
+
+            _instance.FileObjects.Add(fileObject);
+            fileObject.Stream.Write(FormatRecordResults(relativeUri, tableEntities));
+
+            _instance.TotalFilesDownloaded++;
+            IngestCallback?.Invoke(fileObject);
+        }
+
+        private List<CsvTableRecord> FormatRecordResults(string relativeUri, IReadOnlyList<TableEntity> tableEntities)
+        {
+            List<CsvTableRecord> csvRecords = new List<CsvTableRecord>();
+
+            // todo: sort by timestamp?
+            //foreach (TableEntity result in tableSegment.Results.OrderBy(x => x.Timestamp))
+            foreach (TableEntity tableEntity in tableEntities)
+            {
+                foreach (KeyValuePair<string, string> entity in MapEntitiesTypes(tableEntity))
                 {
                     string actualTimeStamp = string.Empty;
 
-                    if (result.RowKey.Contains("_"))
+                    if (tableEntity.RowKey.Contains("_"))
                     {
                         try
                         {
                             // subtract rowkey prefix (ticks) from ticks maxvalue to get actual time
-                            actualTimeStamp = new DateTime(DateTime.MaxValue.Ticks - Convert.ToInt64(result.RowKey.Substring(0, result.RowKey.IndexOf("_")))).ToString(Constants.DateTimeFormat);
+                            actualTimeStamp = new DateTime(DateTime.MaxValue.Ticks - Convert.ToInt64(tableEntity.RowKey.Substring(0, tableEntity.RowKey.IndexOf("_")))).ToString(Constants.DateTimeFormat);
                         }
                         catch (Exception e)
                         {
@@ -280,91 +250,83 @@ namespace CollectSFData.Azure
                         }
                     }
 
-                    results.Add(new CsvTableRecord()
+                    csvRecords.Add(new CsvTableRecord()
                     {
-                        Timestamp = result.Timestamp.UtcDateTime,
+                        Timestamp = tableEntity.Timestamp.Value.UtcDateTime,
                         EventTimeStamp = actualTimeStamp,
-                        ETag = result.ETag,
-                        PartitionKey = result.PartitionKey,
-                        RowKey = result.RowKey,
+                        ETag = tableEntity.ETag.ToString(),
+                        PartitionKey = tableEntity.PartitionKey,
+                        RowKey = tableEntity.RowKey,
                         PropertyName = entity.Key,
                         PropertyValue = $"\"{entity.Value.Trim('"').Replace("\"", "'")}\"",
-                        RelativeUri = cloudTable.Name,
+                        RelativeUri = relativeUri,
                         ResourceUri = _config.ResourceUri
                     });
                 }
             }
 
-            return results;
+            return csvRecords;
         }
 
-        private TableQuery GenerateTimeQuery(int maxResults = Constants.TableMaxResults)
-        {
-            TableQuery query = new TableQuery();
-            string startDate = TableQuery.GenerateFilterConditionForDate("Timestamp", QueryComparisons.GreaterThanOrEqual, _config.StartTimeUtc);
-            string endDate = TableQuery.GenerateFilterConditionForDate("Timestamp", QueryComparisons.LessThanOrEqual, _config.EndTimeUtc);
-
-            query.FilterString = TableQuery.CombineFilters(startDate, TableOperators.And, endDate);
-            query.TakeCount = Math.Min(maxResults, Constants.MaxResults);
-            Log.Info("query string:", ConsoleColor.Cyan, null, query);
-
-            return query;
-        }
-
-        private Dictionary<string, string> MapEntitiesTypes(DynamicTableEntity result)
+        private Dictionary<string, string> MapEntitiesTypes(TableEntity tableEntity)
         {
             Dictionary<string, string> convertedEntities = new Dictionary<string, string>();
             string entityString = null;
 
-            foreach (KeyValuePair<string, EntityProperty> prop in result.Properties)
+            foreach (KeyValuePair<string, object> prop in tableEntity)
             {
-                // Log.Debug($"kvp:{prop.Key}");
+                Log.Trivial($"kvp:{prop.Key}");
                 object entity = null;
 
-                switch (prop.Value.PropertyType)
+                switch (prop.Value)
                 {
-                    case EdmType.Binary:
-                        entity = prop.Value.BinaryValue;
+                    case BinaryData binaryData:
+                        entity = binaryData;
                         entityString = Convert.ToBoolean(entity).ToString();
                         break;
 
-                    case EdmType.Boolean:
-                        entity = prop.Value.BooleanValue;
-                        entityString = Convert.ToBoolean(entity).ToString();
+                    case bool boolValue:
+                        entity = boolValue;
+                        entityString = boolValue.ToString();
                         break;
 
-                    case EdmType.DateTime:
-                        entity = prop.Value.DateTime;
-                        entityString = Convert.ToDateTime(entity).ToString(Constants.DateTimeFormat);
+                    case DateTime dateValue:
+                        entity = dateValue;
+                        entityString = dateValue.ToString(Constants.DateTimeFormat);
                         break;
 
-                    case EdmType.Double:
-                        entity = prop.Value.DoubleValue;
-                        entityString = Convert.ToDouble(entity).ToString();
+                    case DateTimeOffset dateTimeOffsetValue:
+                        entity = dateTimeOffsetValue;
+                        entityString = dateTimeOffsetValue.ToUniversalTime().ToString(Constants.DateTimeFormat);
                         break;
 
-                    case EdmType.Guid:
-                        entity = prop.Value.GuidValue;
-                        entityString = entity.ToString();
+                    case double doubleValue:
+                        entity = doubleValue;
+                        entityString = doubleValue.ToString();
                         break;
 
-                    case EdmType.Int32:
-                        entity = prop.Value.Int32Value;
-                        entityString = Convert.ToInt32(entity).ToString();
+                    case Guid guidValue:
+                        entity = guidValue;
+                        entityString = guidValue.ToString();
                         break;
 
-                    case EdmType.Int64:
-                        entity = prop.Value.Int64Value;
-                        entityString = Convert.ToInt64(entity).ToString();
+                    case int int32Value:
+                        entity = int32Value;
+                        entityString = int32Value.ToString();
                         break;
 
-                    case EdmType.String:
-                        entity = prop.Value.StringValue;
-                        entityString = entity.ToString();
+                    case long int64Value:
+                        entity = int64Value;
+                        entityString = int64Value.ToString();
+                        break;
+
+                    case string stringValue:
+                        entity = stringValue;
+                        entityString = stringValue;
                         break;
 
                     default:
-                        Log.Error($"unknown edmtype:{prop.Value.PropertyType}");
+                        Log.Error($"unknown edmtype:{prop.Value.GetType()}");
                         break;
                 }
 
@@ -377,7 +339,8 @@ namespace CollectSFData.Azure
         private bool TableRecordExists(string tableName)
         {
             // first record is header
-            bool recordExists = EnumerateTable(_tableClient.GetTableReference(tableName), 1, true).Count() > 1;
+            bool recordExists = EnumerateTable(new TableItem(tableName), 1, true) > 0;
+
             Log.Highlight($"record exists in table:{recordExists}");
             return recordExists;
         }

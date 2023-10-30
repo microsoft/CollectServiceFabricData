@@ -1,5 +1,24 @@
 # Change log
 
+## 10/30/2023 v3.0.2310.13022
+
+- migrate from deprecated modules for component governance
+  - Microsoft.Azure.Storage -> Azure.Storage
+  - Microsoft.Azure.Queues -> Azure.Storage.Queues
+  - Microsoft.Azure.Table -> Azure.Data.Tables
+- update dependencies for component governance
+  - Azure.Identity 1.10.1 -> 1.10.2
+  - Microsoft.Azure.Kusto.Data
+  - Update ConvertToUtcTime to use .net core 'zzz' format specifier changes
+- update service fabric modules / manifests to 10.0
+- remove .netcoreapp2.1 target framework
+- remove .netcoreapp3.1 target framework
+- add .net8.0 target framework in preparation for release
+
+## 09/24/2023 v2.9.2309.12421
+
+- update dependencies for component governance
+
 ## 06/11/2023 v2.9.2306.11116
 
 - add internal ado pipeline yaml for central feed service compliance
