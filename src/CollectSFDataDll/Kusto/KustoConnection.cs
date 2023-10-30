@@ -15,10 +15,12 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using CollectSFData.Azure;
+using Azure.Core;
 
 namespace CollectSFData.Kusto
 {
@@ -46,7 +48,7 @@ namespace CollectSFData.Kusto
             _config = _instance.Config;
             _kustoTasks = new CustomTaskManager();
             _blobManager = new BlobManager(instance);
-            _blobManager.Connect();
+            //_blobManager.Connect();
         }
 
         public void AddFile(FileObject fileObject)
@@ -240,7 +242,7 @@ namespace CollectSFData.Kusto
             string ingestionMapping = SetIngestionMapping(fileObject);
             Tuple<string, string> nextQueues = GetNextIngestionQueue();
             string ingestionQueue = nextQueues.Item1;
-            string tempContainer = nextQueues.Item2;
+            Uri tempContainer = new Uri(nextQueues.Item2);
 
             if (_config.KustoUseBlobAsSource && fileObject.IsSourceFileLinkCompliant())
             {
@@ -334,13 +336,43 @@ namespace CollectSFData.Kusto
         private void PostMessageToQueue(string queueUriWithSas, KustoIngestionMessage message, FileObject fileObject)
         {
             Log.Info($"post: {queueUriWithSas ?? "(null ingest uri)"}", ConsoleColor.Magenta);
-            QueueClient queueClient = new QueueClient(new Uri(queueUriWithSas));
-            string queueMessage = JsonConvert.SerializeObject(message);
+            QueueClientOptions queueClientOptions = new QueueClientOptions()
+            {
+                MessageEncoding = QueueMessageEncoding.Base64,
+                Retry =
+                    {
+                        Mode = RetryMode.Exponential,
+                        MaxRetries = Constants.RetryCount,
+                        Delay = TimeSpan.FromSeconds(Constants.RetryDelay),
+                        MaxDelay = TimeSpan.FromSeconds(Constants.RetryMaxDelay)
+                    }
+            };
 
-            //QueueMessage queueMessage = new QueueMessage(JsonConvert.SerializeObject(message));
-            //OperationContext context = new OperationContext() { ClientRequestID = message.Id };
-            Response<SendReceipt> sendReceipt = queueClient.SendMessage(queueMessage, _messageTimeToLive, null, _kustoTasks.CancellationToken);
-            //queueClient.AddMessage(queueMessage, _messageTimeToLive, null, null, context);
+            queueClientOptions.MessageDecodingFailed += async (QueueMessageDecodingFailedEventArgs args) =>
+            {
+                if (args.PeekedMessage != null)
+                {
+                    Log.Error($"PostMessageToQueue:Invalid message has been peeked, message id={args.PeekedMessage.MessageId} body={args.PeekedMessage.Body}");
+                }
+                else if (args.ReceivedMessage != null)
+                {
+                    Log.Error($"PostMessageToQueue:Invalid message has been received, message id={args.ReceivedMessage.MessageId} body={args.ReceivedMessage.Body}");
+
+                    if (args.IsRunningSynchronously)
+                    {
+                        args.Queue.DeleteMessage(args.ReceivedMessage.MessageId, args.ReceivedMessage.PopReceipt);
+                    }
+                    else
+                    {
+                        await args.Queue.DeleteMessageAsync(args.ReceivedMessage.MessageId, args.ReceivedMessage.PopReceipt);
+                    }
+                }
+            };
+
+            QueueClient queueClient = new QueueClient(new Uri(queueUriWithSas), queueClientOptions);
+            string queueMessage = JsonConvert.SerializeObject(message);
+            Response<SendReceipt> sendReceipt = queueClient.SendMessage(queueMessage, null, _messageTimeToLive, _kustoTasks.CancellationToken);
+
             fileObject.Status = FileStatus.uploading;
             fileObject.MessageId = message.Id;
             Log.Info($"fileobject uploading FileUri:{fileObject.FileUri} RelativeUri: {fileObject.RelativeUri} message id: {message.Id}", ConsoleColor.Cyan, null, sendReceipt);
@@ -417,7 +449,8 @@ namespace CollectSFData.Kusto
 
                 foreach (QueueMessage success in successes)
                 {
-                    KustoSuccessMessage message = JsonConvert.DeserializeObject<KustoSuccessMessage>(success.ToString());
+                    string messageText = Encoding.UTF8.GetString(Convert.FromBase64String(success.MessageText));
+                    KustoSuccessMessage message = JsonConvert.DeserializeObject<KustoSuccessMessage>(messageText);
                     Log.Debug("success message:", message);
 
                     if (message.Table.Equals(tableName) || (message.SucceededOn > DateTime.MinValue && message.SucceededOn < DateTime.Now.AddDays(-1)))
@@ -437,7 +470,8 @@ namespace CollectSFData.Kusto
 
                 foreach (QueueMessage error in errors)
                 {
-                    KustoErrorMessage message = JsonConvert.DeserializeObject<KustoErrorMessage>(error.ToString());
+                    string messageText = Encoding.UTF8.GetString(Convert.FromBase64String(error.MessageText));
+                    KustoErrorMessage message = JsonConvert.DeserializeObject<KustoErrorMessage>(messageText);
                     Log.Debug("error message:", message);
 
                     if (message.Table.Equals(tableName) || (message.FailedOn > DateTime.MinValue && message.FailedOn < DateTime.Now.AddDays(-1)))
@@ -461,7 +495,8 @@ namespace CollectSFData.Kusto
 
                 foreach (QueueMessage success in successes)
                 {
-                    KustoSuccessMessage message = JsonConvert.DeserializeObject<KustoSuccessMessage>(success.ToString());
+                    string messageText = Encoding.UTF8.GetString(Convert.FromBase64String(success.MessageText));
+                    KustoSuccessMessage message = JsonConvert.DeserializeObject<KustoSuccessMessage>(messageText);
                     Log.Debug("success:", message);
                     FileObject fileObject = _instance.FileObjects.FindByMessageId(message.IngestionSourceId);
 
@@ -492,7 +527,8 @@ namespace CollectSFData.Kusto
 
                 foreach (QueueMessage error in errors)
                 {
-                    KustoErrorMessage message = JsonConvert.DeserializeObject<KustoErrorMessage>(error.ToString());
+                    string messageText = Encoding.UTF8.GetString(Convert.FromBase64String(error.MessageText));
+                    KustoErrorMessage message = JsonConvert.DeserializeObject<KustoErrorMessage>(messageText);
                     Log.Debug("error:", message);
                     FileObject fileObject = _instance.FileObjects.FindByMessageId(message.IngestionSourceId);
 
@@ -546,7 +582,7 @@ namespace CollectSFData.Kusto
             try
             {
                 QueueClient queue = new QueueClient(new Uri(queueUriWithSas));
-                result = queue.DeleteMessage(message.MessageId,message.PopReceipt,_kustoTasks.CancellationToken);
+                result = queue.DeleteMessage(message.MessageId, message.PopReceipt, _kustoTasks.CancellationToken);
                 Log.Debug($"Removed message from queue:", message);
             }
             catch (Exception e)
@@ -611,44 +647,13 @@ namespace CollectSFData.Kusto
             return ingestionJsonString;
         }
 
-        private string UploadFileToBlobContainer(FileObject fileObject, string blobContainerUri, string containerName, string blobName)
+        private string UploadFileToBlobContainer(FileObject fileObject, Uri blobContainerUri, string containerName, string blobName)
         {
             Log.Info($"uploading: {fileObject.Stream.Get().Length} bytes to {fileObject.FileUri} to {blobContainerUri}", ConsoleColor.Magenta);
-            Uri blobUri = new Uri(blobContainerUri);
 
-            //BlobRequestOptions blobRequestOptions = new BlobRequestOptions()
-            //{
-            //    RetryPolicy = new IngestRetryPolicy(),
-            //    ParallelOperationThreadCount = _config.Threads,
-            //};
-
-            //CloudStorageAccount.UseV1MD5 = false; //DevSkim: ignore DS126858. required for jarvis
-            //CloudBlobContainer blobContainer = new CloudBlobContainer(blobUri);
-            //CloudBlockBlob blockBlob = blobContainer.GetBlockBlobReference(blobName);
-
-            BlobClient blobClient = _blobManager.CreateBlobClient(blobUri);
-
-
-            if (!_kustoTasks.CancellationToken.IsCancellationRequested)
-            {
-                //if (_config.UseMemoryStream)
-                //{
-                    //_kustoTasks.TaskAction(() => blockBlob.UploadFromStreamAsync(fileObject.Stream.Get(), null, blobRequestOptions, null).Wait()).Wait();
-                    _kustoTasks.TaskAction(() => blobClient.Upload(fileObject.Stream.Get(), true)).Wait();
-                    fileObject.Stream.Dispose();
-                //}
-                //else
-                //{
-                //    _kustoTasks.TaskAction(() => blockBlob.UploadFromFileAsync(fileObject.FileUri, null, blobRequestOptions, null).Wait()).Wait();
-                //}
-
-                Log.Info($"uploaded: {fileObject.FileUri} to {blobContainerUri}", ConsoleColor.DarkMagenta);
-                return $"{blobClient.Uri.AbsoluteUri}{blobUri.Query}";
-            }
-            else
-            {
-                return $"task cancelled:{blobClient.Uri.AbsoluteUri}{blobUri.Query}";
-            }
+            string blobUri = _blobManager.UploadFile(fileObject, blobContainerUri, containerName + "/" + blobName);
+            Log.Debug($"returning: {blobUri}");
+            return blobUri;
         }
     }
 }

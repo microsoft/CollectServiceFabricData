@@ -51,7 +51,7 @@ namespace CollectSFData.DataFile.Tests
         [Test()]
         public void MapKnownFileExtensionTest()
         {
-            var result = FileTypes.MapKnownFileExtension("./test.zip");
+            FileExtensionTypesEnum result = FileTypes.MapKnownFileExtension("./test.zip");
             Assert.IsTrue(result == FileExtensionTypesEnum.zip, result.ToString());
 
             result = FileTypes.MapKnownFileExtension("./test.dtr.zip");

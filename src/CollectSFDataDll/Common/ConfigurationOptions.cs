@@ -235,7 +235,7 @@ namespace CollectSFData.Common
                 dateTime = ConvertToUtcTime(timeString);
                 if (dateTime != DateTime.MinValue)
                 {
-                    timeString = dateTime.ToString(Constants.DefaultDatePattern);
+                    timeString = dateTime.ToLocalTime().ToString(Constants.DefaultDatePattern);
                 }
             }
 

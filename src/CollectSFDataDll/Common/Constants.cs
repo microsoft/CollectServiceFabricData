@@ -50,6 +50,7 @@ namespace CollectSFData.Common
         public const string SetupExtension = ".trace";
         public const string TableExtension = ".table.csv";
         public const int TableMaxResults = 50000;
+        public const string TableNamePattern = "fabriclog(?<guidString>[A-Fa-f0-9]{32}).+$";
         public const int ThreadSleepMs10 = 10;
         public const int ThreadSleepMs100 = 100;
         public const int ThreadSleepMs1000 = 1000;
@@ -63,6 +64,5 @@ namespace CollectSFData.Common
         public static readonly string ApplicationName = AppDomain.CurrentDomain.FriendlyName;
         public static readonly string EtwManifestsUrlIndex = $"{EtwManifestsUrl}/index.json";
         public static readonly DateTime UnixEpochMinValue = new DateTime(1601,1,1);
-        
     }
 }

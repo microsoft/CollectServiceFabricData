@@ -4,7 +4,6 @@
 // ------------------------------------------------------------
 
 using Azure.Core;
-using Azure.Identity;
 using Azure.Security.KeyVault.Secrets;
 using CollectSFData.Common;
 using Microsoft.Identity.Client;
@@ -78,11 +77,11 @@ namespace CollectSFData.Azure
                     _config.AzureTenantId = _commonTenantId;
                 }
 
-                if(!CreateClient(false, false, resource))
+                if (!CreateClient(false, false, resource))
                 {
                     throw new MsalClientException("silent authentication failed");
                 }
-                
+
                 return SetToken();
             }
             catch (MsalClientException e)
@@ -480,7 +479,7 @@ namespace CollectSFData.Azure
 
         private void AcquireConfidentialClientToken(bool sendX5C = false)
         {
-            // confidential client requires default scope 
+            // confidential client requires default scope
             if (Scopes.Count < 1)
             {
                 Scopes = _defaultScope;

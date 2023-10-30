@@ -12,10 +12,10 @@ invoke-webRequest "https://raw.githubusercontent.com/microsoft/CollectServiceFab
 .\kusto-rest.ps1 -cluster %kusto cluster% -database %kusto database%
 
 .NOTES
-Author : servicefabric
+Author : jagilber
 File Name  : kusto-rest.ps1
-Version    : 2001217
-History    : add device credentials
+Version    : 231030
+History    : migrate from netcoreapp2.1 to net6.0
 
 .EXAMPLE
 .\kusto-rest.ps1 -cluster kustocluster -database kustodatabase
@@ -111,6 +111,7 @@ param(
     [bool]$fixDuplicateColumns,
     [bool]$removeEmptyColumns = $true,
     [string]$table,
+    [string]$headers,
     [string]$identityPackageLocation,
     [string]$resultFile, # = ".\result.json",
     [bool]$createResults = $true,
@@ -132,8 +133,8 @@ param(
 $PSModuleAutoLoadingPreference = 2
 $ErrorActionPreference = "continue"
 $global:kusto = $null
-$global:identityPackageLocation  
-$global:nuget = "nuget.exe"
+$global:identityPackageLocation
+$packageVersion = "4.28.0"
 
 if ($updateScript) {
     invoke-webRequest "https://raw.githubusercontent.com/jagilber/powershellScripts/master/kusto-rest.ps1" -outFile  "$psscriptroot/kusto-rest.ps1";
@@ -142,49 +143,130 @@ if ($updateScript) {
 }
 
 function AddIdentityPackageType([string]$packageName, [string] $edition) {
-    [string]$nugetPackageDirectory = "$($env:USERPROFILE)\.nuget\packages"
+    # support ps core on linux
+    if ($IsLinux) { 
+        $env:USERPROFILE = $env:HOME
+    }
+    [string]$nugetPackageDirectory = "$($env:USERPROFILE)/.nuget/packages"
     [string]$nugetSource = "https://api.nuget.org/v3/index.json"
     [string]$nugetDownloadUrl = "https://dist.nuget.org/win-x86-commandline/latest/nuget.exe"
     [io.directory]::createDirectory($nugetPackageDirectory)
-    [string]$packageDirectory = "$nugetPackageDirectory\$packageName"
-    $global:identityPackageLocation = @(get-childitem -Path $packageDirectory -Recurse | where-object FullName -match "lib\\$edition\\$packageName\.dll" | select-object FullName)[-1].FullName
+    [string]$packageDirectory = "$nugetPackageDirectory/$packageName"
+    
+    $global:identityPackageLocation = get-identityPackageLocation $packageDirectory
 
     if (!$global:identityPackageLocation) {
-        if (!(test-path $nuget)) {
-            $nuget = "$env:temp\nuget.exe"
-            if (!(test-path $nuget)) {
-                invoke-webRequest $nugetDownloadUrl -outFile  $nuget
-            }
-        }
-        [string]$localPackages = . $nuget list -Source $nugetPackageDirectory
+        if ($psedition -ieq 'core') {
+            $tempProjectFile = './temp.csproj'
+    
+            #dotnet new console 
+            $csproj = "<Project Sdk=`"Microsoft.NET.Sdk`">
+                    <PropertyGroup>
+                        <OutputType>Exe</OutputType>
+                        <TargetFramework>$edition</TargetFramework>
+                    </PropertyGroup>
+                    <ItemGroup>
+                        <PackageReference Include=`"$packageName`" Version=`"$packageVersion`" />
+                    </ItemGroup>
+                </Project>
+            "
 
-        if ($force -or !($localPackages -imatch "$edition\\$packageName")) {
-            write-host "$nuget install $packageName -Source $nugetSource -outputdirectory $nugetPackageDirectory -verbosity detailed"
-            . $nuget install $packageName -Source $nugetSource -outputdirectory $nugetPackageDirectory -verbosity detailed
-            $global:identityPackageLocation = @(get-childitem -Path $packageDirectory -Recurse | where-object FullName -match "$edition\\$packageName\.dll" | select-object FullName)[-1].FullName
+            out-file -InputObject $csproj -FilePath $tempProjectFile
+            write-host "dotnet restore --packages $packageDirectory --no-cache --no-dependencies $tempProjectFile"
+            dotnet restore --packages $packageDirectory --no-cache --no-dependencies $tempProjectFile
+    
+            remove-item "$pwd/obj" -re -fo
+            remove-item -path $tempProjectFile
         }
         else {
-            write-host "$packageName already installed" -ForegroundColor green
+            $nuget = "nuget.exe"    
+            if (!(test-path $nuget)) {
+                $nuget = "$env:temp/nuget.exe"
+                if (!(test-path $nuget)) {
+                    [net.webclient]::new().DownloadFile($nugetDownloadUrl, $nuget)
+                }
+            }
+            [string]$localPackages = . $nuget list -Source $nugetPackageDirectory
+
+            if ($force -or !($localPackages -imatch "$edition.$packageName")) {
+                write-host "$nuget install $packageName -Source $nugetSource -outputdirectory $nugetPackageDirectory -verbosity detailed"
+                . $nuget install $packageName -Source $nugetSource -outputdirectory $nugetPackageDirectory -verbosity detailed
+            }
+            else {
+                write-host "$packageName already installed" -ForegroundColor green
+            }
         }
     }
     
+    $global:identityPackageLocation = get-identityPackageLocation $packageDirectory
     write-host "identityDll: $($global:identityPackageLocation)" -ForegroundColor Green
     add-type -literalPath $global:identityPackageLocation
     return $true
 }
 
-if ($global:PSVersionTable.PSEdition -eq "Core") {
-    if (!(AddIdentityPackageType -packageName "Microsoft.Identity.Client" -edition "netcoreapp2.1")) {
-        write-error "unable to add package"
-        return $false
+function get-identityPackageLocation($packageDirectory) {
+    $pv = [version]::new($packageVersion)
+    $pv = [version]::new($pv.Major, $pv.Minor)
+
+    $versions = @{} 
+    $files = @(get-childitem -Path $packageDirectory -Recurse | where-object FullName -imatch "lib.$edition.$packageName\.dll")
+    write-host "existing identity dlls $($files|out-string)"
+
+    foreach ($file in @($files.fullname)) {
+        $versionString = [regex]::match($file, ".$packageName.([0-9.]+?).lib.$edition", [text.regularexpressions.regexoptions]::IgnoreCase).Groups[1].Value
+        if (!$versionString) { continue }
+
+        $version = [version]::new($versionString)
+        [void]$versions.add($file, [version]::new($version.Major, $version.Minor))
+    }
+
+    foreach ($version in $versions.GetEnumerator()) {
+        write-host "comparing file version:$($version.value) to configured version:$($pv)"
+        if ($version.value -ge $pv) {
+            return $version.Key
+        }
+    }
+    return $null
+}
+
+function get-msalLibrary() {
+    # Install latest AD client library
+    try {
+        if (([Microsoft.Identity.Client.ConfidentialClientApplication]) -and !$force) {
+            write-host "[Microsoft.Identity.Client.AzureCloudInstance] already loaded. skipping" -ForegroundColor Cyan
+            return
+        }
+    }
+    catch {
+        write-verbose "exception checking for identity client:$($error|out-string)"
+        $error.Clear()
+    }
+
+    if ($global:PSVersionTable.PSEdition -eq "Core") {
+        write-host "setting up microsoft.identity.client for .net core"
+        if (!(AddIdentityPackageType -packageName "Microsoft.Identity.Client" -edition "net6.0")) {
+            write-error "unable to add package"
+            return $false
+        }
+        if (!(AddIdentityPackageType -packageName "Microsoft.IdentityModel.Abstractions" -edition "net6.0")) {
+            write-error "unable to add package"
+            return $false
+        }
+    }
+    else {
+        write-host "setting up microsoft.identity.client for .net framework"
+        if (!(AddIdentityPackageType -packageName "Microsoft.Identity.Client" -edition "net461")) {
+            write-error "unable to add package"
+            return $false
+        }
+        if (!(AddIdentityPackageType -packageName "Microsoft.IdentityModel.Abstractions" -edition "net6.0")) {
+            write-error "unable to add package"
+            return $false
+        }
     }
 }
-else {
-    if (!(AddIdentityPackageType -packageName "Microsoft.Identity.Client" -edition "net461")) {
-        write-error "unable to add package"
-        return $false
-    }
-}
+
+get-msalLibrary
 
 # comment next line after microsoft.identity.client type has been imported into powershell session to troubleshoot 1 of 2
 invoke-expression @'
@@ -199,6 +281,7 @@ class KustoObj {
     [string]$Database = $database
     [bool]$FixDuplicateColumns = $fixDuplicateColumns
     [bool]$Force = $force
+    [string]$Headers = $headers
     [int]$Limit = $limit
     [hashtable]$parameters = $parameters
     hidden [Microsoft.Identity.Client.PublicClientApplication] $publicClientApplication = $null
@@ -500,7 +583,14 @@ class KustoObj {
         $this.Exec(".ingest inline into table ['$table'] <| $($csv.tostring())")
         return $this.Pipe()
     }
-    
+
+    [KustoObj] ImportCsv([string]$csvFile, [string]$table, [string]$headers) {
+        $this.Headers = $headers
+        $this.Table = $table
+        $this.ImportCsv($csvFile)
+        return $this.Pipe()
+    }
+
     [KustoObj] ImportCsv([string]$csvFile, [string]$table) {
         $this.Table = $table
         $this.ImportCsv($csvFile)
@@ -519,7 +609,7 @@ class KustoObj {
         #$this.Post($csv)
     
         $sr = new-object io.streamreader($csvFile) 
-        [string]$headers = $sr.ReadLine()
+        [string]$tempHeaders = $sr.ReadLine()
         [text.StringBuilder]$csv = New-Object text.StringBuilder
     
         while ($sr.peek() -ge 0) {
@@ -529,23 +619,28 @@ class KustoObj {
         $sr.close()
         $formattedHeaderList = @{ }
         [string]$formattedHeaders = "("
-    
-        foreach ($header in ($headers.Split(',').trim())) {
-            $columnCount = 0
-            if (!$header) { $header = 'column' }
-            [string]$normalizedHeader = $header.trim('`"').Replace(" ", "_")
-            $normalizedHeader = [regex]::Replace($normalizedHeader, "\W", "")
-            $uniqueHeader = $normalizedHeader
-    
-            while ($formattedHeaderList.ContainsKey($uniqueHeader)) {
-                $uniqueHeader = $normalizedHeader + ++$columnCount
+        if(!$this.Headers) {
+            foreach ($header in ($tempHeaders.Split(',').trim())) {
+                $columnCount = 0
+                if (!$header) { $header = 'column' }
+                [string]$normalizedHeader = $header.trim('`"').Replace(" ", "_")
+                $normalizedHeader = [regex]::Replace($normalizedHeader, "\W", "")
+                $uniqueHeader = $normalizedHeader
+        
+                while ($formattedHeaderList.ContainsKey($uniqueHeader)) {
+                    $uniqueHeader = $normalizedHeader + ++$columnCount
+                }
+                    
+                $formattedHeaderList.Add($uniqueHeader, "")
+                $formattedHeaders += "['$($uniqueHeader)']:string, "
             }
-                
-            $formattedHeaderList.Add($uniqueHeader, "")
-            $formattedHeaders += "['$($uniqueHeader)']:string, "
+            $this.Headers = $formattedHeaders
         }
-            
+        else {
+            $formattedHeaders += $this.Headers
+        }
         $formattedHeaders = $formattedHeaders.trimend(', ')
+
         $formattedHeaders += ")"
     
         #$this.Exec(".drop table ['$($this.Table)'] ifexists")
