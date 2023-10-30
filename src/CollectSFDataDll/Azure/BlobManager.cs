@@ -214,7 +214,7 @@ namespace CollectSFData.Azure
 
             // todo: something with response?
             Log.Info($"uploaded: {fileObject.FileUri} to {blobContainerUri}", ConsoleColor.DarkMagenta, null, response.GetRawResponse());
-            return $"{blobClient.Uri.AbsoluteUri}";// {blobContainerUri.Query}";
+            return $"{blobClient.Uri.AbsoluteUri}";
         }
 
         private void AddContainerToList(string containerName)
