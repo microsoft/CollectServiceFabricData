@@ -41,18 +41,12 @@ steps:
 - task: CodeQL3000Init@0
   condition: always()
 
-- task: DotNetCoreCLI@2
-  inputs:
-    command: 'build'
-    projects: '$env:project_root\$env:project_name\$env:project_name.csproj'
-    arguments: '-v detailed -c $env:buildConfiguration'
-    
 # .NET Core v2
 # Build, test, package, or publish a dotnet application, or run a custom dotnet command.
 - task: DotNetCoreCLI@2
   inputs:
     command: 'build' # 'build' | 'push' | 'pack' | 'publish' | 'restore' | 'run' | 'test' | 'custom'. Required. Command. Default: build.
-    projects: '$env:project_root\$env:project_name\$env:project_name.csproj'
+    projects: '**/$(project_name)/$(project_name).csproj'
     arguments: '-v detailed'# -c $env:buildConfiguration'
     #zipAfterPublish: true # boolean. Optional. Use when command = publish. Zip published projects. Default: true.
     #modifyOutputPath: true # boolean. Optional. Use when command = publish. Add project's folder name to publish path. Default: true.
