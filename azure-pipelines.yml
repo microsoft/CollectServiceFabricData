@@ -14,10 +14,10 @@ variables:
   project_name: CollectSFData
   project_root: .\src
   System.Debug: true
-  BuildConfiguration: Release
-  # testing
+  buildConfiguration: Release
   Codeql.PublishDatabaseLog: true
-  Codeql.Cadence: 0
+  # testing
+  #Codeql.Cadence: 0
 
 steps:
 - task: PowerShell@2
@@ -46,59 +46,29 @@ steps:
     Enabled: true
     AnalyzeInPipeline: true
 
-# .NET Core v2
-# Build, test, package, or publish a dotnet application, or run a custom dotnet command.
 - task: DotNetCoreCLI@2
   inputs:
     command: 'build' # 'build' | 'push' | 'pack' | 'publish' | 'restore' | 'run' | 'test' | 'custom'. Required. Command. Default: build.
     projects: '**/$(project_name)/$(project_name).csproj'
-    arguments: '-v detailed'# -c $env:buildConfiguration'
-    #zipAfterPublish: true # boolean. Optional. Use when command = publish. Zip published projects. Default: true.
-    #modifyOutputPath: true # boolean. Optional. Use when command = publish. Add project's folder name to publish path. Default: true.
-    #packagesToPush: '$(Build.ArtifactStagingDirectory)/*.nupkg' # string. Alias: searchPatternPush. Required when command = push. Path to NuGet package(s) to publish. Default: $(Build.ArtifactStagingDirectory)/*.nupkg.
-    #nuGetFeedType: 'internal' # 'internal' | 'external'. Required when command = push. Target feed location. Default: internal.
-    #publishVstsFeed: # string. Alias: feedPublish. Required when command = push && nuGetFeedType = internal. Target feed. 
-    #publishFeedCredentials: # string. Alias: externalEndpoint. Required when command = push && nuGetFeedType = external. NuGet server. 
+    arguments: '-v detailed' # -c $env:buildConfiguration'
     packagesToPack: '**/*.csproj' # string. Alias: searchPatternPack. Required when command = pack. Path to csproj or nuspec file(s) to pack. Default: **/*.csproj.
-    configuration: '$(BuildConfiguration)' # string. Alias: configurationToPack. Optional. Use when command = pack. Configuration to Package. Default: $(BuildConfiguration).
-    #packDirectory: '$(Build.ArtifactStagingDirectory)' # string. Alias: outputDir. Optional. Use when command = pack. Package Folder. Default: $(Build.ArtifactStagingDirectory).
-    #nobuild: false # boolean. Optional. Use when command = pack. Do not build. Default: false.
+    configuration: '$(buildConfiguration)' # string. Alias: configurationToPack. Optional. Use when command = pack. Configuration to Package. Default: $(BuildConfiguration).
     includesymbols: true # boolean. Optional. Use when command = pack. Include Symbols. Default: false.
-    #includesource: false # boolean. Optional. Use when command = pack. Include Source. Default: false.
-  # Feeds and authentication
     feedsToUse: 'config' # 'select' | 'config'. Alias: selectOrConfig. Required when command = restore. Feeds to use. Default: select.
-    #vstsFeed: # string. Alias: feedRestore. Optional. Use when selectOrConfig = select && command = restore. Use packages from this Azure Artifacts feed. 
-    #includeNuGetOrg: true # boolean. Optional. Use when selectOrConfig = select && command = restore. Use packages from NuGet.org. Default: true.
-    #nugetConfigPath: nuget.config # string. Optional. Use when selectOrConfig = config && command = restore. Path to NuGet.config. 
-    #externalFeedCredentials: # string. Alias: externalEndpoints. Optional. Use when selectOrConfig = config && command = restore. Credentials for feeds outside this organization/collection. 
-  # Advanced
-    #noCache: false # boolean. Optional. Use when command = restore. Disable local cache. Default: false.
-    #restoreDirectory: # string. Alias: packagesDirectory. Optional. Use when command = restore. Destination directory. 
     verbosityRestore: 'Detailed' # '-' | 'Quiet' | 'Minimal' | 'Normal' | 'Detailed' | 'Diagnostic'. Optional. Use when command = restore. Verbosity. Default: Detailed.
-  # Advanced
-    #publishPackageMetadata: true # boolean. Optional. Use when command = push && nuGetFeedType = internal && command = push. Publish pipeline metadata. Default: true.
-  # Pack options
-    #versioningScheme: 'off' # 'off' | 'byPrereleaseNumber' | 'byEnvVar' | 'byBuildNumber'. Required when command = pack. Automatic package versioning. Default: off.
-    #versionEnvVar: # string. Required when versioningScheme = byEnvVar && command = pack. Environment variable. 
-    #majorVersion: '1' # string. Alias: requestedMajorVersion. Required when versioningScheme = byPrereleaseNumber && command = pack. Major. Default: 1.
-    #minorVersion: '0' # string. Alias: requestedMinorVersion. Required when versioningScheme = byPrereleaseNumber && command = pack. Minor. Default: 0.
-    #patchVersion: '0' # string. Alias: requestedPatchVersion. Required when versioningScheme = byPrereleaseNumber && command = pack. Patch. Default: 0.
-  # Advanced
-    #buildProperties: # string. Optional. Use when command = pack. Additional build properties. 
     verbosityPack: 'Detailed' # '-' | 'Quiet' | 'Minimal' | 'Normal' | 'Detailed' | 'Diagnostic'. Optional. Use when command = pack. Verbosity. Default: Detailed.
-  # Advanced
-    #workingDirectory: # string. Optional. Use when command != restore && command != push && command != pack && command != pack && command != push && command != restore. Working directory.
 
-# - task: PowerShell@2
-#   displayName: 'dotnet build'
-#   inputs:
-#     targetType: 'inline'
-#     script: |
-#       write-host "dotnet build `"$env:project_root\$env:project_name\$env:project_name.csproj`" -v detailed -c $env:buildConfiguration"
-#       dotnet build "$env:project_root\$env:project_name\$env:project_name.csproj" -v detailed -c $env:buildConfiguration
-#     errorActionPreference: 'continue'
-#     verbosePreference: 'continue'
-#     debugPreference: 'continue'
+- task: ManifestGeneratorTask@0
+  inputs:
+    BuildDropPath: '.\src'
+    ManifestDirPath: '.\src\bin'
+    BuildComponentPath: '.\src'
+    Verbosity: 'Verbose'
+    PackageName: 'CollectSFData'
+
+- task: CodeQL3000Finalize@0
+  condition: always()
+  continueOnError: true
 
 - task: PowerShell@2
   displayName: 'dotnet build output'
@@ -108,10 +78,6 @@ steps:
     errorActionPreference: 'continue'
     verbosePreference: 'continue'
     debugPreference: 'continue'
-
-- task: CodeQL3000Finalize@0
-  condition: always()
-  continueOnError: true
 
 - task: CredScan@3
   inputs:
