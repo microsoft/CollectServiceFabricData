@@ -15,6 +15,9 @@ variables:
   project_root: .\src
   System.Debug: true
   BuildConfiguration: Release
+  # testing
+  Codeql.PublishDatabaseLog: true
+  Codeql.Cadence: 0
 
 steps:
 - task: PowerShell@2
@@ -39,7 +42,9 @@ steps:
     verbosityRestore: 'Detailed'
 
 - task: CodeQL3000Init@0
-  condition: always()
+  inputs:
+    Enabled: true
+    AnalyzeInPipeline: true
 
 # .NET Core v2
 # Build, test, package, or publish a dotnet application, or run a custom dotnet command.
