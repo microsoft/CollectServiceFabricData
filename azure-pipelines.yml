@@ -79,5 +79,5 @@ steps:
 
 - task: PublishPipelineArtifact@1
   inputs:
-    targetPath: $(System.DefaultWorkingDirectory)/bin/$(buildConfiguration)
+    targetPath: $(System.DefaultWorkingDirectory)/src/bin/$(buildConfiguration)
     artifactName: $(project_name)-$(buildConfiguration)
