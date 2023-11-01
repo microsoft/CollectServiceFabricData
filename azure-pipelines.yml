@@ -5,7 +5,7 @@ name: ADO CI CollectSFData
 trigger:
   branches:
     include:
-    - '*'
+    - 'master'
 
 pool:
   vmImage: 'windows-latest'
