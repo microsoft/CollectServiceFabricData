@@ -62,8 +62,15 @@ function main() {
         $nuspecFile = create-nuspec $targetFrameworks
         rename-nugetConfig
         
+        $error.Clear()
         write-host "dotnet restore $csproj" -ForegroundColor Green
         dotnet restore $csproj
+        if($error) {
+            write-warning "dotnet restore $csproj failed"
+            write-host "utility uses central configuration store that requires authentication."
+            write-host "artifacts authentication package information: https://github.com/microsoft/artifacts-credprovider#azure-artifacts-credential-provider"
+            return
+        }
 
         if ($configuration -ieq 'all') {
             build-configuration 'debug'
