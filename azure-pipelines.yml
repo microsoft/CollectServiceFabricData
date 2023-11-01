@@ -56,3 +56,22 @@ steps:
     errorActionPreference: 'continue'
     verbosePreference: 'continue'
     debugPreference: 'continue'
+
+- task: CredScan@3
+  inputs:
+    verboseOutput: true
+
+- task: AntiMalware@4
+  inputs:
+    InputType: 'Basic'
+    ScanType: 'CustomScan'
+    FileDirPath: '$(Build.StagingDirectory)'
+    TreatSignatureUpdateFailureAs: 'Warning'
+    SignatureFreshness: 'UpToDate'
+    TreatStaleSignatureAs: 'Error'
+
+- task: ComponentGovernanceComponentDetection@0
+  inputs:
+    scanType: 'Register'
+    verbosity: 'Verbose'
+    alertWarningLevel: 'High'
