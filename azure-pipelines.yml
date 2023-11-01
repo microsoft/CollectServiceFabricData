@@ -38,6 +38,8 @@ steps:
     noCache: false
     verbosityRestore: 'Detailed'
 
+- task: CodeQL3000Init@0
+
 - task: PowerShell@2
   displayName: 'dotnet build'
   inputs:
@@ -57,6 +59,7 @@ steps:
     errorActionPreference: 'continue'
     verbosePreference: 'continue'
     debugPreference: 'continue'
+- task: CodeQL3000Finalize@0
 
 - task: CredScan@3
   inputs:
