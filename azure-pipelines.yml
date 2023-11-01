@@ -14,6 +14,7 @@ variables:
   project_name: CollectSFData
   project_root: .\src
   System.Debug: true
+  buildConfiguration: Release
 
 steps:
 - task: PowerShell@2
@@ -42,8 +43,8 @@ steps:
   inputs:
     targetType: 'inline'
     script: |
-      write-host "dotnet build `"$env:project_root\$env:project_name\$env:project_name.csproj`" -v detailed -c Release"
-      dotnet build "$env:project_root\$env:project_name\$env:project_name.csproj" -v detailed -c Release
+      write-host "dotnet build `"$env:project_root\$env:project_name\$env:project_name.csproj`" -v detailed -c $env:buildConfiguration"
+      dotnet build "$env:project_root\$env:project_name\$env:project_name.csproj" -v detailed -c $env:buildConfiguration
     errorActionPreference: 'continue'
     verbosePreference: 'continue'
     debugPreference: 'continue'
@@ -75,3 +76,8 @@ steps:
     scanType: 'Register'
     verbosity: 'Verbose'
     alertWarningLevel: 'High'
+
+- task: PublishPipelineArtifact@1
+  inputs:
+    targetPath: $(System.DefaultWorkingDirectory)/bin/$(buildConfiguration)
+    artifactName: $(project_name)-$(buildConfiguration)
