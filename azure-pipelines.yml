@@ -50,7 +50,7 @@ steps:
   inputs:
     command: 'build' # 'build' | 'push' | 'pack' | 'publish' | 'restore' | 'run' | 'test' | 'custom'. Required. Command. Default: build.
     projects: '**/$(project_name)/$(project_name).csproj'
-    arguments: '-v detailed' # -c $env:buildConfiguration'
+    arguments: '-v detailed -c $(buildConfiguration)'
     packagesToPack: '**/*.csproj' # string. Alias: searchPatternPack. Required when command = pack. Path to csproj or nuspec file(s) to pack. Default: **/*.csproj.
     configuration: '$(buildConfiguration)' # string. Alias: configurationToPack. Optional. Use when command = pack. Configuration to Package. Default: $(BuildConfiguration).
     includesymbols: true # boolean. Optional. Use when command = pack. Include Symbols. Default: false.
