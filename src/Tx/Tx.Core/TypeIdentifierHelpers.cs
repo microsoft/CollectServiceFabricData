@@ -92,7 +92,7 @@
         public static Guid GenerateGuidFromName(string name)
         {
             byte[] array;
-            using (var shA1 = SHA1.Create())
+            using (var shA256 = SHA256.Create())
             {
                 array = Encoding.BigEndianUnicode.GetBytes(name);
 
@@ -101,7 +101,7 @@
                 Buffer.BlockCopy(NamespaceBytes, 0, buffer, 0, NamespaceBytes.Length);
                 Buffer.BlockCopy(array, 0, buffer, NamespaceBytes.Length, array.Length);
 
-                array = shA1.ComputeHash(buffer);
+                array = shA256.ComputeHash(buffer);
             }
 
             Array.Resize(ref array, 16);
