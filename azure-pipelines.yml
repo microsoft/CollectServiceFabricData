@@ -17,7 +17,10 @@ variables:
   buildConfiguration: Release
   Codeql.PublishDatabaseLog: true
   # testing
-  #Codeql.Cadence: 0
+  Codeql.Cadence: 0
+  Codeql.LogLevel: 5
+  Codeql.Language: csharp,powershell
+  Codeql.PublishDatabase: true
 
 steps:
 - task: PowerShell@2
