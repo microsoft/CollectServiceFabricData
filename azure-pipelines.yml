@@ -63,9 +63,7 @@ steps:
 
 - task: ManifestGeneratorTask@0
   inputs:
-    BuildDropPath: '.\src'
-    ManifestDirPath: '.\src\bin'
-    BuildComponentPath: '.\src'
+    BuildDropPath: '$(System.ArtifactsDirectory)/buildOutput'
     Verbosity: 'Verbose'
     PackageName: 'CollectSFData'
 
@@ -103,5 +101,11 @@ steps:
 
 - task: PublishPipelineArtifact@1
   inputs:
-    targetPath: $(System.DefaultWorkingDirectory)/src/bin/$(buildConfiguration)
+    targetPath: $(System.ArtifactsDirectory)/buildOutput
     artifactName: $(project_name)-$(buildConfiguration)
+
+- task: PublishBuildArtifacts@1
+  inputs:
+    PathtoPublish: $(System.DefaultWorkingDirectory)/src/bin/$(buildConfiguration)
+    artifactName: drop
+  
