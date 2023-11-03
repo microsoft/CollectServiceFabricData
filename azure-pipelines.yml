@@ -63,9 +63,9 @@ steps:
 
 - task: ManifestGeneratorTask@0
   inputs:
-    BuildDropPath: '$(System.ArtifactsDirectory)/buildOutput'
-    Verbosity: 'Verbose'
-    PackageName: 'CollectSFData'
+    BuildDropPath: $(System.DefaultWorkingDirectory)/src/bin/$(buildConfiguration)
+    Verbosity: Verbose
+    PackageName: CollectSFData
 
 - task: CodeQL3000Finalize@0
   condition: always()
@@ -95,17 +95,17 @@ steps:
 
 - task: ComponentGovernanceComponentDetection@0
   inputs:
-    scanType: 'Register'
-    verbosity: 'Verbose'
-    alertWarningLevel: 'High'
-
-- task: PublishPipelineArtifact@1
-  inputs:
-    targetPath: $(System.ArtifactsDirectory)/buildOutput
-    artifactName: $(project_name)-$(buildConfiguration)
+    scanType: Register
+    verbosity: Verbose
+    alertWarningLevel: High
 
 - task: PublishBuildArtifacts@1
   inputs:
     PathtoPublish: $(System.DefaultWorkingDirectory)/src/bin/$(buildConfiguration)
     artifactName: drop
+
+- task: PublishPipelineArtifact@1
+  inputs:
+    targetPath: $(System.ArtifactsDirectory)/buildOutput
+    artifactName: $(project_name)-$(buildConfiguration)
   
