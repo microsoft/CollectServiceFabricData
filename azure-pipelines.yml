@@ -117,12 +117,12 @@ steps:
   inputs:
     targetType: 'inline'
     script: |
-      $connectTestResult = Test-NetConnection -ComputerName $env:artifacts_storage_uri -Port 445
+      $connectTestResult = Test-NetConnection -ComputerName $env:mapped_artifacts_storage_uri -Port 445
       if ($connectTestResult.TcpTestSucceeded) {
           # Save the password so the drive will persist on reboot
-          cmd.exe /C "cmdkey /add:`"$env:artifacts_storage_uri/$env:artifacts_storage_uri_fileshare`" /user:`"$env:artifacts_user`" /pass:`"$env:artifacts_pass`""
+          cmd.exe /C "cmdkey /add:`"$env:mapped_artifacts_storage_uri/$env:artifacts_storage_uri_fileshare`" /user:`"$env:mapped_artifacts_user`" /pass:`"$env:mapped_artifacts_pass`""
           # Mount the drive
-          New-PSDrive -Name $env:artifacts_drive -PSProvider FileSystem -Root "$env:artifacts_share" -Persist
+          New-PSDrive -Name $env:artifacts_drive -PSProvider FileSystem -Root "$env:mapped_artifacts_share" -Persist
       } else {
           Write-Error -Message "Unable to reach the Azure storage account via port 445. Check to make sure your organization or ISP is not blocking port 445, or use Azure P2S VPN, Azure S2S VPN, or Express Route to tunnel SMB traffic over a different port."
       }
@@ -130,6 +130,11 @@ steps:
     errorActionPreference: 'continue'
     verbosePreference: 'continue'
     debugPreference: 'continue'
+  env:
+    mapped_artifacts_storage_uri: $(artifacts_storage_uri)
+    mapped_artifacts_user: $(artifacts_user)
+    mapped_artifacts_pass: $(artifacts_pass)
+    mapped_artifacts_share: $(artifacts_share)
 
 - task: DownloadPipelineArtifact@2
   inputs:
