@@ -49,18 +49,6 @@ steps:
     Enabled: true
     AnalyzeInPipeline: true
 
-# - task: DotNetCoreCLI@2
-#   inputs:
-#     command: 'build' # 'build' | 'push' | 'pack' | 'publish' | 'restore' | 'run' | 'test' | 'custom'. Required. Command. Default: build.
-#     projects: '**/$(project_name)/$(project_name).csproj'
-#     arguments: '-v detailed -c $(buildConfiguration)'
-#     packagesToPack: '**/*.csproj' # string. Alias: searchPatternPack. Required when command = pack. Path to csproj or nuspec file(s) to pack. Default: **/*.csproj.
-#     configuration: '$(buildConfiguration)' # string. Alias: configurationToPack. Optional. Use when command = pack. Configuration to Package. Default: $(BuildConfiguration).
-#     includesymbols: true # boolean. Optional. Use when command = pack. Include Symbols. Default: false.
-#     feedsToUse: 'config' # 'select' | 'config'. Alias: selectOrConfig. Required when command = restore. Feeds to use. Default: select.
-#     verbosityRestore: 'Detailed' # '-' | 'Quiet' | 'Minimal' | 'Normal' | 'Detailed' | 'Diagnostic'. Optional. Use when command = restore. Verbosity. Default: Detailed.
-#     verbosityPack: 'Detailed' # '-' | 'Quiet' | 'Minimal' | 'Normal' | 'Detailed' | 'Diagnostic'. Optional. Use when command = pack. Verbosity. Default: Detailed.
-
 - task: PowerShell@2
   displayName: 'dotnet build'
   inputs:
@@ -82,15 +70,6 @@ steps:
   condition: always()
   continueOnError: true
 
-- task: PowerShell@2
-  displayName: 'dotnet build output'
-  inputs:
-    targetType: 'inline'
-    script: dir -recurse
-    errorActionPreference: 'continue'
-    verbosePreference: 'continue'
-    debugPreference: 'continue'
-
 - task: CredScan@3
   inputs:
     verboseOutput: true
@@ -110,13 +89,21 @@ steps:
     verbosity: Verbose
     alertWarningLevel: High
 
+- task: PowerShell@2
+  displayName: 'dotnet build output'
+  inputs:
+    targetType: 'inline'
+    script: dir .. -recurse
+    errorActionPreference: 'continue'
+    verbosePreference: 'continue'
+    debugPreference: 'continue'
+
 - task: PublishBuildArtifacts@1
   inputs:
     PathtoPublish: $(System.DefaultWorkingDirectory)/src/bin/$(buildConfiguration)
     artifactName: drop
 
-# - task: PublishPipelineArtifact@1
-#   inputs:
-#     targetPath: $(System.ArtifactsDirectory)/buildOutput
-#     artifactName: $(project_name)-$(buildConfiguration)
-  
+- task: PublishPipelineArtifact@1
+  inputs:
+    targetPath: $(System.ArtifactsDirectory)
+    artifactName: $(project_name)-$(buildConfiguration)
