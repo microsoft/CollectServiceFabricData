@@ -16,6 +16,7 @@ variables:
   start_time: $[format('{0}-{1:yyyy}{1:MM}{1:dd}-{1:HH}{1:mm}{1:ss}', variables['project_name'], pipeline.startTime)]
   artifacts_drive: Z
   artifacts_share_target: Z:\$(System.TeamProject)/$(System.DefinitionName)/$(System.JobId)
+  artifacts_storage_uri_fileshare: /artifacts
   System.Debug: true
   buildConfiguration: Release
   Codeql.PublishDatabaseLog: true
@@ -116,10 +117,10 @@ steps:
   inputs:
     targetType: 'inline'
     script: |
-      $connectTestResult = Test-NetConnection -ComputerName adostorage0.file.core.windows.net -Port 445
+      $connectTestResult = Test-NetConnection -ComputerName $env:artifacts_storage_uri -Port 445
       if ($connectTestResult.TcpTestSucceeded) {
           # Save the password so the drive will persist on reboot
-          cmd.exe /C "cmdkey /add:`"$env:artifacts_storage_uri`" /user:`"$env:artifacts_user`" /pass:`"$env:artifacts_pass`""
+          cmd.exe /C "cmdkey /add:`"$env:artifacts_storage_uri/$env:artifacts_storage_uri_fileshare`" /user:`"$env:artifacts_user`" /pass:`"$env:artifacts_pass`""
           # Mount the drive
           New-PSDrive -Name $env:artifacts_drive -PSProvider FileSystem -Root "$env:artifacts_share" -Persist
       } else {
