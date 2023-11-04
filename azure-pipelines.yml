@@ -117,9 +117,12 @@ steps:
   inputs:
     targetType: 'inline'
     script: |
-      $connectTestResult = Test-NetConnection -ComputerName $env:mapped_artifacts_storage_uri -Port 445
+      [environment]::getenvironmentvariables().getenumerator()|sort Name
+      write-host "Test-NetConnection -ComputerName $env:mapped_artifacts_storage_uri -Port 445 -informationLevel Detailed"
+      $connectTestResult = Test-NetConnection -ComputerName $env:mapped_artifacts_storage_uri -Port 445 -informationLevel Detailed
       if ($connectTestResult.TcpTestSucceeded) {
           # Save the password so the drive will persist on reboot
+          write-host "cmd.exe /C cmdkey /add:`"$env:mapped_artifacts_storage_uri/$env:artifacts_storage_uri_fileshare`" /user:`"$env:mapped_artifacts_user`" /pass:`"$env:mapped_artifacts_pass`""
           cmd.exe /C "cmdkey /add:`"$env:mapped_artifacts_storage_uri/$env:artifacts_storage_uri_fileshare`" /user:`"$env:mapped_artifacts_user`" /pass:`"$env:mapped_artifacts_pass`""
           # Mount the drive
           New-PSDrive -Name $env:artifacts_drive -PSProvider FileSystem -Root "$env:mapped_artifacts_share" -Persist
