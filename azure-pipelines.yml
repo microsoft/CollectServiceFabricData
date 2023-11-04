@@ -13,6 +13,9 @@ pool:
 variables:
   project_name: CollectSFData
   project_root: .\src
+  start_time: $[format('{0}-{1:yyyy}{1:MM}{1:dd}-{1:HH}{1:mm}{1:ss}', variables['project_name'], pipeline.startTime)]
+  artifacts_drive: Z
+  artifacts_share_target: Z:\$(System.TeamProject)/$(System.DefinitionName)/$(System.JobId)
   System.Debug: true
   buildConfiguration: Release
   Codeql.PublishDatabaseLog: true
@@ -98,12 +101,37 @@ steps:
     verbosePreference: 'continue'
     debugPreference: 'continue'
 
-- task: PublishBuildArtifacts@1
+- task: PublishPipelineArtifact@1
   inputs:
-    PathtoPublish: $(System.DefaultWorkingDirectory)/src/bin/$(buildConfiguration)
-    artifactName: drop
+    targetPath:  $(System.DefaultWorkingDirectory)/src/bin/$(buildConfiguration)
+    artifactName: build-$(start_time)-$(system.JobId)
 
 - task: PublishPipelineArtifact@1
   inputs:
     targetPath: $(System.ArtifactsDirectory)
-    artifactName: $(project_name)-$(buildConfiguration)
+    artifactName: artifacts-$(start_time)-$(system.JobId)
+
+- task: PowerShell@2
+  displayName: 'map artifacts drive'
+  inputs:
+    targetType: 'inline'
+    script: |
+      $connectTestResult = Test-NetConnection -ComputerName adostorage0.file.core.windows.net -Port 445
+      if ($connectTestResult.TcpTestSucceeded) {
+          # Save the password so the drive will persist on reboot
+          cmd.exe /C "cmdkey /add:`"$env:artifacts_storage_uri`" /user:`"$env:artifacts_user`" /pass:`"$env:artifacts_pass`""
+          # Mount the drive
+          New-PSDrive -Name $env:artifacts_drive -PSProvider FileSystem -Root "$env:artifacts_share" -Persist
+      } else {
+          Write-Error -Message "Unable to reach the Azure storage account via port 445. Check to make sure your organization or ISP is not blocking port 445, or use Azure P2S VPN, Azure S2S VPN, or Express Route to tunnel SMB traffic over a different port."
+      }
+      mkdir "$env:artifacts_share_target"
+    errorActionPreference: 'continue'
+    verbosePreference: 'continue'
+    debugPreference: 'continue'
+
+- task: DownloadPipelineArtifact@2
+  inputs:
+    buildType: 'current'
+    artifactName: 'artifacts-$(start_time)-$(system.JobId)'
+    targetPath: '$(artifacts_share_target)'
