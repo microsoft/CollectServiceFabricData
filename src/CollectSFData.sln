@@ -17,8 +17,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tx.Core", "Tx\Tx.Core\Tx.Co
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tx.Windows", "Tx\Tx.Windows\Tx.Windows.csproj", "{C12D1737-15A7-4DF2-8A9B-BD10089606B9}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CollectSFDataDllTest", "CollectSFDataDllTest\CollectSFDataDllTest.csproj", "{867CAC2F-4CA8-4688-B2B1-082F30697EDA}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
