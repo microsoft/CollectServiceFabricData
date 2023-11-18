@@ -296,7 +296,7 @@ namespace CollectSFData.Common
 
             try
             {
-                if (http.SendRequest(uri: Constants.EtwManifestsUrlIndex, headers: headers, httpMethod: HttpMethod.Head)
+                if (http.CheckConnectivity(uri: Constants.EtwManifestsUrlIndex, headers: headers)
                      && http.SendRequest(uri: Constants.EtwManifestsUrlIndex, headers: headers))
                 {
                     JArray manifests = http.ResponseStreamJson.SelectToken("manifests") as JArray;
