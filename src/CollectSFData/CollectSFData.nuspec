@@ -25,11 +25,11 @@
         <dependency id="Azure.Security.KeyVault.Secrets" version="4.5.0" exclude="Build,Analyzers" />
         <dependency id="Azure.Storage.Blobs" version="12.18.0" exclude="Build,Analyzers" />
         <dependency id="Azure.Storage.Queues" version="12.16.0" exclude="Build,Analyzers" />
-        <dependency id="Microsoft.Azure.Kusto.Data" version="7.1.1" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.Azure.Kusto.Data" version="11.3.4" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Extensions.CommandLineUtils" version="1.1.1" exclude="Build,Analyzers" />
         <dependency id="Azure.Identity" version="1.10.2" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Identity.Client.Extensions.Msal" version="4.56.0" exclude="Build,Analyzers" />
-        <dependency id="Newtonsoft.Json" version="13.0.1" exclude="Build,Analyzers" />
+        <dependency id="Newtonsoft.Json" version="13.0.3" exclude="Build,Analyzers" />
         <dependency id="System.CodeDom" version="4.7.0" exclude="Build,Analyzers" />
         <dependency id="System.Diagnostics.DiagnosticSource" version="7.0.2" exclude="Build,Analyzers" />
         <dependency id="System.Reactive" version="4.0.0" exclude="Build,Analyzers" />
