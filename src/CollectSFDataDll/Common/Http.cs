@@ -37,14 +37,15 @@ namespace CollectSFData.Common
 
         private Http()
         {
+#if NETFRAMEWORK
+            _httpClient = new HttpClient();
+#else
             _httpClient = new HttpClient(new HttpClientHandler()
             {
                 CheckCertificateRevocationList = true
-            })
-            { 
-                Timeout = Timeout.InfiniteTimeSpan 
-            };
-
+            });
+#endif
+            _httpClient.Timeout = Timeout.InfiniteTimeSpan;
             _httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
         }
 
