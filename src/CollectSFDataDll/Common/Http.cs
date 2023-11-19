@@ -37,12 +37,10 @@ namespace CollectSFData.Common
 
         private Http()
         {
-            HttpClientHandler httpClientHandler = new HttpClientHandler()
+            _httpClient = new HttpClient(new HttpClientHandler()
             {
                 CheckCertificateRevocationList = true
-            };
-
-            _httpClient = new HttpClient(httpClientHandler)
+            })
             { 
                 Timeout = Timeout.InfiniteTimeSpan 
             };
