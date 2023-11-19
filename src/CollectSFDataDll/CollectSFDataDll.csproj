@@ -1,6 +1,6 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net462;net48;net6.0;net8.0</TargetFrameworks>
+    <TargetFrameworks>net462;net48;net6.0;</TargetFrameworks>
     <HighEntropyVA>true</HighEntropyVA>
     <Platforms>x64</Platforms>
     <PlatformTarget>x64</PlatformTarget>
