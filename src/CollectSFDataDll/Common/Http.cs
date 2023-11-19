@@ -46,52 +46,17 @@ namespace CollectSFData.Common
             return new Http();
         }
 
-        public static void ConnectCallback(IAsyncResult asyncResult)
+        public bool CheckConnectivity(string uri, string authToken = null, Dictionary<string, string> headers = null)
         {
-            TcpClient client = (TcpClient)asyncResult.AsyncState;
-
-            try
+            Log.Info($"enter: {uri}", ConsoleColor.Magenta);
+            bool result = false;
+            if (SendRequest(uri: uri, authToken: authToken, httpMethod: HttpMethod.Head, headers: headers, displayError: false))
             {
-                client.EndConnect(asyncResult);
+                result = StatusCode == System.Net.HttpStatusCode.NoContent;
             }
-            catch (Exception e)
-            {
-                Log.Debug($"exception callback:{e}");
-            }
-            finally
-            {
-                asyncResult.AsyncWaitHandle?.Dispose();
-                client.Dispose();
-            }
-        }
 
-        public bool CheckConnectivity(string uri)
-        {
-            try
-            {
-                bool ret = true;
-                Uri uriType = new Uri(uri);
-                string host = uriType.Host;
-                int portNumber = uriType.Port;
-
-                TcpClient client = new TcpClient();
-                IAsyncResult asyncResult = client.BeginConnect(host, portNumber, new AsyncCallback(ConnectCallback), client);
-
-                if (!asyncResult.AsyncWaitHandle.WaitOne(Constants.ThreadSleepMs100, false) | !client.Connected)
-                {
-                    Log.Info($"timed out ({Constants.ThreadSleepMs100}ms) pinging host:{host}:{portNumber}");
-                    ret = false;
-                }
-
-                Log.Info($"pinging host success:{ret} host:{host}:{portNumber}", ConsoleColor.Green);
-                return ret;
-            }
-            catch (SocketException e)
-            {
-                Log.Info($"error pinging host:{uri}");
-                Log.Debug($"error pinging host:{uri}\r\n{e}");
-                return false;
-            }
+            Log.Info($"exit: {uri} result: {result}", ConsoleColor.Magenta);
+            return result;
         }
 
         public bool SendRequest(
