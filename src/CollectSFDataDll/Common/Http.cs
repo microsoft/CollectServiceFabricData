@@ -58,9 +58,18 @@ namespace CollectSFData.Common
         {
             Log.Info($"enter: {uri}", ConsoleColor.Magenta);
             bool result = false;
+            if(headers == null)
+            {
+                headers = new Dictionary<string, string>();
+            }
+            if(!headers.ContainsKey("User-Agent"))
+            {
+                headers.Add("User-Agent", "CollectSFData");
+            }
+
             if (SendRequest(uri: uri, authToken: authToken, httpMethod: HttpMethod.Head, headers: headers, displayError: false))
             {
-                result = StatusCode == System.Net.HttpStatusCode.NoContent;
+                result = StatusCode == HttpStatusCode.OK;
             }
 
             Log.Info($"exit: {uri} result: {result}", ConsoleColor.Magenta);
@@ -79,6 +88,8 @@ namespace CollectSFData.Common
         {
             HttpContent httpContent = default(HttpContent);
             httpMethod = httpMethod ?? Method;
+            HttpCompletionOption httpCompletionOption = HttpCompletionOption.ResponseContentRead;
+
             Log.Info($"enter:method: {httpMethod} uri: {uri}", ConsoleColor.Magenta, ConsoleColor.Black);
 
             try
@@ -91,6 +102,14 @@ namespace CollectSFData.Common
                     httpContent.Headers.ContentLength = jsonBytes.Length;
 
                     Log.Info($"json bytes:{jsonBytes.Length} uri:{uri}", ConsoleColor.Magenta, ConsoleColor.Black);
+                }
+
+                // head not working with httpclient use get with ResponseHeadersRead
+                if(httpMethod == HttpMethod.Head)
+                {
+                    httpMethod = HttpMethod.Get;
+                    _httpClient.DefaultRequestHeaders.Add("Accept", "*/*");
+                    httpCompletionOption = HttpCompletionOption.ResponseHeadersRead;
                 }
 
                 HttpRequestMessage request = new HttpRequestMessage()
@@ -114,7 +133,7 @@ namespace CollectSFData.Common
                 }
 
                 //Response = _httpTasks.TaskFunction((httpResponse) => _httpClient.SendAsync(request).Result).Result as HttpResponseMessage;
-                Response = _httpClient.SendAsync(request).Result;
+                Response = _httpClient.SendAsync(request, httpCompletionOption).Result;
 
                 Log.Info($"response status: {Response.StatusCode}", ConsoleColor.DarkMagenta, ConsoleColor.Black);
                 StatusCode = Response.StatusCode;
