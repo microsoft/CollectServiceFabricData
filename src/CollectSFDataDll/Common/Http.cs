@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 
@@ -36,10 +37,14 @@ namespace CollectSFData.Common
 
         private Http()
         {
-            _httpClient = new HttpClient(new WinHttpHandler()
+#if NET462
+            _httpClient = new HttpClient();
+#else
+            _httpClient = new HttpClient(new HttpClientHandler()
             {
                 CheckCertificateRevocationList = true
             });
+#endif
             _httpClient.Timeout = Timeout.InfiniteTimeSpan;
             _httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
         }
