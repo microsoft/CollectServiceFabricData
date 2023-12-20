@@ -374,7 +374,7 @@ namespace CollectSFData.Kusto
             Response<SendReceipt> sendReceipt = queueClient.SendMessage(queueMessage, null, _messageTimeToLive, _kustoTasks.CancellationToken);
 
             fileObject.Status = FileStatus.uploading;
-            fileObject.MessageId = message.Id;
+            fileObject.MessageId = sendReceipt.Value.MessageId;
             Log.Info($"fileobject uploading FileUri:{fileObject.FileUri} RelativeUri: {fileObject.RelativeUri} message id: {message.Id}", ConsoleColor.Cyan, null, sendReceipt);
         }
 
