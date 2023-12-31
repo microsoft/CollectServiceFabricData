@@ -184,6 +184,12 @@ namespace CollectSFData.Azure
                     }
                     else
                     {
+                        if (!string.IsNullOrEmpty(_config.NodeFilter) && !Regex.IsMatch(item.Prefix, _config.NodeFilter, RegexOptions.IgnoreCase))
+                        {
+                            Log.Info($"skipping directory: {item.Prefix} as it does not match nodeFilter: {_config.NodeFilter}", ConsoleColor.DarkYellow);
+                            _instance.TotalFilesSkipped++;
+                            continue;
+                        }
                         DownloadBlobsFromDirectory(containerClient, item.Prefix);
                     }
                 }

@@ -1,5 +1,11 @@
 # Change log
 
+## 11/19/2023
+
+- add support for .net8.0
+  - now builds net462, net48, net6.0, net8.0
+- add draft collectsfdata-bug-bar.md for bug bar for SDL
+
 ## 10/30/2023 v3.0.2310.13022
 
 - migrate from deprecated modules for component governance

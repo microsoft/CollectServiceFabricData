@@ -1,6 +1,7 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net462;net48;net6.0</TargetFrameworks>
+    <TargetFrameworks>net462;net48;net6.0;</TargetFrameworks>
+    <HighEntropyVA>true</HighEntropyVA>
     <Platforms>x64</Platforms>
     <PlatformTarget>x64</PlatformTarget>
     <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
@@ -29,19 +30,15 @@
     <AssemblyCLSCompliant>false</AssemblyCLSCompliant>
     <DefineConstants>TRACE;WINDOWS_BUILD</DefineConstants>
   </PropertyGroup>
-  <ItemGroup Condition=" '$(TargetFramework)' == 'net462'">
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.1">
-      <TreatAsUsed>true</TreatAsUsed>
-    </PackageReference>
-    <PackageReference Include="Microsoft.Azure.Kusto.Data" Version="7.1.1" />
-  </ItemGroup>
-  <ItemGroup Condition=" '$(TargetFramework)' != 'net462'">
+  <PropertyGroup Condition="'$(Configuration)' != 'Release'">
+    <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
+    <DebugSymbols>true</DebugSymbols>
+  </PropertyGroup>
+  <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3">      
       <TreatAsUsed>true</TreatAsUsed>
     </PackageReference>
     <PackageReference Include="Microsoft.Azure.Kusto.Data" Version="11.3.4" />
-  </ItemGroup>
-  <ItemGroup>
     <PackageReference Include="Azure.Data.Tables" Version="12.8.1" />
     <PackageReference Include="Azure.Security.KeyVault.Certificates">
       <Version>4.5.1</Version>

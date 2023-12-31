@@ -166,12 +166,7 @@ namespace CollectSFData.Azure
         {
             string uri = $"{Constants.ManagementAzureCom}{resourceId}?{Constants.ArmApiVersion}";
 
-            if (_httpClient.SendRequest(uri: uri, authToken: BearerToken, httpMethod: HttpMethod.Head))
-            {
-                return _httpClient.StatusCode == System.Net.HttpStatusCode.NoContent;
-            }
-
-            return false;
+            return _httpClient.CheckConnectivity(uri: uri, authToken: BearerToken);
         }
 
         public bool CreateClient(bool prompt, bool deviceLogin = false, string resource = "")
