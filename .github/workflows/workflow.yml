@@ -104,9 +104,9 @@ jobs:
         run: |
           $nugetPackage = (get-item "$($env:release_path)\*.nupkg").FullName
           $nugetPackageName = (get-item "$($env:release_path)\*.nupkg").Name
-          echo "nuget_package=$nugetPackage" >> $GITHUB_OUTPUT
-          echo "nuget_package_name=$nugetPackageName" >> $GITHUB_OUTPUT
-        
+          echo "nuget_package=$nugetPackage" >> $env:GITHUB_OUTPUT
+          echo "nuget_package_name=$nugetPackageName" >> $env:GITHUB_OUTPUT
+
       - name: prepare release asset
         shell: powershell
         id: prepare_release_asset
@@ -120,7 +120,7 @@ jobs:
           compress-archive -path "$($env:release_path)_upload\*" -destinationPath "$($env:release_path)\$($env:project_name).zip" -force
           $fileVersion = [io.fileinfo]::new("$($releaseFramework)\$($env:project_name).exe").VersionInfo.FileVersion
           echo "::log-command parameter1=$fileVersion::fileVersion"
-          echo "file_version=v$fileVersion" >> $GITHUB_OUTPUT
+          echo "file_version=v$fileVersion" >> $env:GITHUB_OUTPUT
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
