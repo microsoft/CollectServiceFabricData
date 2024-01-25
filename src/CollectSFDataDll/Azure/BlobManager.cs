@@ -168,15 +168,14 @@ namespace CollectSFData.Azure
             string continuationToken = "";
             bool moreResultsAvailable = true;
             List<BlobClient> blobItems = new List<BlobClient>();
-            Page<BlobHierarchyItem> blobHierarchyItems = default;
 
             while (!_blobTasks.CancellationToken.IsCancellationRequested && moreResultsAvailable)
             {
-                blobHierarchyItems = GetBlobsByHierarchy(containerClient, prefix, continuationToken);
-                continuationToken = blobHierarchyItems.ContinuationToken;
-                moreResultsAvailable = blobHierarchyItems.Values.Any() && !string.IsNullOrEmpty(continuationToken);
+                Page<BlobHierarchyItem> pageItems = GetBlobsByHierarchy(containerClient, prefix, continuationToken);
+                continuationToken = pageItems.ContinuationToken;
+                moreResultsAvailable = pageItems.Values.Any() && !string.IsNullOrEmpty(continuationToken);
 
-                foreach (BlobHierarchyItem item in blobHierarchyItems.Values)
+                foreach (BlobHierarchyItem item in pageItems.Values)
                 {
                     if (item.IsBlob)
                     {
