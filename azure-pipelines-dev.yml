@@ -126,7 +126,7 @@ steps:
           $securePassword = ConvertTo-SecureString -String $env:mapped_artifacts_pass -Force -AsPlainText
           $credentials = [pscredential]::new($env:mapped_artifacts_user, $securePassword)
           write-host "New-PSDrive -Name $drive -PSProvider FileSystem -Root "$env:mapped_artifacts_share" -Credential $credentials" -ForegroundColor Cyan
-          New-PSDrive -Name $drive -PSProvider FileSystem -Root "$env:mapped_artifacts_share" -Credential $credentials
+          New-PSDrive -Name $env:artifacts_drive -PSProvider FileSystem -Root "$env:mapped_artifacts_share" -Credential $credentials -global
       } else {
           write-error -Message "Unable to reach the Azure storage account via port 445. Check to make sure your organization or ISP is not blocking port 445, or use Azure P2S VPN, Azure S2S VPN, or Express Route to tunnel SMB traffic over a different port."
       }
