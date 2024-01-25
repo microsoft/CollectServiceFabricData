@@ -19,7 +19,7 @@ variables:
   Codeql.PublishDatabaseLog: true
   # testing
   Codeql.Cadence: 0
-  Codeql.LogLevel: 4
+  Codeql.LogLevel: 3
   Codeql.Language: csharp,powershell
   Codeql.PublishDatabase: true
 
