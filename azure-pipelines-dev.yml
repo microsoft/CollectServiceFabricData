@@ -14,12 +14,15 @@ variables:
   project_name: CollectSFData
   project_root: .\src
   start_time: $[format('{0}-{1:yyyy}{1:MM}{1:dd}-{1:HH}{1:mm}{1:ss}', variables['project_name'], pipeline.startTime)]
-  System.Debug: false
+  artifacts_drive: Z
+  artifacts_share_target: Z:\$(System.TeamProject)/$(System.DefinitionName)/$(System.JobId)
+  artifacts_storage_uri_fileshare: /artifacts
+  System.Debug: true
   buildConfiguration: Release
   Codeql.PublishDatabaseLog: true
   # testing
   Codeql.Cadence: 0
-  Codeql.LogLevel: 3
+  Codeql.LogLevel: 5
   Codeql.Language: csharp,powershell
   Codeql.PublishDatabase: true
 
@@ -43,7 +46,7 @@ steps:
     feedsToUse: 'config'
     nugetConfigPath: './nuget.config'
     noCache: false
-    verbosityRestore: 'Normal'
+    verbosityRestore: 'Detailed'
 
 - task: CodeQL3000Init@0
   inputs:
@@ -55,8 +58,8 @@ steps:
   inputs:
     targetType: 'inline'
     script: |
-      write-host "dotnet build `"$env:project_root\$env:project_name\$env:project_name.csproj`" -v normal -c $env:buildConfiguration"
-      dotnet build "$env:project_root\$env:project_name\$env:project_name.csproj" -v normal -c $env:buildConfiguration
+      write-host "dotnet build `"$env:project_root\$env:project_name\$env:project_name.csproj`" -v detailed -c $env:buildConfiguration"
+      dotnet build "$env:project_root\$env:project_name\$env:project_name.csproj" -v detailed -c $env:buildConfiguration
     errorActionPreference: 'continue'
     verbosePreference: 'continue'
     debugPreference: 'continue'
@@ -64,7 +67,7 @@ steps:
 - task: ManifestGeneratorTask@0
   inputs:
     BuildDropPath: $(System.DefaultWorkingDirectory)/src/bin/$(buildConfiguration)
-    Verbosity: 'Warning'
+    Verbosity: Verbose
     PackageName: CollectSFData
 
 - task: CodeQL3000Finalize@0
@@ -109,3 +112,36 @@ steps:
     targetPath: $(System.ArtifactsDirectory)
     artifactName: artifacts-$(start_time)-$(system.JobId)
 
+## not working
+- task: PowerShell@2
+  displayName: 'map artifacts drive'
+  inputs:
+    targetType: 'inline'
+    script: |
+      [environment]::getEnvironmentVariables().getEnumerator()|sort Name
+      write-host "Test-NetConnection -ComputerName $env:mapped_artifacts_storage_uri -Port 445 -informationLevel Detailed"
+      $connectTestResult = Test-NetConnection -ComputerName $env:mapped_artifacts_storage_uri -Port 445 -informationLevel Detailed
+      if ($connectTestResult.TcpTestSucceeded) {
+          write-host "Tcp Test Succeeded"
+          $securePassword = ConvertTo-SecureString -String $env:mapped_artifacts_pass -Force -AsPlainText
+          $credentials = [pscredential]::new($env:mapped_artifacts_user, $securePassword)
+          write-host "New-PSDrive -Name $drive -PSProvider FileSystem -Root "$env:mapped_artifacts_share" -Credential $credentials" -ForegroundColor Cyan
+          New-PSDrive -Name $drive -PSProvider FileSystem -Root "$env:mapped_artifacts_share" -Credential $credentials
+      } else {
+          write-error -Message "Unable to reach the Azure storage account via port 445. Check to make sure your organization or ISP is not blocking port 445, or use Azure P2S VPN, Azure S2S VPN, or Express Route to tunnel SMB traffic over a different port."
+      }
+      mkdir "$env:artifacts_share_target"
+    errorActionPreference: 'continue'
+    verbosePreference: 'continue'
+    debugPreference: 'continue'
+  env:
+    mapped_artifacts_storage_uri: $(artifacts_storage_uri)
+    mapped_artifacts_user: $(artifacts_user)
+    mapped_artifacts_pass: $(artifacts_pass)
+    mapped_artifacts_share: $(artifacts_share)
+
+- task: DownloadPipelineArtifact@2
+  inputs:
+    buildType: 'current'
+    artifactName: 'artifacts-$(start_time)-$(system.JobId)'
+    targetPath: '$(artifacts_share_target)'
