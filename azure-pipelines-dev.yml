@@ -46,7 +46,7 @@ steps:
     feedsToUse: 'config'
     nugetConfigPath: './nuget.config'
     noCache: false
-    verbosityRestore: 'Detailed'
+    verbosityRestore: 'Normal'
 
 - task: CodeQL3000Init@0
   inputs:
@@ -58,8 +58,8 @@ steps:
   inputs:
     targetType: 'inline'
     script: |
-      write-host "dotnet build `"$env:project_root\$env:project_name\$env:project_name.csproj`" -v detailed -c $env:buildConfiguration"
-      dotnet build "$env:project_root\$env:project_name\$env:project_name.csproj" -v detailed -c $env:buildConfiguration
+      write-host "dotnet build `"$env:project_root\$env:project_name\$env:project_name.csproj`" -v normal -c $env:buildConfiguration"
+      dotnet build "$env:project_root\$env:project_name\$env:project_name.csproj" -v normal -c $env:buildConfiguration
     errorActionPreference: 'continue'
     verbosePreference: 'continue'
     debugPreference: 'continue'
@@ -67,7 +67,7 @@ steps:
 - task: ManifestGeneratorTask@0
   inputs:
     BuildDropPath: $(System.DefaultWorkingDirectory)/src/bin/$(buildConfiguration)
-    Verbosity: Verbose
+    Verbosity: 'Normal'
     PackageName: CollectSFData
 
 - task: CodeQL3000Finalize@0
