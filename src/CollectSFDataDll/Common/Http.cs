@@ -19,7 +19,7 @@ namespace CollectSFData.Common
     {
         private readonly HttpClient _httpClient;
 
-        private readonly CustomTaskManager _httpTasks = new CustomTaskManager();
+        //private readonly CustomTaskManager _httpTasks = new CustomTaskManager();
 
         public HttpContentHeaders Headers { get; set; }
 
@@ -58,11 +58,11 @@ namespace CollectSFData.Common
         {
             Log.Info($"enter: {uri}", ConsoleColor.Magenta);
             bool result = false;
-            if (headers == null)
+            if(headers == null)
             {
                 headers = new Dictionary<string, string>();
             }
-            if (!headers.ContainsKey("User-Agent"))
+            if(!headers.ContainsKey("User-Agent"))
             {
                 headers.Add("User-Agent", "CollectSFData");
             }
@@ -89,7 +89,6 @@ namespace CollectSFData.Common
             HttpContent httpContent = default(HttpContent);
             httpMethod = httpMethod ?? Method;
             HttpCompletionOption httpCompletionOption = HttpCompletionOption.ResponseContentRead;
-            bool headRequest = httpMethod == HttpMethod.Head;
 
             Log.Info($"enter:method: {httpMethod} uri: {uri}", ConsoleColor.Magenta, ConsoleColor.Black);
 
@@ -106,7 +105,7 @@ namespace CollectSFData.Common
                 }
 
                 // head not working with httpclient use get with ResponseHeadersRead
-                if (headRequest)
+                if(httpMethod == HttpMethod.Head)
                 {
                     httpMethod = HttpMethod.Get;
                     _httpClient.DefaultRequestHeaders.Add("Accept", "*/*");
@@ -133,15 +132,8 @@ namespace CollectSFData.Common
                     }
                 }
 
-                if (headRequest)
-                {
-                    // do not use task for 'head' requests in order to get the status code and mask exceptions
-                    Response = _httpClient.SendAsync(request, httpCompletionOption).Result;
-                }
-                else
-                {
-                    Response = _httpTasks.TaskFunction((httpResponse) => _httpClient.SendAsync(request).Result).Result as HttpResponseMessage;
-                }
+                //Response = _httpTasks.TaskFunction((httpResponse) => _httpClient.SendAsync(request).Result).Result as HttpResponseMessage;
+                Response = _httpClient.SendAsync(request, httpCompletionOption).Result;
 
                 Log.Info($"response status: {Response.StatusCode}", ConsoleColor.DarkMagenta, ConsoleColor.Black);
                 StatusCode = Response.StatusCode;

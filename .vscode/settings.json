@@ -1,6 +1,5 @@
 {
     "dotnet-test-explorer.testProjectPath": "**/*Test.csproj",
     "dotnet.defaultSolution": "src\\CollectSFData.sln",
-    "audioCues.volume": 0,
-    "sarif-viewer.connectToGithubCodeScanning": "off"
+    "audioCues.volume": 0
 }
