@@ -67,7 +67,7 @@ steps:
 - task: ManifestGeneratorTask@0
   inputs:
     BuildDropPath: $(System.DefaultWorkingDirectory)/src/bin/$(buildConfiguration)
-    Verbosity: 'Normal'
+    Verbosity: 'Warning'
     PackageName: CollectSFData
 
 - task: CodeQL3000Finalize@0
