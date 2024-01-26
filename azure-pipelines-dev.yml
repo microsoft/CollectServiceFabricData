@@ -19,12 +19,6 @@ variables:
   artifacts_storage_uri_fileshare: /ado-pipeline-artifacts
   System.Debug: true
   buildConfiguration: Release
-  Codeql.PublishDatabaseLog: true
-  # testing
-  Codeql.Cadence: 0
-  Codeql.LogLevel: 6
-  Codeql.Language: csharp,powershell
-  Codeql.PublishDatabase: true
 
 steps:
 - task: PowerShell@2
@@ -51,7 +45,12 @@ steps:
 - task: CodeQL3000Init@0
   inputs:
     Enabled: true
-    AnalyzeInPipeline: true
+    AnalyzeInPipeline: false
+    PublishDatabase: true
+    PublishDatabaseLog: true
+    Language: csharp,powershell
+    Cadence: 0
+    LogLevel: 6
 
 - task: PowerShell@2
   displayName: 'dotnet build'
