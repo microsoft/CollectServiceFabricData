@@ -17,7 +17,7 @@ variables:
   artifacts_drive: Z
   artifacts_share_target: 'Z:\$(System.DefinitionName)\$(System.JobId)\$(start_time)'
   system.debug: true
-  buildConfiguration: Release
+  buildConfiguration: debug
 
 steps:
 - task: PowerShell@2
@@ -48,8 +48,8 @@ steps:
     PublishDatabase: true
     PublishDatabaseLog: true
     Language: csharp,powershell
-    Cadence: 0 # 72 hours default, use 0 for debug
-    LogLevel: 6
+    Cadence: 72 # 72 hours default, use 0 for debug
+    LogLevel: 4
 
 - task: PowerShell@2
   displayName: 'dotnet build'
