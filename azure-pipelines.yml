@@ -6,6 +6,7 @@ trigger:
   branches:
     include:
     - 'master'
+    - 'release*'
 
 pool:
   vmImage: 'windows-latest'
@@ -14,25 +15,16 @@ variables:
   project_name: CollectSFData
   project_root: .\src
   start_time: $[format('{0}-{1:yyyy}{1:MM}{1:dd}-{1:HH}{1:mm}{1:ss}', variables['project_name'], pipeline.startTime)]
-  artifacts_drive: Z
-  artifacts_share_target: Z:\$(System.TeamProject)/$(System.DefinitionName)/$(System.JobId)
-  artifacts_storage_uri_fileshare: /artifacts
-  System.Debug: true
-  buildConfiguration: Release
-  Codeql.PublishDatabaseLog: true
-  # testing
-  Codeql.Cadence: 0
-  Codeql.LogLevel: 5
-  Codeql.Language: csharp,powershell
-  Codeql.PublishDatabase: true
-
+  system.debug: false
+  buildConfiguration: release
+  
 steps:
 - task: PowerShell@2
   displayName: 'agent environment'
   inputs:
     targetType: 'inline'
     script: |
-      [environment]::getenvironmentvariables().getenumerator()|sort Name
+      [environment]::getEnvironmentVariables().getEnumerator()|sort Name
       dotnet --info
       dotnet nuget locals all --clear
     errorActionPreference: 'continue'
@@ -51,7 +43,12 @@ steps:
 - task: CodeQL3000Init@0
   inputs:
     Enabled: true
-    AnalyzeInPipeline: true
+    AnalyzeInPipeline: false
+    PublishDatabase: false
+    PublishDatabaseLog: false
+    Language: csharp,powershell
+    Cadence: 72 # 72 hours default, use 0 for debug
+    LogLevel: 4
 
 - task: PowerShell@2
   displayName: 'dotnet build'
