@@ -23,7 +23,7 @@ variables:
   # testing
   Codeql.Cadence: 0
   Codeql.LogLevel: 5
-  Codeql.Language: csharp,powershell
+  Codeql.Language: csharp #,powershell
   Codeql.PublishDatabase: true
 
 steps:
