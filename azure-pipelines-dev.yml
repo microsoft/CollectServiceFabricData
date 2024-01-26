@@ -16,7 +16,7 @@ variables:
   start_time: $[format('{0}-{1:yyyy}{1:MM}{1:dd}-{1:HH}{1:mm}{1:ss}', variables['project_name'], pipeline.startTime)]
   artifacts_drive: Z
   artifacts_share_target: Z:\$(System.TeamProject)/$(System.DefinitionName)/$(System.JobId)
-  artifacts_storage_uri_fileshare: /artifacts
+  artifacts_storage_uri_fileshare: /ado-pipeline-artifacts
   System.Debug: true
   buildConfiguration: Release
   Codeql.PublishDatabaseLog: true
