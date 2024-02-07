@@ -1,5 +1,13 @@
 # Change log
 
+## 02/07/2024
+
+- add updates for SDL
+- add dependabot config
+- remove stale links in documentation
+- update workflow for git for deprecated env variables
+- update prod and dev pipelines azure pipelines for ado
+
 ## 11/19/2023
 
 - add support for .net8.0
