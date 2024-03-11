@@ -1,5 +1,11 @@
 # Change log
 
+## 03/11/2024
+
+- update kusto quickstart doc with modified image and minimum sas permissions
+- update kusto quickstart doc with new exception message
+- update kusto functions
+
 ## 03/07/2024
 
 - upgrade git action labeler@v5
