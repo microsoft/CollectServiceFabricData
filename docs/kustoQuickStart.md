@@ -53,6 +53,21 @@ From Azure portal https://portal.azure.com navigate to service fabric cluster re
 
 Once correct storage account is identified, select 'Shared access signature' and then 'Generate SAS and connection string'. Copy 'Blob service SAS URL' or 'Connection Sting'. This is the value that will be used for CollectSFData argument 'SasKey'.
 
+Ensure at least the following permissions are selected:
+
+- Allowed Services
+  - Blob
+  - Table
+
+- Allowed Resource Types
+  - Service
+  - Container
+  - Object
+
+- Allowed Permissions
+  - Read
+  - List
+
 - ![](media/azure.portal.3.png)
 
 - ![](media/azure.portal.4.png)
@@ -457,6 +472,27 @@ pause
 1:Execute:exception: System.AggregateException: One or more errors occurred. ---> System.AggregateException: One or more errors occurred. ---> Microsoft.WindowsAzure.Storage.StorageException: The remote server returned an error: (403) Forbidden. ---> System.Net.WebException: The remote server returned an error: (403) Forbidden.
    at Microsoft.WindowsAzure.Storage.Shared.Protocol.HttpResponseParsers.ProcessExpectedStatusCodeNoException[T](HttpStatusCode expectedStatusCode, HttpStatusCode actualStatusCode, T retVal, StorageCommandBase`1 cmd, Exception ex) in c:\Program Files (x86)\Jenkins\workspace\release_dotnet_master\Lib\Common\Shared\Protocol\HttpResponseParsers.Common.cs:line 54
 
+```
+
+4. Microsoft.Identity.Client.MsalServiceException.  
+    Verify configuration settings are correct:
+    - azureClientId
+    - azureTenantId
+    - azureClientSecret
+    - azureClientCertificate
+
+    .net framework will use ADAL and .net core will use MSAL.  
+    If using .net framework (net462), use cmd.exe or powershell.exe to execute collectsfdata.exe.  
+    If using .net core (net6.0+), use pwsh.exe (powershell core) to execute collectsfdata.exe.
+
+```text
+Authenticate:exception: AggregateException:System.AggregateException: One or more errors occurred. ---> Microsoft.Identity.Client.MsalServiceException: 
+AADSTS50194: Application 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'(collectsfdata service fabric data collection) is not configured as a multi-tenant application. 
+Usage of the /common endpoint is not supported for such applications created after '10/15/2018'. 
+Use a tenant-specific endpoint or configure the application to be multi-tenant. 
+Trace ID: 952e918a-1414-4206-91bd-ad74eb1cbc00 
+Correlation ID: 56e0075d-cc4f-4974-a651-0b25e82faaee 
+Timestamp: 2024-03-08 22:05:00Z
 ```
 
 ## reference
