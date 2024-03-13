@@ -3,8 +3,8 @@ requires .net sdk 6
 requires pwsh
 #>
 param(
-    [string]$module = (resolve-path "$psscriptroot/../src/bin/debug/net6.0/collectsfdatadll.dll"),
-    [string]$collectsfdataOptionsFile = (resolve-path "$psscriptroot/../src/bin/debug/net6.0/collectsfdata.options.json")
+    [string]$module = (resolve-path "$psscriptroot/../src/bin/debug/net8.0/collectsfdatadll.dll"),
+    [string]$collectsfdataOptionsFile = (resolve-path "$psscriptroot/../src/bin/debug/net8.0/collectsfdata.options.json")
 )
 
 write-host "checking $module"
