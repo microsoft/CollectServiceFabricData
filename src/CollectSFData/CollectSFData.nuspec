@@ -102,12 +102,12 @@
   </metadata>
   <files>
     <!-- net462 tools -->
-    <file src="..\bin\$configuration$\net462\*.exe" target="tools\net462" />
+    <!-- <file src="..\bin\$configuration$\net462\*.exe" target="tools\net462" />
     <file src="..\bin\$configuration$\net462\*.dll" target="tools\net462" />
     <file src="..\bin\$configuration$\net462\*.pdb" target="tools\net462" />
     <file src="..\bin\$configuration$\net462\manifests\*.man" target="tools\net462\manifests" />
     <file src="..\bin\$configuration$\net462\*.config" target="tools\net462" />
-    <file src="..\..\configurationFiles\collectsfdata.options.json" target="tools\net462" />
+    <file src="..\..\configurationFiles\collectsfdata.options.json" target="tools\net462" /> -->
     <!-- net462 lib -->
     <file src="..\bin\$configuration$\net462\CollectSFDataDll.dll" target="lib\net462" />
     <file src="..\bin\$configuration$\net462\Sf.Tx.Core.dll" target="lib\net462" />
@@ -145,13 +145,13 @@
     <file src="..\bin\$configuration$\net6.0\Etlreader.dll" target="lib\net6.0" />
     <file src="..\bin\$configuration$\net6.0\System.Fabric.Strings.dll" target="lib\net6.0" />
     <!-- net8.0 tools -->
-    <file src="..\bin\$configuration$\net8.0\*.exe" target="tools\net8.0" />
+    <!-- <file src="..\bin\$configuration$\net8.0\*.exe" target="tools\net8.0" />
     <file src="..\bin\$configuration$\net8.0\*.runtimeconfig.json" target="tools\net8.0" />
     <file src="..\bin\$configuration$\net8.0\*.dll" target="tools\net8.0" />
     <file src="..\bin\$configuration$\net8.0\*.pdb" target="tools\net8.0" />
     <file src="..\bin\$configuration$\net8.0\manifests\*.man" target="tools\net8.0\manifests" />
     <file src="..\bin\$configuration$\net8.0\*.config" target="tools\net8.0" />
-    <file src="..\..\configurationFiles\collectsfdata.options.json" target="tools\net8.0" />
+    <file src="..\..\configurationFiles\collectsfdata.options.json" target="tools\net8.0" /> -->
     <!-- net8.0 lib -->
     <file src="..\bin\$configuration$\net8.0\CollectSFDataDll.dll" target="lib\net8.0" />
     <file src="..\bin\$configuration$\net8.0\Sf.Tx.Core.dll" target="lib\net8.0" />
