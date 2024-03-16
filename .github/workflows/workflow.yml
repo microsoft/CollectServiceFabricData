@@ -123,7 +123,9 @@ jobs:
           $destination = "$($env:release_path)\\$($env:project_name).zip"
           write-host "compress-archive -path $source -destinationPath $destination -force"
           compress-archive -path $source -destinationPath $destination -force
-          $fileVersion = [io.fileinfo]::new("$($releaseFramework)\$($env:project_name).exe").VersionInfo.FileVersion
+          $exeFileRef = @(get-childItem -recurse "$($env:release_path)\$($env:project_name).exe")[0].FullName
+          $fileVersion = [io.fileinfo]::new($exeFileRef).VersionInfo.FileVersion
+          write-host "fileVersion=$fileVersion"
           echo "::log-command parameter1=$fileVersion::fileVersion"
           echo "file_version=v$fileVersion" >> $env:GITHUB_OUTPUT
           write-host "dir $env:release_path -recurse"
