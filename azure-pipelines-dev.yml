@@ -18,6 +18,7 @@ variables:
   artifacts_share_target: 'Z:\$(System.DefinitionName)\$(System.JobId)\$(start_time)'
   system.debug: true
   buildConfiguration: debug
+  targetPath: $(System.DefaultWorkingDirectory)/src/bin/$(buildConfiguration)
 
 steps:
 - task: PowerShell@2
@@ -64,7 +65,7 @@ steps:
 
 - task: ManifestGeneratorTask@0
   inputs:
-    BuildDropPath: $(System.DefaultWorkingDirectory)/src/bin/$(buildConfiguration)
+    BuildDropPath: $(targetPath)
     Verbosity: Verbose
     PackageName: CollectSFData
 
@@ -102,7 +103,7 @@ steps:
 
 - task: PublishPipelineArtifact@1
   inputs:
-    targetPath:  $(System.DefaultWorkingDirectory)/src/bin/$(buildConfiguration)
+    targetPath:  $(targetPath)
     artifactName: build-$(start_time)-$(system.JobId)
 
 - task: PublishPipelineArtifact@1
@@ -131,10 +132,10 @@ steps:
         write-host "mkdir "$env:artifacts_share_target""
         mkdir "$env:artifacts_share_target"
       }
-      write-host "copy $(System.DefaultWorkingDirectory)/src/bin/$(buildConfiguration) "$env:artifacts_share_target" -recurse"
-      copy $(System.DefaultWorkingDirectory)/src/bin/$(buildConfiguration) "$env:artifacts_share_target" -recurse
-      write-host "copy $(System.ArtifactsDirectory) "$env:artifacts_share_target" -recurse"
-      copy $(System.ArtifactsDirectory) "$env:artifacts_share_target" -recurse
+      write-host "copy $env:targetPath $env:artifacts_share_target -recurse"
+      copy "$env:targetPath" "$env:artifacts_share_target" -recurse
+      write-host "copy $(System.ArtifactsDirectory) $env:artifacts_share_target -recurse"
+      copy "$(System.ArtifactsDirectory)"" "$env:artifacts_share_target" -recurse
     errorActionPreference: 'continue'
     verbosePreference: 'continue'
     debugPreference: 'continue'
@@ -151,3 +152,13 @@ steps:
 #     targetPath: '$(artifacts_share_target)'
 #     allowPartiallySucceededBuilds: true
 #     allowFailedBuilds: true
+
+# # https://aka.ms/esrp
+# - task: EsrpCodeSigning@4
+#   inputs:
+#     FolderPath: $(targetPath)
+#     Pattern: '*.dll,*.exe,*.zip,*.nupkg'
+#     SessionTimeout: '60'
+#     MaxConcurrency: '50'
+#     MaxRetryAttempts: '5'
+#     PendingAnalysisWaitTimeoutMinutes: '5'
