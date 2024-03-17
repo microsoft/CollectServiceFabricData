@@ -19,6 +19,7 @@ variables:
   system.debug: true
   buildConfiguration: debug
   targetDropPath: $(System.DefaultWorkingDirectory)/src/bin/$(buildConfiguration)
+  esrp_signing_connection: 'collectsfdata esrp signing connection'
 
 steps:
 - task: PowerShell@2
@@ -73,10 +74,12 @@ steps:
     PackageName: CollectSFData
 
 - task: CodeQL3000Finalize@0
+  displayName: 'codeql finalize'
   condition: always()
   continueOnError: true
 
 - task: CredScan@3
+  displayName: 'cred scan'
   inputs:
     verboseOutput: true
 
@@ -111,12 +114,68 @@ steps:
 - task: EsrpCodeSigning@4
   displayName: 'code signing'
   inputs:
-    FolderPath: $(targetDropPath)
-    Pattern: '*.dll,*.exe,*.zip,*.nupkg'
+    ConnectedServiceName: $(esrp_signing_connection)
+    FolderPath: '$(targetDropPath)'
+    Pattern: 'sf.tx.*.dll,*$(project_name)*.dll,$(project_name).exe,*.zip'
+    signConfigType: 'inlineSignParams'
+    inlineOperation: |
+      [
+        {
+            "KeyCode": "CP-230012",
+            "OperationCode": "SigntoolSign",
+            "Parameters": {
+              "OpusName": "Microsoft",
+              "OpusInfo": "http://www.microsoft.com",
+              "FileDigest": "/fd \"SHA256\"",
+              "PageHash": "/NPH",
+              "TimeStamp": "/tr \"http://rfc3161.gtm.corp.microsoft.com/TSS/HttpTspServer\" /td sha256"
+            },
+            "ToolName": "sign",
+            "ToolVersion": "1.0"
+          },
+          {
+            "KeyCode": "CP-230012",
+            "OperationCode": "SigntoolVerify",
+            "Parameters": {},
+            "ToolName": "sign",
+            "ToolVersion": "1.0"
+          }
+      ]
     SessionTimeout: '60'
     MaxConcurrency: '50'
     MaxRetryAttempts: '5'
     PendingAnalysisWaitTimeoutMinutes: '5'
+    VerboseLogin: true
+
+- task: EsrpCodeSigning@4
+  displayName: 'nupkg code signing'
+  inputs:
+    ConnectedServiceName: $(esrp_signing_connection)
+    FolderPath: '$(targetDropPath)'
+    Pattern: '*.nupkg'
+    signConfigType: 'inlineSignParams'
+    inlineOperation: |
+      [
+        {
+            "KeyCode": "CP-401405",
+            "OperationCode": "NuGetSign",
+            "Parameters": {},
+            "ToolName": "sign",
+            "ToolVersion": "1.0"
+          },
+          {
+            "KeyCode": "CP-401405",
+            "OperationCode": "NuGetVerify",
+            "Parameters": {},
+            "ToolName": "sign",
+            "ToolVersion": "1.0"
+          }
+      ]
+    SessionTimeout: '60'
+    MaxConcurrency: '50'
+    MaxRetryAttempts: '5'
+    PendingAnalysisWaitTimeoutMinutes: '5'
+    VerboseLogin: true
 
 - task: PowerShell@2
   displayName: 'dotnet signed build output'
