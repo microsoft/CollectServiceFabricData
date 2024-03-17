@@ -18,7 +18,7 @@ variables:
   artifacts_share_target: 'Z:\$(System.DefinitionName)\$(System.JobId)\$(start_time)'
   system.debug: true
   buildConfiguration: debug
-  targetDropPath: $(System.DefaultWorkingDirectory)/src/bin/$(buildConfiguration)
+  release_path: $(System.DefaultWorkingDirectory)/src/bin/$(buildConfiguration)
   esrp_signing_connection: 'collectsfdata esrp signing connection'
 
 steps:
@@ -69,7 +69,7 @@ steps:
 - task: ManifestGeneratorTask@0
   displayName: 'manifest generation'
   inputs:
-    BuildDropPath: $(targetDropPath)
+    BuildDropPath: $(release_path)
     Verbosity: Verbose
     PackageName: CollectSFData
 
@@ -110,13 +110,12 @@ steps:
     debugPreference: 'continue'
 
 # https://aka.ms/esrp
-# https://microsoft.sharepoint.com/teams/prss/esrp/info/ESRP%20Onboarding%20Wiki/Generating%20the%20ESRP%20Authentication%20(Request%20Signing)%20certificate.aspx
 - task: EsrpCodeSigning@4
-  displayName: 'code signing'
+  displayName: 'dll and exe code signing'
   inputs:
     ConnectedServiceName: $(esrp_signing_connection)
-    FolderPath: '$(targetDropPath)'
-    Pattern: 'sf.tx.*.dll,*$(project_name)*.dll,$(project_name).exe,*.zip'
+    FolderPath: '$(release_path)'
+    Pattern: 'sf.tx.*.dll,*$(project_name)*.dll,$(project_name).exe'
     signConfigType: 'inlineSignParams'
     inlineOperation: |
       [
@@ -151,7 +150,7 @@ steps:
   displayName: 'nupkg code signing'
   inputs:
     ConnectedServiceName: $(esrp_signing_connection)
-    FolderPath: '$(targetDropPath)'
+    FolderPath: '$(release_path)'
     Pattern: '*.nupkg'
     signConfigType: 'inlineSignParams'
     inlineOperation: |
@@ -178,6 +177,61 @@ steps:
     VerboseLogin: true
 
 - task: PowerShell@2
+  displayName: 'create zip with signed files'
+  inputs:
+    targetType: 'inline'
+    script: |
+      $source = "$($env:release_path)\\*"
+      $destination = "$($env:release_path)\\$($env:project_name).zip"
+      write-host "compress-archive -path $source -destinationPath $destination -force"
+      compress-archive -path $source -destinationPath $destination -force
+      $exeFileRef = @(get-childItem -recurse "$($env:release_path)\$($env:project_name).exe")[0].FullName
+      $fileVersion = [io.fileinfo]::new($exeFileRef).VersionInfo.FileVersion
+      write-host "fileVersion=$fileVersion"
+      #echo "file_version=v$fileVersion" >> $env:GITHUB_OUTPUT
+      write-host "dir $env:release_path -recurse"
+      dir $env:release_path -recurse
+    errorActionPreference: 'continue'
+    verbosePreference: 'continue'
+    debugPreference: 'continue'
+
+- task: EsrpCodeSigning@4
+  displayName: 'zip code signing'
+  inputs:
+    ConnectedServiceName: $(esrp_signing_connection)
+    FolderPath: '$(release_path)'
+    Pattern: '$(project_name).zip'
+    signConfigType: 'inlineSignParams'
+    inlineOperation: |
+      [
+        {
+            "KeyCode": "CP-230012",
+            "OperationCode": "SigntoolSign",
+            "Parameters": {
+              "OpusName": "Microsoft",
+              "OpusInfo": "http://www.microsoft.com",
+              "FileDigest": "/fd \"SHA256\"",
+              "PageHash": "/NPH",
+              "TimeStamp": "/tr \"http://rfc3161.gtm.corp.microsoft.com/TSS/HttpTspServer\" /td sha256"
+            },
+            "ToolName": "sign",
+            "ToolVersion": "1.0"
+          },
+          {
+            "KeyCode": "CP-230012",
+            "OperationCode": "SigntoolVerify",
+            "Parameters": {},
+            "ToolName": "sign",
+            "ToolVersion": "1.0"
+          }
+      ]
+    SessionTimeout: '60'
+    MaxConcurrency: '50'
+    MaxRetryAttempts: '5'
+    PendingAnalysisWaitTimeoutMinutes: '5'
+    VerboseLogin: true
+
+- task: PowerShell@2
   displayName: 'dotnet signed build output'
   inputs:
     targetType: 'inline'
@@ -185,18 +239,6 @@ steps:
     errorActionPreference: 'continue'
     verbosePreference: 'continue'
     debugPreference: 'continue'
-
-- task: PublishPipelineArtifact@1
-  displayName: 'publish artifacts'
-  inputs:
-    targetPath:  $(targetDropPath)
-    artifactName: build-$(start_time)-$(system.JobId)
-
-- task: PublishPipelineArtifact@1
-  displayName: 'publish codeql'
-  inputs:
-    targetPath: $(System.ArtifactsDirectory)
-    artifactName: artifacts-$(start_time)-$(system.JobId)
 
 - task: PowerShell@2
   displayName: 'copy artifacts'
@@ -219,8 +261,8 @@ steps:
         write-host "mkdir "$env:artifacts_share_target""
         mkdir "$env:artifacts_share_target"
       }
-      write-host "copy $env:targetDropPath "$env:artifacts_share_target" -recurse"
-      copy $env:targetDropPath "$env:artifacts_share_target" -recurse
+      write-host "copy $env:release_path "$env:artifacts_share_target" -recurse"
+      copy $env:release_path "$env:artifacts_share_target" -recurse
       write-host "copy $env:artifacts_directory $env:artifacts_share_target -recurse"
       copy $env:artifacts_directory "$env:artifacts_share_target" -recurse
     errorActionPreference: 'continue'
@@ -232,6 +274,18 @@ steps:
     mapped_artifacts_pass: $(artifacts_pass)
     mapped_artifacts_share: $(artifacts_share)
     artifacts_directory: $(System.ArtifactsDirectory)
+
+- task: PublishPipelineArtifact@1
+  displayName: 'publish artifacts'
+  inputs:
+    targetPath:  $(release_path)
+    artifactName: build-$(start_time)-$(system.JobId)
+
+- task: PublishPipelineArtifact@1
+  displayName: 'publish codeql'
+  inputs:
+    targetPath: $(System.ArtifactsDirectory)
+    artifactName: artifacts-$(start_time)-$(system.JobId)
 
 # - task: DownloadPipelineArtifact@2
 #   inputs:
