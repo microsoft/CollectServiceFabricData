@@ -107,12 +107,14 @@ steps:
     targetType: 'inline'
     script: |
       $nupkg = @(get-childItem -recurse "$($env:release_path)\*.nupkg")[0].FullName
+      $nupkgZip = "$nupkg.zip"
       write-host "nupkg=$nupkg"
       $nupkgDir = "$($env:release_stage_path)"
       write-host "mkdir $nupkgDir"
       mkdir $nupkgDir
-      write-host "expand-archive -path $nupkg -destinationPath $nupkgDir -force"
-      expand-archive -path $nupkg -destinationPath $nupkgDir -force
+      copy $nupkg $nupkgZip
+      write-host "expand-archive -path $nupkgZip -destinationPath $nupkgDir -force"
+      expand-archive -path $nupkgZip -destinationPath $nupkgDir -force
       write-host "dir $nupkgDir -recurse"
       dir $nupkgDir -recurse
     errorActionPreference: 'continue'
@@ -171,10 +173,12 @@ steps:
     targetType: 'inline'
     script: |
       $nupkg = @(get-childItem -recurse "$($env:release_path)\*.nupkg")[0].FullName
+      $nupkgZip = "$nupkg.zip"
       write-host "nupkg=$nupkg"
       $nupkgDir = "$($env:release_stage_path)"
-      write-host "compress-archive -path $nupkgDir\* -destinationPath $nupkg -force"
-      compress-archive -path $nupkgDir\* -destinationPath $nupkg -force
+      write-host "compress-archive -path $nupkgDir\* -destinationPath $nupkgZip -force"
+      compress-archive -path $nupkgDir\* -destinationPath $nupkgZip -force
+      copy $nupkgZip $nupkg -force
       write-host "dir $nupkg"
       dir $nupkg
     errorActionPreference: 'continue'
