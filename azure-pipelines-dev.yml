@@ -195,42 +195,6 @@ steps:
     verbosePreference: 'continue'
     debugPreference: 'continue'
 
-- task: EsrpCodeSigning@4
-  displayName: 'zip code signing'
-  inputs:
-    ConnectedServiceName: $(esrp_signing_connection)
-    FolderPath: '$(release_path)'
-    Pattern: '$(project_name).zip'
-    signConfigType: 'inlineSignParams'
-    inlineOperation: |
-      [
-        {
-            "KeyCode": "CP-230012",
-            "OperationCode": "SigntoolSign",
-            "Parameters": {
-              "OpusName": "Microsoft",
-              "OpusInfo": "http://www.microsoft.com",
-              "FileDigest": "/fd \"SHA256\"",
-              "PageHash": "/NPH",
-              "TimeStamp": "/tr \"http://rfc3161.gtm.corp.microsoft.com/TSS/HttpTspServer\" /td sha256"
-            },
-            "ToolName": "sign",
-            "ToolVersion": "1.0"
-          },
-          {
-            "KeyCode": "CP-230012",
-            "OperationCode": "SigntoolVerify",
-            "Parameters": {},
-            "ToolName": "sign",
-            "ToolVersion": "1.0"
-          }
-      ]
-    SessionTimeout: '60'
-    MaxConcurrency: '50'
-    MaxRetryAttempts: '5'
-    PendingAnalysisWaitTimeoutMinutes: '5'
-    VerboseLogin: true
-
 - task: PowerShell@2
   displayName: 'dotnet signed build output'
   inputs:
