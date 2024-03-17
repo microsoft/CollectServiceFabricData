@@ -1,5 +1,13 @@
 # Change log
 
+## 03/16/2024
+
+- add all target frameworks to zip for release
+- update git actions workflow release. add permissions
+    permissions:
+      contents: write
+      packages: write
+
 ## 03/11/2024
 
 - update kusto quickstart doc with modified image and minimum sas permissions
