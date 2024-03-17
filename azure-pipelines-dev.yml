@@ -18,6 +18,7 @@ variables:
   artifacts_share_target: 'Z:\$(System.DefinitionName)\$(System.JobId)\$(start_time)'
   system.debug: true
   buildConfiguration: debug
+  targetDropPath: $(System.DefaultWorkingDirectory)/src/bin/$(buildConfiguration)
 
 steps:
 - task: PowerShell@2
@@ -33,6 +34,7 @@ steps:
     debugPreference: 'continue'
 
 - task: NuGetCommand@2
+  displayName: 'nuget restore'
   inputs:
     command: 'restore'
     restoreSolution: '$(project_root)/$(project_name).sln'
@@ -42,6 +44,7 @@ steps:
     verbosityRestore: 'Detailed'
 
 - task: CodeQL3000Init@0
+  displayName: 'codeql init'
   inputs:
     Enabled: true
     AnalyzeInPipeline: false
@@ -63,8 +66,9 @@ steps:
     debugPreference: 'continue'
 
 - task: ManifestGeneratorTask@0
+  displayName: 'manifest generation'
   inputs:
-    BuildDropPath: $(System.DefaultWorkingDirectory)/src/bin/$(buildConfiguration)
+    BuildDropPath: $(targetDropPath)
     Verbosity: Verbose
     PackageName: CollectSFData
 
@@ -77,6 +81,7 @@ steps:
     verboseOutput: true
 
 - task: AntiMalware@4
+  displayName: 'anti-malware'
   inputs:
     InputType: 'Basic'
     ScanType: 'CustomScan'
@@ -86,6 +91,7 @@ steps:
     TreatStaleSignatureAs: 'Error'
 
 - task: ComponentGovernanceComponentDetection@0
+  displayName: 'component governance'
   inputs:
     scanType: Register
     verbosity: Verbose
@@ -100,12 +106,35 @@ steps:
     verbosePreference: 'continue'
     debugPreference: 'continue'
 
-- task: PublishPipelineArtifact@1
+# https://aka.ms/esrp
+# https://microsoft.sharepoint.com/teams/prss/esrp/info/ESRP%20Onboarding%20Wiki/Generating%20the%20ESRP%20Authentication%20(Request%20Signing)%20certificate.aspx
+- task: EsrpCodeSigning@4
+  displayName: 'code signing'
   inputs:
-    targetPath:  $(System.DefaultWorkingDirectory)/src/bin/$(buildConfiguration)
+    FolderPath: $(targetDropPath)
+    Pattern: '*.dll,*.exe,*.zip,*.nupkg'
+    SessionTimeout: '60'
+    MaxConcurrency: '50'
+    MaxRetryAttempts: '5'
+    PendingAnalysisWaitTimeoutMinutes: '5'
+
+- task: PowerShell@2
+  displayName: 'dotnet signed build output'
+  inputs:
+    targetType: 'inline'
+    script: dir .. -recurse
+    errorActionPreference: 'continue'
+    verbosePreference: 'continue'
+    debugPreference: 'continue'
+
+- task: PublishPipelineArtifact@1
+  displayName: 'publish artifacts'
+  inputs:
+    targetPath:  $(targetDropPath)
     artifactName: build-$(start_time)-$(system.JobId)
 
 - task: PublishPipelineArtifact@1
+  displayName: 'publish codeql'
   inputs:
     targetPath: $(System.ArtifactsDirectory)
     artifactName: artifacts-$(start_time)-$(system.JobId)
@@ -131,10 +160,10 @@ steps:
         write-host "mkdir "$env:artifacts_share_target""
         mkdir "$env:artifacts_share_target"
       }
-      write-host "copy $(System.DefaultWorkingDirectory)/src/bin/$(buildConfiguration) "$env:artifacts_share_target" -recurse"
-      copy $(System.DefaultWorkingDirectory)/src/bin/$(buildConfiguration) "$env:artifacts_share_target" -recurse
-      write-host "copy $(System.ArtifactsDirectory) "$env:artifacts_share_target" -recurse"
-      copy $(System.ArtifactsDirectory) "$env:artifacts_share_target" -recurse
+      write-host "copy $env:targetDropPath "$env:artifacts_share_target" -recurse"
+      copy $env:targetDropPath "$env:artifacts_share_target" -recurse
+      write-host "copy $env:artifacts_directory $env:artifacts_share_target -recurse"
+      copy $env:artifacts_directory "$env:artifacts_share_target" -recurse
     errorActionPreference: 'continue'
     verbosePreference: 'continue'
     debugPreference: 'continue'
@@ -143,6 +172,7 @@ steps:
     mapped_artifacts_user: $(artifacts_user)
     mapped_artifacts_pass: $(artifacts_pass)
     mapped_artifacts_share: $(artifacts_share)
+    artifacts_directory: $(System.ArtifactsDirectory)
 
 # - task: DownloadPipelineArtifact@2
 #   inputs:
