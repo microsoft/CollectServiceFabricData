@@ -19,6 +19,7 @@ variables:
   system.debug: true
   buildConfiguration: debug
   release_path: $(System.DefaultWorkingDirectory)/src/bin/$(buildConfiguration)
+  release_stage_path: $(release_path)/signed
   esrp_signing_connection: 'collectsfdata esrp signing connection'
 
 steps:
@@ -101,6 +102,24 @@ steps:
     alertWarningLevel: High
 
 - task: PowerShell@2
+  displayName: 'unpack nupkg for binary signing'
+  inputs:
+    targetType: 'inline'
+    script: |
+      $nupkg = @(get-childItem -recurse "$($env:release_path)\*.nupkg")[0].FullName
+      write-host "nupkg=$nupkg"
+      $nupkgDir = "$($env:release_stage_path)"
+      write-host "mkdir $nupkgDir"
+      mkdir $nupkgDir
+      write-host "expand-archive -path $nupkg -destinationPath $nupkgDir -force"
+      expand-archive -path $nupkg -destinationPath $nupkgDir -force
+      write-host "dir $nupkgDir -recurse"
+      dir $nupkgDir -recurse
+    errorActionPreference: 'continue'
+    verbosePreference: 'continue'
+    debugPreference: 'continue'
+
+- task: PowerShell@2
   displayName: 'dotnet build output'
   inputs:
     targetType: 'inline'
@@ -114,7 +133,7 @@ steps:
   displayName: 'dll and exe code signing'
   inputs:
     ConnectedServiceName: $(esrp_signing_connection)
-    FolderPath: '$(release_path)'
+    FolderPath: '$(release_stage_path)'
     Pattern: 'sf.tx.*.dll,*$(project_name)*.dll,$(project_name).exe'
     signConfigType: 'inlineSignParams'
     inlineOperation: |
@@ -145,6 +164,22 @@ steps:
     MaxRetryAttempts: '5'
     PendingAnalysisWaitTimeoutMinutes: '5'
     VerboseLogin: true
+
+- task: PowerShell@2
+  displayName: 'repack nupkg with signed binaries'
+  inputs:
+    targetType: 'inline'
+    script: |
+      $nupkg = @(get-childItem -recurse "$($env:release_path)\*.nupkg")[0].FullName
+      write-host "nupkg=$nupkg"
+      $nupkgDir = "$($env:release_stage_path)"
+      write-host "compress-archive -path $nupkgDir\* -destinationPath $nupkg -force"
+      compress-archive -path $nupkgDir\* -destinationPath $nupkg -force
+      write-host "dir $nupkg"
+      dir $nupkg
+    errorActionPreference: 'continue'
+    verbosePreference: 'continue'
+    debugPreference: 'continue'
 
 - task: EsrpCodeSigning@4
   displayName: 'nupkg code signing'
