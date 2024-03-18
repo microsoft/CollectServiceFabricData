@@ -112,7 +112,7 @@ steps:
       $nupkgDir = "$($env:release_stage_path)"
       write-host "mkdir $nupkgDir"
       mkdir $nupkgDir
-      copy $nupkg $nupkgZip
+      move $nupkg $nupkgZip
       write-host "expand-archive -path $nupkgZip -destinationPath $nupkgDir -force"
       expand-archive -path $nupkgZip -destinationPath $nupkgDir -force
       write-host "dir $nupkgDir -recurse"
@@ -176,11 +176,12 @@ steps:
       $nupkgZip = "$nupkg.zip"
       write-host "nupkg=$nupkg"
       $nupkgDir = "$($env:release_stage_path)"
+      del 'CodeSignSummary*.md' -force
       write-host "compress-archive -path $nupkgDir\* -destinationPath $nupkgZip -force"
+      del $nupkg -force
+      del $nupkgZip -force
       compress-archive -path $nupkgDir\* -destinationPath $nupkgZip -force
-      copy $nupkgZip $nupkg -force
-      write-host "dir $nupkg"
-      dir $nupkg
+      move $nupkgZip $nupkg -force
     errorActionPreference: 'continue'
     verbosePreference: 'continue'
     debugPreference: 'continue'
