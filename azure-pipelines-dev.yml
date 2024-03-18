@@ -174,10 +174,11 @@ steps:
     script: |
       $nupkg = @(get-childItem -recurse "$($env:release_path)\*.nupkg")[0].FullName
       $nupkgZip = "$nupkg.zip"
+      $nupkgUnsigned = "$nupkg".replace(".nupkg", ".unsigned.nupkg")
       write-host "nupkg=$nupkg"
       $nupkgDir = "$($env:release_stage_path)"
       del "$nupkgDir\CodeSignSummary*.md" -force
-      del $nupkg -force
+      ren $nupkg $nuPkgUnsigned
       del $nupkgZip -force
       write-host "compress-archive -path $nupkgDir\* -destinationPath $nupkgZip -force"
       compress-archive -path $nupkgDir\* -destinationPath $nupkgZip -force
