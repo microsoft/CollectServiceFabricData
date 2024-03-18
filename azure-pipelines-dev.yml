@@ -182,7 +182,10 @@ steps:
       del $nupkgZip -force
       write-host "compress-archive -path $nupkgDir\* -destinationPath $nupkgZip -force"
       compress-archive -path $nupkgDir\* -destinationPath $nupkgZip -force
+      rd $nupkgDir -recurse -force
+      md $nupkgDir
       move $nupkgZip $nupkg -force
+      move *.nupkg $nupkgDir -force
     errorActionPreference: 'continue'
     verbosePreference: 'continue'
     debugPreference: 'continue'
@@ -283,7 +286,7 @@ steps:
 - task: PublishPipelineArtifact@1
   displayName: 'publish artifacts'
   inputs:
-    targetPath:  $(release_path)
+    targetPath:  $(release_stage_path)
     artifactName: build-$(start_time)-$(system.JobId)
 
 - task: PublishPipelineArtifact@1
