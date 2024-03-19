@@ -21,17 +21,9 @@ variables:
   release_path: $(System.DefaultWorkingDirectory)/src/bin/$(buildConfiguration)
   release_stage_path: $(release_path)/signed
   esrp_signing_connection: 'collectsfdata esrp signing connection'
+  project_feed: CollectServiceFabricData
 
 steps:
-- task: NuGetAuthenticate@1
-  # inputs:
-  #   nuGetServiceConnections: CollectServiceFabricData
-
-- task: NuGetToolInstaller@1 # Optional if nuget.exe >= 4.8.5385 is already on the path
-  inputs:
-    versionSpec: '*'
-    checkLatest: true
-
 - task: PowerShell@2
   displayName: 'agent environment'
   inputs:
@@ -40,8 +32,6 @@ steps:
       [environment]::getEnvironmentVariables().getEnumerator()|sort Name
       dotnet --info
       dotnet nuget locals all --clear
-      # test
-      dotnet restore .\src --configfile ./nuget.config --force -v d
     errorActionPreference: 'continue'
     verbosePreference: 'continue'
     debugPreference: 'continue'
@@ -51,7 +41,6 @@ steps:
   inputs:
     command: 'restore'
     restoreSolution: '$(project_root)/$(project_name).sln'
-    includeNuGetOrg: true
     feedsToUse: 'config'
     nugetConfigPath: './nuget.config'
     noCache: false
@@ -314,14 +303,12 @@ steps:
 #     targetPath: '$(artifacts_share_target)'
 #     allowPartiallySucceededBuilds: true
 #     allowFailedBuilds: true
-
 - task: NuGetCommand@2
-  displayName: 'nuget push'
+  displayName: 'push nupkg to feed'
   inputs:
     command: 'push'
     packagesToPush: '$(release_path)/*.nupkg'
-    nuGetFeedType: 'internal'
-    feedsToUse: 'config'
     nugetConfigPath: './nuget.config'
-    noCache: false
-    verbosityRestore: 'Detailed'
+    publishVstsFeed: '$(project_feed)'
+    publishPackageMetadata: true
+    verbosityPush: 'Detailed'
