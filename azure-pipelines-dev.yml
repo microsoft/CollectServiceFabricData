@@ -166,7 +166,7 @@ steps:
     MaxConcurrency: '50'
     MaxRetryAttempts: '5'
     PendingAnalysisWaitTimeoutMinutes: '5'
-    VerboseLogin: true
+    VerboseLogin: false
 
 - task: PowerShell@2
   displayName: 'repack nupkg with signed binaries'
@@ -219,7 +219,7 @@ steps:
     MaxConcurrency: '50'
     MaxRetryAttempts: '5'
     PendingAnalysisWaitTimeoutMinutes: '5'
-    VerboseLogin: true
+    VerboseLogin: false
 
 - task: PowerShell@2
   displayName: 'create zip with signed files'
@@ -303,12 +303,22 @@ steps:
 #     targetPath: '$(artifacts_share_target)'
 #     allowPartiallySucceededBuilds: true
 #     allowFailedBuilds: true
+# - task: NuGetCommand@2
+#   displayName: 'push nupkg to feed'
+#   inputs:
+#     command: 'push'
+#     packagesToPush: '$(release_path)/*.nupkg'
+#     nugetConfigPath: './nuget.config'
+#     publishVstsFeed: '$(project_feed)'
+#     publishPackageMetadata: true
+#     verbosityPush: 'Detailed'
+
 - task: NuGetCommand@2
   displayName: 'push nupkg to feed'
   inputs:
     command: 'push'
     packagesToPush: '$(release_path)/*.nupkg'
     nugetConfigPath: './nuget.config'
-    publishVstsFeed: '$(project_feed)'
+    feedsToUse: 'config'
     publishPackageMetadata: true
     verbosityPush: 'Detailed'
