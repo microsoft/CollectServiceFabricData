@@ -186,7 +186,7 @@ steps:
       rd $nupkgDir -recurse -force
       md $nupkgDir
       move $nupkgZip $nupkg -force
-      move *.nupkg $nupkgDir -force
+      move $nupkg $nupkgDir -force
     errorActionPreference: 'continue'
     verbosePreference: 'continue'
     debugPreference: 'continue'
@@ -296,32 +296,12 @@ steps:
     targetPath: $(System.ArtifactsDirectory)
     artifactName: artifacts-$(start_time)-$(system.JobId)
 
-# - task: DownloadPipelineArtifact@2
-#   inputs:
-#     buildType: 'current'
-#     artifactName: 'artifacts-$(start_time)-$(system.JobId)'
-#     targetPath: '$(artifacts_share_target)'
-#     allowPartiallySucceededBuilds: true
-#     allowFailedBuilds: true
-
-# - task: NuGetCommand@2
-#   displayName: 'push nupkg to feed'
-#   inputs:
-#     command: 'push'
-#     packagesToPush: '$(release_path)/*.nupkg'
-#     nugetConfigPath: './nuget.config'
-#     publishVstsFeed: '$(project_feed)'
-#     publishPackageMetadata: true
-#     verbosityPush: 'Detailed'
-
 - task: NuGetCommand@2
   displayName: 'push nupkg to feed'
   inputs:
     command: 'push'
-    packagesToPush: '$(release_path)/*.nupkg'
-    #nugetConfigPath: './nuget.config'
+    packagesToPush: '$(release_stage_path)/*.nupkg'
     nuGetFeedType: 'internal'
     publishVstsFeed: '$(project_feed)'
-    #feedsToUse: 'config'
     publishPackageMetadata: true
     verbosityPush: 'Detailed'
