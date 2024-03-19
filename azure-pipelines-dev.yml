@@ -21,7 +21,7 @@ variables:
   release_path: $(System.DefaultWorkingDirectory)/src/bin/$(buildConfiguration)
   release_stage_path: $(release_path)/signed
   esrp_signing_connection: 'collectsfdata esrp signing connection'
-  project_feed: CollectServiceFabricData
+  project_feed: Tools/CollectServiceFabricData
 
 steps:
 - task: PowerShell@2
@@ -319,9 +319,9 @@ steps:
   inputs:
     command: 'push'
     packagesToPush: '$(release_path)/*.nupkg'
-    nugetConfigPath: './nuget.config'
+    #nugetConfigPath: './nuget.config'
     nuGetFeedType: 'internal'
     publishVstsFeed: '$(project_feed)'
-    feedsToUse: 'config'
+    #feedsToUse: 'config'
     publishPackageMetadata: true
     verbosityPush: 'Detailed'
