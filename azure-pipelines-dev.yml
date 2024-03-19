@@ -31,6 +31,8 @@ steps:
       [environment]::getEnvironmentVariables().getEnumerator()|sort Name
       dotnet --info
       dotnet nuget locals all --clear
+      # test
+      dotnet restore .\src --configfile ./nuget.config --force -v d
     errorActionPreference: 'continue'
     verbosePreference: 'continue'
     debugPreference: 'continue'
@@ -40,6 +42,7 @@ steps:
   inputs:
     command: 'restore'
     restoreSolution: '$(project_root)/$(project_name).sln'
+    includeNuGetOrg: true
     feedsToUse: 'config'
     nugetConfigPath: './nuget.config'
     noCache: false
@@ -302,3 +305,14 @@ steps:
 #     targetPath: '$(artifacts_share_target)'
 #     allowPartiallySucceededBuilds: true
 #     allowFailedBuilds: true
+
+- task: NuGetCommand@2
+  displayName: 'nuget push'
+  inputs:
+    command: 'push'
+    packagesToPush: '$(release_path)/*.nupkg'
+    nuGetFeedType: 'internal'
+    feedsToUse: 'config'
+    nugetConfigPath: './nuget.config'
+    noCache: false
+    verbosityRestore: 'Detailed'
