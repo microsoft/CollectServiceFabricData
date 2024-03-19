@@ -23,6 +23,15 @@ variables:
   esrp_signing_connection: 'collectsfdata esrp signing connection'
 
 steps:
+- task: NuGetAuthenticate@1
+  inputs:
+    nuGetServiceConnections: CollectServiceFabricData
+
+- task: NuGetToolInstaller@1 # Optional if nuget.exe >= 4.8.5385 is already on the path
+  inputs:
+    versionSpec: '*'
+    checkLatest: true
+
 - task: PowerShell@2
   displayName: 'agent environment'
   inputs:
