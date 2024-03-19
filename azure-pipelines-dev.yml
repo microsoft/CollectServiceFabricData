@@ -303,6 +303,7 @@ steps:
 #     targetPath: '$(artifacts_share_target)'
 #     allowPartiallySucceededBuilds: true
 #     allowFailedBuilds: true
+
 # - task: NuGetCommand@2
 #   displayName: 'push nupkg to feed'
 #   inputs:
@@ -319,6 +320,8 @@ steps:
     command: 'push'
     packagesToPush: '$(release_path)/*.nupkg'
     nugetConfigPath: './nuget.config'
+    nuGetFeedType: 'internal'
+    publishVstsFeed: '$(project_feed)'
     feedsToUse: 'config'
     publishPackageMetadata: true
     verbosityPush: 'Detailed'
