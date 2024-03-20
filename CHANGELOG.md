@@ -1,5 +1,12 @@
 # Change log
 
+## 03/20/2024
+
+- modify azure pipelines for ado
+ - add stages and jobs for build and release
+ - add signing
+ - add publish
+
 ## 03/16/2024
 
 - add all target frameworks to zip for release
