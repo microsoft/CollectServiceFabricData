@@ -2,11 +2,10 @@ name: CI CollectSFData
 
 env:
   project_name: CollectSFData
-  project_root: .\src
-  artifacts_path: .\src\bin\artifacts
-  release_path: .\src\bin\Release
-  release_config: .\configurationFiles\collectsfdata.options.json
-  target_version: net48
+  project_root: ${{ github.workspace }}\\src
+  artifacts_path: ${{ github.workspace }}\\src\\bin\\artifacts
+  release_path: ${{ github.workspace }}\\src\\bin\\Release
+  release_config: ${{ github.workspace }}\\configurationFiles\\collectsfdata.options.json
   github_owner: ${{ github.event.repository.owner.name }}
 
 on:
@@ -19,6 +18,7 @@ on:
     branches:
       - master
       - main
+
 jobs:
   build:
     runs-on: windows-latest
@@ -62,9 +62,11 @@ jobs:
         shell: powershell
         run: |
           [environment]::GetEnvironmentVariables()
-          dir
+          write-host "copy "$($env:release_path)" "$($env:artifacts_path)" -recurse -force"
           copy "$($env:release_path)" "$($env:artifacts_path)" -recurse -force
+          write-host "copy "$($env:release_config)" "$($env:artifacts_path)" -recurse -force"
           copy "$($env:release_config)" "$($env:artifacts_path)" -recurse -force
+          dir "$($env:artifacts_path)" -recurse
 
       - name: artifacts output
         shell: powershell
@@ -80,6 +82,10 @@ jobs:
     if: success() && github.event.pull_request.merged == true && github.event.action == 'closed' && (contains(github.event.pull_request.labels.*.name, 'Release') || contains(github.event.pull_request.labels.*.name, 'Pre-release'))
     needs: build
     runs-on: windows-latest
+    permissions:
+      contents: write
+      packages: write
+
     steps:
       - name: checkout
         uses: actions/checkout@v1
@@ -106,53 +112,38 @@ jobs:
           $nugetPackageName = (get-item "$($env:release_path)\*.nupkg").Name
           echo "nuget_package=$nugetPackage" >> $env:GITHUB_OUTPUT
           echo "nuget_package_name=$nugetPackageName" >> $env:GITHUB_OUTPUT
+          write-host "nuget_package=$nugetPackage"
+          write-host "nuget_package_name=$nugetPackageName"
 
       - name: prepare release asset
         shell: powershell
         id: prepare_release_asset
         run: |
-          md "$($env:release_path)_upload"
-          $releaseFramework = "$($env:release_path)\$($env:target_version)"
-          copy "$($releaseFramework)\*.config" "$($env:release_path)_upload"
-          copy "$($releaseFramework)\*.exe" "$($env:release_path)_upload"
-          copy "$($releaseFramework)\*.dll" "$($env:release_path)_upload"
-          copy "$($releaseFramework)\*.json" "$($env:release_path)_upload"
-          compress-archive -path "$($env:release_path)_upload\*" -destinationPath "$($env:release_path)\$($env:project_name).zip" -force
-          $fileVersion = [io.fileinfo]::new("$($releaseFramework)\$($env:project_name).exe").VersionInfo.FileVersion
+          $source = "$($env:release_path)\\*"
+          $destination = "$($env:release_path)\\$($env:project_name).zip"
+          write-host "compress-archive -path $source -destinationPath $destination -force"
+          compress-archive -path $source -destinationPath $destination -force
+          $exeFileRef = @(get-childItem -recurse "$($env:release_path)\$($env:project_name).exe")[0].FullName
+          $fileVersion = [io.fileinfo]::new($exeFileRef).VersionInfo.FileVersion
+          write-host "fileVersion=$fileVersion"
           echo "::log-command parameter1=$fileVersion::fileVersion"
           echo "file_version=v$fileVersion" >> $env:GITHUB_OUTPUT
+          write-host "dir $env:release_path -recurse"
+          dir $env:release_path -recurse
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      # https://github.com/marketplace/actions/gh-release
       - name: create release
         id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: softprops/action-gh-release@v2
         with:
+          files: |
+            **/${{ env.project_name }}.zip
+            **/*${{ env.project_name }}*.nupkg
           tag_name: ${{ steps.prepare_release_asset.outputs.file_version }}
-          release_name: ${{ env.project_name }}
+          name: ${{ env.project_name }}
           draft: false
+          token: ${{ secrets.GITHUB_TOKEN }}
           prerelease: ${{ contains(github.event.pull_request.labels.*.name, 'Pre-release') }}
-
-      - name: upload release asset
-        id: upload-release-asset
-        uses: actions/upload-release-asset@v1.0.1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ${{ env.release_path }}\${{ env.project_name }}.zip
-          asset_name: ${{ env.project_name }}.zip
-          asset_content_type: application/zip
-
-      - name: upload nuget release asset
-        id: upload-nuget-release-asset
-        uses: actions/upload-release-asset@v1.0.1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ${{ steps.set_nuget_package.outputs.nuget_package }}
-          asset_name: ${{ steps.set_nuget_package.outputs.nuget_package_name }}
-          asset_content_type: application/zip
+          generate_release_notes: true
