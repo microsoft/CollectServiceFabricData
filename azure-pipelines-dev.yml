@@ -23,7 +23,7 @@ variables:
   artifacts_share_target: 'Z:\$(System.DefinitionName)\$(System.JobId)\$(start_time)'
   release_path: $(System.DefaultWorkingDirectory)/src/bin/$(buildConfiguration)
   release_stage_path: $(release_path)/signed
-  artifacts_name_suffix: $(artifacts_name_suffix)
+  artifacts_name_suffix: $(start_time)-$(system.JobId)
 
 stages:
   - stage: build
