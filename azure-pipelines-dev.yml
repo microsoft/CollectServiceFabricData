@@ -109,19 +109,6 @@ stages:
           verbosity: Verbose
           alertWarningLevel: High
 
-      # - task: PowerShell@2
-      #   displayName: 'stage release binaries'
-      #   inputs:
-      #     targetType: 'inline'
-      #     script: |
-      #       $source = "$($env:release_path)\\*"
-      #       $destination = "$($env:release_stage_path)"
-      #       write-host "copy $source $destination -recurse"
-      #       copy $source $destination -recurse
-      #     errorActionPreference: 'continue'
-      #     verbosePreference: 'continue'
-      #     debugPreference: 'continue'
-
       - task: PowerShell@2
         displayName: 'dotnet build output'
         inputs:
@@ -146,10 +133,11 @@ stages:
   - stage: release
     displayName: 'release'
     dependsOn: build
+    condition: and(succeeded(), variables['publish_release'])
     jobs:
     - job: sign
       displayName: 'sign'
-      condition: and(succeeded(), variables['publish_release'])
+      #condition: and(succeeded(), variables['publish_release'])
       steps:
       - task: DownloadPipelineArtifact@2
         displayName: 'download release from pipeline'
@@ -353,7 +341,7 @@ stages:
     - job: publish
       displayName: 'publish'
       dependsOn: sign
-      condition: and(succeeded(), variables['publish_release'])
+      #condition: and(succeeded(), variables['publish_release'])
       steps:      
       - task: DownloadPipelineArtifact@2
         displayName: 'download release from pipeline'
