@@ -1,5 +1,38 @@
 # Change log
 
+## 03/20/2024
+
+- modify azure pipelines for ado
+ - add stages and jobs for build and release
+ - add signing
+ - add publish
+
+## 03/16/2024
+
+- add all target frameworks to zip for release
+- update git actions workflow release. add permissions
+    permissions:
+      contents: write
+      packages: write
+
+## 03/11/2024
+
+- update kusto quickstart doc with modified image and minimum sas permissions
+- update kusto quickstart doc with new exception message
+- update kusto functions
+
+## 03/07/2024
+
+- upgrade git action labeler@v5
+
+## 02/07/2024
+
+- add updates for SDL
+- add dependabot config
+- remove stale links in documentation
+- update workflow for git for deprecated env variables
+- update prod and dev pipelines azure pipelines for ado
+
 ## 11/19/2023
 
 - add support for .net8.0

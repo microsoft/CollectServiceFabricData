@@ -68,9 +68,9 @@ to build a specific configuration:
 .\dotnet-build.ps1 -targetFrameworks net462 -configuration debug -runtimeIdentifier win-x64
 ```
 
-Visual Studio Code with .net6.0 / net5 and powershell 7.0+
+Visual Studio Code with .net6.0 / net8.0 and powershell 7.0+
 or
-Visual Studio 2019 with .net6.0 / net5 and powershell 7.0+
+Visual Studio 2019 with .net6.0 / net8.0 and powershell 7.0+
 
 ### App registration (user) setup
 

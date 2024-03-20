@@ -1,19 +1,30 @@
+root:
+- changed-files:
+  - any-glob-to-any-file: '*'
+
 Configuration File:
-  - configurationFiles/**
+- changed-files:
+  - any-glob-to-any-file: configurationFiles/**
 
 Executable:
-  - src/**
+- changed-files:
+  - any-glob-to-any-file: src/**
 
 Kusto Query Language:
-  - kusto/**
+- changed-files:
+  - any-glob-to-any-file: kusto/**
 
 WorkFlow:
-  - .github/**
+- changed-files:
+  - any-glob-to-any-file: .github/**
 
 documentation:
-  - docs/*.*
-  - README.md
-  - CHANGELOG.md
+- changed-files:
+  - any-glob-to-any-file: 
+    - docs/*.*
+    - README.md
+    - CHANGELOG.md
 
 scripts:
-  - scripts/*.*
+- changed-files:
+  - any-glob-to-any-file: scripts/*.*
