@@ -109,18 +109,18 @@ stages:
           verbosity: Verbose
           alertWarningLevel: High
 
-      - task: PowerShell@2
-        displayName: 'stage release binaries'
-        inputs:
-          targetType: 'inline'
-          script: |
-            $source = "$($env:release_path)\\*"
-            $destination = "$($env:release_stage_path)"
-            write-host "copy $source $destination -recurse"
-            copy $source $destination -recurse
-          errorActionPreference: 'continue'
-          verbosePreference: 'continue'
-          debugPreference: 'continue'
+      # - task: PowerShell@2
+      #   displayName: 'stage release binaries'
+      #   inputs:
+      #     targetType: 'inline'
+      #     script: |
+      #       $source = "$($env:release_path)\\*"
+      #       $destination = "$($env:release_stage_path)"
+      #       write-host "copy $source $destination -recurse"
+      #       copy $source $destination -recurse
+      #     errorActionPreference: 'continue'
+      #     verbosePreference: 'continue'
+      #     debugPreference: 'continue'
 
       - task: PowerShell@2
         displayName: 'dotnet build output'
@@ -162,7 +162,16 @@ stages:
         inputs:
           artifactName: artifacts-$(artifacts_name_suffix)
           targetPath: $(System.ArtifactsDirectory)
-      
+
+      - task: PowerShell@2
+        displayName: 'download pipeline artifacts output'
+        inputs:
+          targetType: 'inline'
+          script: dir .. -recurse
+          errorActionPreference: 'continue'
+          verbosePreference: 'continue'
+          debugPreference: 'continue'
+
       - task: PowerShell@2
         displayName: 'unpack nupkg for binary signing'
         inputs:
@@ -278,7 +287,7 @@ stages:
           targetType: 'inline'
           script: |
             $source = "$($env:release_path)\\*"
-            $destination = "$($env:release_path)\\$($env:project_name).zip"
+            $destination = "$($env:release_stage_path)\\$($env:project_name).zip"
             write-host "compress-archive -path $source -destinationPath $destination -force"
             compress-archive -path $source -destinationPath $destination -force
             $exeFileRef = @(get-childItem -recurse "$($env:release_path)\$($env:project_name).exe")[0].FullName
@@ -364,7 +373,7 @@ stages:
         displayName: 'push nupkg to feed'
         inputs:
           command: 'push'
-          packagesToPush: '$(release_stage_path)/*.nupkg'
+          packagesToPush: '$(release_path)/*.nupkg'
           nuGetFeedType: 'internal'
           publishVstsFeed: '$(project_feed)'
           publishPackageMetadata: true
