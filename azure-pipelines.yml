@@ -118,27 +118,39 @@ stages:
           errorActionPreference: 'continue'
           verbosePreference: 'continue'
           debugPreference: 'continue'
-      
+
       - task: PublishPipelineArtifact@1
         displayName: 'publish release to pipeline'
         inputs:
           targetPath:  $(release_path)
           artifactName: release-$(artifacts_name_suffix)
-    
+
       - task: PublishPipelineArtifact@1
         displayName: 'publish artifacts for codeql to pipeline'
         inputs:
           targetPath: $(System.ArtifactsDirectory)
           artifactName: artifacts-$(artifacts_name_suffix)
-    
+
   - stage: release
     displayName: 'release'
     dependsOn: build
+    condition: and(succeeded(), variables.publish_release)
     jobs:
     - job: sign
       displayName: 'sign'
-      condition: and(succeeded(), variables['publish_release'])
       steps:
+      - task: PowerShell@2
+        displayName: 'agent environment'
+        inputs:
+          targetType: 'inline'
+          script: |
+            [environment]::getEnvironmentVariables().getEnumerator()|sort Name
+            dotnet --info
+            dotnet nuget locals all --clear
+          errorActionPreference: 'continue'
+          verbosePreference: 'continue'
+          debugPreference: 'continue'
+
       - task: DownloadPipelineArtifact@2
         displayName: 'download release from pipeline'
         inputs:
@@ -298,7 +310,7 @@ stages:
 
       - task: PowerShell@2
         displayName: 'copy artifacts to azure storage'
-        condition: not(variables['publish_release'])
+        condition: not(variables.publish_release)
         inputs:
           targetType: 'inline'
           script: |
@@ -337,18 +349,29 @@ stages:
         inputs:
           targetPath:  $(release_stage_path)
           artifactName: signed-release-$(artifacts_name_suffix)
-      
+
     - job: publish
       displayName: 'publish'
       dependsOn: sign
-      condition: and(succeeded(), variables['publish_release'])
-      steps:      
+      steps:
+      - task: PowerShell@2
+        displayName: 'agent environment'
+        inputs:
+          targetType: 'inline'
+          script: |
+            [environment]::getEnvironmentVariables().getEnumerator()|sort Name
+            dotnet --info
+            dotnet nuget locals all --clear
+          errorActionPreference: 'continue'
+          verbosePreference: 'continue'
+          debugPreference: 'continue'
+
       - task: DownloadPipelineArtifact@2
         displayName: 'download release from pipeline'
         inputs:
           artifactName: signed-release-$(artifacts_name_suffix)
           targetPath: $(release_path)
-      
+
       - task: PowerShell@2
         displayName: 'dotnet build output'
         inputs:
