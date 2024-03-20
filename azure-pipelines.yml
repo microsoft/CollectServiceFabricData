@@ -15,14 +15,14 @@ variables:
   project_name: CollectSFData
   esrp_signing_connection: 'collectsfdata esrp signing connection'
   project_feed: Tools/CollectServiceFabricData
-  buildConfiguration: release
+  build_configuration: release
   system.debug: false
   publish_release: $[eq(variables['Build.SourceBranch'], 'refs/heads/release_30')]
   project_root: .\src
   start_time: $[format('{0}-{1:yyyy}{1:MM}{1:dd}-{1:HH}{1:mm}{1:ss}', variables['project_name'], pipeline.startTime)]
   artifacts_drive: Z
   artifacts_share_target: 'Z:\$(System.DefinitionName)\$(System.JobId)\$(start_time)'
-  release_path: $(System.DefaultWorkingDirectory)/src/bin/$(buildConfiguration)
+  release_path: $(System.DefaultWorkingDirectory)/src/bin/$(build_configuration)
   release_stage_path: $(release_path)/signed
   artifacts_name_suffix: $(project_name)
 
@@ -70,8 +70,8 @@ stages:
         inputs:
           targetType: 'inline'
           script: |
-            write-host "dotnet build `"$env:project_root\$env:project_name\$env:project_name.csproj`" -v detailed -c $env:buildConfiguration"
-            dotnet build "$env:project_root\$env:project_name\$env:project_name.csproj" -v detailed -c $env:buildConfiguration
+            write-host "dotnet build `"$env:project_root\$env:project_name\$env:project_name.csproj`" -v detailed -c $env:build_configuration"
+            dotnet build "$env:project_root\$env:project_name\$env:project_name.csproj" -v detailed -c $env:build_configuration
           errorActionPreference: 'continue'
           verbosePreference: 'continue'
           debugPreference: 'continue'
@@ -134,7 +134,7 @@ stages:
   - stage: release
     displayName: 'release'
     dependsOn: build
-    condition: and(succeeded(), variables.publish_release)
+    condition: and(succeeded(), eq(variables.publish_release, 'true'))
     jobs:
     - job: sign
       displayName: 'sign'
@@ -310,7 +310,7 @@ stages:
 
       - task: PowerShell@2
         displayName: 'copy artifacts to azure storage'
-        condition: not(variables.publish_release)
+        condition: eq(variables.build_configuration, 'debug')
         inputs:
           targetType: 'inline'
           script: |
