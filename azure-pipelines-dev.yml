@@ -16,13 +16,14 @@ variables:
   project_feed: Tools/CollectServiceFabricData
   buildConfiguration: debug
   system.debug: true
-  publish_release: eq(variables['System.PullRequest.TargetBranch'], variables['Build.Repository.DefaultBranch']))
+  publish_release: eq(variables['Build.SourceBranch'], 'refs/heads/release_30')
   project_root: .\src
   start_time: $[format('{0}-{1:yyyy}{1:MM}{1:dd}-{1:HH}{1:mm}{1:ss}', variables['project_name'], pipeline.startTime)]
   artifacts_drive: Z
   artifacts_share_target: 'Z:\$(System.DefinitionName)\$(System.JobId)\$(start_time)'
   release_path: $(System.DefaultWorkingDirectory)/src/bin/$(buildConfiguration)
   release_stage_path: $(release_path)/signed
+  artifacts_name_suffix: $(artifacts_name_suffix)
 
 stages:
   - stage: build
@@ -109,6 +110,60 @@ stages:
           alertWarningLevel: High
 
       - task: PowerShell@2
+        displayName: 'stage release binaries'
+        inputs:
+          targetType: 'inline'
+          script: |
+            $source = "$($env:release_path)\\*"
+            $destination = "$($env:release_stage_path)"
+            write-host "copy $source $destination -recurse"
+            copy $source $destination -recurse
+          errorActionPreference: 'continue'
+          verbosePreference: 'continue'
+          debugPreference: 'continue'
+
+      - task: PowerShell@2
+        displayName: 'dotnet build output'
+        inputs:
+          targetType: 'inline'
+          script: dir .. -recurse
+          errorActionPreference: 'continue'
+          verbosePreference: 'continue'
+          debugPreference: 'continue'
+      
+      - task: PublishPipelineArtifact@1
+        displayName: 'publish release to pipeline'
+        inputs:
+          targetPath:  $(release_stage_path)
+          artifactName: release-$(artifacts_name_suffix)
+    
+      - task: PublishPipelineArtifact@1
+        displayName: 'publish artifacts for codeql to pipeline'
+        inputs:
+          targetPath: $(System.ArtifactsDirectory)
+          artifactName: artifacts-$(artifacts_name_suffix)
+    
+  - stage: release
+    displayName: 'release'
+    dependsOn: build
+    jobs:
+    - job: sign
+      displayName: 'sign'
+      condition: and(succeeded(), variables['publish_release'])
+      steps:
+      - task: DownloadPipelineArtifact@2
+        displayName: 'download release from pipeline'
+        inputs:
+          artifactName: release-$(artifacts_name_suffix)
+          targetPath: $(release_path)
+
+      - task: DownloadPipelineArtifact@2
+        displayName: 'download artifacts from pipeline'
+        inputs:
+          artifactName: artifacts-$(artifacts_name_suffix)
+          targetPath: $(System.ArtifactsDirectory)
+      
+      - task: PowerShell@2
         displayName: 'unpack nupkg for binary signing'
         inputs:
           targetType: 'inline'
@@ -128,24 +183,6 @@ stages:
           verbosePreference: 'continue'
           debugPreference: 'continue'
 
-      - task: PowerShell@2
-        displayName: 'dotnet build output'
-        inputs:
-          targetType: 'inline'
-          script: dir .. -recurse
-          errorActionPreference: 'continue'
-          verbosePreference: 'continue'
-          debugPreference: 'continue'
-    
-  - stage: release
-    displayName: 'release'
-    dependsOn: build
-    jobs:
-    - job: sign
-      displayName: 'sign'
-      condition: and(succeeded(), variables['publish_release'])
-      steps:
-        # https://aka.ms/esrp
       - task: EsrpCodeSigning@4
         displayName: 'dll and exe code signing'
         inputs:
@@ -264,7 +301,7 @@ stages:
           debugPreference: 'continue'
 
       - task: PowerShell@2
-        displayName: 'copy artifacts'
+        displayName: 'copy artifacts to azure storage'
         inputs:
           targetType: 'inline'
           script: |
@@ -297,22 +334,22 @@ stages:
           mapped_artifacts_pass: $(artifacts_pass)
           mapped_artifacts_share: $(artifacts_share)
           artifacts_directory: $(System.ArtifactsDirectory)
-    
+
+      - task: PublishPipelineArtifact@1
+        displayName: 'publish release to pipeline'
+        inputs:
+          targetPath:  $(release_stage_path)
+          artifactName: release-$(artifacts_name_suffix)
+      
     - job: publish
       displayName: 'publish'
       condition: and(succeeded(), variables['publish_release'])
-      steps:
-      - task: PublishPipelineArtifact@1
-        displayName: 'publish artifacts'
+      steps:      
+      - task: DownloadPipelineArtifact@2
+        displayName: 'download release from pipeline'
         inputs:
-          targetPath:  $(release_stage_path)
-          artifactName: build-$(start_time)-$(system.JobId)
-
-      - task: PublishPipelineArtifact@1
-        displayName: 'publish codeql'
-        inputs:
-          targetPath: $(System.ArtifactsDirectory)
-          artifactName: artifacts-$(start_time)-$(system.JobId)
+          artifactName: release-$(artifacts_name_suffix)
+          targetPath: $(release_path)
 
       - task: NuGetCommand@2
         displayName: 'push nupkg to feed'
