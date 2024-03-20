@@ -134,7 +134,7 @@ stages:
       - task: PublishPipelineArtifact@1
         displayName: 'publish release to pipeline'
         inputs:
-          targetPath:  $(release_stage_path)
+          targetPath:  $(release_path)
           artifactName: release-$(artifacts_name_suffix)
     
       - task: PublishPipelineArtifact@1
@@ -284,7 +284,6 @@ stages:
             $exeFileRef = @(get-childItem -recurse "$($env:release_path)\$($env:project_name).exe")[0].FullName
             $fileVersion = [io.fileinfo]::new($exeFileRef).VersionInfo.FileVersion
             write-host "fileVersion=$fileVersion"
-            #echo "file_version=v$fileVersion" >> $env:GITHUB_OUTPUT
             write-host "dir $env:release_path -recurse"
             dir $env:release_path -recurse
           errorActionPreference: 'continue'
@@ -351,6 +350,15 @@ stages:
         inputs:
           artifactName: signed-release-$(artifacts_name_suffix)
           targetPath: $(release_path)
+      
+      - task: PowerShell@2
+        displayName: 'dotnet build output'
+        inputs:
+          targetType: 'inline'
+          script: dir .. -recurse
+          errorActionPreference: 'continue'
+          verbosePreference: 'continue'
+          debugPreference: 'continue'
 
       - task: NuGetCommand@2
         displayName: 'push nupkg to feed'
