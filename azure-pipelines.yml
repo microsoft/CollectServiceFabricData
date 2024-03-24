@@ -235,11 +235,10 @@ stages:
           script: |
             $nupkg = @(get-childItem -recurse "$($env:release_path)\*.nupkg")[0].FullName
             $nupkgZip = "$nupkg.zip"
-            $nupkgUnsigned = "$nupkg".replace(".nupkg", ".unsigned.nupkg")
             write-host "nupkg=$nupkg"
             $nupkgDir = "$($env:release_stage_path)"
             del "$nupkgDir\CodeSignSummary*.md" -force
-            ren $nupkg $nuPkgUnsigned
+            del $nupkg -force
             del $nupkgZip -force
             write-host "compress-archive -path $nupkgDir\* -destinationPath $nupkgZip -force"
             compress-archive -path $nupkgDir\* -destinationPath $nupkgZip -force
@@ -282,11 +281,11 @@ stages:
           VerboseLogin: false
 
       - task: PowerShell@2
-        displayName: 'create zip with signed files'
+        displayName: 'create zip with signed .net version files'
         inputs:
           targetType: 'inline'
           script: |
-            $source = "$($env:release_path)\\*"
+            $source = "$($env:release_path)\\net*"
             $destination = "$($env:release_stage_path)\\$($env:project_name).zip"
             write-host "compress-archive -path $source -destinationPath $destination -force"
             compress-archive -path $source -destinationPath $destination -force
