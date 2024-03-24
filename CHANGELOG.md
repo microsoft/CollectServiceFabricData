@@ -1,5 +1,12 @@
 # Change log
 
+## 03/24/2024
+
+- add sign stage
+  - build
+  - sign
+  - release nupkg to internal feed if master
+
 ## 03/20/2024
 
 - modify azure pipelines for ado
