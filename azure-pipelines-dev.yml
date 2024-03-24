@@ -356,7 +356,6 @@ stages:
     jobs:
     - job: publish
       displayName: 'publish'
-      dependsOn: sign
       steps:
       - task: PowerShell@2
         displayName: 'agent environment'
