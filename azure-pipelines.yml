@@ -350,14 +350,14 @@ stages:
           targetPath:  $(release_stage_path)
           artifactName: signed-release-$(artifacts_name_suffix)
 
-- stage: release
+  - stage: release
     displayName: 'release'
     dependsOn: sign
     condition: and(succeeded(), eq(variables.publish_release, 'true'))
     jobs:
     - job: publish
       displayName: 'publish'
-            steps:
+      steps:
       - task: PowerShell@2
         displayName: 'agent environment'
         inputs:
