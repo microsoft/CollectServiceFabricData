@@ -69,6 +69,8 @@ stages:
         inputs:
           targetType: 'inline'
           script: |
+            write-host "dotnet list `"$env:project_root\$env:project_name\$env:project_name.csproj`" package --include-transitive"
+            dotnet list "$env:project_root\$env:project_name\$env:project_name.csproj" package --include-transitive
             write-host "dotnet build `"$env:project_root\$env:project_name\$env:project_name.csproj`" -v detailed -c $env:build_configuration"
             dotnet build "$env:project_root\$env:project_name\$env:project_name.csproj" -v detailed -c $env:build_configuration
           errorActionPreference: 'continue'
