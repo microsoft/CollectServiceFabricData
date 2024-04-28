@@ -704,7 +704,7 @@ Project 'CollectSFDataDll' has the following package references
    > Azure.Storage.Queues                           12.16.0  
    > Microsoft.Azure.Kusto.Data                     11.3.4  
    > Microsoft.Extensions.CommandLineUtils          1.1.1  
-   > Microsoft.Identity.Client.Extensions.Msal      4.56.0  
+   > Microsoft.Identity.Client.Extensions.Msal      4.60.1  
    > Newtonsoft.Json                                13.0.3  
    > System.CodeDom                                 4.7.0  
    > System.Diagnostics.DiagnosticSource            7.0.2  

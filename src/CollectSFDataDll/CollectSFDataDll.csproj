@@ -57,7 +57,7 @@
       <TreatAsUsed>true</TreatAsUsed>
     </PackageReference>
     <PackageReference Include="Microsoft.Identity.Client.Extensions.Msal">
-      <Version>4.56.0</Version>
+      <Version>4.60.1</Version>
       <TreatAsUsed>true</TreatAsUsed>
     </PackageReference>
     <PackageReference Include="System.CodeDom">
