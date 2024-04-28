@@ -372,7 +372,6 @@ Binaries are signed.
 |   |   Azure.Core.dll
 |   |   Azure.Data.Tables.dll
 |   |   Azure.Identity.dll
-|   |   Azure.Security.KeyVault.Certificates.dll
 |   |   Azure.Security.KeyVault.Keys.dll
 |   |   Azure.Security.KeyVault.Secrets.dll
 |   |   Azure.Storage.Blobs.dll
@@ -526,7 +525,6 @@ Binaries are signed.
 |   |   Azure.Core.dll
 |   |   Azure.Data.Tables.dll
 |   |   Azure.Identity.dll
-|   |   Azure.Security.KeyVault.Certificates.dll
 |   |   Azure.Security.KeyVault.Keys.dll
 |   |   Azure.Security.KeyVault.Secrets.dll
 |   |   Azure.Storage.Blobs.dll
@@ -583,7 +581,6 @@ Binaries are signed.
 |   |   Azure.Core.dll
 |   |   Azure.Data.Tables.dll
 |   |   Azure.Identity.dll
-|   |   Azure.Security.KeyVault.Certificates.dll
 |   |   Azure.Security.KeyVault.Keys.dll
 |   |   Azure.Security.KeyVault.Secrets.dll
 |   |   Azure.Storage.Blobs.dll
@@ -646,7 +643,6 @@ Binaries are signed.
     |   Azure.Core.dll
     |   Azure.Data.Tables.dll
     |   Azure.Identity.dll
-    |   Azure.Security.KeyVault.Certificates.dll
     |   Azure.Security.KeyVault.Keys.dll
     |   Azure.Security.KeyVault.Secrets.dll
     |   Azure.Storage.Blobs.dll
@@ -696,3 +692,20 @@ Binaries are signed.
                 \---net7.0
                         System.Security.Cryptography.ProtectedData.dll
 ```
+
+### NuGet Package Dependencies
+
+Project 'CollectSFDataDll' has the following package references
+   > Azure.Data.Tables                              12.8.1  
+   > Azure.Identity                                 1.11.0  
+   > Azure.Security.KeyVault.Keys                   4.5.0  
+   > Azure.Security.KeyVault.Secrets                4.5.0  
+   > Azure.Storage.Blobs                            12.18.0  
+   > Azure.Storage.Queues                           12.16.0  
+   > Microsoft.Azure.Kusto.Data                     11.3.4  
+   > Microsoft.Extensions.CommandLineUtils          1.1.1  
+   > Microsoft.Identity.Client.Extensions.Msal      4.56.0  
+   > Newtonsoft.Json                                13.0.3  
+   > System.CodeDom                                 4.7.0  
+   > System.Diagnostics.DiagnosticSource            7.0.2  
+   > System.Reactive                                4.0.0  

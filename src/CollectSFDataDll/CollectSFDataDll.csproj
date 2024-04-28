@@ -40,10 +40,6 @@
     </PackageReference>
     <PackageReference Include="Microsoft.Azure.Kusto.Data" Version="11.3.4" />
     <PackageReference Include="Azure.Data.Tables" Version="12.8.1" />
-    <PackageReference Include="Azure.Security.KeyVault.Certificates">
-      <Version>4.5.1</Version>
-      <TreatAsUsed>true</TreatAsUsed>
-    </PackageReference>
     <PackageReference Include="Azure.Security.KeyVault.Keys">
       <Version>4.5.0</Version>
       <TreatAsUsed>true</TreatAsUsed>
