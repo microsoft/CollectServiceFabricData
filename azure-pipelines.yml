@@ -14,7 +14,7 @@ pool:
 variables:
   project_name: CollectSFData
   esrp_signing_connection: 'collectsfdata esrp signing connection'
-  project_feed: Tools/CollectServiceFabricData
+  project_feed: Tools/CollectServiceFabricData_Public
   build_configuration: release
   system.debug: false
   publish_release: $[eq(variables['Build.SourceBranch'], 'refs/heads/master')]
