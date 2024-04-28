@@ -418,7 +418,6 @@ Binaries are signed.
 |   |   System.Data.SqlClient.dll
 |   |   System.Diagnostics.Contracts.dll
 |   |   System.Diagnostics.Debug.dll
-|   |   System.Diagnostics.DiagnosticSource.dll
 |   |   System.Diagnostics.FileVersionInfo.dll
 |   |   System.Diagnostics.Process.dll
 |   |   System.Diagnostics.StackTrace.dll
@@ -554,7 +553,6 @@ Binaries are signed.
 |   |   System.Buffers.dll
 |   |   System.CodeDom.dll
 |   |   System.Collections.Immutable.dll
-|   |   System.Diagnostics.DiagnosticSource.dll
 |   |   System.Fabric.Strings.dll
 |   |   System.IO.FileSystem.AccessControl.dll
 |   |   System.IO.Hashing.dll
@@ -612,7 +610,6 @@ Binaries are signed.
 |   |   Sf.Tx.Windows.pdb
 |   |   System.CodeDom.dll
 |   |   System.Collections.Immutable.dll
-|   |   System.Diagnostics.DiagnosticSource.dll
 |   |   System.Fabric.Strings.dll
 |   |   System.IO.Hashing.dll
 |   |   System.Memory.Data.dll
@@ -707,5 +704,4 @@ Project 'CollectSFDataDll' has the following package references
    > Microsoft.Identity.Client.Extensions.Msal      4.60.1  
    > Newtonsoft.Json                                13.0.3  
    > System.CodeDom                                 4.7.0  
-   > System.Diagnostics.DiagnosticSource            7.0.2  
    > System.Reactive                                4.0.0  

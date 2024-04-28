@@ -31,7 +31,6 @@
         <dependency id="Microsoft.Identity.Client.Extensions.Msal" version="4.60.1" exclude="Build,Analyzers" />
         <dependency id="Newtonsoft.Json" version="13.0.3" exclude="Build,Analyzers" />
         <dependency id="System.CodeDom" version="4.7.0" exclude="Build,Analyzers" />
-        <dependency id="System.Diagnostics.DiagnosticSource" version="7.0.2" exclude="Build,Analyzers" />
         <dependency id="System.Reactive" version="4.0.0" exclude="Build,Analyzers" />
       </group>
       <group targetFramework=".NETFramework4.8.0">
@@ -61,7 +60,6 @@
         <dependency id="Microsoft.Identity.Client.Extensions.Msal" version="4.60.1" exclude="Build,Analyzers" />
         <dependency id="Newtonsoft.Json" version="13.0.3" exclude="Build,Analyzers" />
         <dependency id="System.CodeDom" version="4.7.0" exclude="Build,Analyzers" />
-        <dependency id="System.Diagnostics.DiagnosticSource" version="7.0.2" exclude="Build,Analyzers" />
         <dependency id="System.Reactive" version="4.0.0" exclude="Build,Analyzers" />
       </group>
       <group targetFramework=".net8.0">
@@ -76,7 +74,6 @@
         <dependency id="Microsoft.Identity.Client.Extensions.Msal" version="4.60.1" exclude="Build,Analyzers" />
         <dependency id="Newtonsoft.Json" version="13.0.3" exclude="Build,Analyzers" />
         <dependency id="System.CodeDom" version="4.7.0" exclude="Build,Analyzers" />
-        <dependency id="System.Diagnostics.DiagnosticSource" version="7.0.2" exclude="Build,Analyzers" />
         <dependency id="System.Reactive" version="4.0.0" exclude="Build,Analyzers" />
       </group>
     </dependencies>
