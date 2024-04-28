@@ -21,7 +21,7 @@
     <dependencies>
       <group targetFramework=".NETFramework4.6.2">
         <dependency id="Azure.Data.Tables" version="12.8.1" exclude="Build,Analyzers" />
-        <dependency id="Azure.Identity" version="1.10.2" exclude="Build,Analyzers" />
+        <dependency id="Azure.Identity" version="1.11.0" exclude="Build,Analyzers" />
         <dependency id="Azure.Security.KeyVault.Keys" version="4.5.0" exclude="Build,Analyzers" />
         <dependency id="Azure.Security.KeyVault.Secrets" version="4.5.0" exclude="Build,Analyzers" />
         <dependency id="Azure.Storage.Blobs" version="12.18.0" exclude="Build,Analyzers" />
@@ -36,7 +36,7 @@
       </group>
       <group targetFramework=".NETFramework4.8.0">
         <dependency id="Azure.Data.Tables" version="12.8.1" exclude="Build,Analyzers" />
-        <dependency id="Azure.Identity" version="1.10.2" exclude="Build,Analyzers" />
+        <dependency id="Azure.Identity" version="1.11.0" exclude="Build,Analyzers" />
         <dependency id="Azure.Security.KeyVault.Keys" version="4.5.0" exclude="Build,Analyzers" />
         <dependency id="Azure.Security.KeyVault.Secrets" version="4.5.0" exclude="Build,Analyzers" />
         <dependency id="Azure.Storage.Blobs" version="12.18.0" exclude="Build,Analyzers" />
@@ -51,7 +51,7 @@
       </group>
       <group targetFramework=".net6.0">
         <dependency id="Azure.Data.Tables" version="12.8.1" exclude="Build,Analyzers" />
-        <dependency id="Azure.Identity" version="1.10.2" exclude="Build,Analyzers" />
+        <dependency id="Azure.Identity" version="1.11.0" exclude="Build,Analyzers" />
         <dependency id="Azure.Security.KeyVault.Keys" version="4.5.0" exclude="Build,Analyzers" />
         <dependency id="Azure.Security.KeyVault.Secrets" version="4.5.0" exclude="Build,Analyzers" />
         <dependency id="Azure.Storage.Blobs" version="12.18.0" exclude="Build,Analyzers" />
@@ -66,7 +66,7 @@
       </group>
       <group targetFramework=".net8.0">
         <dependency id="Azure.Data.Tables" version="12.8.1" exclude="Build,Analyzers" />
-        <dependency id="Azure.Identity" version="1.10.2" exclude="Build,Analyzers" />
+        <dependency id="Azure.Identity" version="1.11.0" exclude="Build,Analyzers" />
         <dependency id="Azure.Security.KeyVault.Keys" version="4.5.0" exclude="Build,Analyzers" />
         <dependency id="Azure.Security.KeyVault.Secrets" version="4.5.0" exclude="Build,Analyzers" />
         <dependency id="Azure.Storage.Blobs" version="12.18.0" exclude="Build,Analyzers" />
