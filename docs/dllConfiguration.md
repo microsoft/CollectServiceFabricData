@@ -418,6 +418,7 @@ Binaries are signed.
 |   |   System.Data.SqlClient.dll
 |   |   System.Diagnostics.Contracts.dll
 |   |   System.Diagnostics.Debug.dll
+|   |   System.Diagnostics.DiagnosticSource.dll
 |   |   System.Diagnostics.FileVersionInfo.dll
 |   |   System.Diagnostics.Process.dll
 |   |   System.Diagnostics.StackTrace.dll
@@ -701,7 +702,10 @@ Project 'CollectSFDataDll' has the following package references
    > Azure.Storage.Queues                           12.16.0  
    > Microsoft.Azure.Kusto.Data                     11.3.4  
    > Microsoft.Extensions.CommandLineUtils          1.1.1  
+   > Microsoft.Identity.Client                      4.60.1  
    > Microsoft.Identity.Client.Extensions.Msal      4.60.1  
    > Newtonsoft.Json                                13.0.3  
    > System.CodeDom                                 4.7.0  
+   > System.Diagnostics.DiagnosticSource            7.0.2  
+   > System.Memory                                  4.5.5  
    > System.Reactive                                4.0.0  
