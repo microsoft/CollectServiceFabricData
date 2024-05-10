@@ -131,4 +131,12 @@
             | invoke TypeAndTextContains("not an error","FabricDCA.WindowsFabric_ServiceFabricEtlFile","Unable to decode ETW event. The event will be skipped.")
             | invoke TypeAndTextContains("not an error","General.RSMessage","RSMessage::GetActivityId Missing activity id header")
             | invoke TypeAndTextContains("file not found not usually an error.","General.File@File.GetAttributes","GetAttributes failed with the following error 0x80070002 for the path:")
+            | invoke TypeAndTextContains("only issue if using docker.","FabricDeployer.FabricDeployer","Error invoking PowerShell script")
+            | invoke TypeAndTextContains("only issue if using docker.","FabricDeployer.FabricDeployer","Failed to get nat mac address")
+            | invoke TypeAndTextContains("only issue if using docker.","FabricDeployer.FabricDeployer","Failed to unblock access to wireserver")
+            | invoke TypeAndTextContains("only issue if using docker.","Hosting.DockerProcessManager","Failed to load vmcompute.dll")
+            | invoke TypeAndTextContains("only issue if using docker.","Hosting.DockerProcessManager","OnContainerServiceStarted: ErrorCode=FABRIC_E_SERVICE_DOES_NOT_EXIST")
+            | invoke TypeAndTextContains("only issue if using docker.","Hosting.DockerProcessManager","StopDockerNtService: ShutdownDockerService() returned with ErrorCode=FABRIC_E_SERVICE_DOES_NOT_EXIST.")
+            | invoke TypeAndTextContains("only issue if using docker.","Hosting.ContainerHelper","Container Log Root not found at:")
+            | invoke TypeAndTextContains("only issue if using docker.","Hosting.ContainerActivator","OnContainerServiceStarted: ErrorCode=FABRIC_E_SERVICE_DOES_NOT_EXIST")
     }
