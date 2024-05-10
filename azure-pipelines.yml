@@ -14,10 +14,10 @@ pool:
 variables:
   project_name: CollectSFData
   esrp_signing_connection: 'collectsfdata esrp signing connection'
-  project_feed: Tools/CollectServiceFabricData
+  project_feed: Tools/CollectServiceFabricData_Public
   build_configuration: release
   system.debug: false
-  publish_release: $[eq(variables['System.PullRequest.targetBranchName'], 'master')]
+  publish_release: $[eq(variables['Build.SourceBranch'], 'refs/heads/master')]
   project_root: .\src
   start_time: $[format('{0}-{1:yyyy}{1:MM}{1:dd}-{1:HH}{1:mm}{1:ss}', variables['project_name'], pipeline.startTime)]
   artifacts_drive: Z
@@ -70,6 +70,8 @@ stages:
         inputs:
           targetType: 'inline'
           script: |
+            write-host "dotnet list `"$env:project_root\$env:project_name\$env:project_name.csproj`" package --include-transitive"
+            dotnet list "$env:project_root\$env:project_name\$env:project_name.csproj" package --include-transitive
             write-host "dotnet build `"$env:project_root\$env:project_name\$env:project_name.csproj`" -v detailed -c $env:build_configuration"
             dotnet build "$env:project_root\$env:project_name\$env:project_name.csproj" -v detailed -c $env:build_configuration
           errorActionPreference: 'continue'
@@ -131,10 +133,10 @@ stages:
           targetPath: $(System.ArtifactsDirectory)
           artifactName: artifacts-$(artifacts_name_suffix)
 
-  - stage: release
-    displayName: 'release'
+  - stage: sign
+    displayName: 'sign'
     dependsOn: build
-    condition: and(succeeded(), eq(variables.publish_release, 'true'))
+    condition: succeeded()
     jobs:
     - job: sign
       displayName: 'sign'
@@ -196,7 +198,7 @@ stages:
         displayName: 'dll and exe code signing'
         inputs:
           ConnectedServiceName: $(esrp_signing_connection)
-          FolderPath: '$(release_stage_path)'
+          FolderPath: '$(release_path)'
           Pattern: 'sf.tx.*.dll,*$(project_name)*.dll,$(project_name).exe'
           signConfigType: 'inlineSignParams'
           inlineOperation: |
@@ -235,11 +237,10 @@ stages:
           script: |
             $nupkg = @(get-childItem -recurse "$($env:release_path)\*.nupkg")[0].FullName
             $nupkgZip = "$nupkg.zip"
-            $nupkgUnsigned = "$nupkg".replace(".nupkg", ".unsigned.nupkg")
             write-host "nupkg=$nupkg"
             $nupkgDir = "$($env:release_stage_path)"
             del "$nupkgDir\CodeSignSummary*.md" -force
-            ren $nupkg $nuPkgUnsigned
+            del $nupkg -force
             del $nupkgZip -force
             write-host "compress-archive -path $nupkgDir\* -destinationPath $nupkgZip -force"
             compress-archive -path $nupkgDir\* -destinationPath $nupkgZip -force
@@ -282,11 +283,11 @@ stages:
           VerboseLogin: false
 
       - task: PowerShell@2
-        displayName: 'create zip with signed files'
+        displayName: 'create zip with signed .net version files'
         inputs:
           targetType: 'inline'
           script: |
-            $source = "$($env:release_path)\\*"
+            $source = "$($env:release_path)\\net*"
             $destination = "$($env:release_stage_path)\\$($env:project_name).zip"
             write-host "compress-archive -path $source -destinationPath $destination -force"
             compress-archive -path $source -destinationPath $destination -force
@@ -350,9 +351,13 @@ stages:
           targetPath:  $(release_stage_path)
           artifactName: signed-release-$(artifacts_name_suffix)
 
+  - stage: release
+    displayName: 'release'
+    dependsOn: sign
+    condition: and(succeeded(), eq(variables.publish_release, 'true'))
+    jobs:
     - job: publish
       displayName: 'publish'
-      dependsOn: sign
       steps:
       - task: PowerShell@2
         displayName: 'agent environment'

@@ -1,12 +1,22 @@
 # Change log
 
+## 04/29/2024
+
+- remove unused Azure.Security.KeyVault.Certificates from nuget.config
+- set System.Memory explicity version 4.5.5 in nuget.config
+- bump Microsoft.Identity.Client from 4.56.0 to 4.60.1 in nuget.config due to security vulnerability
+- bump Azure.Identity from 1.10.2 to 1.11.0 in nuget.config due to security vulnerability
+- add Service Fabric 10.1 manifests
+
 ## 03/20/2024
 
 - modify azure pipelines for ado
- - add stages and jobs for build and release
- - add signing
- - add publish
-
+  - add stages and jobs for build and release
+  - add signing
+  - add publish
+  - set publish on merge to master
+- only add net framework / core versions to zip for release
+ 
 ## 03/16/2024
 
 - add all target frameworks to zip for release
