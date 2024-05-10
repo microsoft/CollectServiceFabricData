@@ -8,6 +8,13 @@
 - bump Azure.Identity from 1.10.2 to 1.11.0 in nuget.config due to security vulnerability
 - add Service Fabric 10.1 manifests
 
+## 03/24/2024
+
+- add sign stage
+  - build
+  - sign
+  - release nupkg to internal feed if master
+
 ## 03/20/2024
 
 - modify azure pipelines for ado
