@@ -136,9 +136,34 @@ $global:identityPackageLocation
 $global:nuget = "nuget.exe"
 
 if ($updateScript) {
-    invoke-webRequest "https://raw.githubusercontent.com/jagilber/powershellScripts/master/kusto-rest.ps1" -outFile  "$psscriptroot/kusto-rest.ps1";
+    invoke-webRequest "https://raw.githubusercontent.com/microsoft/CollectServiceFabricData/master/scripts/kusto-rest.ps1" -outFile  "$psscriptroot/kusto-rest.ps1";
     write-warning "script updated. restart script"
     return
+}
+
+function main() {
+    try {
+        $error.Clear()
+        $global:kusto = [KustoObj]::new()
+        $kusto.SetTables()
+        $kusto.SetFunctions()
+        $kusto.Exec()
+        $kusto.ClearResults()
+
+        write-host ($PSBoundParameters | out-string)
+
+        if ($error) {
+            write-warning ($error | out-string)
+        }
+        else {
+            write-host ($kusto | Get-Member | out-string)
+            write-host "use `$kusto object to set properties and run queries. example: `$kusto.Exec('.show operations')" -ForegroundColor Green
+            write-host "set `$kusto.viewresults=`$true to see results." -ForegroundColor Green
+        }
+    }
+    catch {
+        write-host "exception::$($psitem.Exception.Message)`r`n$($psitem.scriptStackTrace)" -ForegroundColor Red
+    }
 }
 
 function AddIdentityPackageType([string]$packageName, [string] $edition) {
@@ -582,6 +607,7 @@ class KustoObj {
     [bool] Logon([string]$resourceUrl) {
         [int]$expirationRefreshMinutes = 15
         [int]$expirationMinutes = 0
+        write-host "logon($resourceUrl)" -foregroundcolor green
 
         if (!$resourceUrl) {
             write-warning "-resourceUrl required. example: https://{{ kusto cluster }}.kusto.windows.net"
@@ -605,6 +631,7 @@ class KustoObj {
         try {
             $error.Clear()
             [string[]]$defaultScope = @(".default")
+            write-host "logonMsal($resourceUrl,$($scopes | out-string))" -foregroundcolor green
             
             if ($this.clientId -and $this.clientSecret) {
                 [string[]]$defaultScope = @("$resourceUrl/.default")
@@ -720,8 +747,19 @@ class KustoObj {
 
     hidden [object] Post([string]$body = "") {
         # authorize aad to get token
-        [string]$kustoHost = "$($this.cluster).kusto.windows.net"
-        [string]$kustoResource = "https://$kustoHost"
+        if($this.cluster.startswith('https://')) {
+            $this.cluster = $this.cluster.trimstart('https://')
+        }
+
+        if(!(test-netConnection $this.cluster -p 443).TcpTestSucceeded) {
+            write-warning "cluster not reachable:$this.cluster"
+            if((test-netConnection $this.cluster + '.kusto.windows.net' -p 443).TcpTestSucceeded) {
+                $this.cluster += '.kusto.windows.net'
+                write-host "cluster reachable:$this.cluster" -foregroundcolor green
+            }
+        }
+        [string]$kustoHost = $this.cluster
+        [string]$kustoResource = 'https://' + $kustoHost
         [string]$csl = "$($this.Query)"
         
         $this.Result = $null
@@ -867,20 +905,4 @@ class KustoObj {
 # comment next line after microsoft.identity.client type has been imported into powershell session to troubleshoot 2 of 2
 '@ 
 
-$error.Clear()
-$global:kusto = [KustoObj]::new()
-$kusto.SetTables()
-$kusto.SetFunctions()
-$kusto.Exec()
-$kusto.ClearResults()
-
-write-host ($PSBoundParameters | out-string)
-
-if ($error) {
-    write-warning ($error | out-string)
-}
-else {
-    write-host ($kusto | Get-Member | out-string)
-    write-host "use `$kusto object to set properties and run queries. example: `$kusto.Exec('.show operations')" -ForegroundColor Green
-    write-host "set `$kusto.viewresults=`$true to see results." -ForegroundColor Green
-}
+main

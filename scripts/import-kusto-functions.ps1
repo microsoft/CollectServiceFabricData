@@ -8,7 +8,10 @@ param(
     [string]$kustoDatabase = '',
     [switch]$test,
     [switch]$force,
-    [string]$kustoDir = "$psscriptroot\..\kusto\functions"
+    [string]$kustoDir = "$psscriptroot\..\kusto\functions",
+    [string]$clientId,
+    [string]$clientSecret,
+    [string]$tenantId
 )
 
 $ErrorActionPreference = 'continue'
@@ -20,7 +23,7 @@ function main() {
     $error.clear()
 
     if (!$kusto -or $force) {
-        . .\kusto-rest.ps1 -cluster $kustoCluster -database $kustoDatabase
+        . .\kusto-rest.ps1 -cluster $kustoCluster -database $kustoDatabase -clientId $clientId -clientSecret $clientSecret -tenantId $tenantId
     }
 
     foreach ($script in $kustoScripts) {
