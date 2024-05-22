@@ -4,7 +4,6 @@
 // ------------------------------------------------------------
 
 using Azure.Core;
-using Azure.Identity;
 using Azure.Security.KeyVault.Secrets;
 using CollectSFData.Common;
 using Microsoft.Identity.Client;
@@ -78,11 +77,11 @@ namespace CollectSFData.Azure
                     _config.AzureTenantId = _commonTenantId;
                 }
 
-                if(!CreateClient(false, false, resource))
+                if (!CreateClient(false, false, resource))
                 {
                     throw new MsalClientException("silent authentication failed");
                 }
-                
+
                 return SetToken();
             }
             catch (MsalClientException e)
@@ -167,12 +166,7 @@ namespace CollectSFData.Azure
         {
             string uri = $"{Constants.ManagementAzureCom}{resourceId}?{Constants.ArmApiVersion}";
 
-            if (_httpClient.SendRequest(uri: uri, authToken: BearerToken, httpMethod: HttpMethod.Head))
-            {
-                return _httpClient.StatusCode == System.Net.HttpStatusCode.NoContent;
-            }
-
-            return false;
+            return _httpClient.CheckConnectivity(uri: uri, authToken: BearerToken);
         }
 
         public bool CreateClient(bool prompt, bool deviceLogin = false, string resource = "")
@@ -480,7 +474,7 @@ namespace CollectSFData.Azure
 
         private void AcquireConfidentialClientToken(bool sendX5C = false)
         {
-            // confidential client requires default scope 
+            // confidential client requires default scope
             if (Scopes.Count < 1)
             {
                 Scopes = _defaultScope;

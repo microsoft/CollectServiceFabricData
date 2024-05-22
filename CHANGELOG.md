@@ -1,5 +1,76 @@
 # Change log
 
+## 04/29/2024
+
+- remove unused Azure.Security.KeyVault.Certificates from nuget.config
+- set System.Memory explicity version 4.5.5 in nuget.config
+- bump Microsoft.Identity.Client from 4.56.0 to 4.60.1 in nuget.config due to security vulnerability
+- bump Azure.Identity from 1.10.2 to 1.11.0 in nuget.config due to security vulnerability
+- add Service Fabric 10.1 manifests
+
+## 03/24/2024
+
+- add sign stage
+  - build
+  - sign
+  - release nupkg to internal feed if master
+
+## 03/20/2024
+
+- modify azure pipelines for ado
+  - add stages and jobs for build and release
+  - add signing
+  - add publish
+  - set publish on merge to master
+- only add net framework / core versions to zip for release
+ 
+## 03/16/2024
+
+- add all target frameworks to zip for release
+- update git actions workflow release. add permissions
+    permissions:
+      contents: write
+      packages: write
+
+## 03/11/2024
+
+- update kusto quickstart doc with modified image and minimum sas permissions
+- update kusto quickstart doc with new exception message
+- update kusto functions
+
+## 03/07/2024
+
+- upgrade git action labeler@v5
+
+## 02/07/2024
+
+- add updates for SDL
+- add dependabot config
+- remove stale links in documentation
+- update workflow for git for deprecated env variables
+- update prod and dev pipelines azure pipelines for ado
+
+## 11/19/2023
+
+- add support for .net8.0
+  - now builds net462, net48, net6.0, net8.0
+- add draft collectsfdata-bug-bar.md for bug bar for SDL
+
+## 10/30/2023 v3.0.2310.13022
+
+- migrate from deprecated modules for component governance
+  - Microsoft.Azure.Storage -> Azure.Storage
+  - Microsoft.Azure.Queues -> Azure.Storage.Queues
+  - Microsoft.Azure.Table -> Azure.Data.Tables
+- update dependencies for component governance
+  - Azure.Identity 1.10.1 -> 1.10.2
+  - Microsoft.Azure.Kusto.Data
+  - Update ConvertToUtcTime to use .net core 'zzz' format specifier changes
+- update service fabric modules / manifests to 10.0
+- remove .netcoreapp2.1 target framework
+- remove .netcoreapp3.1 target framework
+- add .net8.0 target framework in preparation for release
+
 ## 09/24/2023 v2.9.2309.12421
 
 - update dependencies for component governance

@@ -37,7 +37,15 @@ namespace CollectSFData.Common
 
         private Http()
         {
-            _httpClient = new HttpClient { Timeout = Timeout.InfiniteTimeSpan };
+#if NET462
+            _httpClient = new HttpClient();
+#else
+            _httpClient = new HttpClient(new HttpClientHandler()
+            {
+                CheckCertificateRevocationList = true
+            });
+#endif
+            _httpClient.Timeout = Timeout.InfiniteTimeSpan;
             _httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
         }
 
@@ -46,52 +54,26 @@ namespace CollectSFData.Common
             return new Http();
         }
 
-        public static void ConnectCallback(IAsyncResult asyncResult)
+        public bool CheckConnectivity(string uri, string authToken = null, Dictionary<string, string> headers = null)
         {
-            TcpClient client = (TcpClient)asyncResult.AsyncState;
-
-            try
+            Log.Info($"enter: {uri}", ConsoleColor.Magenta);
+            bool result = false;
+            if(headers == null)
             {
-                client.EndConnect(asyncResult);
+                headers = new Dictionary<string, string>();
             }
-            catch (Exception e)
+            if(!headers.ContainsKey("User-Agent"))
             {
-                Log.Debug($"exception callback:{e}");
+                headers.Add("User-Agent", "CollectSFData");
             }
-            finally
+
+            if (SendRequest(uri: uri, authToken: authToken, httpMethod: HttpMethod.Head, headers: headers, displayError: false))
             {
-                asyncResult.AsyncWaitHandle?.Dispose();
-                client.Dispose();
+                result = StatusCode == HttpStatusCode.OK;
             }
-        }
 
-        public bool CheckConnectivity(string uri)
-        {
-            try
-            {
-                bool ret = true;
-                Uri uriType = new Uri(uri);
-                string host = uriType.Host;
-                int portNumber = uriType.Port;
-
-                TcpClient client = new TcpClient();
-                IAsyncResult asyncResult = client.BeginConnect(host, portNumber, new AsyncCallback(ConnectCallback), client);
-
-                if (!asyncResult.AsyncWaitHandle.WaitOne(Constants.ThreadSleepMs100, false) | !client.Connected)
-                {
-                    Log.Info($"timed out ({Constants.ThreadSleepMs100}ms) pinging host:{host}:{portNumber}");
-                    ret = false;
-                }
-
-                Log.Info($"pinging host success:{ret} host:{host}:{portNumber}", ConsoleColor.Green);
-                return ret;
-            }
-            catch (SocketException e)
-            {
-                Log.Info($"error pinging host:{uri}");
-                Log.Debug($"error pinging host:{uri}\r\n{e}");
-                return false;
-            }
+            Log.Info($"exit: {uri} result: {result}", ConsoleColor.Magenta);
+            return result;
         }
 
         public bool SendRequest(
@@ -106,6 +88,8 @@ namespace CollectSFData.Common
         {
             HttpContent httpContent = default(HttpContent);
             httpMethod = httpMethod ?? Method;
+            HttpCompletionOption httpCompletionOption = HttpCompletionOption.ResponseContentRead;
+
             Log.Info($"enter:method: {httpMethod} uri: {uri}", ConsoleColor.Magenta, ConsoleColor.Black);
 
             try
@@ -118,6 +102,14 @@ namespace CollectSFData.Common
                     httpContent.Headers.ContentLength = jsonBytes.Length;
 
                     Log.Info($"json bytes:{jsonBytes.Length} uri:{uri}", ConsoleColor.Magenta, ConsoleColor.Black);
+                }
+
+                // head not working with httpclient use get with ResponseHeadersRead
+                if(httpMethod == HttpMethod.Head)
+                {
+                    httpMethod = HttpMethod.Get;
+                    _httpClient.DefaultRequestHeaders.Add("Accept", "*/*");
+                    httpCompletionOption = HttpCompletionOption.ResponseHeadersRead;
                 }
 
                 HttpRequestMessage request = new HttpRequestMessage()
@@ -141,7 +133,7 @@ namespace CollectSFData.Common
                 }
 
                 //Response = _httpTasks.TaskFunction((httpResponse) => _httpClient.SendAsync(request).Result).Result as HttpResponseMessage;
-                Response = _httpClient.SendAsync(request).Result;
+                Response = _httpClient.SendAsync(request, httpCompletionOption).Result;
 
                 Log.Info($"response status: {Response.StatusCode}", ConsoleColor.DarkMagenta, ConsoleColor.Black);
                 StatusCode = Response.StatusCode;

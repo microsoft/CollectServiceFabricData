@@ -9,7 +9,8 @@
         "build",
         "${workspaceFolder}/src/CollectSFData/CollectSFData.csproj",
         "/property:GenerateFullPaths=true",
-        "/consoleloggerparameters:NoSummary"
+        "/consoleloggerparameters:NoSummary",
+        "/verbosity:normal"
       ],
       "group": {
         "kind": "build",

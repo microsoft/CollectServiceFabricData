@@ -5,11 +5,11 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": ".NET Core 31 Launch with Args (console)",
+            "name": ".NET 8 LTS Launch with Args (console)",
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceFolder}/src/bin/Debug/netcoreapp3.1/CollectSFData.dll",
+            "program": "${workspaceFolder}/src/bin/Debug/net8.0/CollectSFData.dll",
             "args": [
                 //"${input:args}"
                 "-type",
@@ -17,12 +17,12 @@
                 "-krt",
                 "1"
             ],
-            "cwd": "${workspaceFolder}/src/bin/Debug/netcoreapp3.1",
+            "cwd": "${workspaceFolder}/src/bin/Debug/net8.0",
             "stopAtEntry": false,
             "console": "internalConsole",
         },
         {
-            "name": ".NET Core 6 Launch with Args (console)",
+            "name": ".NET 6 LTS Launch with Args (console)",
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
@@ -48,13 +48,13 @@
             "stopAtEntry": false
         },
         {
-            "name": ".NET Core 31 Launch (console)",
+            "name": ".NET 8.0 Launch (console)",
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceFolder}/src/bin/Debug/netcoreapp3.1/CollectSFData.dll",
+            "program": "${workspaceFolder}/src/bin/Debug/net8.0/CollectSFData.dll",
             "args": [],
-            "cwd": "${workspaceFolder}/src/bin/Debug/netcoreapp3.1",
+            "cwd": "${workspaceFolder}/src/bin/Debug/net8.0",
             "console": "internalConsole",
             "stopAtEntry": false
         },

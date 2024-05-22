@@ -3,7 +3,7 @@ post build event script called from CollectSFDataDll.csproj
 #>
 param(
     $projectDir = "..\src\CollectSfDataDll\",
-    $outdir = "..\bin\Debug\netcoreapp3.1\"
+    $outdir = "..\bin\Debug\net8.0\"
 )
 
 $ErrorActionPreference = 'continue'

@@ -7,7 +7,7 @@ param(
     [string]$kustoCluster = '',
     [Parameter(Mandatory = $true)]
     [string]$kustoDatabase = '',
-    [string[]]$exclusions = @('sfrplog','cluster','rc-perf'),
+    [string[]]$exclusions = @('sfrplog','cluster','rc-perf','armprod'),
     [switch]$test,
     [switch]$force,
     [string]$kustoDir = "$psscriptroot\..\kusto\functions",

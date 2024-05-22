@@ -1,0 +1,396 @@
+# used for internal ado builds
+
+name: ADO CI CollectSFData-Dev
+
+trigger:
+  branches:
+    include:
+    - 'dev*'
+
+pool:
+  vmImage: 'windows-latest'
+
+variables:
+  project_name: CollectSFData
+  esrp_signing_connection: 'collectsfdata esrp signing connection'
+  project_feed: Tools/CollectServiceFabricData
+  build_configuration: debug
+  system.debug: true
+  publish_release: true #$[eq(variables['Build.SourceBranch'], 'refs/heads/master')]
+  project_root: .\src
+  start_time: $[format('{0}-{1:yyyy}{1:MM}{1:dd}-{1:HH}{1:mm}{1:ss}', variables['project_name'], pipeline.startTime)]
+  artifacts_drive: Z
+  artifacts_share_target: 'Z:\$(System.DefinitionName)\$(System.JobId)\$(start_time)'
+  release_path: $(System.DefaultWorkingDirectory)/src/bin/$(build_configuration)
+  release_stage_path: $(release_path)/signed
+  artifacts_name_suffix: $(project_name)
+
+stages:
+  - stage: build
+    jobs:
+    - job: build
+      displayName: 'build'
+      steps:
+      - task: PowerShell@2
+        displayName: 'agent environment'
+        inputs:
+          targetType: 'inline'
+          script: |
+            [environment]::getEnvironmentVariables().getEnumerator()|sort Name
+            dotnet --info
+            dotnet nuget locals all --clear
+          errorActionPreference: 'continue'
+          verbosePreference: 'continue'
+          debugPreference: 'continue'
+
+      - task: NuGetCommand@2
+        displayName: 'nuget restore'
+        inputs:
+          command: 'restore'
+          restoreSolution: '$(project_root)/$(project_name).sln'
+          feedsToUse: 'config'
+          nugetConfigPath: './nuget.config'
+          noCache: false
+          verbosityRestore: 'Detailed'
+
+      - task: CodeQL3000Init@0
+        displayName: 'codeql init'
+        inputs:
+          Enabled: true
+          AnalyzeInPipeline: false
+          PublishDatabase: true
+          PublishDatabaseLog: true
+          Language: csharp,powershell
+          Cadence: 72 # 72 hours default, use 0 for debug
+          LogLevel: 4
+
+      - task: PowerShell@2
+        displayName: 'dotnet build'
+        inputs:
+          targetType: 'inline'
+          script: |
+            write-host "dotnet list `"$env:project_root\$env:project_name\$env:project_name.csproj`" package --include-transitive"
+            dotnet list "$env:project_root\$env:project_name\$env:project_name.csproj" package --include-transitive
+            write-host "dotnet build `"$env:project_root\$env:project_name\$env:project_name.csproj`" -v detailed -c $env:build_configuration"
+            dotnet build "$env:project_root\$env:project_name\$env:project_name.csproj" -v detailed -c $env:build_configuration
+          errorActionPreference: 'continue'
+          verbosePreference: 'continue'
+          debugPreference: 'continue'
+
+      - task: ManifestGeneratorTask@0
+        displayName: 'manifest generation'
+        inputs:
+          BuildDropPath: $(release_path)
+          Verbosity: Verbose
+          PackageName: CollectSFData
+
+      - task: CodeQL3000Finalize@0
+        displayName: 'codeql finalize'
+        condition: always()
+        continueOnError: true
+
+      - task: CredScan@3
+        displayName: 'cred scan'
+        inputs:
+          verboseOutput: false
+
+      - task: AntiMalware@4
+        displayName: 'anti-malware'
+        inputs:
+          InputType: 'Basic'
+          ScanType: 'CustomScan'
+          FileDirPath: '$(Build.StagingDirectory)'
+          TreatSignatureUpdateFailureAs: 'Warning'
+          SignatureFreshness: 'UpToDate'
+          TreatStaleSignatureAs: 'Error'
+
+      - task: ComponentGovernanceComponentDetection@0
+        displayName: 'component governance'
+        inputs:
+          scanType: Register
+          verbosity: Verbose
+          alertWarningLevel: High
+
+      - task: PowerShell@2
+        displayName: 'dotnet build output'
+        inputs:
+          targetType: 'inline'
+          script: dir .. -recurse
+          errorActionPreference: 'continue'
+          verbosePreference: 'continue'
+          debugPreference: 'continue'
+
+      - task: PublishPipelineArtifact@1
+        displayName: 'publish release to pipeline'
+        inputs:
+          targetPath:  $(release_path)
+          artifactName: release-$(artifacts_name_suffix)
+
+      - task: PublishPipelineArtifact@1
+        displayName: 'publish artifacts for codeql to pipeline'
+        inputs:
+          targetPath: $(System.ArtifactsDirectory)
+          artifactName: artifacts-$(artifacts_name_suffix)
+
+  - stage: sign
+    displayName: 'sign'
+    dependsOn: build
+    condition: succeeded()
+    jobs:
+    - job: sign
+      displayName: 'sign'
+      steps:
+      - task: PowerShell@2
+        displayName: 'agent environment'
+        inputs:
+          targetType: 'inline'
+          script: |
+            [environment]::getEnvironmentVariables().getEnumerator()|sort Name
+            dotnet --info
+            dotnet nuget locals all --clear
+          errorActionPreference: 'continue'
+          verbosePreference: 'continue'
+          debugPreference: 'continue'
+
+      - task: DownloadPipelineArtifact@2
+        displayName: 'download release from pipeline'
+        inputs:
+          artifactName: release-$(artifacts_name_suffix)
+          targetPath: $(release_path)
+
+      - task: DownloadPipelineArtifact@2
+        displayName: 'download artifacts from pipeline'
+        inputs:
+          artifactName: artifacts-$(artifacts_name_suffix)
+          targetPath: $(System.ArtifactsDirectory)
+
+      - task: PowerShell@2
+        displayName: 'download pipeline artifacts output'
+        inputs:
+          targetType: 'inline'
+          script: dir .. -recurse
+          errorActionPreference: 'continue'
+          verbosePreference: 'continue'
+          debugPreference: 'continue'
+
+      - task: PowerShell@2
+        displayName: 'unpack nupkg for binary signing'
+        inputs:
+          targetType: 'inline'
+          script: |
+            $nupkg = @(get-childItem -recurse "$($env:release_path)\*.nupkg")[0].FullName
+            $nupkgZip = "$nupkg.zip"
+            write-host "nupkg=$nupkg"
+            $nupkgDir = "$($env:release_stage_path)"
+            write-host "mkdir $nupkgDir"
+            mkdir $nupkgDir
+            copy $nupkg $nupkgZip
+            write-host "expand-archive -path $nupkgZip -destinationPath $nupkgDir -force"
+            expand-archive -path $nupkgZip -destinationPath $nupkgDir -force
+            write-host "dir $nupkgDir -recurse"
+            dir $nupkgDir -recurse
+          errorActionPreference: 'continue'
+          verbosePreference: 'continue'
+          debugPreference: 'continue'
+
+      - task: EsrpCodeSigning@4
+        displayName: 'dll and exe code signing'
+        inputs:
+          ConnectedServiceName: $(esrp_signing_connection)
+          FolderPath: '$(release_path)'
+          Pattern: 'sf.tx.*.dll,*$(project_name)*.dll,$(project_name).exe'
+          signConfigType: 'inlineSignParams'
+          inlineOperation: |
+            [
+              {
+                  "KeyCode": "CP-230012",
+                  "OperationCode": "SigntoolSign",
+                  "Parameters": {
+                    "OpusName": "Microsoft",
+                    "OpusInfo": "http://www.microsoft.com",
+                    "FileDigest": "/fd \"SHA256\"",
+                    "PageHash": "/NPH",
+                    "TimeStamp": "/tr \"http://rfc3161.gtm.corp.microsoft.com/TSS/HttpTspServer\" /td sha256"
+                  },
+                  "ToolName": "sign",
+                  "ToolVersion": "1.0"
+                },
+                {
+                  "KeyCode": "CP-230012",
+                  "OperationCode": "SigntoolVerify",
+                  "Parameters": {},
+                  "ToolName": "sign",
+                  "ToolVersion": "1.0"
+                }
+            ]
+          SessionTimeout: '60'
+          MaxConcurrency: '50'
+          MaxRetryAttempts: '5'
+          PendingAnalysisWaitTimeoutMinutes: '5'
+          VerboseLogin: false
+
+      - task: PowerShell@2
+        displayName: 'repack nupkg with signed binaries'
+        inputs:
+          targetType: 'inline'
+          script: |
+            $nupkg = @(get-childItem -recurse "$($env:release_path)\*.nupkg")[0].FullName
+            $nupkgZip = "$nupkg.zip"
+            write-host "nupkg=$nupkg"
+            $nupkgDir = "$($env:release_stage_path)"
+            del "$nupkgDir\CodeSignSummary*.md" -force
+            del $nupkg -force
+            del $nupkgZip -force
+            write-host "compress-archive -path $nupkgDir\* -destinationPath $nupkgZip -force"
+            compress-archive -path $nupkgDir\* -destinationPath $nupkgZip -force
+            rd $nupkgDir -recurse -force
+            md $nupkgDir
+            move $nupkgZip $nupkg -force
+            move $nupkg $nupkgDir -force
+          errorActionPreference: 'continue'
+          verbosePreference: 'continue'
+          debugPreference: 'continue'
+
+      - task: EsrpCodeSigning@4
+        displayName: 'nupkg code signing'
+        inputs:
+          ConnectedServiceName: $(esrp_signing_connection)
+          FolderPath: '$(release_path)'
+          Pattern: '*.nupkg'
+          signConfigType: 'inlineSignParams'
+          inlineOperation: |
+            [
+              {
+                  "KeyCode": "CP-401405",
+                  "OperationCode": "NuGetSign",
+                  "Parameters": {},
+                  "ToolName": "sign",
+                  "ToolVersion": "1.0"
+                },
+                {
+                  "KeyCode": "CP-401405",
+                  "OperationCode": "NuGetVerify",
+                  "Parameters": {},
+                  "ToolName": "sign",
+                  "ToolVersion": "1.0"
+                }
+            ]
+          SessionTimeout: '60'
+          MaxConcurrency: '50'
+          MaxRetryAttempts: '5'
+          PendingAnalysisWaitTimeoutMinutes: '5'
+          VerboseLogin: false
+
+      - task: PowerShell@2
+        displayName: 'create zip with signed .net version files'
+        inputs:
+          targetType: 'inline'
+          script: |
+            $source = "$($env:release_path)\\net*"
+            $destination = "$($env:release_stage_path)\\$($env:project_name).zip"
+            write-host "compress-archive -path $source -destinationPath $destination -force"
+            compress-archive -path $source -destinationPath $destination -force
+            $exeFileRef = @(get-childItem -recurse "$($env:release_path)\$($env:project_name).exe")[0].FullName
+            $fileVersion = [io.fileinfo]::new($exeFileRef).VersionInfo.FileVersion
+            write-host "fileVersion=$fileVersion"
+            write-host "dir $env:release_path -recurse"
+            dir $env:release_path -recurse
+          errorActionPreference: 'continue'
+          verbosePreference: 'continue'
+          debugPreference: 'continue'
+
+      - task: PowerShell@2
+        displayName: 'dotnet signed build output'
+        inputs:
+          targetType: 'inline'
+          script: dir .. -recurse
+          errorActionPreference: 'continue'
+          verbosePreference: 'continue'
+          debugPreference: 'continue'
+
+      - task: PowerShell@2
+        displayName: 'copy artifacts to azure storage'
+        condition: eq(variables.build_configuration, 'debug')
+        inputs:
+          targetType: 'inline'
+          script: |
+            [environment]::getEnvironmentVariables().getEnumerator()|sort Name
+            write-host "test-netConnection -computerName $env:mapped_artifacts_storage_uri -Port 445 -informationLevel detailed"
+            $connectTestResult = test-netConnection -computerName $env:mapped_artifacts_storage_uri -Port 445 -informationLevel detailed
+            if ($connectTestResult.tcpTestSucceeded) {
+                $securePassword = ConvertTo-SecureString -String $env:mapped_artifacts_pass -Force -AsPlainText
+                $credentials = [psCredential]::new($env:mapped_artifacts_user, $securePassword)
+                write-host "new-psDrive -name $drive -psProvider fileSystem -root "$env:mapped_artifacts_share" -credential $credentials"
+                new-psDrive -name $env:artifacts_drive -psProvider fileSystem -root "$env:mapped_artifacts_share" -credential $credentials -scope global
+            } else {
+                write-error -message "Unable to reach the azure storage account via port 445."
+            }
+            if(!(test-path $env:artifacts_share_target))
+            {
+              write-host "mkdir "$env:artifacts_share_target""
+              mkdir "$env:artifacts_share_target"
+            }
+            write-host "copy $env:release_path "$env:artifacts_share_target" -recurse"
+            copy $env:release_path "$env:artifacts_share_target" -recurse
+            write-host "copy $env:artifacts_directory $env:artifacts_share_target -recurse"
+            copy $env:artifacts_directory "$env:artifacts_share_target" -recurse
+          errorActionPreference: 'continue'
+          verbosePreference: 'continue'
+          debugPreference: 'continue'
+        env:
+          mapped_artifacts_storage_uri: $(artifacts_storage_uri)
+          mapped_artifacts_user: $(artifacts_user)
+          mapped_artifacts_pass: $(artifacts_pass)
+          mapped_artifacts_share: $(artifacts_share)
+          artifacts_directory: $(System.ArtifactsDirectory)
+
+      - task: PublishPipelineArtifact@1
+        displayName: 'publish release to pipeline'
+        inputs:
+          targetPath:  $(release_stage_path)
+          artifactName: signed-release-$(artifacts_name_suffix)
+
+  - stage: release
+    displayName: 'release'
+    dependsOn: sign
+    condition: and(succeeded(), eq(variables.publish_release, 'true'))
+    jobs:
+    - job: publish
+      displayName: 'publish'
+      steps:
+      - task: PowerShell@2
+        displayName: 'agent environment'
+        inputs:
+          targetType: 'inline'
+          script: |
+            [environment]::getEnvironmentVariables().getEnumerator()|sort Name
+            dotnet --info
+            dotnet nuget locals all --clear
+          errorActionPreference: 'continue'
+          verbosePreference: 'continue'
+          debugPreference: 'continue'
+
+      - task: DownloadPipelineArtifact@2
+        displayName: 'download release from pipeline'
+        inputs:
+          artifactName: signed-release-$(artifacts_name_suffix)
+          targetPath: $(release_path)
+
+      - task: PowerShell@2
+        displayName: 'dotnet build output'
+        inputs:
+          targetType: 'inline'
+          script: dir .. -recurse
+          errorActionPreference: 'continue'
+          verbosePreference: 'continue'
+          debugPreference: 'continue'
+
+      - task: NuGetCommand@2
+        displayName: 'push nupkg to feed'
+        inputs:
+          command: 'push'
+          packagesToPush: '$(release_path)/*.nupkg'
+          nuGetFeedType: 'internal'
+          publishVstsFeed: '$(project_feed)'
+          publishPackageMetadata: true
+          verbosityPush: 'Detailed'

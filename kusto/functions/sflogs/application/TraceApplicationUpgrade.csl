@@ -1,4 +1,4 @@
-.create-or-alter function with (docstring = "[T:string] where T=table name, [A:string] where App=application table name. function to search service fabric sflogs for application related entries", folder = "sflogs/application")
+.create-or-alter function with (docstring = "[T:string] where T=table name, [A:string] where App=application  name. function to search service fabric sflogs for application related entries", folder = "sflogs/application")
     TraceApplicationUpgrade(T:string, A:string) {
             let extractPattern_Context1 = @'(ApplicationUpgradeContext\()([^\)]*)\)\[([^,]*),\s([^,]*),\s([^,]*),\s([^,]*),\s([^\s]*)\s=\s([^,]*),\s([^\s]*)\s=\s';
             let extractPattern_Context2 = @'(Monitoring = action:)([^,]*),\swait:([^,]*),\sstable:([^,]*),\sretry:([^,]*),\sud:([^,]*),\soverall:([^,]*)';

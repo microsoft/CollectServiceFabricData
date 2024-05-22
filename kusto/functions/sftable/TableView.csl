@@ -3,9 +3,9 @@
         let Table = table(T) | where Timestamp between (case(isnull(startTimeStamp),datetime(2017-01-01 00:00),startTimeStamp) .. case(isnull(endTimeStamp),now(),endTimeStamp));
         let DistinctEvents = Table | distinct Timestamp, PartitionKey, RowKey;
         DistinctEvents
-            | join Table on $left.Timestamp==$right.Timestamp and $left.PartitionKey==$right.PartitionKey and $left.RowKey==$right.RowKey
-            | extend propertyPack = pack(PropertyName, PropertyValue)
+            | join kind=leftouter Table on $left.Timestamp==$right.Timestamp and $left.PartitionKey==$right.PartitionKey and $left.RowKey==$right.RowKey
+            | extend propertyPack = bag_pack(PropertyName, PropertyValue)
             | summarize bag = make_bag(propertyPack) by Timestamp, PartitionKey, RowKey, RelativeUri=trim_end(@'\.?\d?\.table\.csv', RelativeUri)
-            | evaluate bag_unpack(bag) 
+            | evaluate bag_unpack(bag, "","keep_source") 
         | order by Timestamp asc
     }

@@ -235,7 +235,7 @@ namespace CollectSFData.Common
                 dateTime = ConvertToUtcTime(timeString);
                 if (dateTime != DateTime.MinValue)
                 {
-                    timeString = dateTime.ToString(Constants.DefaultDatePattern);
+                    timeString = dateTime.ToLocalTime().ToString(Constants.DefaultDatePattern);
                 }
             }
 
@@ -296,7 +296,7 @@ namespace CollectSFData.Common
 
             try
             {
-                if (http.SendRequest(uri: Constants.EtwManifestsUrlIndex, headers: headers, httpMethod: HttpMethod.Head)
+                if (http.CheckConnectivity(uri: Constants.EtwManifestsUrlIndex, headers: headers)
                      && http.SendRequest(uri: Constants.EtwManifestsUrlIndex, headers: headers))
                 {
                     JArray manifests = http.ResponseStreamJson.SelectToken("manifests") as JArray;

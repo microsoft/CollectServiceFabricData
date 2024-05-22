@@ -3,8 +3,8 @@
 
 #>
 param(
-    [ValidateSet('net48', 'netcoreapp2.2', 'netcoreapp3.1', 'net6.0', 'net7.0', 'net462')]
-    [string[]]$targetFrameworks = @('net48', 'netcoreapp3.1', 'net6.0', 'net7.0', 'net462'),
+    [ValidateSet('net48', 'net6.0', 'net8.0', 'net462')]
+    [string[]]$targetFrameworks = @('net48', 'net6.0', 'net8.0', 'net462'),
     [ValidateSet('all', 'debug', 'release')]
     $configuration = 'all',
     [switch]$publish,
@@ -62,8 +62,15 @@ function main() {
         $nuspecFile = create-nuspec $targetFrameworks
         rename-nugetConfig
         
+        $error.Clear()
         write-host "dotnet restore $csproj" -ForegroundColor Green
         dotnet restore $csproj
+        if($error) {
+            write-warning "dotnet restore $csproj failed"
+            write-host "utility uses central configuration store that requires authentication."
+            write-host "artifacts authentication package information: https://github.com/microsoft/artifacts-credprovider#azure-artifacts-credential-provider"
+            return
+        }
 
         if ($configuration -ieq 'all') {
             build-configuration 'debug'
@@ -101,8 +108,8 @@ function main() {
 }
 
 function build-configuration($configuration) {
-    write-host "dotnet list $csproj package"
-    dotnet list $csproj package
+    write-host "dotnet list $csproj package  --include-transitive"
+    dotnet list $csproj package  --include-transitive
 
     write-host "dotnet build $csproj -c $configuration" -ForegroundColor Magenta
     dotnet build $csproj -c $configuration

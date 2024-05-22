@@ -13,7 +13,7 @@ invoke-webRequest "https://raw.githubusercontent.com/microsoft/CollectServiceFab
 .\kusto-rest.ps1 -cluster %kusto cluster% -database %kusto database%
 
 .NOTES
-Author : servicefabric
+Author : jagilber
 File Name  : kusto-rest.ps1
 Version    : 240521
 History    : migrate from netcoreapp2.1 to net6.0
