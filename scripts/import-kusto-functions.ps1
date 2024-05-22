@@ -22,8 +22,17 @@ $scriptSuccess = [collections.arraylist]::new()
 function main() {
     $error.clear()
 
+    $kustoParams = @{
+        cluster  = $kustoCluster
+        database = $kustoDatabase
+    }
+
+    if ($clientId) { $kustoParams.clientId = $clientId }
+    if ($clientSecret) { $kustoParams.clientSecret = $clientSecret }
+    if ($tenantId) { $kustoParams.tenantId = $tenantId }
+
     if (!$kusto -or $force) {
-        . .\kusto-rest.ps1 -cluster $kustoCluster -database $kustoDatabase -clientId $clientId -clientSecret $clientSecret -tenantId $tenantId
+        . .\kusto-rest.ps1 @kustoParams
     }
 
     foreach ($script in $kustoScripts) {
