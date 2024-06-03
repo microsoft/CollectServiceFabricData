@@ -36,13 +36,14 @@ namespace CollectSFData.Common
 
         public static ConfigurationOptions Singleton()
         {
-                lock (_singleLock)
+            lock (_singleLock)
+            {
+                if (_singleton == null)
                 {
-                    if(_singleton == null) {
-                        _singleton = new ConfigurationOptions();
-                    }
-                    return _singleton;
+                    _singleton = new ConfigurationOptions();
                 }
+                return _singleton;
+            }
         }
 
         public X509Certificate2 ClientCertificate { get; set; }
@@ -168,6 +169,33 @@ namespace CollectSFData.Common
 
         public void CheckReleaseVersion()
         {
+            Log.Info($"CheckReleaseVersionDays:{CheckForUpdates}");
+
+            if (CheckForUpdates < 1)
+            {
+                Log.Warning($"CheckReleaseVersionDays disabled. skipping version check.");
+                return;
+            }
+
+            string lastUpdateCheck = Constants.AppDataFolder + "\\lastupdatecheck.txt";
+            if (File.Exists(lastUpdateCheck))
+            {
+                string lastCheck = File.ReadAllText(lastUpdateCheck);
+                if (DateTime.Now.Subtract(Convert.ToDateTime(lastCheck)).TotalDays < CheckForUpdates)
+                {
+                    Log.Info($"last update check was less than {CheckForUpdates} days ago. skipping version check.");
+                    return;
+                }
+            }
+            else if (!FileManager.CreateDirectory(Constants.AppDataFolder))
+            {
+                Log.Warning($"unable to create directory {Constants.AppDataFolder}. skipping version check.");
+                return;
+            }
+
+            Log.Info($"writing last update check date to {lastUpdateCheck}");
+            File.WriteAllText(lastUpdateCheck, DateTime.Now.ToString(Constants.DefaultDatePattern));
+
             string response = $"\r\n\tlocal running version: {Version}";
             Http http = Http.ClientFactory();
 
@@ -969,7 +997,7 @@ namespace CollectSFData.Common
             {
                 LogFile = FileManager.NormalizePath(LogFile);
 
-                if(Regex.IsMatch(LogFile,@"<.+>")) 
+                if (Regex.IsMatch(LogFile, @"<.+>"))
                 {
                     string timePattern = Regex.Match(LogFile, @"<(.+?)>").Groups[1].Value;
                     LogFile = Regex.Replace(LogFile, @"<.+?>", DateTime.Now.ToString(timePattern));

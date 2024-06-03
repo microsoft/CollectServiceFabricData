@@ -19,7 +19,6 @@ namespace CollectSFData
 
     public class Collector
     {
-        private bool _checkedVersion;
         private int _noProgressCounter = 0;
         private Timer _noProgressTimer;
         private ParallelOptions _parallelConfig;
@@ -309,12 +308,8 @@ namespace CollectSFData
                 Log.Last("0 files enumerated.", ConsoleColor.Red);
             }
 
-            // do random (10%) version check
-            if (Log.IsConsole && !_checkedVersion && new Random().Next(1, 11) == 10)
-            {
-                _checkedVersion = true;
-                Config.CheckReleaseVersion();
-            }
+            // do version check
+            Config.CheckReleaseVersion();
 
             Log.Last($"{Instance.TotalErrors} errors.", Instance.TotalErrors > 0 ? ConsoleColor.Yellow : ConsoleColor.Green);
             Log.Last($"{Instance.FileObjects.Pending()} files failed to be processed.", Instance.FileObjects.Pending() > 0 ? ConsoleColor.Red : ConsoleColor.Green);

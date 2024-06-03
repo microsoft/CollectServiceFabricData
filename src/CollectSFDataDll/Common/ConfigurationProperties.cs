@@ -28,6 +28,8 @@ namespace CollectSFData.Common
 
         public string CacheLocation { get; set; }
 
+        public int CheckForUpdates { get; set; } = 30;
+
         public string ConfigurationFile { get; set; }
 
         public string ContainerFilter { get; set; }
@@ -107,6 +109,7 @@ namespace CollectSFData.Common
         public string UriFilter { get; set; }
 
         public bool UseMemoryStream { get; set; } = true;
+
 
         public bool VersionOption { get; set; }
 

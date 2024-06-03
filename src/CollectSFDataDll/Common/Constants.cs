@@ -62,6 +62,7 @@ namespace CollectSFData.Common
         public const double WarningTimeSpanMinHours = .5F;
         public const string ZipExtension = ".zip";
         public static readonly string ApplicationName = AppDomain.CurrentDomain.FriendlyName;
+        public static readonly string AppDataFolder = $"{Environment.GetEnvironmentVariable("LOCALAPPDATA")}\\{ApplicationName}";
         public static readonly string EtwManifestsUrlIndex = $"{EtwManifestsUrl}/index.json";
         public static readonly DateTime UnixEpochMinValue = new DateTime(1601,1,1);
     }

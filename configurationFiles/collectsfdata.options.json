@@ -8,6 +8,7 @@
   "AzureSubscriptionId": null,
   "AzureTenantId": null,
   "CacheLocation": null,
+  "CheckForUpdates": 30,
   "ContainerFilter": null,
   "DeleteCache": false,
   "EndTimeStamp": null,

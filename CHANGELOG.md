@@ -1,5 +1,14 @@
 # Change log
 
+## 06/03/2024
+
+- add configuration option to specify / disable utility update check in days 'CheckForUpdates' #25
+  - default 30 days
+  - 0 to disable
+- remove unused RelogBlg function #26
+- add collectsfdata.options.json to all lib\net* frameworks #24
+- script updates for kusto myfreecluster
+
 ## 04/29/2024
 
 - remove unused Azure.Security.KeyVault.Certificates from nuget.config
