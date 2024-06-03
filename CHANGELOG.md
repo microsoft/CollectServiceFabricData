@@ -1,5 +1,14 @@
 # Change log
 
+## 06/03/2024
+
+- add configuration option to specify / disable utility update check in days 'CheckForUpdates' #25
+  - default 30 days
+  - 0 to disable
+- remove unused RelogBlg function #26
+- add collectsfdata.options.json to all lib\net* frameworks #24
+- script updates for kusto myfreecluster
+
 ## 04/29/2024
 
 - remove unused Azure.Security.KeyVault.Certificates from nuget.config
@@ -7,6 +16,13 @@
 - bump Microsoft.Identity.Client from 4.56.0 to 4.60.1 in nuget.config due to security vulnerability
 - bump Azure.Identity from 1.10.2 to 1.11.0 in nuget.config due to security vulnerability
 - add Service Fabric 10.1 manifests
+
+## 03/24/2024
+
+- add sign stage
+  - build
+  - sign
+  - release nupkg to internal feed if master
 
 ## 03/20/2024
 

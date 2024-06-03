@@ -122,6 +122,30 @@
       ],
       "pattern": "^(.+)$"
     },
+    "CheckForUpdates": {
+      "$id": "#/properties/CheckForUpdates",
+      "type": "integer",
+      "title": "CheckForUpdates",
+      "description": "0-disabled, else check for new utility updates every n days",
+      "default": 30,
+      "enum": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "examples": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "pattern": "^(\\d{0,3})$"
+    },
     "ContainerFilter": {
       "$id": "#/properties/ContainerFilter",
       "type": "string",

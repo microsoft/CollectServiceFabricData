@@ -29,6 +29,8 @@ namespace CollectSFData.Common
 
         public CommandOption CacheLocation { get; set; }
 
+        public CommandOption CheckForUpdates { get; set; }
+
         public CommandLineApplication CmdLineApp { get; private set; }
 
         public CommandOption ConfigurationFile { get; set; }
@@ -385,6 +387,11 @@ namespace CollectSFData.Common
             CacheLocation = CmdLineApp.Option("-cache|--cacheLocation",
                      "[string] Write files to this output location. e.g. \"C:\\Perfcounters\\Output\" ",
                      CommandOptionType.SingleValue);
+
+            CheckForUpdates = CmdLineApp.Option("-cfu|--checkForUpdates",
+                    $"[int] 0-disabled." +
+                    $"{newLine} use checkForUpdates for specifying / disabling utility update checks in days.",
+                    CommandOptionType.SingleValue);
 
             ConfigurationFile = CmdLineApp.Option("-config|--configurationFile",
                     $"[string] json file containing configuration options." +

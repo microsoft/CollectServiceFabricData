@@ -124,6 +124,7 @@
     <file src="..\bin\$configuration$\net462\*.pdb" target="lib\net462" />
     <file src="..\bin\$configuration$\net462\Etlreader.dll" target="lib\net462" />
     <file src="..\bin\$configuration$\net462\System.Fabric.Strings.dll" target="lib\net462" />
+        <file src="..\..\configurationFiles\collectsfdata.options.json" target="lib\net462" />
     <!-- net48 tools -->
     <!-- <file src="..\bin\$configuration$\net48\*.exe" target="tools\net48" />
     <file src="..\bin\$configuration$\net48\*.dll" target="tools\net48" />
@@ -138,6 +139,7 @@
     <file src="..\bin\$configuration$\net48\*.pdb" target="lib\net48" />
     <file src="..\bin\$configuration$\net48\Etlreader.dll" target="lib\net48" />
     <file src="..\bin\$configuration$\net48\System.Fabric.Strings.dll" target="lib\net48" />
+    <file src="..\..\configurationFiles\collectsfdata.options.json" target="lib\net48" />
     <!-- net6.0 tools -->
     <!-- <file src="..\bin\$configuration$\net6.0\*.exe" target="tools\net6.0" />
     <file src="..\bin\$configuration$\net6.0\*.runtimeconfig.json" target="tools\net6.0" />
@@ -153,6 +155,7 @@
     <file src="..\bin\$configuration$\net6.0\*.pdb" target="lib\net6.0" />
     <file src="..\bin\$configuration$\net6.0\Etlreader.dll" target="lib\net6.0" />
     <file src="..\bin\$configuration$\net6.0\System.Fabric.Strings.dll" target="lib\net6.0" />
+    <file src="..\..\configurationFiles\collectsfdata.options.json" target="lib\net6.0" />
     <!-- net8.0 tools -->
     <file src="..\bin\$configuration$\net8.0\*.exe" target="tools\net8.0" />
     <file src="..\bin\$configuration$\net8.0\*.runtimeconfig.json" target="tools\net8.0" />
@@ -168,6 +171,7 @@
     <file src="..\bin\$configuration$\net8.0\*.pdb" target="lib\net8.0" />
     <file src="..\bin\$configuration$\net8.0\Etlreader.dll" target="lib\net8.0" />
     <file src="..\bin\$configuration$\net8.0\System.Fabric.Strings.dll" target="lib\net8.0" />
+    <file src="..\..\configurationFiles\collectsfdata.options.json" target="lib\net8.0" />
     <!-- icon -->
     <file src="..\FabricSupport.png" target="images\" />
   </files>
