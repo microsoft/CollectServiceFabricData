@@ -6,7 +6,7 @@
   "AzureResourceGroup": null,
   "AzureResourceGroupLocation": null,
   "AzureSubscriptionId": null,
-  "AzureTenantId": null,
+  "AzureTenantId": "common",
   "CacheLocation": null,
   "CheckForUpdates": 30,
   "ContainerFilter": null,

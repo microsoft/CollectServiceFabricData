@@ -24,7 +24,7 @@ namespace CollectSFData.Common
 
         public string AzureSubscriptionId { get; set; }
 
-        public string AzureTenantId { get; set; }
+        public string AzureTenantId { get; set; } = "common";
 
         public string CacheLocation { get; set; }
 
