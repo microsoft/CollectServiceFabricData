@@ -5,58 +5,47 @@
 
 using CollectSFData.Azure;
 using CollectSFData.Common;
-using Kusto.Cloud.Platform.Utils;
 using Kusto.Data;
 using Kusto.Data.Common;
 using Kusto.Data.Net.Client;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using System.Net.Http;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Threading.Tasks;
+using System.Xml;
 
 namespace CollectSFData.Kusto
 {
     public class KustoEndpoint
     {
-        public string Cursor;
-        private static ICslAdminProvider _kustoAdminClient;
-        private static ICslQueryProvider _kustoQueryClient;
-        private static int maxKustoClientTimeMs = 300 * 1000;
+        private static ICslAdminProvider _adminClient;
+        private static ICslAdminProvider _adminIngestClient;
+        private static int _maxKustoClientTimeMs = 300 * 1000;
+        private static ICslQueryProvider _queryClient;
+        private readonly CustomTaskManager _kustoTasks = new CustomTaskManager();
         private AzureResourceManager _arm;
         private ConfigurationOptions _config;
-        private Http _httpClient = Http.ClientFactory();
-
         public string ClusterIngestUrl { get; set; }
-
         public string ClusterName { get; private set; }
-
-        public KustoConnectionStringBuilder DatabaseConnection { get; set; }
         public string DatabaseName { get; set; }
-        public KustoRestTable ExtendedPropertiesTable { get; private set; } = new KustoRestTable();
-        public List<string> ExtendedResults { get; private set; }
         public string HostName { get; private set; }
         public string IdentityToken { get; private set; }
+        public KustoConnectionStringBuilder IngestConnection { get; set; }
         public IngestionResourcesSnapshot IngestionResources { get; set; }
         public bool LogLargeResults { get; set; } = true;
+        public KustoConnectionStringBuilder ManagementConnection { get; set; }
         public string ManagementUrl { get; private set; }
-        public KustoRestTable PrimaryResultTable { get; private set; } = new KustoRestTable();
-        public List<KustoRestTable> QueryResultTables { get; private set; } = new List<KustoRestTable>();
-        public KustoRestResponseV1 ResponseDataSet { get; private set; } = new KustoRestResponseV1();
         public string RestMgmtUri { get; private set; }
         public string RestQueryUri { get; private set; }
         public string TableName { get; private set; }
-        public KustoRestTableOfContentsV1 TableOfContents { get; private set; } = new KustoRestTableOfContentsV1();
-        private Timer adminTimer { get; set; }
-        private KustoConnectionStringBuilder ManagementConnection { get; set; }
-
-        private Timer queryTimer { get; set; }
+        private Timer _adminIngestTimer { get; set; }
+        private Timer _adminTimer { get; set; }
+        private Timer _queryTimer { get; set; }
 
         public KustoEndpoint(ConfigurationOptions config)
         {
@@ -102,13 +91,13 @@ namespace CollectSFData.Kusto
                 _arm.Scopes = new List<string>() { $"{ClusterIngestUrl}/.default" };
             }
 
-            if (_config.IsKustoConfigured() && _arm.Authenticate(throwOnError, ClusterIngestUrl))
+            if (_config.IsKustoConfigured() && _config.IsARMValid && _arm.Authenticate(throwOnError, ClusterIngestUrl))
             {
                 if (_arm.ClientIdentity.IsAppRegistration)
                 {
                     Log.Info($"connecting to kusto with app registration {_config.AzureClientId}");
 
-                    DatabaseConnection = new KustoConnectionStringBuilder(ClusterIngestUrl)
+                    IngestConnection = new KustoConnectionStringBuilder(ClusterIngestUrl)
                     {
                         FederatedSecurity = true,
                         InitialCatalog = DatabaseName,
@@ -130,10 +119,11 @@ namespace CollectSFData.Kusto
                 }
                 else
                 {
-                    DatabaseConnection = new KustoConnectionStringBuilder(ClusterIngestUrl)
+                    IngestConnection = new KustoConnectionStringBuilder(ClusterIngestUrl)
                     {
                         FederatedSecurity = true,
                         InitialCatalog = DatabaseName,
+                        Authority = _config.AzureTenantId,
                         UserToken = _arm.BearerToken
                     };
 
@@ -141,22 +131,26 @@ namespace CollectSFData.Kusto
                     {
                         FederatedSecurity = true,
                         InitialCatalog = DatabaseName,
+                        Authority = _config.AzureTenantId,
                         UserToken = _arm.BearerToken
                     };
                 }
             }
             else
             {
-                DatabaseConnection = new KustoConnectionStringBuilder(ClusterIngestUrl)
+                // use federated security to connect to kusto directly and use kusto identity token instead of arm token
+                IngestConnection = new KustoConnectionStringBuilder(ClusterIngestUrl)
                 {
                     FederatedSecurity = true,
-                    InitialCatalog = DatabaseName
+                    InitialCatalog = DatabaseName,
+                    Authority = _config.AzureTenantId
                 };
 
                 ManagementConnection = new KustoConnectionStringBuilder(ManagementUrl)
                 {
                     FederatedSecurity = true,
-                    InitialCatalog = DatabaseName
+                    InitialCatalog = DatabaseName,
+                    Authority = _config.AzureTenantId
                 };
             }
 
@@ -164,21 +158,63 @@ namespace CollectSFData.Kusto
             IngestionResources = RetrieveIngestionResources();
         }
 
-        public List<string> Command(string command)
+        public async Task<List<string>> CommandAsync(string command)
         {
             Log.Info($"command:{command}", ConsoleColor.Blue);
-            if (_kustoAdminClient == null)
+            return await _kustoTasks.TaskFunction((responseList) =>
             {
-                _kustoAdminClient = KustoClientFactory.CreateCslAdminProvider(ManagementConnection);
+                ICslAdminProvider adminClient = CreateAdminClient();
+                List<string> results = EnumerateResultsCsv(adminClient.ExecuteControlCommand(command));
+                return results;
+            }) as List<string>;
+        }
+
+        public ICslAdminProvider CreateAdminClient()
+        {
+            if (_adminClient == null)
+            {
+                _adminClient = KustoClientFactory.CreateCslAdminProvider(ManagementConnection);
             }
 
-            if (adminTimer == null)
+            if (_adminTimer == null)
             {
-                adminTimer = new Timer(DisposeAdminClient, null, maxKustoClientTimeMs, maxKustoClientTimeMs);
+                _adminTimer = new Timer(DisposeAdminClient, null, _maxKustoClientTimeMs, _maxKustoClientTimeMs);
             }
 
-            adminTimer.Change(maxKustoClientTimeMs, maxKustoClientTimeMs);
-            return EnumerateResults(_kustoAdminClient.ExecuteControlCommand(command));
+            _adminTimer.Change(_maxKustoClientTimeMs, _maxKustoClientTimeMs);
+            return _adminClient;
+        }
+
+        public ICslAdminProvider CreateAdminIngestClient()
+        {
+            if (_adminIngestClient == null)
+            {
+                _adminIngestClient = KustoClientFactory.CreateCslAdminProvider(IngestConnection);
+            }
+
+            if (_adminIngestTimer == null)
+            {
+                _adminIngestTimer = new Timer(DisposeAdminIngestClient, null, _maxKustoClientTimeMs, _maxKustoClientTimeMs);
+            }
+
+            _adminIngestTimer.Change(_maxKustoClientTimeMs, _maxKustoClientTimeMs);
+            return _adminIngestClient;
+        }
+
+        public ICslQueryProvider CreateQueryClient()
+        {
+            if (_queryClient == null)
+            {
+                _queryClient = KustoClientFactory.CreateCslQueryProvider(ManagementConnection);
+            }
+
+            if (_queryTimer == null)
+            {
+                _queryTimer = new Timer(DisposeQueryClient, null, _maxKustoClientTimeMs, _maxKustoClientTimeMs);
+            }
+
+            _queryTimer.Change(_maxKustoClientTimeMs, _maxKustoClientTimeMs);
+            return _queryClient;
         }
 
         public bool CreateTable(string tableName, string tableSchema)
@@ -186,7 +222,7 @@ namespace CollectSFData.Kusto
             if (!HasTable(tableName))
             {
                 Log.Info($"creating table: {tableName}");
-                return Command($".create table ['{tableName}'] ( {tableSchema} )").Count > 0;
+                return CommandAsync($".create table ['{tableName}'] ( {tableSchema} )").Result.Count > 0;
             }
 
             return true;
@@ -197,99 +233,53 @@ namespace CollectSFData.Kusto
             if (HasTable(tableName))
             {
                 Log.Warning($"dropping table: {tableName}");
-                return Command($".drop table ['{tableName}'] ifexists skip-seal | project TableName | where TableName == '{tableName}'").Count == 0;
+                return CommandAsync($".drop table ['{tableName}'] ifexists skip-seal | project TableName | where TableName == '{tableName}'").Result.Count == 0;
             }
 
             return true;
         }
 
+        public string GetCursor()
+        {
+            string cursor = QueryAsCsvAsync("print Cursor=current_cursor()").Result.FirstOrDefault();
+            Log.Info($"returning cursor: {cursor}");
+            return cursor;
+        }
+
         public bool HasTable(string tableName)
         {
-            return Query($".show tables | project TableName | where TableName == '{tableName}'").Count > 0;
+            return QueryAsCsvAsync($".show tables | project TableName | where TableName == '{tableName}'").Result.Count > 0;
         }
 
         public bool IngestInline(string tableName, string csv)
         {
             Log.Info($"inline ingesting data: {csv} into table: {tableName}");
-            return Command($".ingest inline into table ['{tableName}'] <| {csv}").Count > 0;
+            return CommandAsync($".ingest inline into table ['{tableName}'] <| {csv}").Result.Count > 0;
         }
 
-        public List<string> Query(string query)
+        public async Task<List<string>> QueryAsCsvAsync(string query)
         {
             Log.Info($"query:{query}", ConsoleColor.Blue);
 
-            if (_kustoQueryClient == null)
-            {
-                _kustoQueryClient = KustoClientFactory.CreateCslQueryProvider(ManagementConnection);
-            }
-
-            if (queryTimer == null)
-            {
-                queryTimer = new Timer(DisposeQueryClient, null, maxKustoClientTimeMs, maxKustoClientTimeMs);
-            }
-
             try
             {
-                PrimaryResultTable = null;
-                QueryResultTables.Clear();
-                Cursor = null;
-
-                queryTimer.Change(maxKustoClientTimeMs, maxKustoClientTimeMs);
-                // unable to parse multiple tables v1 or v2 using kusto so using httpclient and rest
-                string requestBody = "{ \"db\": \"" + DatabaseName + "\", \"csl\": \"" + query + ";print Cursor=current_cursor()\" }";
-                string requestId = new Guid().ToString();
-
-                Dictionary<string, string> headers = new Dictionary<string, string>();
-                headers.Add("accept", "application/json");
-                headers.Add("host", HostName);
-                headers.Add("x-ms-client-request-id", requestId);
-
-                Log.Info($"query:", requestBody);
-                _httpClient.SendRequest(uri: RestQueryUri, authToken: _arm.BearerToken, jsonBody: requestBody, httpMethod: HttpMethod.Post, headers: headers);
-                ResponseDataSet = JsonConvert.DeserializeObject<KustoRestResponseV1>(_httpClient.ResponseStreamString);
-
-                if (!ResponseDataSet.HasData())
+                List<string> response = await _kustoTasks.TaskFunction((responseList) =>
                 {
-                    Log.Info($"no tables:", ResponseDataSet);
-                    return new List<string>();
-                }
+                    ICslQueryProvider queryClient = CreateQueryClient();
+                    IDataReader reader = queryClient.ExecuteQuery(query);
 
-                KustoRestTableOfContentsV1 toc = SetTableOfContents(ResponseDataSet);
-
-                if (toc.HasData)
-                {
-                    SetExtendedProperties();
-                    List<long> indexes = toc.Rows.Where(x => x.Kind.Equals("QueryResult")).Select(x => x.Ordinal).ToList();
-
-                    foreach (long index in indexes)
+                    if (reader == null)
                     {
-                        KustoRestTable table = new KustoRestTable(ResponseDataSet.Tables[index]);
-                        QueryResultTables.Add(table);
-
-                        if (PrimaryResultTable == null)
-                        {
-                            PrimaryResultTable = table;
-                            continue;
-                        }
-
-                        if (table.Columns.FirstOrDefault(x => x.ColumnName.Contains("Cursor")) != null)
-                        {
-                            Cursor = table.Records().FirstOrDefault()["Cursor"].ToString();
-                        }
+                        Log.Info($"no results:", ConsoleColor.DarkBlue);
+                        return new List<string>();
                     }
 
-                    Log.Debug($"table cursor: {Cursor}");
-                    return PrimaryResultTable.RecordsCsv();
-                }
-                else
-                {
-                    TableOfContents = new KustoRestTableOfContentsV1();
-                    ExtendedPropertiesTable = new KustoRestTable();
-                    PrimaryResultTable = new KustoRestTable(ResponseDataSet.Tables[0]);
-                    ResponseDataSet.Tables.ForEach(x => QueryResultTables.Add(new KustoRestTable(x)));
+                    List<string> results = EnumerateResultsCsv(reader);
+                    reader.Close();
+                    return results;
+                }) as List<string>;
 
-                    return PrimaryResultTable.RecordsCsv();
-                }
+                return response;
             }
             catch (Exception e)
             {
@@ -298,43 +288,80 @@ namespace CollectSFData.Kusto
             }
         }
 
+        public async Task<KustoRestRecords> QueryAsListAsync(string query)
+        {
+            Log.Info($"query:{query}", ConsoleColor.Blue);
+            KustoRestRecords response = new KustoRestRecords();
+
+            try
+            {
+                response = await _kustoTasks.TaskFunction((responseList) =>
+                {
+                    ICslQueryProvider queryClient = CreateQueryClient();
+                    IDataReader reader = queryClient.ExecuteQuery(query);
+
+                    if (reader == null)
+                    {
+                        Log.Info($"no results:", ConsoleColor.DarkBlue);
+                        return null;
+                    }
+
+                    KustoRestRecords results = EnumerateResultsList(reader);
+                    reader.Close();
+                    return results;
+                }) as KustoRestRecords;
+
+                return response;
+            }
+            catch (Exception e)
+            {
+                Log.Exception($"exception executing query: {query}\r\n{e}");
+                return null;
+            }
+        }
+
         private static void DisposeAdminClient(object state)
         {
-            if (_kustoAdminClient != null)
+            if (_adminClient != null)
             {
                 Log.Info("Disposing kusto admin client");
-                _kustoAdminClient.Dispose();
-                _kustoAdminClient = null;
+                _adminClient.Dispose();
+                _adminClient = null;
+            }
+        }
+
+        private static void DisposeAdminIngestClient(object state)
+        {
+            if (_adminIngestClient != null)
+            {
+                Log.Info("Disposing kusto admin ingest client");
+                _adminIngestClient.Dispose();
+                _adminIngestClient = null;
             }
         }
 
         private static void DisposeQueryClient(object state)
         {
-            if (_kustoQueryClient != null)
+            if (_queryClient != null)
             {
                 Log.Info("Disposing kusto query client");
-                _kustoQueryClient.Dispose();
-                _kustoQueryClient = null;
+                _queryClient.Dispose();
+                _queryClient = null;
             }
         }
 
-        private List<string> EnumerateResults(IDataReader reader)
+        private KustoRestTable CreateResponseTable(IDataReader reader)
+        {
+            KustoRestTable test = new KustoRestTable(reader);
+            return test;
+        }
+
+        private List<string> EnumerateResultsCsv(IDataReader reader)
         {
             int maxRecords = 1000;
             int index = 0;
-            List<string> csvRecords = new List<string>();
-
-            while (reader.Read())
-            {
-                StringBuilder csvRecord = new StringBuilder();
-
-                for (int i = 0; i < reader.FieldCount; i++)
-                {
-                    csvRecord.Append(reader.GetValue(i) + ",");
-                }
-
-                csvRecords.Add(csvRecord.ToString().TrimEnd(','));
-            }
+            KustoRestTable dataTable = CreateResponseTable(reader);
+            List<string> csvRecords = dataTable.RecordsCsv();
 
             if (csvRecords.Count < maxRecords | LogLargeResults)
             {
@@ -352,34 +379,59 @@ namespace CollectSFData.Kusto
             return csvRecords;
         }
 
+        private KustoRestRecords EnumerateResultsList(IDataReader reader)
+        {
+            int maxRecords = 1000;
+            string jsonRecords = string.Empty;
+            KustoRestTable dataTable = CreateResponseTable(reader);
+            KustoRestRecords dictionary = dataTable.RecordsList();
+
+            if (dataTable.Rows.Count < maxRecords | LogLargeResults)
+            {
+                Log.Info($"results:\r\n{jsonRecords}", ConsoleColor.DarkBlue, null, dataTable);
+            }
+            else
+            {
+                Log.Info($"results: {dataTable.Rows.Count}");
+            }
+
+            return dictionary;
+        }
+
         private IngestionResourcesSnapshot RetrieveIngestionResources()
         {
-            // retrieve ingestion resources (queues and blob containers) with SAS from specified Kusto Ingestion service using supplied Access token
-            string requestBody = "{ \"csl\": \".get ingestion resources\" }";
-
+            string command = CslCommandGenerator.GenerateIngestionResourcesGetCommand();
+            ICslAdminProvider ingestClient = CreateAdminIngestClient();
             IngestionResourcesSnapshot ingestionResources = new IngestionResourcesSnapshot();
-            _httpClient.SendRequest(RestMgmtUri, _arm.BearerToken, requestBody, HttpMethod.Post);
-            JObject responseJson = _httpClient.ResponseStreamJson;
+            IEnumerable<string> results = EnumerateResultsCsv(ingestClient.ExecuteControlCommand(command));
 
-            IEnumerable<JToken> tokens = responseJson.SelectTokens("Tables[0].Rows[?(@.[0] == 'SecuredReadyForAggregationQueue')]");
-
-            foreach (JToken token in tokens)
+            foreach (string result in results)
             {
-                ingestionResources.IngestionQueues.Add((string)token.Last);
+                if (string.IsNullOrEmpty(result) || !result.Contains(','))
+                {
+                    Log.Warning($"invalid ingestion resource: {result}");
+                    continue;
+                }
+                string propertyName = result.Split(',')[0];
+                string propertyValue = result.Split(',')[1];
+
+                if (propertyName.Equals("SecuredReadyForAggregationQueue"))
+                {
+                    ingestionResources.IngestionQueues.Add(propertyValue);
+                }
+                else if (propertyName.Equals("TempStorage"))
+                {
+                    ingestionResources.TempStorageContainers.Add(propertyValue);
+                }
+                else if (propertyName.Equals("FailedIngestionsQueue"))
+                {
+                    ingestionResources.FailureNotificationsQueue = propertyValue;
+                }
+                else if (propertyName.Equals("SuccessfulIngestionsQueue"))
+                {
+                    ingestionResources.SuccessNotificationsQueue = propertyValue;
+                }
             }
-
-            tokens = responseJson.SelectTokens("Tables[0].Rows[?(@.[0] == 'TempStorage')]");
-
-            foreach (JToken token in tokens)
-            {
-                ingestionResources.TempStorageContainers.Add((string)token.Last);
-            }
-
-            JToken singleToken = responseJson.SelectTokens("Tables[0].Rows[?(@.[0] == 'FailedIngestionsQueue')].[1]").FirstOrDefault();
-            ingestionResources.FailureNotificationsQueue = (string)singleToken;
-
-            singleToken = responseJson.SelectTokens("Tables[0].Rows[?(@.[0] == 'SuccessfulIngestionsQueue')].[1]").FirstOrDefault();
-            ingestionResources.SuccessNotificationsQueue = (string)singleToken;
 
             Log.Info("ingestion resources:", ingestionResources);
             return ingestionResources;
@@ -388,74 +440,12 @@ namespace CollectSFData.Kusto
         private string RetrieveKustoIdentityToken()
         {
             // retrieve kusto identity token that will be added to every ingest message
-            string requestBody = "{ \"csl\": \".get kusto identity token\" }";
-            string jsonPath = "Tables[0].Rows[*].[0]";
+            string command = CslCommandGenerator.GenerateKustoIdentityTokenGetCommand();
+            ICslAdminProvider ingestClient = CreateAdminIngestClient();
+            string identityToken = EnumerateResultsCsv(ingestClient.ExecuteControlCommand(command)).FirstOrDefault();
 
-            _httpClient.SendRequest(RestMgmtUri, _arm.BearerToken, requestBody, HttpMethod.Post);
-            JToken identityToken = _httpClient.ResponseStreamJson.SelectTokens(jsonPath).FirstOrDefault();
-
-            Log.Info("identityToken:", identityToken);
-            return ((string)identityToken);
-        }
-
-        private void SetExtendedProperties()
-        {
-            // extended properties stored in single 'Value' column as key value pair in json string
-            string tableName = "@ExtendedProperties";
-
-            if (TableOfContents.Rows.Any(x => x.Name.Equals(tableName)))
-            {
-                long index = TableOfContents.Rows.FirstOrDefault(x => x.Name.Equals(tableName)).Ordinal;
-                ExtendedPropertiesTable = new KustoRestTable(ResponseDataSet.Tables[index]);
-            }
-        }
-
-        private KustoRestTableOfContentsV1 SetTableOfContents(KustoRestResponseV1 responseDataSet)
-        {
-            KustoRestTableOfContentsV1 content = new KustoRestTableOfContentsV1();
-
-            if (responseDataSet == null || responseDataSet.Tables?.Length < 2)
-            {
-                Log.Debug($"no table of content table");
-                return content;
-            }
-
-            KustoRestResponseTableV1 tableOfContents = responseDataSet.Tables.Last();
-
-            for (int c = 0; c < tableOfContents.Columns.Length; c++)
-            {
-                content.Columns.Add(
-                    new KustoRestTableOfContentsColumnV1
-                    {
-                        _index = c,
-                        ColumnName = tableOfContents.Columns[c].ColumnName,
-                        ColumnType = tableOfContents.Columns[c].ColumnType,
-                        DataType = tableOfContents.Columns[c].DataType
-                    });
-            }
-
-            for (int r = 0; r < tableOfContents.Rows.Length; r++)
-            {
-                Hashtable record = new Hashtable();
-                KustoRestTableOfContentsRowV1 row = new KustoRestTableOfContentsRowV1();
-
-                object[] rowFields = tableOfContents.Rows[r];
-                if (rowFields.Length != tableOfContents.Columns.Length)
-                {
-                    Log.Error($"mismatch in column count and row count {rowFields.Count()} {tableOfContents.Columns.Length}");
-                    return content;
-                }
-
-                row._index = r;
-                row.Id = rowFields[content.Columns.First(x => x.ColumnName.Equals("Id"))._index].ToString();
-                row.Kind = rowFields[content.Columns.First(x => x.ColumnName.Equals("Kind"))._index].ToString();
-                row.Name = rowFields[content.Columns.First(x => x.ColumnName.Equals("Name"))._index].ToString();
-                row.Ordinal = Convert.ToInt64(rowFields[content.Columns.First(x => x.ColumnName.Equals("Ordinal"))._index]);
-                row.PrettyName = rowFields[content.Columns.First(x => x.ColumnName.Equals("PrettyName"))._index].ToString();
-                content.Rows.Add(row);
-            }
-
-            return content;
+            Log.Info($"identityToken:{identityToken}");
+            return identityToken;
         }
     }
 }

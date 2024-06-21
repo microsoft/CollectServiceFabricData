@@ -6,8 +6,6 @@
 using CollectSFData.Common;
 using CollectSFData.DataFile;
 using Azure;
-using Azure.Storage.Blobs;
-using Azure.Storage.Blobs.Models;
 using Azure.Storage.Queues;
 using Azure.Storage.Queues.Models;
 using Newtonsoft.Json;
@@ -93,7 +91,7 @@ namespace CollectSFData.Kusto
                     string command = $".set-or-replace {_config.KustoTable} <| {_config.KustoTable} | summarize min(RelativeUri) by {names}";
                     Log.Info(command);
 
-                    Endpoint.Command(command);
+                    Endpoint.CommandAsync(command).Wait();
                     Log.Info("removed duplicate records", ConsoleColor.White);
                 }
 
@@ -138,7 +136,7 @@ namespace CollectSFData.Kusto
             else if (_config.Unique && Endpoint.HasTable(Endpoint.TableName))
             {
                 _appendingToExistingTableUnique = true;
-                List<string> existingUploads = Endpoint.Query($"['{Endpoint.TableName}']|distinct RelativeUri");
+                List<string> existingUploads = Endpoint.QueryAsCsvAsync($"['{Endpoint.TableName}']|distinct RelativeUri").Result;
                 foreach (string existingUpload in existingUploads)
                 {
                     _instance.FileObjects.Add(new FileObject(existingUpload) { Status = FileStatus.existing });
@@ -259,19 +257,16 @@ namespace CollectSFData.Kusto
 
         private void IngestStatusFailQuery()
         {
-            Endpoint.Query($".show ingestion failures" +
+            KustoRestRecords failedRecords = Endpoint.QueryAsListAsync($".show ingestion failures" +
                 $"| where Table == '{Endpoint.TableName}'" +
                 $"| where FailedOn >= todatetime('{_failureQueryTime}')" +
-                $"| order by FailedOn asc");
-
-            KustoRestRecords failedRecords = Endpoint.PrimaryResultTable.Records();
+                $"| order by FailedOn asc").Result;
 
             foreach (KustoRestRecord record in failedRecords)
             {
                 string uriFile = record["IngestionSourcePath"].ToString();
                 Log.Debug($"checking failed ingested for failed relativeuri: {uriFile}");
                 FileObject fileObject = _instance.FileObjects.FindByUriFirstOrDefault(uriFile);
-
                 fileObject.Status = FileStatus.failed;
 
                 if (fileObject.IsPopulated)
@@ -290,13 +285,18 @@ namespace CollectSFData.Kusto
 
         private void IngestStatusSuccessQuery()
         {
+            long queryTime = DateTime.Now.Ticks;
+
             List<string> successUris = new List<string>();
-            successUris.AddRange(Endpoint.Query($"['{Endpoint.TableName}']" +
+            successUris.AddRange(Endpoint.QueryAsCsvAsync($"['{Endpoint.TableName}']" +
                 $"| where cursor_after('{_ingestCursor}')" +
                 $"| where ingestion_time() > todatetime('{_instance.StartTime.ToUniversalTime().ToString("o")}')" +
-                $"| distinct RelativeUri"));
-
-            _ingestCursor = !_instance.FileObjects.Any(FileStatus.succeeded) ? "" : Endpoint.Cursor;
+                $"| distinct RelativeUri").Result);
+            if (successUris.Count > 0)
+            {
+                // to avoid time gaps between query and ingestion
+                _ingestCursor = Math.Min(queryTime, Convert.ToInt64(Endpoint.GetCursor())).ToString();
+            }
             Log.Debug($"files ingested:{successUris.Count}");
 
             foreach (string uriFile in successUris)
@@ -419,11 +419,11 @@ namespace CollectSFData.Kusto
 
                 if (_config.KustoPurge.ToLower().Split(' ').Length > 1)
                 {
-                    results = Endpoint.Query($".show tables | where TableName contains {_config.KustoPurge.ToLower().Split(' ')[1]} | project TableName");
+                    results = Endpoint.QueryAsCsvAsync($".show tables | where TableName contains {_config.KustoPurge.ToLower().Split(' ')[1]} | project TableName").Result;
                 }
                 else
                 {
-                    results = Endpoint.Query(".show tables | project TableName");
+                    results = Endpoint.QueryAsCsvAsync(".show tables | project TableName").Result;
                 }
 
                 Log.Info($"current table list:", results);
