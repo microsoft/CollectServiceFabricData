@@ -82,6 +82,8 @@ namespace CollectSFData.Common
             }
         }
 
+        public bool IsARMValid { get; set; }
+
         public bool IsValid { get; set; }
 
         public bool NeedsValidation { get; set; } = true;
@@ -436,6 +438,17 @@ namespace CollectSFData.Common
             return IsKustoConfigured() | IsLogAnalyticsConfigured();
         }
 
+        public bool IsTenantValid()
+        {
+            if (!HasValue(AzureTenantId) || AzureTenantId.Length > Constants.MaxStringLength)
+            {
+                Log.Error($"invalid tenant id value:'{AzureTenantId}' expected:guid, domain name, or 'common'");
+                return false;
+            }
+
+            return true;
+        }
+
         public void MergeConfig(string optionsFile)
         {
             JObject fileOptions = ReadConfigFile(optionsFile);
@@ -600,6 +613,11 @@ namespace CollectSFData.Common
             _defaultConfig = configurationOptions;
         }
 
+        public bool ShouldAuthenticateToArm()
+        {
+            return IsClientIdConfigured() | IsLogAnalyticsConfigured();
+        }
+
         public bool Validate()
         {
             try
@@ -622,7 +640,8 @@ namespace CollectSFData.Common
                     retval &= ValidateTime();
                     retval &= ValidateSource();
                     retval &= ValidateDestination();
-                    retval &= ValidateAad();
+
+                    IsARMValid = ShouldAuthenticateToArm() && (retval &= ValidateAad());
 
                     if (retval)
                     {
@@ -651,8 +670,7 @@ namespace CollectSFData.Common
             AzureResourceManager arm = new AzureResourceManager(this);
             bool retval = true;
             bool clientIdConfigured = IsClientIdConfigured();
-            bool usingAad = clientIdConfigured | IsKustoConfigured() | IsKustoPurgeRequested();
-            usingAad |= LogAnalyticsCreate | LogAnalyticsRecreate | IsLogAnalyticsPurgeRequested() | IsLogAnalyticsConfigured();
+            bool usingAad = clientIdConfigured | LogAnalyticsCreate | LogAnalyticsRecreate | IsLogAnalyticsPurgeRequested() | IsLogAnalyticsConfigured();
 
             if (HasValue(AzureClientId) && !IsGuid(AzureClientId))
             {
@@ -666,9 +684,9 @@ namespace CollectSFData.Common
                 retval &= false;
             }
 
-            if (HasValue(AzureTenantId) && !IsGuid(AzureTenantId))
+            if (!HasValue(AzureTenantId) | AzureTenantId.Length > Constants.MaxStringLength)
             {
-                Log.Error($"invalid tenant id value:{AzureTenantId} expected:guid");
+                Log.Error($"invalid tenant id value:{AzureTenantId} expected:guid, domain name, or 'common'");
                 retval &= false;
             }
 
@@ -682,6 +700,8 @@ namespace CollectSFData.Common
             {
                 if (clientIdConfigured && HasValue(AzureClientCertificate) && !HasValue(ClientCertificate))
                 {
+                    retval &= IsTenantValid();
+
                     if (HasValue(AzureClientSecret))
                     {
                         certificateUtilities.SetSecurePassword(AzureClientSecret);
@@ -703,11 +723,6 @@ namespace CollectSFData.Common
                         retval &= false;
                     }
                 }
-                // else
-                // {
-                //     Log.Error("Failed certificate to find certificate");
-                //     retval &= false;
-                // }
 
                 retval &= arm.Authenticate();
 
@@ -800,6 +815,12 @@ namespace CollectSFData.Common
                         retval = false;
                     }
                 }
+            }
+
+            if ((IsKustoConfigured() | IsLogAnalyticsConfigured()) & !IsTenantValid())
+            {
+                Log.Error("tenant id value expected for this configuration.");
+                retval = false;
             }
 
             if (IsKustoConfigured() & IsLogAnalyticsConfigured())
