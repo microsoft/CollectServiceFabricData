@@ -4,7 +4,6 @@
 // ------------------------------------------------------------
 
 using CollectSFData.Common;
-using Kusto.Cloud.Platform.Data;
 using Kusto.Cloud.Platform.Utils;
 using System;
 using System.Collections.Generic;
@@ -20,7 +19,7 @@ namespace CollectSFData.Kusto
     public class KustoRestRecords : List<KustoRestRecord>
     { }
 
-    public class KustoRestTable : DataTable //KustoRestResponseTableV1
+    public class KustoRestTable : DataTable
     {
         private IDataReader _reader;
 

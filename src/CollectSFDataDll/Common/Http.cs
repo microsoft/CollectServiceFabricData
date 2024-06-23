@@ -9,7 +9,6 @@ using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 
@@ -58,11 +57,11 @@ namespace CollectSFData.Common
         {
             Log.Info($"enter: {uri}", ConsoleColor.Magenta);
             bool result = false;
-            if(headers == null)
+            if (headers == null)
             {
                 headers = new Dictionary<string, string>();
             }
-            if(!headers.ContainsKey("User-Agent"))
+            if (!headers.ContainsKey("User-Agent"))
             {
                 headers.Add("User-Agent", "CollectSFData");
             }
@@ -105,7 +104,7 @@ namespace CollectSFData.Common
                 }
 
                 // head not working with httpclient use get with ResponseHeadersRead
-                if(httpMethod == HttpMethod.Head)
+                if (httpMethod == HttpMethod.Head)
                 {
                     httpMethod = HttpMethod.Get;
                     _httpClient.DefaultRequestHeaders.Add("Accept", "*/*");

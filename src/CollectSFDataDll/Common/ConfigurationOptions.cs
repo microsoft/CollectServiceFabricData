@@ -14,7 +14,6 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Net.Http;
 using System.Reflection;
 using System.Security.Cryptography.X509Certificates;
 using System.Text.RegularExpressions;
@@ -25,27 +24,14 @@ namespace CollectSFData.Common
     public class ConfigurationOptions : ConfigurationProperties
     {
         private static readonly CommandLineArguments _cmdLineArgs = new CommandLineArguments();
-        private static bool _cmdLineExecuted;
         private static bool? _cacheLocationPreconfigured = null;
+        private static bool _cmdLineExecuted;
         private static string[] _commandlineArguments = new string[0];
         private static ConfigurationOptions _defaultConfig;
+        private static object _singleLock = new Object();
         private static ConfigurationOptions _singleton;// = new ConfigurationOptions();
         private readonly string _tempName = "csfd";
         private string _tempPath;
-        private static object _singleLock = new Object();
-
-        public static ConfigurationOptions Singleton()
-        {
-            lock (_singleLock)
-            {
-                if (_singleton == null)
-                {
-                    _singleton = new ConfigurationOptions();
-                }
-                return _singleton;
-            }
-        }
-
         public X509Certificate2 ClientCertificate { get; set; }
 
         public new string EndTimeStamp
@@ -108,6 +94,7 @@ namespace CollectSFData.Common
         }
 
         public string Version { get; } = $"{Process.GetCurrentProcess().MainModule?.FileVersionInfo.FileVersion}";
+
         private bool _defaultConfigLoaded => HasValue(_defaultConfig);
 
         static ConfigurationOptions()
@@ -143,6 +130,44 @@ namespace CollectSFData.Common
             {
                 Validate();
             }
+        }
+
+        public static ConfigurationOptions Singleton()
+        {
+            lock (_singleLock)
+            {
+                if (_singleton == null)
+                {
+                    _singleton = new ConfigurationOptions();
+                }
+                return _singleton;
+            }
+        }
+
+        public bool CheckLogFile()
+        {
+            if (LogDebug == LoggingLevel.Verbose && !HasValue(LogFile))
+            {
+                LogFile = $"{CacheLocation}/{_tempName}.log";
+                Log.Warning($"LogDebug 5 (Verbose) requires log file. setting LogFile:{LogFile}");
+            }
+
+            if (HasValue(LogFile))
+            {
+                LogFile = FileManager.NormalizePath(LogFile);
+
+                if (Regex.IsMatch(LogFile, @"<.+>"))
+                {
+                    string timePattern = Regex.Match(LogFile, @"<(.+?)>").Groups[1].Value;
+                    LogFile = Regex.Replace(LogFile, @"<.+?>", DateTime.Now.ToString(timePattern));
+                    Log.Info($"replaced datetime token {timePattern}: new LogFile name:{LogFile}");
+                }
+
+                Log.Info($"setting output log file to: {LogFile}");
+                return FileManager.CreateDirectory(Path.GetDirectoryName(LogFile));
+            }
+
+            return true;
         }
 
         public void CheckPublicIp()
@@ -433,11 +458,6 @@ namespace CollectSFData.Common
             return HasValue(LogAnalyticsPurge);
         }
 
-        public bool IsUploadConfigured()
-        {
-            return IsKustoConfigured() | IsLogAnalyticsConfigured();
-        }
-
         public bool IsTenantValid()
         {
             if (!HasValue(AzureTenantId) || AzureTenantId.Length > Constants.MaxStringLength)
@@ -447,6 +467,11 @@ namespace CollectSFData.Common
             }
 
             return true;
+        }
+
+        public bool IsUploadConfigured()
+        {
+            return IsKustoConfigured() | IsLogAnalyticsConfigured();
         }
 
         public void MergeConfig(string optionsFile)
@@ -1004,32 +1029,6 @@ namespace CollectSFData.Common
                 FileManager.CreateDirectory(EtwManifestsCache);
                 DownloadEtwManifests();
             }
-        }
-
-        public bool CheckLogFile()
-        {
-            if (LogDebug == LoggingLevel.Verbose && !HasValue(LogFile))
-            {
-                LogFile = $"{CacheLocation}/{_tempName}.log";
-                Log.Warning($"LogDebug 5 (Verbose) requires log file. setting LogFile:{LogFile}");
-            }
-
-            if (HasValue(LogFile))
-            {
-                LogFile = FileManager.NormalizePath(LogFile);
-
-                if (Regex.IsMatch(LogFile, @"<.+>"))
-                {
-                    string timePattern = Regex.Match(LogFile, @"<(.+?)>").Groups[1].Value;
-                    LogFile = Regex.Replace(LogFile, @"<.+?>", DateTime.Now.ToString(timePattern));
-                    Log.Info($"replaced datetime token {timePattern}: new LogFile name:{LogFile}");
-                }
-
-                Log.Info($"setting output log file to: {LogFile}");
-                return FileManager.CreateDirectory(Path.GetDirectoryName(LogFile));
-            }
-
-            return true;
         }
 
         private string CleanTableName(string tableName, bool withGatherType = false)
