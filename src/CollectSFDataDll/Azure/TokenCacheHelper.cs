@@ -6,7 +6,6 @@
 using CollectSFData.Common;
 using CollectSFData.DataFile;
 using Microsoft.Identity.Client;
-using System;
 using System.IO;
 using System.Security.Cryptography;
 
@@ -18,10 +17,10 @@ namespace CollectSFData.Azure
 
         private static readonly object _fileLock = new object();
 
-        public static bool HasTokens { get; set; }
-        
         // Create byte array for additional entropy when using Protect method.
-        static byte [] s_additionalEntropy = { 9, 8, 7, 6, 5, 4 };
+        private static byte[] s_additionalEntropy = { 9, 8, 7, 6, 5, 4 };
+
+        public static bool HasTokens { get; set; }
 
         static TokenCacheHelper()
         {

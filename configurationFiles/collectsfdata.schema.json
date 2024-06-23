@@ -103,8 +103,9 @@
       "type": "string",
       "title": "AzureTenantId",
       "description": "azure tenant id guid for certain non-default azure operations",
-      "default": null,
+      "default": "common",
       "examples": [
+        "common",
         null,
         "123456578-1234-1234-1234-123456789012"
       ],

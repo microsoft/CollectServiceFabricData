@@ -5,9 +5,32 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": ".NET 8 LTS Launch with Args (console)",
+            "name": ".NET 8 Launch with Args (console)",
             "type": "coreclr",
             "request": "launch",
+            "requireExactSource": false,
+            //"preLaunchTask": "build",
+            "program": "${workspaceFolder}/src/bin/Debug/net8.0/CollectSFData.dll",
+            "args": [
+                //"${input:args}"
+                "-type",
+                "trace",
+                "-krt",
+                "1",
+                "-t",
+                "1",
+                // "-l",
+                // "1"
+            ],
+            "cwd": "${workspaceFolder}/src/bin/Debug/net8.0",
+            "stopAtEntry": false,
+            "console": "internalConsole",
+        },
+        {
+            "name": ".NET 8 Build / Launch with Args (console)",
+            "type": "coreclr",
+            "request": "launch",
+            "requireExactSource": false,
             "preLaunchTask": "build",
             "program": "${workspaceFolder}/src/bin/Debug/net8.0/CollectSFData.dll",
             "args": [
@@ -22,9 +45,10 @@
             "console": "internalConsole",
         },
         {
-            "name": ".NET 6 LTS Launch with Args (console)",
+            "name": ".NET 6 Build / Launch with Args (console)",
             "type": "coreclr",
             "request": "launch",
+            "requireExactSource": false,
             "preLaunchTask": "build",
             "program": "${workspaceFolder}/src/bin/Debug/net6.0/CollectSFData.dll",
             "args": [
@@ -41,6 +65,7 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
+            "requireExactSource": false,
             "program": "${workspaceFolder}/src/bin/Debug/net6.0/CollectSFData.dll",
             "args": [],
             "cwd": "${workspaceFolder}/src/bin/Debug/net6.0",
@@ -52,6 +77,7 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
+            "requireExactSource": false,
             "program": "${workspaceFolder}/src/bin/Debug/net8.0/CollectSFData.dll",
             "args": [],
             "cwd": "${workspaceFolder}/src/bin/Debug/net8.0",

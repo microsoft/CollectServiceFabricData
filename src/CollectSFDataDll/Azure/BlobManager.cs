@@ -93,7 +93,13 @@ namespace CollectSFData.Azure
             {
                 Log.Debug($"enter: {blobUri}");
                 Uri uri = new Uri(blobUri);
-                return CreateBlobClient(uri);
+                string query = "";
+                if (string.IsNullOrEmpty(uri.Query))
+                {
+                    Log.Debug($"adding sas token to uri: {blobUri}");
+                    query = _config.SasEndpointInfo.SasToken;
+                }
+                return CreateBlobClient(uri, query);
             }
             catch (Exception e)
             {

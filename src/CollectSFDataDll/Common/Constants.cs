@@ -38,6 +38,7 @@ namespace CollectSFData.Common
         public const int MaxJsonTransmitBytes = 1024 * 1024 * 25;
         public const int MaxResults = 5000;
         public const int MaxStreamTransmitBytes = 1024 * 1024 * 1024;
+        public const int MaxStringLength = 256;
         public const int MaxThreadMultiplier = 20;
         public const int MinThreadMultiplier = 10;
         public const string PerfCsvExtension = ".perf.csv";

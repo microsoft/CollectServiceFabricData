@@ -6,7 +6,6 @@
 using CollectSFData.Common;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -102,7 +101,6 @@ namespace CollectSFData.DataFile
                 File.Delete(fileUri);
             }
         }
-
 
         public FileObjectCollection FormatCounterFile(FileObject fileObject)
         {
@@ -214,7 +212,7 @@ namespace CollectSFData.DataFile
             List<string> files = new List<string>();
             SearchOption subDirectories = includeSubDirectories ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
 
-            if(Directory.Exists(filePath)) 
+            if (Directory.Exists(filePath))
             {
                 files.AddRange(Directory.GetFiles(filePath, $"*{fileExtensionPattern}", subDirectories));
             }
@@ -222,7 +220,7 @@ namespace CollectSFData.DataFile
             {
                 Log.Warning($"directory does not exist:filePath{filePath}");
             }
-            
+
             Log.Info($"exit:filePath{filePath} subdir:{includeSubDirectories} files:", files);
             return files;
         }

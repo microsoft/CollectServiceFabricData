@@ -14,7 +14,6 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Net.Http;
 using System.Reflection;
 using System.Security.Cryptography.X509Certificates;
 using System.Text.RegularExpressions;
@@ -25,27 +24,14 @@ namespace CollectSFData.Common
     public class ConfigurationOptions : ConfigurationProperties
     {
         private static readonly CommandLineArguments _cmdLineArgs = new CommandLineArguments();
-        private static bool _cmdLineExecuted;
         private static bool? _cacheLocationPreconfigured = null;
+        private static bool _cmdLineExecuted;
         private static string[] _commandlineArguments = new string[0];
         private static ConfigurationOptions _defaultConfig;
+        private static object _singleLock = new Object();
         private static ConfigurationOptions _singleton;// = new ConfigurationOptions();
         private readonly string _tempName = "csfd";
         private string _tempPath;
-        private static object _singleLock = new Object();
-
-        public static ConfigurationOptions Singleton()
-        {
-            lock (_singleLock)
-            {
-                if (_singleton == null)
-                {
-                    _singleton = new ConfigurationOptions();
-                }
-                return _singleton;
-            }
-        }
-
         public X509Certificate2 ClientCertificate { get; set; }
 
         public new string EndTimeStamp
@@ -82,6 +68,8 @@ namespace CollectSFData.Common
             }
         }
 
+        public bool IsARMValid { get; set; }
+
         public bool IsValid { get; set; }
 
         public bool NeedsValidation { get; set; } = true;
@@ -106,6 +94,7 @@ namespace CollectSFData.Common
         }
 
         public string Version { get; } = $"{Process.GetCurrentProcess().MainModule?.FileVersionInfo.FileVersion}";
+
         private bool _defaultConfigLoaded => HasValue(_defaultConfig);
 
         static ConfigurationOptions()
@@ -141,6 +130,44 @@ namespace CollectSFData.Common
             {
                 Validate();
             }
+        }
+
+        public static ConfigurationOptions Singleton()
+        {
+            lock (_singleLock)
+            {
+                if (_singleton == null)
+                {
+                    _singleton = new ConfigurationOptions();
+                }
+                return _singleton;
+            }
+        }
+
+        public bool CheckLogFile()
+        {
+            if (LogDebug == LoggingLevel.Verbose && !HasValue(LogFile))
+            {
+                LogFile = $"{CacheLocation}/{_tempName}.log";
+                Log.Warning($"LogDebug 5 (Verbose) requires log file. setting LogFile:{LogFile}");
+            }
+
+            if (HasValue(LogFile))
+            {
+                LogFile = FileManager.NormalizePath(LogFile);
+
+                if (Regex.IsMatch(LogFile, @"<.+>"))
+                {
+                    string timePattern = Regex.Match(LogFile, @"<(.+?)>").Groups[1].Value;
+                    LogFile = Regex.Replace(LogFile, @"<.+?>", DateTime.Now.ToString(timePattern));
+                    Log.Info($"replaced datetime token {timePattern}: new LogFile name:{LogFile}");
+                }
+
+                Log.Info($"setting output log file to: {LogFile}");
+                return FileManager.CreateDirectory(Path.GetDirectoryName(LogFile));
+            }
+
+            return true;
         }
 
         public void CheckPublicIp()
@@ -431,6 +458,17 @@ namespace CollectSFData.Common
             return HasValue(LogAnalyticsPurge);
         }
 
+        public bool IsTenantValid()
+        {
+            if (!HasValue(AzureTenantId) || AzureTenantId.Length > Constants.MaxStringLength)
+            {
+                Log.Error($"invalid tenant id value:'{AzureTenantId}' expected:guid, domain name, or 'common'");
+                return false;
+            }
+
+            return true;
+        }
+
         public bool IsUploadConfigured()
         {
             return IsKustoConfigured() | IsLogAnalyticsConfigured();
@@ -600,6 +638,11 @@ namespace CollectSFData.Common
             _defaultConfig = configurationOptions;
         }
 
+        public bool ShouldAuthenticateToArm()
+        {
+            return IsClientIdConfigured() | IsLogAnalyticsConfigured();
+        }
+
         public bool Validate()
         {
             try
@@ -622,7 +665,8 @@ namespace CollectSFData.Common
                     retval &= ValidateTime();
                     retval &= ValidateSource();
                     retval &= ValidateDestination();
-                    retval &= ValidateAad();
+
+                    IsARMValid = ShouldAuthenticateToArm() && (retval &= ValidateAad());
 
                     if (retval)
                     {
@@ -651,8 +695,7 @@ namespace CollectSFData.Common
             AzureResourceManager arm = new AzureResourceManager(this);
             bool retval = true;
             bool clientIdConfigured = IsClientIdConfigured();
-            bool usingAad = clientIdConfigured | IsKustoConfigured() | IsKustoPurgeRequested();
-            usingAad |= LogAnalyticsCreate | LogAnalyticsRecreate | IsLogAnalyticsPurgeRequested() | IsLogAnalyticsConfigured();
+            bool usingAad = clientIdConfigured | LogAnalyticsCreate | LogAnalyticsRecreate | IsLogAnalyticsPurgeRequested() | IsLogAnalyticsConfigured();
 
             if (HasValue(AzureClientId) && !IsGuid(AzureClientId))
             {
@@ -666,9 +709,9 @@ namespace CollectSFData.Common
                 retval &= false;
             }
 
-            if (HasValue(AzureTenantId) && !IsGuid(AzureTenantId))
+            if (!HasValue(AzureTenantId) | AzureTenantId.Length > Constants.MaxStringLength)
             {
-                Log.Error($"invalid tenant id value:{AzureTenantId} expected:guid");
+                Log.Error($"invalid tenant id value:{AzureTenantId} expected:guid, domain name, or 'common'");
                 retval &= false;
             }
 
@@ -682,6 +725,8 @@ namespace CollectSFData.Common
             {
                 if (clientIdConfigured && HasValue(AzureClientCertificate) && !HasValue(ClientCertificate))
                 {
+                    retval &= IsTenantValid();
+
                     if (HasValue(AzureClientSecret))
                     {
                         certificateUtilities.SetSecurePassword(AzureClientSecret);
@@ -703,11 +748,6 @@ namespace CollectSFData.Common
                         retval &= false;
                     }
                 }
-                // else
-                // {
-                //     Log.Error("Failed certificate to find certificate");
-                //     retval &= false;
-                // }
 
                 retval &= arm.Authenticate();
 
@@ -800,6 +840,12 @@ namespace CollectSFData.Common
                         retval = false;
                     }
                 }
+            }
+
+            if ((IsKustoConfigured() | IsLogAnalyticsConfigured()) & !IsTenantValid())
+            {
+                Log.Error("tenant id value expected for this configuration.");
+                retval = false;
             }
 
             if (IsKustoConfigured() & IsLogAnalyticsConfigured())
@@ -983,32 +1029,6 @@ namespace CollectSFData.Common
                 FileManager.CreateDirectory(EtwManifestsCache);
                 DownloadEtwManifests();
             }
-        }
-
-        public bool CheckLogFile()
-        {
-            if (LogDebug == LoggingLevel.Verbose && !HasValue(LogFile))
-            {
-                LogFile = $"{CacheLocation}/{_tempName}.log";
-                Log.Warning($"LogDebug 5 (Verbose) requires log file. setting LogFile:{LogFile}");
-            }
-
-            if (HasValue(LogFile))
-            {
-                LogFile = FileManager.NormalizePath(LogFile);
-
-                if (Regex.IsMatch(LogFile, @"<.+>"))
-                {
-                    string timePattern = Regex.Match(LogFile, @"<(.+?)>").Groups[1].Value;
-                    LogFile = Regex.Replace(LogFile, @"<.+?>", DateTime.Now.ToString(timePattern));
-                    Log.Info($"replaced datetime token {timePattern}: new LogFile name:{LogFile}");
-                }
-
-                Log.Info($"setting output log file to: {LogFile}");
-                return FileManager.CreateDirectory(Path.GetDirectoryName(LogFile));
-            }
-
-            return true;
         }
 
         private string CleanTableName(string tableName, bool withGatherType = false)
