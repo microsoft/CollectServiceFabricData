@@ -64,6 +64,8 @@ namespace CollectSFData.Common
 
         public bool List { get; set; } = false;
 
+        public string LocalPath { get; set; }
+
         public bool LogAnalyticsCreate { get; set; }
 
         public string LogAnalyticsId { get; set; }
@@ -87,6 +89,8 @@ namespace CollectSFData.Common
         public string NodeFilter { get; set; }
 
         public int NoProgressTimeoutMin { get; set; } = 10;
+
+        public bool OverwriteTable { get; set; }
 
         public string ResourceUri { get; set; }
 

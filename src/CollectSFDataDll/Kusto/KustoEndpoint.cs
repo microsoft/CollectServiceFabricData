@@ -71,6 +71,15 @@ namespace CollectSFData.Kusto
                 RestMgmtUri = $"{ClusterIngestUrl}/v1/rest/mgmt";
                 RestQueryUri = $"{ManagementUrl}/v1/rest/query";
             }
+            else if (Regex.IsMatch(_config.KustoCluster, Constants.LocalWebServerPattern))
+            {
+                Match matches = Regex.Match(_config.KustoCluster, Constants.LocalWebServerPattern);
+                DatabaseName = matches.Groups["databaseName"].Value;
+                TableName = _config.KustoTable;
+                ClusterName = _config.KustoCluster;
+                ManagementUrl = ClusterName;
+                ClusterIngestUrl = ClusterName;
+            }
             else
             {
                 string errMessage = $"invalid kusto url.";
@@ -133,7 +142,7 @@ namespace CollectSFData.Kusto
                     };
                 }
             }
-            else
+            else if (Regex.IsMatch(_config.KustoCluster, Constants.KustoUrlPattern))
             {
                 // use federated security to connect to kusto directly and use kusto identity token instead of arm token
                 IngestConnection = new KustoConnectionStringBuilder(ClusterIngestUrl)
@@ -150,9 +159,25 @@ namespace CollectSFData.Kusto
                     Authority = _config.AzureTenantId
                 };
             }
+            else
+            {
+                // set up connection to localhost server
+                IngestConnection = new KustoConnectionStringBuilder(ClusterIngestUrl)
+                {
+                    InitialCatalog = DatabaseName,
+                };
 
-            IdentityToken = RetrieveKustoIdentityToken();
-            IngestionResources = RetrieveIngestionResources();
+                ManagementConnection = new KustoConnectionStringBuilder(ManagementUrl)
+                {
+                    InitialCatalog = DatabaseName,
+                };
+            }
+
+            if (!Regex.IsMatch(_config.KustoCluster, Constants.LocalWebServerPattern))
+            {
+                IdentityToken = RetrieveKustoIdentityToken();
+                IngestionResources = RetrieveIngestionResources();
+            }
         }
 
         public async Task<List<string>> CommandAsync(string command)
@@ -225,6 +250,16 @@ namespace CollectSFData.Kusto
             return true;
         }
 
+        public bool CreateDatabase(string databaseName, string databaseLocation)
+        {
+            if (!HasDatabase(databaseName))
+            {
+                Log.Info($"creating database: {databaseName}");
+                return CommandAsync($".create database {databaseName} persist ( {databaseLocation} )").Result.Count > 0;
+            }
+            return true;
+        }
+
         public bool DropTable(string tableName)
         {
             if (HasTable(tableName))
@@ -243,9 +278,20 @@ namespace CollectSFData.Kusto
             return cursor;
         }
 
+        public bool HasDatabase(string databaseName)
+        {
+            bool result = QueryAsCsvAsync($".show databases | project DatabaseName | where DatabaseName == '{databaseName}'").Result.Count() > 0;
+            return result;
+        }
+
         public bool HasTable(string tableName)
         {
             return QueryAsCsvAsync($".show tables | project TableName | where TableName == '{tableName}'").Result.Count > 0;
+        }
+
+        public bool IngestInlineWithMapping(string tableName, string mapping, string stream)
+        {
+            return CommandAsync($".ingest inline into table ['{tableName}'] with (format='csv', ingestionMapping = '{mapping}') <| {stream}").Result.Count > 0;
         }
 
         public bool IngestInline(string tableName, string csv)
@@ -443,6 +489,6 @@ namespace CollectSFData.Kusto
 
             Log.Info($"identityToken:{identityToken}");
             return identityToken;
-        }
+        } 
     }
 }

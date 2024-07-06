@@ -59,13 +59,24 @@ namespace CollectSFData.Kusto
                 return;
             }
 
-            if (_config.KustoUseBlobAsSource && fileObject.IsSourceFileLinkCompliant())
+            if (!_config.IsIngestionLocal)
             {
-                IngestSingleFile(fileObject);
+                if (_config.KustoUseBlobAsSource && fileObject.IsSourceFileLinkCompliant())
+                {
+                    IngestSingleFile(fileObject);
+                }
+                else
+                {
+                    IngestMultipleFiles(_instance.FileMgr.ProcessFile(fileObject));
+                }
             }
             else
             {
-                IngestMultipleFiles(_instance.FileMgr.ProcessFile(fileObject));
+                // format the trace files
+                FileObjectCollection collection = _instance.FileMgr.ProcessFile(fileObject);
+
+                // ingest the trace files
+                collection.ForEach(x => IngestLocally(x));
             }
         }
 
@@ -75,9 +86,13 @@ namespace CollectSFData.Kusto
             {
                 Log.Info("finished. cancelling", ConsoleColor.White);
                 _tokenSource.Cancel();
-                _monitorTask.Wait();
-                _monitorTask.Dispose();
 
+                if (!_config.IsIngestionLocal)
+                {
+                    _monitorTask.Wait();
+                    _monitorTask.Dispose();
+                }
+                
                 if (_appendingToExistingTableUnique
                     && _config.FileType == FileTypesEnum.table
                     && _instance.FileObjects.Any(FileStatus.succeeded))
@@ -112,13 +127,18 @@ namespace CollectSFData.Kusto
         {
             Endpoint = new KustoEndpoint(_config);
             Endpoint.Authenticate();
+            Endpoint.CreateDatabase(Endpoint.DatabaseName, string.Format("@'{0}',@'{1}'", $"c:\\kustodata\\dbs\\{Endpoint.DatabaseName}\\md", $"c:\\kustodata\\dbs\\{Endpoint.DatabaseName}\\data"));            
+
             _failureQueryTime = _instance.StartTime.ToUniversalTime();
 
-            if (!PopulateQueueEnumerators())
+            if (!_config.IsIngestionLocal)
             {
-                return false;
+                if (!PopulateQueueEnumerators())
+                {
+                    return false;
+                }
             }
-
+            
             if (_config.IsKustoPurgeRequested())
             {
                 Purge();
@@ -133,7 +153,7 @@ namespace CollectSFData.Kusto
                     return false;
                 }
             }
-            else if (_config.Unique && Endpoint.HasTable(Endpoint.TableName))
+            else if (!_config.IsIngestionLocal && _config.Unique && Endpoint.HasTable(Endpoint.TableName))
             {
                 _appendingToExistingTableUnique = true;
                 List<string> existingUploads = Endpoint.QueryAsCsvAsync($"['{Endpoint.TableName}']|distinct RelativeUri").Result;
@@ -145,10 +165,13 @@ namespace CollectSFData.Kusto
 
             IngestResourceIdKustoTableMapping();
 
-            // monitor for new files to be uploaded
-            if (_monitorTask == null)
+            if (!_config.IsIngestionLocal)
             {
-                _monitorTask = Task.Run((Action)QueueMonitor, _tokenSource.Token);
+                // monitor for new files to be uploaded
+                if (_monitorTask == null)
+                {
+                    _monitorTask = Task.Run((Action)QueueMonitor, _tokenSource.Token);
+                }
             }
 
             return true;
@@ -211,6 +234,23 @@ namespace CollectSFData.Kusto
             string cleanUri = Regex.Replace(relativeUri, $"\\.?\\d*?({Constants.ZipExtension}|{Constants.TableExtension})", "");
             FileObject fileObject = _instance.FileObjects.FindByUriFirstOrDefault(cleanUri);
             return fileObject.Status != FileStatus.existing;
+        }
+
+        private void IngestLocally(FileObject fileObject)
+        {
+            string ingestionMapping = SetIngestionMapping(fileObject);
+            fileObject.Stream.Decompress();
+            string traces = fileObject.Stream.ReadToEnd();
+            Endpoint.IngestInlineWithMapping(_config.KustoTable, ingestionMapping, traces);
+        }
+
+        public bool ClearTable()
+        {
+            if (_config.OverwriteTable && Endpoint.HasTable(_config.KustoTable))
+            {
+                return Endpoint.CommandAsync($".clear table ['{_config.KustoTable}'] data").Result.Count > 0;
+            }
+            return false;
         }
 
         private void IngestMultipleFiles(FileObjectCollection fileObjectCollection)

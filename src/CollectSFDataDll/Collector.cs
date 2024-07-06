@@ -62,6 +62,8 @@ namespace CollectSFData
 
                 if (Config.IsCacheLocationPreConfigured() | Config.FileUris.Any())
                 {
+                    // clear table data if override is configured
+                    Instance.Kusto.ClearTable();
                     UploadCacheData();
                     CustomTaskManager.WaitAll();
                 }
@@ -366,7 +368,14 @@ namespace CollectSFData
             {
                 if (Config.IsKustoConfigured())
                 {
-                    Instance.TaskManager.QueueTaskAction(() => Instance.Kusto.AddFile(fileObject));
+                    if (!Config.IsIngestionLocal)
+                    {
+                        Instance.TaskManager.QueueTaskAction(() => Instance.Kusto.AddFile(fileObject));
+                    }
+                    else
+                    {
+                        Instance.Kusto.AddFile(fileObject);
+                    }
                 }
 
                 if (Config.IsLogAnalyticsConfigured())

@@ -65,6 +65,8 @@ namespace CollectSFData.Common
 
         public CommandOption List { get; set; }
 
+        public CommandOption LocalPath { get; set; }
+
         public CommandOption LogAnalyticsCreate { get; set; }
 
         public CommandOption LogAnalyticsId { get; set; }
@@ -88,6 +90,8 @@ namespace CollectSFData.Common
         public CommandOption NodeFilter { get; set; }
 
         public CommandOption NoProgressTimeoutMin { get; set; }
+
+        public CommandOption OverwriteTable { get; set; }
 
         public CommandOption ResourceUri { get; set; }
 
@@ -475,6 +479,10 @@ namespace CollectSFData.Common
                     "[bool] list files instead of downloading",
                     CommandOptionType.SingleValue);
 
+            LocalPath = CmdLineApp.Option("-lp|--localPath",
+                    $"[string] path to original files and indicates local ingestion e.g. \"C:\\Perfcounters\\Output\" ",
+                    CommandOptionType.SingleValue);
+
             LogAnalyticsCreate = CmdLineApp.Option("-lac|--logAnalyticsCreate",
                     $"[bool] create new log analytics workspace." +
                     $"{newLine} requires LogAnalyticsWorkspaceName, AzureResourceGroup," +
@@ -532,6 +540,10 @@ namespace CollectSFData.Common
 
             NoProgressTimeoutMin = CmdLineApp.Option("-timeout|--noProgressTimeoutMin",
                     $"[int] no progress timer in minutes. set to 0 to disable timeout.",
+                    CommandOptionType.SingleValue);
+
+            OverwriteTable = CmdLineApp.Option("-ot|--overwriteTable",
+                    "[bool] indicates whether you want to append or replace ingested traces in a table during local ingestion",
                     CommandOptionType.SingleValue);
 
             ResourceUri = CmdLineApp.Option("-ruri|--resourceUri",

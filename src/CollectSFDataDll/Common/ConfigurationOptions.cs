@@ -72,6 +72,8 @@ namespace CollectSFData.Common
 
         public bool IsValid { get; set; }
 
+        public bool IsIngestionLocal { get; set; }
+
         public bool NeedsValidation { get; set; } = true;
 
         public new string StartTimeStamp
@@ -130,6 +132,7 @@ namespace CollectSFData.Common
             {
                 Validate();
             }
+            IsIngestionLocal = IsLocalIngestionConfigured();
         }
 
         public static ConfigurationOptions Singleton()
@@ -434,6 +437,11 @@ namespace CollectSFData.Common
 
             Guid testGuid = new Guid();
             return Guid.TryParse(guid, out testGuid);
+        }
+
+        public bool IsLocalIngestionConfigured()
+        {
+            return Regex.IsMatch(KustoCluster, Constants.LocalWebServerPattern) & HasValue(LocalPath);
         }
 
         public bool IsKustoConfigured()
@@ -789,9 +797,9 @@ namespace CollectSFData.Common
                     retval = IsKustoConfigured();
                 }
 
-                if (!Regex.IsMatch(KustoCluster, Constants.KustoUrlPattern))
+                if (!Regex.IsMatch(KustoCluster, Constants.KustoUrlPattern) && !Regex.IsMatch(KustoCluster, Constants.LocalWebServerPattern))
                 {
-                    string errMessage = $"invalid kusto url. should match pattern {Constants.KustoUrlPattern}\r\nexample: https://ingest-{{kustocluster}}.{{optional location}}.kusto.windows.net/{{kustodatabase}}";
+                    string errMessage = $"invalid url. should match either Kusto or local web server pattern. Kusto pattern: {Constants.KustoUrlPattern}\r\nexample: https://ingest-{{kustocluster}}.{{optional location}}.kusto.windows.net/{{kustodatabase}} \n Local web server pattern: {Constants.LocalWebServerPattern}\r\nexample: http://localhost:8080/MyDatabaseName";
                     Log.Error(errMessage);
                     retval = false;
                 }
@@ -864,6 +872,18 @@ namespace CollectSFData.Common
             {
                 Log.Warning($"kusto or log analytics must be configured for UseMemoryStream. setting UseMemoryStream to false.");
                 UseMemoryStream = false;
+            }
+
+            if (Regex.IsMatch(KustoCluster, Constants.KustoUrlPattern) && HasValue(LocalPath))
+            {
+                Log.Error($"local and remote ingestion *cannot* both be enabled. please either remove input for LocalPath or provide a local web server url instead.");
+                retval = false;
+            }
+
+            if (Regex.IsMatch(KustoCluster, Constants.LocalWebServerPattern) && !HasValue(LocalPath))
+            {
+                Log.Error($"if connecting to a local web server, please provide a value for LocalPath.");
+                retval = false;
             }
 
             return retval;
