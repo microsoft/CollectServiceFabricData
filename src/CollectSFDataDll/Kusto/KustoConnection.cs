@@ -73,10 +73,10 @@ namespace CollectSFData.Kusto
             else
             {
                 // format the trace files
-                FileObjectCollection collection = _instance.FileMgr.ProcessFile(fileObject);
+                FileObjectCollection fileObjectCollection = _instance.FileMgr.ProcessFile(fileObject);
 
                 // ingest the trace files
-                collection.ForEach(x => IngestLocally(x));
+                fileObjectCollection.ForEach(x => IngestLocally(x));
             }
         }
 
@@ -127,7 +127,11 @@ namespace CollectSFData.Kusto
         {
             Endpoint = new KustoEndpoint(_config);
             Endpoint.Authenticate();
-            Endpoint.CreateDatabase(Endpoint.DatabaseName, string.Format("@'{0}',@'{1}'", $"c:\\kustodata\\dbs\\{Endpoint.DatabaseName}\\md", $"c:\\kustodata\\dbs\\{Endpoint.DatabaseName}\\data"));            
+
+            if (_config.IsIngestionLocal)
+            {
+                Endpoint.CreateDatabase(Endpoint.DatabaseName, string.Format("@'{0}',@'{1}'", $"c:\\kustodata\\dbs\\{Endpoint.DatabaseName}\\md", $"c:\\kustodata\\dbs\\{Endpoint.DatabaseName}\\data"));
+            }
 
             _failureQueryTime = _instance.StartTime.ToUniversalTime();
 
@@ -246,7 +250,7 @@ namespace CollectSFData.Kusto
 
         public bool ClearTable()
         {
-            if (_config.OverwriteTable && Endpoint.HasTable(_config.KustoTable))
+            if (_config.IsIngestionLocal & _config.OverwriteTable && Endpoint.HasTable(_config.KustoTable))
             {
                 return Endpoint.CommandAsync($".clear table ['{_config.KustoTable}'] data").Result.Count > 0;
             }

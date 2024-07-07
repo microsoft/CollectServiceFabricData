@@ -173,7 +173,7 @@ namespace CollectSFData.Kusto
                 };
             }
 
-            if (!Regex.IsMatch(_config.KustoCluster, Constants.LocalWebServerPattern))
+            if (!_config.IsIngestionLocal)
             {
                 IdentityToken = RetrieveKustoIdentityToken();
                 IngestionResources = RetrieveIngestionResources();

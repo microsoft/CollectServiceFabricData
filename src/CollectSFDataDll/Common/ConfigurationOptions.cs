@@ -441,7 +441,7 @@ namespace CollectSFData.Common
 
         public bool IsLocalIngestionConfigured()
         {
-            return Regex.IsMatch(KustoCluster, Constants.LocalWebServerPattern) & HasValue(LocalPath);
+            return Regex.IsMatch(KustoCluster, Constants.LocalWebServerPattern) & HasValue(LocalPath) & HasValue(OverwriteTable);
         }
 
         public bool IsKustoConfigured()
@@ -876,13 +876,13 @@ namespace CollectSFData.Common
 
             if (Regex.IsMatch(KustoCluster, Constants.KustoUrlPattern) && HasValue(LocalPath))
             {
-                Log.Error($"local and remote ingestion *cannot* both be enabled. please either remove input for LocalPath or provide a local web server url instead.");
+                Log.Error($"local and remote ingestion *cannot* both be enabled. please either remove input for LocalPath field or provide a local web server url instead.");
                 retval = false;
             }
 
             if (Regex.IsMatch(KustoCluster, Constants.LocalWebServerPattern) && !HasValue(LocalPath))
             {
-                Log.Error($"if connecting to a local web server, please provide a value for LocalPath.");
+                Log.Error($"if connecting to a local web server, please provide a value for the LocalPath field.");
                 retval = false;
             }
 
