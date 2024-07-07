@@ -68,7 +68,7 @@ namespace CollectSFData.Common
             }
         }
 
-        public bool IsARMValid { get; set; }
+        public bool IsARMValid { get; set; } = false;
 
         public bool IsValid { get; set; }
 
@@ -664,9 +664,13 @@ namespace CollectSFData.Common
                     retval &= ValidateFileType();
                     retval &= ValidateTime();
                     retval &= ValidateSource();
-                    retval &= ValidateDestination();
 
-                    IsARMValid = ShouldAuthenticateToArm() && (retval &= ValidateAad());
+                    if (ShouldAuthenticateToArm())
+                    {
+                        retval &= IsARMValid = ValidateAad();
+                    }
+
+                    retval &= ValidateDestination();
 
                     if (retval)
                     {
@@ -847,6 +851,16 @@ namespace CollectSFData.Common
                 Log.Error("tenant id value expected for this configuration.");
                 retval = false;
             }
+
+#if NET462
+            // if net462, this is not supported and will throw an exception
+            if (IsKustoConfigured() && !IsARMValid)
+            {
+                string errorMessage = "kusto federated security not supported in .net framework 4.6.2. use different framework or configure 'AzureClientId'";
+                Log.Error(errorMessage);
+                throw new NotSupportedException(errorMessage);
+            }
+#endif
 
             if (IsKustoConfigured() & IsLogAnalyticsConfigured())
             {
