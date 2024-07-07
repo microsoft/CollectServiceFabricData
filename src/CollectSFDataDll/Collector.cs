@@ -231,7 +231,14 @@ namespace CollectSFData
             }
             else if (Config.IsKustoConfigured())
             {
-                Log.Last($"{Constants.DataExplorer}/clusters/{Instance.Kusto.Endpoint.ClusterName}/databases/{Instance.Kusto.Endpoint.DatabaseName}", ConsoleColor.Cyan);
+                if (Config.IsIngestionLocal)
+                {
+                    Log.Last($"{Instance.Kusto.Endpoint.ClusterName}", ConsoleColor.Cyan);
+                }
+                else
+                {
+                    Log.Last($"{Constants.DataExplorer}/clusters/{Instance.Kusto.Endpoint.ClusterName}/databases/{Instance.Kusto.Endpoint.DatabaseName}", ConsoleColor.Cyan);
+                }
             }
 
             if (Instance.FileObjects.Any(FileStatus.failed | FileStatus.uploading))
