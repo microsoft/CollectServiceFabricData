@@ -382,6 +382,25 @@ namespace CollectSFData
             Log.Debug("exit");
         }
 
+        private List<string> FilterFilesByTimeStamp(List<string> files)
+        {
+            List<string> filteredFiles = new List<string>();
+
+            foreach (string file in files)
+            {
+                DateTime lastWriteTime = File.GetLastWriteTime(file);
+                lastWriteTime = DateTime.SpecifyKind(lastWriteTime, DateTimeKind.Utc);
+                DateTimeOffset lastWriteTimeOffset = lastWriteTime;
+
+                if (lastWriteTimeOffset > Config.StartTimeUtc && lastWriteTimeOffset < Config.EndTimeUtc)
+                {
+                    filteredFiles.Add(file);
+                }
+            }
+            return filteredFiles;
+
+        }
+
         private void UploadCacheData()
         {
             Log.Info("enter");
@@ -493,6 +512,9 @@ namespace CollectSFData
                 }
             }
 
+            files = FilterFilesByTimeStamp(files);
+
+            // what is this value representing? should i do this before file filtering or after
             Instance.TotalFilesEnumerated += files.Count;
 
             foreach (string file in files)
