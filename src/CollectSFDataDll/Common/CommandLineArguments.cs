@@ -90,9 +90,6 @@ namespace CollectSFData.Common
         public CommandOption NodeFilter { get; set; }
 
         public CommandOption NoProgressTimeoutMin { get; set; }
-
-        public CommandOption OverwriteTable { get; set; }
-
         public CommandOption ResourceUri { get; set; }
 
         public CommandOption SasKey { get; set; }
@@ -540,10 +537,6 @@ namespace CollectSFData.Common
 
             NoProgressTimeoutMin = CmdLineApp.Option("-timeout|--noProgressTimeoutMin",
                     $"[int] no progress timer in minutes. set to 0 to disable timeout.",
-                    CommandOptionType.SingleValue);
-
-            OverwriteTable = CmdLineApp.Option("-ot|--overwriteTable",
-                    "[bool] indicates whether you want to append or replace ingested traces in a table during local ingestion",
                     CommandOptionType.SingleValue);
 
             ResourceUri = CmdLineApp.Option("-ruri|--resourceUri",

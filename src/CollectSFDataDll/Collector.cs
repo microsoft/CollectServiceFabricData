@@ -62,8 +62,6 @@ namespace CollectSFData
 
                 if (Config.IsCacheLocationPreConfigured() | Config.FileUris.Any())
                 {
-                    // clear table data if override is configured
-                    Instance.Kusto.ClearTable();
                     UploadCacheData();
                     CustomTaskManager.WaitAll();
                 }

@@ -150,7 +150,10 @@ namespace CollectSFData.Kusto
             }
             else if (_config.KustoRecreateTable)
             {
-                PurgeMessages(Endpoint.TableName);
+                if (!_config.IsIngestionLocal)
+                {
+                    PurgeMessages(Endpoint.TableName);
+                }
 
                 if (!Endpoint.DropTable(Endpoint.TableName))
                 {
@@ -245,16 +248,14 @@ namespace CollectSFData.Kusto
             string ingestionMapping = SetIngestionMapping(fileObject);
             fileObject.Stream.Decompress();
             string traces = fileObject.Stream.ReadToEnd();
-            Endpoint.IngestInlineWithMapping(_config.KustoTable, ingestionMapping, traces);
-        }
-
-        public bool ClearTable()
-        {
-            if (_config.IsIngestionLocal & _config.OverwriteTable && Endpoint.HasTable(_config.KustoTable))
+            if (traces.Length != 0)
             {
-                return Endpoint.CommandAsync($".clear table ['{_config.KustoTable}'] data").Result.Count > 0;
+                Endpoint.IngestInlineWithMapping(_config.KustoTable, ingestionMapping, traces);
             }
-            return false;
+            else
+            {
+                Log.Error($"Length of file {fileObject.BaseUri} is 0. Please provide non-empty files for ingestion.");
+            }
         }
 
         private void IngestMultipleFiles(FileObjectCollection fileObjectCollection)

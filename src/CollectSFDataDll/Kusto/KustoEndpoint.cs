@@ -243,6 +243,7 @@ namespace CollectSFData.Kusto
         {
             if (!HasTable(tableName))
             {
+                // string.Format("@'{0}',@'{1}'", $"c:\\kustodata\\dbs\\{Endpoint.DatabaseName}\\md", $"c:\\kustodata\\dbs\\{Endpoint.DatabaseName}\\data")
                 Log.Info($"creating table: {tableName}");
                 return CommandAsync($".create table ['{tableName}'] ( {tableSchema} )").Result.Count > 0;
             }

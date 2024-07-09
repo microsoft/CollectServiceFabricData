@@ -441,7 +441,7 @@ namespace CollectSFData.Common
 
         public bool IsLocalIngestionConfigured()
         {
-            return Regex.IsMatch(KustoCluster, Constants.LocalWebServerPattern) & HasValue(LocalPath) & HasValue(OverwriteTable);
+            return Regex.IsMatch(KustoCluster, Constants.LocalWebServerPattern) & HasValue(LocalPath);
         }
 
         public bool IsKustoConfigured()
