@@ -90,6 +90,10 @@ namespace CollectSFData.Common
 
         public int NoProgressTimeoutMin { get; set; } = 10;
 
+        public bool PersistentDatabase { get; set; } = false;
+
+        public string PersistentDatabasePath { get; set; }
+
         public string ResourceUri { get; set; }
 
         public SasEndpoints SasEndpointInfo { get; set; } = new SasEndpoints();

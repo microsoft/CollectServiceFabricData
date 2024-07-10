@@ -130,7 +130,7 @@ namespace CollectSFData.Kusto
 
             if (_config.IsIngestionLocal)
             {
-                Endpoint.CreateDatabase(Endpoint.DatabaseName, string.Format("@'{0}',@'{1}'", $"c:\\kustodata\\dbs\\{Endpoint.DatabaseName}\\md", $"c:\\kustodata\\dbs\\{Endpoint.DatabaseName}\\data"));
+                Endpoint.CreateDatabase(Endpoint.DatabaseName);
             }
 
             _failureQueryTime = _instance.StartTime.ToUniversalTime();

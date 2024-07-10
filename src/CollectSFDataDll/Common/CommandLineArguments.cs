@@ -90,6 +90,11 @@ namespace CollectSFData.Common
         public CommandOption NodeFilter { get; set; }
 
         public CommandOption NoProgressTimeoutMin { get; set; }
+
+        public CommandOption PersistentDatabase {  get; set; }
+
+        public CommandOption PersistentDatabasePath { get; set; }
+
         public CommandOption ResourceUri { get; set; }
 
         public CommandOption SasKey { get; set; }
@@ -444,7 +449,8 @@ namespace CollectSFData.Common
 
             KustoCluster = CmdLineApp.Option("-kc|--kustoCluster",
                     $"[string] ingest url for kusto." +
-                    $"{newLine} ex: https://ingest-{{clusterName}}.{{location}}.kusto.windows.net/{{databaseName}}",
+                    $"{newLine} ex: https://ingest-{{clusterName}}.{{location}}.kusto.windows.net/{{databaseName}}" + 
+                    $"{newLine} ex: http://localhost:8080/{{databaseName}}",
                     CommandOptionType.SingleValue);
 
             KustoPurge = CmdLineApp.Option("-kp|--KustoPurge",
@@ -537,6 +543,15 @@ namespace CollectSFData.Common
 
             NoProgressTimeoutMin = CmdLineApp.Option("-timeout|--noProgressTimeoutMin",
                     $"[int] no progress timer in minutes. set to 0 to disable timeout.",
+                    CommandOptionType.SingleValue);
+
+            PersistentDatabase = CmdLineApp.Option("-pd|--persistentDatabase",
+                    "[bool] default false to create a volatile database. a value of true will persist the database a given path in your container.",
+                    CommandOptionType.SingleValue);
+
+            PersistentDatabasePath = CmdLineApp.Option("-pdp|--persistentDatabasePath",
+                    $"[string] path where you want your database to be persisted in for local ingestion." + 
+                    $"{newLine} path much be in the format: ''c:\\...\\md', 'c:\\...\\data''",
                     CommandOptionType.SingleValue);
 
             ResourceUri = CmdLineApp.Option("-ruri|--resourceUri",
