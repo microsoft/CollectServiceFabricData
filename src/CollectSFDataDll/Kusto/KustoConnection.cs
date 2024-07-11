@@ -58,17 +58,14 @@ namespace CollectSFData.Kusto
                 Log.Warning($"file already ingested. skipping: {fileObject.RelativeUri}");
                 return;
             }
-
-            if (!_config.IsIngestionLocal)
+            
+            if (!_config.IsIngestionLocal && _config.KustoUseBlobAsSource && fileObject.IsSourceFileLinkCompliant())
             {
-                if (_config.KustoUseBlobAsSource && fileObject.IsSourceFileLinkCompliant())
-                {
-                    IngestSingleFile(fileObject);
-                }
-                else
-                {
-                    IngestMultipleFiles(_instance.FileMgr.ProcessFile(fileObject));
-                }
+                IngestSingleFile(fileObject);
+            }
+            else if (!_config.IsIngestionLocal)
+            {
+                IngestMultipleFiles(_instance.FileMgr.ProcessFile(fileObject));
             }
             else
             {
@@ -246,6 +243,7 @@ namespace CollectSFData.Kusto
         private void IngestLocally(FileObject fileObject)
         {
             string ingestionMapping = SetIngestionMapping(fileObject);
+            // After the files get formatted, they are in a zip file format. To read the stream's contents, the file must be decompressed
             fileObject.Stream.Decompress();
             string traces = fileObject.Stream.ReadToEnd();
             if (traces.Length != 0)

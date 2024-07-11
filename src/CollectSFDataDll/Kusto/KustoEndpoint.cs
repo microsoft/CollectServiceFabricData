@@ -164,12 +164,12 @@ namespace CollectSFData.Kusto
                 // set up connection to localhost server
                 IngestConnection = new KustoConnectionStringBuilder(ClusterIngestUrl)
                 {
-                    InitialCatalog = DatabaseName,
+                    InitialCatalog = DatabaseName
                 };
 
                 ManagementConnection = new KustoConnectionStringBuilder(ManagementUrl)
                 {
-                    InitialCatalog = DatabaseName,
+                    InitialCatalog = DatabaseName
                 };
             }
 
@@ -255,16 +255,14 @@ namespace CollectSFData.Kusto
             if (!HasDatabase(databaseName))
             {
                 Log.Info($"creating database: {databaseName}");
-                if (_config.DatabasePersistence)
+                
+                if (_config.DatabasePersistence && string.IsNullOrEmpty(_config.DatabasePersistencePath))
                 {
-                    if (string.IsNullOrEmpty(_config.DatabasePersistencePath))
-                    {
-                        return CommandAsync($".create database {databaseName} persist ( {string.Format("@'{0}',@'{1}'", $"{Constants.StartOfDefaultDatabasePersistencePath}{databaseName}\\md", $"{Constants.StartOfDefaultDatabasePersistencePath}{databaseName}\\data")} )").Result.Count > 0;
-                    }
-                    else
-                    {
-                        return CommandAsync($".create database {databaseName} persist ( {_config.DatabasePersistencePath} )").Result.Count > 0;
-                    }
+                    return CommandAsync($".create database {databaseName} persist ( {string.Format("@'{0}',@'{1}'", $"{Constants.StartOfDefaultDatabasePersistencePath}{databaseName}\\md", $"{Constants.StartOfDefaultDatabasePersistencePath}{databaseName}\\data")} )").Result.Count > 0;
+                }
+                else if (_config.DatabasePersistence)
+                {
+                    return CommandAsync($".create database {databaseName} persist ( {_config.DatabasePersistencePath} )").Result.Count > 0;
                 }
                 else
                 {

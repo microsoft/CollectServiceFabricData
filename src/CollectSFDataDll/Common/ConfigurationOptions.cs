@@ -813,7 +813,7 @@ namespace CollectSFData.Common
 
                 if (!Regex.IsMatch(KustoCluster, Constants.KustoUrlPattern) && !Regex.IsMatch(KustoCluster, Constants.LocalWebServerPattern))
                 {
-                    string errMessage = $"invalid url. should match either Kusto or local web server pattern. Kusto pattern: {Constants.KustoUrlPattern}\r\nexample: https://ingest-{{kustocluster}}.{{optional location}}.kusto.windows.net/{{kustodatabase}} \n Local web server pattern: {Constants.LocalWebServerPattern}\r\nexample: http://localhost:8080/MyDatabaseName";
+                    string errMessage = $"invalid url. should match either Kusto or local web server pattern. Kusto pattern: {Constants.KustoUrlPattern}\r\nexample: https://ingest-{{kustocluster}}.{{optional location}}.kusto.windows.net/{{kustodatabase}} \n Local web server pattern: {Constants.LocalWebServerPattern}\r\nexample: http://localhost:port/MyDatabaseName";
                     Log.Error(errMessage);
                     retval = false;
                 }
@@ -909,7 +909,7 @@ namespace CollectSFData.Common
             if (!DatabasePersistence && HasValue(DatabasePersistencePath))
             {
                 Log.Error($"cannot provide a database persistence path if database persistence is not enabled.");
-                retval=false;
+                retval = false;
             }
 
             return retval;

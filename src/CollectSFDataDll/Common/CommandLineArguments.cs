@@ -409,11 +409,11 @@ namespace CollectSFData.Common
                     "[string] string / regex to filter container names",
                     CommandOptionType.SingleValue);
 
-            DatabasePersistence = CmdLineApp.Option("-pd|--persistentDatabase",
+            DatabasePersistence = CmdLineApp.Option("-dp|--databasePersistence",
                     "[bool] default false to create a volatile database. a value of true will persist the database a given path in your container.",
                     CommandOptionType.SingleValue);
 
-            DatabasePersistencePath = CmdLineApp.Option("-pdp|--persistentDatabasePath",
+            DatabasePersistencePath = CmdLineApp.Option("-dpp|--databasePersistencePath",
                     $"[string] path where you want your database to be persisted in for local ingestion." +
                     $"{newLine} path much be in the format: '@'c:\\...\\..',@'c:\\...\\..''",
                     CommandOptionType.SingleValue);
@@ -459,7 +459,7 @@ namespace CollectSFData.Common
             KustoCluster = CmdLineApp.Option("-kc|--kustoCluster",
                     $"[string] ingest url for kusto." +
                     $"{newLine} ex: https://ingest-{{clusterName}}.{{location}}.kusto.windows.net/{{databaseName}}" + 
-                    $"{newLine} ex: http://localhost:8080/{{databaseName}}",
+                    $"{newLine} ex: http://localhost:{{port}}/{{databaseName}}",
                     CommandOptionType.SingleValue);
 
             KustoPurge = CmdLineApp.Option("-kp|--KustoPurge",
@@ -492,7 +492,7 @@ namespace CollectSFData.Common
                     CommandOptionType.SingleValue);
 
             LocalPath = CmdLineApp.Option("-lp|--localPath",
-                    $"[string] path to original files and indicates local ingestion e.g. \"C:\\Perfcounters\\Output\" ",
+                    @"[string] path to original files and indicates local ingestion e.g. 'C:\Perfcounters\Output'",
                     CommandOptionType.SingleValue);
 
             LogAnalyticsCreate = CmdLineApp.Option("-lac|--logAnalyticsCreate",
