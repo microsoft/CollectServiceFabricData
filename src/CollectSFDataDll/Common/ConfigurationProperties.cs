@@ -64,6 +64,8 @@ namespace CollectSFData.Common
 
         public bool List { get; set; } = false;
 
+        public string LocalPath { get; set; }
+
         public bool LogAnalyticsCreate { get; set; }
 
         public string LogAnalyticsId { get; set; }

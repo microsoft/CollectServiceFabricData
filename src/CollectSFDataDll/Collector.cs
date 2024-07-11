@@ -62,7 +62,14 @@ namespace CollectSFData
 
                 if (Config.IsCacheLocationPreConfigured() | Config.FileUris.Any())
                 {
-                    UploadCacheData();
+                    if (Config.IsLocalPathPreConfigured())
+                    {
+                        UploadLocalData();
+                    }
+                    else
+                    {
+                        UploadCacheData();
+                    }
                     CustomTaskManager.WaitAll();
                 }
 
@@ -382,25 +389,6 @@ namespace CollectSFData
             Log.Debug("exit");
         }
 
-        private List<string> FilterFilesByTimeStamp(List<string> files)
-        {
-            List<string> filteredFiles = new List<string>();
-
-            foreach (string file in files)
-            {
-                DateTime lastWriteTime = File.GetLastWriteTime(file);
-                lastWriteTime = DateTime.SpecifyKind(lastWriteTime, DateTimeKind.Utc);
-                DateTimeOffset lastWriteTimeOffset = lastWriteTime;
-
-                if (lastWriteTimeOffset > Config.StartTimeUtc && lastWriteTimeOffset < Config.EndTimeUtc)
-                {
-                    filteredFiles.Add(file);
-                }
-            }
-            return filteredFiles;
-
-        }
-
         private void UploadCacheData()
         {
             Log.Info("enter");
@@ -512,15 +500,192 @@ namespace CollectSFData
                 }
             }
 
-            files = FilterFilesByTimeStamp(files);
-
-            // what is this value representing? should i do this before file filtering or after
             Instance.TotalFilesEnumerated += files.Count;
 
             foreach (string file in files)
             {
                 FileObject fileObject = new FileObject(file, Config.CacheLocation) { Status = FileStatus.enumerated };
 
+                // only queue if file not already in FileObjects list
+                if (Instance.FileObjects.Add(fileObject))
+                {
+                    Log.Info($"adding file: {fileObject.FileUri}", ConsoleColor.Green);
+
+                    if (!Config.List)
+                    {
+                        QueueForIngest(fileObject);
+                    }
+                }
+                else
+                {
+                    Log.Debug($"file {fileObject.FileUri} already in FileObjects. not queueing for ingest.");
+                }
+            }
+        }
+
+        private List<string> FilterFilesByTimeStamp(List<string> files)
+        {
+            List<string> filteredFilesByTime = new List<string>();
+
+            foreach (string file in files)
+            {
+                DateTimeOffset lastWriteTime = File.GetLastWriteTimeUtc(file);
+
+                if (lastWriteTime >= Config.StartTimeUtc && lastWriteTime <= Config.EndTimeUtc)
+                {
+                    filteredFilesByTime.Add(file);
+                }
+                else
+                {
+                    Instance.TotalFilesSkipped++;
+                }
+            }
+            return filteredFilesByTime;
+        }
+
+        private FileObject CopyLocalFileToCacheLocation(string fileLocalPath)
+        {
+            // remove path from the file name
+            string fileName = fileLocalPath.Substring(Config.LocalPath.Length + 1);
+
+            // create copy of this filtered time file in the cache location
+            string fileCacheLocationPath = Path.Combine(Config.CacheLocation, fileName);
+            File.Copy(fileLocalPath, fileCacheLocationPath, true);
+
+            FileObject fileObject = new FileObject(fileCacheLocationPath, Config.CacheLocation) { Status = FileStatus.enumerated };
+            return fileObject;
+        }
+         
+        private List<FileObject> PrepareFiles(List<string> files)
+        {
+            List<string> filteredFilesByTime = FilterFilesByTimeStamp(files);
+            List<FileObject> fileObjects = new List<FileObject>();
+
+            foreach (string file in filteredFilesByTime)
+            {
+                FileObject fileObject = CopyLocalFileToCacheLocation(file);
+                fileObjects.Add(fileObject);
+            }
+            return fileObjects;
+        }
+
+        private void UploadLocalData()
+        {
+            Log.Info("enter");
+            List<string> files = new List<string>();
+
+            if (!Config.IsUploadConfigured())
+            {
+                // update status to succeeded if not configured for upload
+                Instance.FileObjects.Where(x => x.Status == FileStatus.formatting).ToList().ForEach(x => x.Status = FileStatus.succeeded);
+                Log.Info("config options not set for upload. returning");
+                return;
+            }
+
+            string[] localFiles = Config.FileUris.Where(x => FileTypes.MapFileUriType(x) == FileUriTypesEnum.fileUri).ToArray();
+
+            if (localFiles.Any())
+            {
+                List<string> fileUris = Config.FileUris.ToList();
+
+                foreach (string file in localFiles)
+                {
+                    if (File.Exists(file))
+                    {
+                        Log.Info($"adding file to list: {file}");
+                        files.Add(file);
+                        fileUris.Remove(file);
+                    }
+                    else
+                    {
+                        Log.Warning($"file does not exist: {file}");
+                    }
+                }
+
+                if (files.Any())
+                {
+                    Config.FileUris = fileUris.ToArray();
+                }
+                else
+                {
+                    string logString = $"configuration set to upload cache files from 'fileUris' count:{Config.FileUris.Length} but no files found";
+
+                    if (Config.SasEndpointInfo.IsPopulated())
+                    {
+                        Log.Warning(logString);
+                    }
+                    else
+                    {
+                        Log.Error(logString);
+                    }
+                }
+            }
+            else if (Config.IsLocalPathPreConfigured())
+            {
+                switch (Config.FileType)
+                {
+                    case FileTypesEnum.counter:
+                        files = Instance.FileMgr.GetFilesByExtension(Config.LocalPath, Constants.PerfCtrExtension);
+
+                        if (files.Count < 1)
+                        {
+                            files = Instance.FileMgr.GetFilesByExtension(Config.LocalPath, Constants.PerfCsvExtension);
+                        }
+
+                        break;
+
+                    case FileTypesEnum.setup:
+                        files = Instance.FileMgr.GetFilesByExtension(Config.LocalPath, Constants.SetupExtension);
+
+                        break;
+
+                    case FileTypesEnum.table:
+                        files = Instance.FileMgr.GetFilesByExtension(Config.LocalPath, Constants.TableExtension);
+
+                        break;
+
+                    case FileTypesEnum.trace:
+                        files = Instance.FileMgr.GetFilesByExtension(Config.LocalPath, Constants.DtrExtension + Constants.ZipExtension);
+
+                        if (files.Count < 1)
+                        {
+                            files = Instance.FileMgr.GetFilesByExtension(Config.LocalPath, Constants.DtrExtension);
+                        }
+
+                        if (files.Count < 1)
+                        {
+                            files = Instance.FileMgr.GetFilesByExtension(Config.LocalPath, Constants.EtlExtension + Constants.ZipExtension);
+                        }
+
+                        if (files.Count < 1)
+                        {
+                            files = Instance.FileMgr.GetFilesByExtension(Config.LocalPath, Constants.EtlExtension);
+                        }
+
+                        break;
+
+                    case FileTypesEnum.sfextlog:
+                        files = Instance.FileMgr.GetFilesByExtension(Config.LocalPath, Constants.LogExtension);
+
+                        break;
+
+                    default:
+                        Log.Warning($"configured filetype:{Config.FileType} not valid for cache upload. returning.");
+                        return;
+                }
+
+                if (files.Count < 1)
+                {
+                    Log.Error($"configuration set to upload cache files from 'LocalPath' {Config.LocalPath} but no files found");
+                }
+            }
+
+            Instance.TotalFilesEnumerated += files.Count;
+
+            List<FileObject> fileObjects = PrepareFiles(files);
+
+            foreach (FileObject fileObject in fileObjects)
+            {
                 // only queue if file not already in FileObjects list
                 if (Instance.FileObjects.Add(fileObject))
                 {

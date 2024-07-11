@@ -65,6 +65,8 @@ namespace CollectSFData.Common
 
         public CommandOption List { get; set; }
 
+        public CommandOption LocalPath { get; set; }
+
         public CommandOption LogAnalyticsCreate { get; set; }
 
         public CommandOption LogAnalyticsId { get; set; }
@@ -473,6 +475,10 @@ namespace CollectSFData.Common
 
             List = CmdLineApp.Option("-l|--list",
                     "[bool] list files instead of downloading",
+                    CommandOptionType.SingleValue);
+
+            LocalPath = CmdLineApp.Option("-lp|--localPath",
+                    $"[string] path to original files and indicates local ingestion e.g. \"C:\\Perfcounters\\Output\" ",
                     CommandOptionType.SingleValue);
 
             LogAnalyticsCreate = CmdLineApp.Option("-lac|--logAnalyticsCreate",
