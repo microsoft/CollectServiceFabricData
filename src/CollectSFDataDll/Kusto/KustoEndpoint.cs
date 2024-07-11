@@ -12,7 +12,6 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using System.Net;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -253,19 +252,18 @@ namespace CollectSFData.Kusto
 
         public bool CreateDatabase(string databaseName)
         {
-            // default is volatile, bool to be persistent db or not, take in a path but have a default one if not provided
             if (!HasDatabase(databaseName))
             {
                 Log.Info($"creating database: {databaseName}");
-                if (_config.PersistentDatabase)
+                if (_config.DatabasePersistence)
                 {
-                    if (string.IsNullOrEmpty(_config.PersistentDatabasePath))
+                    if (string.IsNullOrEmpty(_config.DatabasePersistencePath))
                     {
-                        return CommandAsync($".create database {databaseName} persist ( {string.Format("@'{0}',@'{1}'", $"c:\\kustodata\\dbs\\{DatabaseName}\\md", $"c:\\kustodata\\dbs\\{DatabaseName}\\data")} )").Result.Count > 0;
+                        return CommandAsync($".create database {databaseName} persist ( {string.Format("@'{0}',@'{1}'", $"{Constants.StartOfDefaultDatabasePersistencePath}{databaseName}\\md", $"{Constants.StartOfDefaultDatabasePersistencePath}{databaseName}\\data")} )").Result.Count > 0;
                     }
                     else
                     {
-                        return CommandAsync($".create database {databaseName} persist ( {_config.PersistentDatabasePath} )").Result.Count > 0;
+                        return CommandAsync($".create database {databaseName} persist ( {_config.DatabasePersistencePath} )").Result.Count > 0;
                     }
                 }
                 else
@@ -296,8 +294,8 @@ namespace CollectSFData.Kusto
 
         public bool HasDatabase(string databaseName)
         {
-            bool result = QueryAsCsvAsync($".show databases | project DatabaseName | where DatabaseName =~ '{databaseName}'").Result.Count() > 0;
             Log.Warning("database names are treated as case insensitive.");
+            bool result = QueryAsCsvAsync($".show databases | project DatabaseName | where DatabaseName =~ '{databaseName}'").Result.Count() > 0;
             return result;
         }
 

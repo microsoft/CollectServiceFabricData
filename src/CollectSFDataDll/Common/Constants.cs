@@ -15,6 +15,7 @@ namespace CollectSFData.Common
         public const string CodeLatestRelease = "https://api.github.com/repos/microsoft/CollectServiceFabricData/releases/latest";
         public const string CodeRepository = "https://github.com/microsoft/CollectServiceFabricData";
         public const string CsvExtension = ".csv";
+        public const string CustomDatabasePersistencePathPattern = "^@'[a-zA-Z]:.+',@'[a-zA-Z]:.+'$";
         public const string DataExplorer = "https://dataexplorer.azure.com";
         public const string DateTimeFormat = "yyyy-MM-ddTHH:mm:ss.ffffffZ";
         public const string DefaultDatePattern = "MM/dd/yyyy HH:mm zzz";
@@ -50,6 +51,7 @@ namespace CollectSFData.Common
         public const int RetryMaxDelay = 30;
         public const string SchemaFile = "https://raw.githubusercontent.com/microsoft/CollectServiceFabricData/master/configurationFiles/collectsfdata.schema.json";
         public const string SetupExtension = ".trace";
+        public const string StartOfDefaultDatabasePersistencePath = "c:\\kustodata\\dbs\\";
         public const string TableExtension = ".table.csv";
         public const int TableMaxResults = 50000;
         public const string TableNamePattern = "fabriclog(?<guidString>[A-Fa-f0-9]{32}).+$";

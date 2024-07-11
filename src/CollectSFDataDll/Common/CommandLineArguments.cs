@@ -37,6 +37,10 @@ namespace CollectSFData.Common
 
         public CommandOption ContainerFilter { get; set; }
 
+        public CommandOption DatabasePersistence { get; set; }
+
+        public CommandOption DatabasePersistencePath { get; set; }
+
         public CommandOption DeleteCache { get; set; }
 
         public CommandOption EndTimeStamp { get; set; }
@@ -90,10 +94,6 @@ namespace CollectSFData.Common
         public CommandOption NodeFilter { get; set; }
 
         public CommandOption NoProgressTimeoutMin { get; set; }
-
-        public CommandOption PersistentDatabase {  get; set; }
-
-        public CommandOption PersistentDatabasePath { get; set; }
 
         public CommandOption ResourceUri { get; set; }
 
@@ -409,6 +409,15 @@ namespace CollectSFData.Common
                     "[string] string / regex to filter container names",
                     CommandOptionType.SingleValue);
 
+            DatabasePersistence = CmdLineApp.Option("-pd|--persistentDatabase",
+                    "[bool] default false to create a volatile database. a value of true will persist the database a given path in your container.",
+                    CommandOptionType.SingleValue);
+
+            DatabasePersistencePath = CmdLineApp.Option("-pdp|--persistentDatabasePath",
+                    $"[string] path where you want your database to be persisted in for local ingestion." +
+                    $"{newLine} path much be in the format: '@'c:\\...\\..',@'c:\\...\\..''",
+                    CommandOptionType.SingleValue);
+
             DeleteCache = CmdLineApp.Option("-dc|--deleteCache",
                     "[bool] delete downloaded blobs from local disk at end of execution. ",
                     CommandOptionType.SingleValue);
@@ -543,15 +552,6 @@ namespace CollectSFData.Common
 
             NoProgressTimeoutMin = CmdLineApp.Option("-timeout|--noProgressTimeoutMin",
                     $"[int] no progress timer in minutes. set to 0 to disable timeout.",
-                    CommandOptionType.SingleValue);
-
-            PersistentDatabase = CmdLineApp.Option("-pd|--persistentDatabase",
-                    "[bool] default false to create a volatile database. a value of true will persist the database a given path in your container.",
-                    CommandOptionType.SingleValue);
-
-            PersistentDatabasePath = CmdLineApp.Option("-pdp|--persistentDatabasePath",
-                    $"[string] path where you want your database to be persisted in for local ingestion." + 
-                    $"{newLine} path much be in the format: ''c:\\...\\md', 'c:\\...\\data''",
                     CommandOptionType.SingleValue);
 
             ResourceUri = CmdLineApp.Option("-ruri|--resourceUri",

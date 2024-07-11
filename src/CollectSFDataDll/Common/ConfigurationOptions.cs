@@ -673,6 +673,7 @@ namespace CollectSFData.Common
                     retval &= ValidateTime();
                     retval &= ValidateSource();
                     retval &= ValidateDestination();
+                    retval &= ValidateDatabasePersistencePaths();
 
                     IsARMValid = ShouldAuthenticateToArm() && (retval &= ValidateAad());
 
@@ -783,6 +784,19 @@ namespace CollectSFData.Common
             return retval;
         }
 
+        public bool ValidateDatabasePersistencePaths()
+        {
+            bool retval = true;
+
+            if (HasValue(DatabasePersistencePath) && !Regex.IsMatch(DatabasePersistencePath, Constants.CustomDatabasePersistencePathPattern))
+            {
+                string errMessage = $"invalid paths. input should match pattern and include one path each for metadata and data. pattern: {Constants.CustomDatabasePersistencePathPattern}\r\nexample: '@'c:\\kustodata\\dbs\\customfolder\\DatabaseName\\md',@'c:\\kustodata\\dbs\\customfolder\\DatabaseName\\data''";
+                Log.Error(errMessage);
+                retval = false;
+            }
+            return retval;
+        }
+
         public bool ValidateDestination()
         {
             bool retval = true;
@@ -884,6 +898,18 @@ namespace CollectSFData.Common
             {
                 Log.Error($"if connecting to a local web server, please provide a value for the LocalPath field.");
                 retval = false;
+            }
+
+            if (Regex.IsMatch(KustoCluster, Constants.KustoUrlPattern) && (DatabasePersistence || HasValue(DatabasePersistencePath)))
+            {
+                Log.Error($"persistent database creation is only available for local ingestion.");
+                retval = false;
+            }
+
+            if (!DatabasePersistence && HasValue(DatabasePersistencePath))
+            {
+                Log.Error($"cannot provide a database persistence path if database persistence is not enabled.");
+                retval=false;
             }
 
             return retval;

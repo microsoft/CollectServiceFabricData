@@ -34,6 +34,10 @@ namespace CollectSFData.Common
 
         public string ContainerFilter { get; set; }
 
+        public bool DatabasePersistence { get; set; } = false;
+
+        public string DatabasePersistencePath { get; set; }
+
         public bool DeleteCache { get; set; }
 
         public string EndTimeStamp { get; set; }
@@ -89,10 +93,6 @@ namespace CollectSFData.Common
         public string NodeFilter { get; set; }
 
         public int NoProgressTimeoutMin { get; set; } = 10;
-
-        public bool PersistentDatabase { get; set; } = false;
-
-        public string PersistentDatabasePath { get; set; }
 
         public string ResourceUri { get; set; }
 
