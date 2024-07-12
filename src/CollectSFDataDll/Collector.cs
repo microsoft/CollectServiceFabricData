@@ -534,6 +534,7 @@ namespace CollectSFData
                 if (lastWriteTime >= Config.StartTimeUtc && lastWriteTime <= Config.EndTimeUtc)
                 {
                     filteredFilesByTime.Add(file);
+                    Instance.TotalFilesMatched++;
                 }
                 else
                 {
@@ -548,7 +549,7 @@ namespace CollectSFData
             // remove path from the file name
             string fileName = fileLocalPath.Substring(Config.LocalPath.Length + 1);
 
-            // create copy of this filtered time file in the cache location
+            // create copy of this file in the cache location
             string fileCacheLocationPath = Path.Combine(Config.CacheLocation, fileName);
             File.Copy(fileLocalPath, fileCacheLocationPath, true);
 
