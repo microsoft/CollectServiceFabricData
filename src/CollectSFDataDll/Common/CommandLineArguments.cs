@@ -478,7 +478,7 @@ namespace CollectSFData.Common
                     CommandOptionType.SingleValue);
 
             LocalPath = CmdLineApp.Option("-lp|--localPath",
-                    $"[string] path to original files and indicates local ingestion e.g. \"C:\\Perfcounters\\Output\" ",
+                    @"[string] path to original files and indicates local ingestion e.g. 'C:\Perfcounters\Output'",
                     CommandOptionType.SingleValue);
 
             LogAnalyticsCreate = CmdLineApp.Option("-lac|--logAnalyticsCreate",

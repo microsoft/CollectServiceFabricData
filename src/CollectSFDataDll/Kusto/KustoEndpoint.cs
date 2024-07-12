@@ -71,6 +71,15 @@ namespace CollectSFData.Kusto
                 RestMgmtUri = $"{ClusterIngestUrl}/v1/rest/mgmt";
                 RestQueryUri = $"{ManagementUrl}/v1/rest/query";
             }
+            else if (Regex.IsMatch(_config.KustoCluster, Constants.LocalWebServerPattern))
+            {
+                Match matches = Regex.Match(_config.KustoCluster, Constants.LocalWebServerPattern);
+                DatabaseName = matches.Groups["databaseName"].Value;
+                TableName = _config.KustoTable;
+                ClusterName = _config.KustoCluster;
+                ManagementUrl = ClusterName;
+                ClusterIngestUrl = ClusterName;
+            }
             else
             {
                 string errMessage = $"invalid kusto url.";
@@ -133,7 +142,7 @@ namespace CollectSFData.Kusto
                     };
                 }
             }
-            else
+            else if (Regex.IsMatch(_config.KustoCluster, Constants.KustoUrlPattern))
             {
                 // use federated security to connect to kusto directly and use kusto identity token instead of arm token
                 IngestConnection = new KustoConnectionStringBuilder(ClusterIngestUrl)
@@ -150,9 +159,24 @@ namespace CollectSFData.Kusto
                     Authority = _config.AzureTenantId
                 };
             }
+            else
+            {
+                // set up connection to localhost server
+                IngestConnection = new KustoConnectionStringBuilder(ClusterIngestUrl)
+                {
+                    InitialCatalog = DatabaseName
+                };
 
-            IdentityToken = RetrieveKustoIdentityToken();
-            IngestionResources = RetrieveIngestionResources();
+                ManagementConnection = new KustoConnectionStringBuilder(ManagementUrl)
+                {
+                    InitialCatalog = DatabaseName
+                };
+            }
+            if (!_config.IsIngestionLocal)
+            {
+                IdentityToken = RetrieveKustoIdentityToken();
+                IngestionResources = RetrieveIngestionResources();
+            }
         }
 
         public async Task<List<string>> CommandAsync(string command)

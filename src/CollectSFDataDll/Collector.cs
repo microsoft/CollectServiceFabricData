@@ -62,7 +62,7 @@ namespace CollectSFData
 
                 if (Config.IsCacheLocationPreConfigured() | Config.FileUris.Any())
                 {
-                    if (Config.IsLocalPathPreConfigured())
+                    if (Config.IsLocalIngestionConfigured())
                     {
                         UploadLocalData();
                     }
@@ -621,7 +621,7 @@ namespace CollectSFData
                     }
                 }
             }
-            else if (Config.IsLocalPathPreConfigured())
+            else if (Config.IsLocalIngestionConfigured())
             {
                 switch (Config.FileType)
                 {

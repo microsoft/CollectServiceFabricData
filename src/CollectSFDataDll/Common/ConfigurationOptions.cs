@@ -72,6 +72,7 @@ namespace CollectSFData.Common
         public bool IsARMValid { get; set; }
 
         public bool IsValid { get; set; }
+        public bool IsIngestionLocal { get; set; }
 
         public bool NeedsValidation { get; set; } = true;
 
@@ -131,6 +132,7 @@ namespace CollectSFData.Common
             {
                 Validate();
             }
+            IsIngestionLocal = IsLocalIngestionConfigured();
         }
 
         public static ConfigurationOptions Singleton()
@@ -412,16 +414,6 @@ namespace CollectSFData.Common
             return (bool)_cacheLocationPreconfigured;
         }
 
-        public bool IsLocalPathPreConfigured()
-        {
-            if (_localPathPreconfigured == null)
-            {
-                _localPathPreconfigured = HasValue(LocalPath);
-                Log.Info($"{_localPathPreconfigured}");
-            }
-            return (bool)_localPathPreconfigured;
-        }
-
         public bool IsClientIdConfigured()
         {
             bool configured = ((HasValue(AzureClientId) & HasValue(ClientCertificate)) // app registration configured
@@ -445,6 +437,11 @@ namespace CollectSFData.Common
 
             Guid testGuid = new Guid();
             return Guid.TryParse(guid, out testGuid);
+        }
+
+        public bool IsLocalIngestionConfigured()
+        {
+            return Regex.IsMatch(KustoCluster, Constants.LocalWebServerPattern) & HasValue(LocalPath);
         }
 
         public bool IsKustoConfigured()
@@ -800,9 +797,9 @@ namespace CollectSFData.Common
                     retval = IsKustoConfigured();
                 }
 
-                if (!Regex.IsMatch(KustoCluster, Constants.KustoUrlPattern))
+                if (!Regex.IsMatch(KustoCluster, Constants.KustoUrlPattern) && !Regex.IsMatch(KustoCluster, Constants.LocalWebServerPattern))
                 {
-                    string errMessage = $"invalid kusto url. should match pattern {Constants.KustoUrlPattern}\r\nexample: https://ingest-{{kustocluster}}.{{optional location}}.kusto.windows.net/{{kustodatabase}}";
+                    string errMessage = $"invalid url. should match either Kusto or local web server pattern. Kusto pattern: {Constants.KustoUrlPattern}\r\nexample: https://ingest-{{kustocluster}}.{{optional location}}.kusto.windows.net/{{kustodatabase}} \n Local web server pattern: {Constants.LocalWebServerPattern}\r\nexample: http://localhost:port/MyDatabaseName";
                     Log.Error(errMessage);
                     retval = false;
                 }

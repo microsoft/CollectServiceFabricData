@@ -114,9 +114,12 @@ namespace CollectSFData.Kusto
             Endpoint.Authenticate();
             _failureQueryTime = _instance.StartTime.ToUniversalTime();
 
-            if (!PopulateQueueEnumerators())
+            if (!_config.IsIngestionLocal)
             {
-                return false;
+                if (!PopulateQueueEnumerators())
+                {
+                    return false;
+                }
             }
 
             if (_config.IsKustoPurgeRequested())
@@ -126,14 +129,17 @@ namespace CollectSFData.Kusto
             }
             else if (_config.KustoRecreateTable)
             {
-                PurgeMessages(Endpoint.TableName);
+                if (!_config.IsIngestionLocal)
+                {
+                    PurgeMessages(Endpoint.TableName);
+                }
 
                 if (!Endpoint.DropTable(Endpoint.TableName))
                 {
                     return false;
                 }
             }
-            else if (_config.Unique && Endpoint.HasTable(Endpoint.TableName))
+            else if (!_config.IsIngestionLocal && _config.Unique && Endpoint.HasTable(Endpoint.TableName))
             {
                 _appendingToExistingTableUnique = true;
                 List<string> existingUploads = Endpoint.QueryAsCsvAsync($"['{Endpoint.TableName}']|distinct RelativeUri").Result;
@@ -145,12 +151,14 @@ namespace CollectSFData.Kusto
 
             IngestResourceIdKustoTableMapping();
 
-            // monitor for new files to be uploaded
-            if (_monitorTask == null)
-            {
-                _monitorTask = Task.Run((Action)QueueMonitor, _tokenSource.Token);
+            if (!_config.IsIngestionLocal)
+            { 
+                // monitor for new files to be uploaded
+                if (_monitorTask == null)
+                {
+                    _monitorTask = Task.Run((Action)QueueMonitor, _tokenSource.Token);
+                }
             }
-
             return true;
         }
 
