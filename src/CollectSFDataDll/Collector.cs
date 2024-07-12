@@ -227,16 +227,13 @@ namespace CollectSFData
             {
                 Log.Warning($"there may have been errors during kusto import. {Config.CacheLocation} has *not* been deleted.");
             }
+            else if (Config.IsKustoConfigured() && Config.IsIngestionLocal)
+            {
+                Log.Last($"{Instance.Kusto.Endpoint.ClusterName}", ConsoleColor.Cyan);
+            }
             else if (Config.IsKustoConfigured())
             {
-                if (Config.IsIngestionLocal)
-                {
-                    Log.Last($"{Instance.Kusto.Endpoint.ClusterName}", ConsoleColor.Cyan);
-                }
-                else
-                {
-                    Log.Last($"{Constants.DataExplorer}/clusters/{Instance.Kusto.Endpoint.ClusterName}/databases/{Instance.Kusto.Endpoint.DatabaseName}", ConsoleColor.Cyan);
-                }
+                Log.Last($"{Constants.DataExplorer}/clusters/{Instance.Kusto.Endpoint.ClusterName}/databases/{Instance.Kusto.Endpoint.DatabaseName}", ConsoleColor.Cyan);
             }
 
             if (Instance.FileObjects.Any(FileStatus.failed | FileStatus.uploading))
