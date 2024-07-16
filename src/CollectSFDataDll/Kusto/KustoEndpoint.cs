@@ -292,9 +292,14 @@ namespace CollectSFData.Kusto
 
         public bool HasDatabase(string databaseName)
         {
-            Log.Warning("database names are treated as case insensitive.");
-            bool result = QueryAsCsvAsync($".show databases | project DatabaseName | where DatabaseName =~ '{databaseName}'").Result.Count() > 0;
-            return result;
+            bool caseInsensitiveResult = QueryAsCsvAsync($".show databases | project DatabaseName | where DatabaseName =~ '{databaseName}'").Result.Count() > 0;
+            bool caseSensitiveResult = QueryAsCsvAsync($".show databases | project DatabaseName | where DatabaseName == '{databaseName}'").Result.Count() > 0;
+
+            if (caseInsensitiveResult && !caseSensitiveResult)
+            {
+                Log.Warning($"database names are treated as case insensitive by default. a database with the name of '{databaseName}' with different capitalization already exists. the program will continue by using the pre-existing database.");
+            }
+            return caseInsensitiveResult;
         }
 
         public bool HasTable(string tableName)
