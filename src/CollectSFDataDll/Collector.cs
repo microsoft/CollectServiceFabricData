@@ -62,14 +62,7 @@ namespace CollectSFData
 
                 if (Config.IsCacheLocationPreConfigured() | Config.FileUris.Any())
                 {
-                    if (Config.IsLocalIngestionConfigured())
-                    {
-                        UploadLocalData();
-                    }
-                    else
-                    {
-                        UploadCacheData();
-                    }
+                    UploadCacheData();
                     CustomTaskManager.WaitAll();
                 }
 
@@ -440,87 +433,118 @@ namespace CollectSFData
                     }
                 }
             }
-            else if (Config.IsCacheLocationPreConfigured())
+            else if (Config.IsCacheLocationPreConfigured() && !Config.IsLocalIngestionConfigured())
             {
-                switch (Config.FileType)
-                {
-                    case FileTypesEnum.counter:
-                        files = Instance.FileMgr.GetFilesByExtension(Config.CacheLocation, Constants.PerfCtrExtension);
-
-                        if (files.Count < 1)
-                        {
-                            files = Instance.FileMgr.GetFilesByExtension(Config.CacheLocation, Constants.PerfCsvExtension);
-                        }
-
-                        break;
-
-                    case FileTypesEnum.setup:
-                        files = Instance.FileMgr.GetFilesByExtension(Config.CacheLocation, Constants.SetupExtension);
-
-                        break;
-
-                    case FileTypesEnum.table:
-                        files = Instance.FileMgr.GetFilesByExtension(Config.CacheLocation, Constants.TableExtension);
-
-                        break;
-
-                    case FileTypesEnum.trace:
-                        files = Instance.FileMgr.GetFilesByExtension(Config.CacheLocation, Constants.DtrExtension + Constants.ZipExtension);
-
-                        if (files.Count < 1)
-                        {
-                            files = Instance.FileMgr.GetFilesByExtension(Config.CacheLocation, Constants.DtrExtension);
-                        }
-
-                        if (files.Count < 1)
-                        {
-                            files = Instance.FileMgr.GetFilesByExtension(Config.CacheLocation, Constants.EtlExtension + Constants.ZipExtension);
-                        }
-
-                        if (files.Count < 1)
-                        {
-                            files = Instance.FileMgr.GetFilesByExtension(Config.CacheLocation, Constants.EtlExtension);
-                        }
-
-                        break;
-
-                    case FileTypesEnum.sfextlog:
-                        files = Instance.FileMgr.GetFilesByExtension(Config.CacheLocation, Constants.LogExtension);
-
-                        break;
-
-                    default:
-                        Log.Warning($"configured filetype:{Config.FileType} not valid for cache upload. returning.");
-                        return;
-                }
+                files = GetFilesWithNecessaryExtension(files, Config.CacheLocation);
 
                 if (files.Count < 1)
                 {
                     Log.Error($"configuration set to upload cache files from 'cachelocation' {Config.CacheLocation} but no files found");
                 }
+                
+            }
+            else if (Config.IsCacheLocationPreConfigured() && Config.IsLocalIngestionConfigured())
+            {
+                files = GetFilesWithNecessaryExtension(files, Config.LocalPath);
+
+                if (files.Count < 1)
+                {
+                    Log.Error($"configuration set to upload cache files from 'LocalPath' {Config.LocalPath} but no files found");
+                }
             }
 
             Instance.TotalFilesEnumerated += files.Count;
 
-            foreach (string file in files)
+            if (Config.IsLocalIngestionConfigured())
             {
-                FileObject fileObject = new FileObject(file, Config.CacheLocation) { Status = FileStatus.enumerated };
-
-                // only queue if file not already in FileObjects list
-                if (Instance.FileObjects.Add(fileObject))
+                List<FileObject> fileObjects = PrepareFiles(files);
+                foreach (FileObject fileObject in fileObjects)
                 {
-                    Log.Info($"adding file: {fileObject.FileUri}", ConsoleColor.Green);
-
-                    if (!Config.List)
-                    {
-                        QueueForIngest(fileObject);
-                    }
-                }
-                else
-                {
-                    Log.Debug($"file {fileObject.FileUri} already in FileObjects. not queueing for ingest.");
+                    QueueAndAddToFileObjects(fileObject);
                 }
             }
+            else
+            {
+                foreach (string file in files)
+                {
+                    FileObject fileObject = new FileObject(file, Config.CacheLocation) { Status = FileStatus.enumerated };
+                    QueueAndAddToFileObjects(fileObject);
+                }
+            }
+        }
+
+        private void QueueAndAddToFileObjects(FileObject fileObject)
+        {
+            // only queue if file not already in FileObjects list
+            if (Instance.FileObjects.Add(fileObject))
+            {
+                Log.Info($"adding file: {fileObject.FileUri}", ConsoleColor.Green);
+
+                if (!Config.List)
+                {
+                    QueueForIngest(fileObject);
+                }
+            }
+            else
+            {
+                Log.Debug($"file {fileObject.FileUri} already in FileObjects. not queueing for ingest.");
+            }
+        }
+
+        private List<string> GetFilesWithNecessaryExtension(List<string> files, string location)
+        {
+            switch (Config.FileType)
+            {
+                case FileTypesEnum.counter:
+                    files = Instance.FileMgr.GetFilesByExtension(location, Constants.PerfCtrExtension);
+
+                    if (files.Count < 1)
+                    {
+                        files = Instance.FileMgr.GetFilesByExtension(location, Constants.PerfCsvExtension);
+                    }
+
+                    break;
+
+                case FileTypesEnum.setup:
+                    files = Instance.FileMgr.GetFilesByExtension(location, Constants.SetupExtension);
+
+                    break;
+
+                case FileTypesEnum.table:
+                    files = Instance.FileMgr.GetFilesByExtension(location, Constants.TableExtension);
+
+                    break;
+
+                case FileTypesEnum.trace:
+                    files = Instance.FileMgr.GetFilesByExtension(location, Constants.DtrExtension + Constants.ZipExtension);
+
+                    if (files.Count < 1)
+                    {
+                        files = Instance.FileMgr.GetFilesByExtension(location, Constants.DtrExtension);
+                    }
+
+                    if (files.Count < 1)
+                    {
+                        files = Instance.FileMgr.GetFilesByExtension(location, Constants.EtlExtension + Constants.ZipExtension);
+                    }
+
+                    if (files.Count < 1)
+                    {
+                        files = Instance.FileMgr.GetFilesByExtension(location, Constants.EtlExtension);
+                    }
+
+                    break;
+
+                case FileTypesEnum.sfextlog:
+                    files = Instance.FileMgr.GetFilesByExtension(location, Constants.LogExtension);
+
+                    break;
+
+                default:
+                    Log.Warning($"configured filetype:{Config.FileType} not valid for cache upload. returning.");
+                    return null;
+            }
+            return files;
         }
 
         private List<string> FilterFilesByTimeStamp(List<string> files)
@@ -568,140 +592,6 @@ namespace CollectSFData
                 fileObjects.Add(fileObject);
             }
             return fileObjects;
-        }
-
-        private void UploadLocalData()
-        {
-            Log.Info("enter");
-            List<string> files = new List<string>();
-
-            if (!Config.IsUploadConfigured())
-            {
-                // update status to succeeded if not configured for upload
-                Instance.FileObjects.Where(x => x.Status == FileStatus.formatting).ToList().ForEach(x => x.Status = FileStatus.succeeded);
-                Log.Info("config options not set for upload. returning");
-                return;
-            }
-
-            string[] localFiles = Config.FileUris.Where(x => FileTypes.MapFileUriType(x) == FileUriTypesEnum.fileUri).ToArray();
-
-            if (localFiles.Any())
-            {
-                List<string> fileUris = Config.FileUris.ToList();
-
-                foreach (string file in localFiles)
-                {
-                    if (File.Exists(file))
-                    {
-                        Log.Info($"adding file to list: {file}");
-                        files.Add(file);
-                        fileUris.Remove(file);
-                    }
-                    else
-                    {
-                        Log.Warning($"file does not exist: {file}");
-                    }
-                }
-
-                if (files.Any())
-                {
-                    Config.FileUris = fileUris.ToArray();
-                }
-                else
-                {
-                    string logString = $"configuration set to upload cache files from 'fileUris' count:{Config.FileUris.Length} but no files found";
-
-                    if (Config.SasEndpointInfo.IsPopulated())
-                    {
-                        Log.Warning(logString);
-                    }
-                    else
-                    {
-                        Log.Error(logString);
-                    }
-                }
-            }
-            else if (Config.IsLocalIngestionConfigured())
-            {
-                switch (Config.FileType)
-                {
-                    case FileTypesEnum.counter:
-                        files = Instance.FileMgr.GetFilesByExtension(Config.LocalPath, Constants.PerfCtrExtension);
-
-                        if (files.Count < 1)
-                        {
-                            files = Instance.FileMgr.GetFilesByExtension(Config.LocalPath, Constants.PerfCsvExtension);
-                        }
-
-                        break;
-
-                    case FileTypesEnum.setup:
-                        files = Instance.FileMgr.GetFilesByExtension(Config.LocalPath, Constants.SetupExtension);
-
-                        break;
-
-                    case FileTypesEnum.table:
-                        files = Instance.FileMgr.GetFilesByExtension(Config.LocalPath, Constants.TableExtension);
-
-                        break;
-
-                    case FileTypesEnum.trace:
-                        files = Instance.FileMgr.GetFilesByExtension(Config.LocalPath, Constants.DtrExtension + Constants.ZipExtension);
-
-                        if (files.Count < 1)
-                        {
-                            files = Instance.FileMgr.GetFilesByExtension(Config.LocalPath, Constants.DtrExtension);
-                        }
-
-                        if (files.Count < 1)
-                        {
-                            files = Instance.FileMgr.GetFilesByExtension(Config.LocalPath, Constants.EtlExtension + Constants.ZipExtension);
-                        }
-
-                        if (files.Count < 1)
-                        {
-                            files = Instance.FileMgr.GetFilesByExtension(Config.LocalPath, Constants.EtlExtension);
-                        }
-
-                        break;
-
-                    case FileTypesEnum.sfextlog:
-                        files = Instance.FileMgr.GetFilesByExtension(Config.LocalPath, Constants.LogExtension);
-
-                        break;
-
-                    default:
-                        Log.Warning($"configured filetype:{Config.FileType} not valid for cache upload. returning.");
-                        return;
-                }
-
-                if (files.Count < 1)
-                {
-                    Log.Error($"configuration set to upload cache files from 'LocalPath' {Config.LocalPath} but no files found");
-                }
-            }
-
-            Instance.TotalFilesEnumerated += files.Count;
-
-            List<FileObject> fileObjects = PrepareFiles(files);
-
-            foreach (FileObject fileObject in fileObjects)
-            {
-                // only queue if file not already in FileObjects list
-                if (Instance.FileObjects.Add(fileObject))
-                {
-                    Log.Info($"adding file: {fileObject.FileUri}", ConsoleColor.Green);
-
-                    if (!Config.List)
-                    {
-                        QueueForIngest(fileObject);
-                    }
-                }
-                else
-                {
-                    Log.Debug($"file {fileObject.FileUri} already in FileObjects. not queueing for ingest.");
-                }
-            }
         }
     }
 }
