@@ -433,7 +433,7 @@ namespace CollectSFData
                     }
                 }
             }
-            else if (Config.IsCacheLocationPreConfigured() && !Config.IsLocalIngestionConfigured())
+            else if (Config.IsCacheLocationPreConfigured() && !Config.IsIngestionLocal)
             {
                 files = GetFilesWithNecessaryExtension(files, Config.CacheLocation);
 
@@ -443,7 +443,7 @@ namespace CollectSFData
                 }
                 
             }
-            else if (Config.IsCacheLocationPreConfigured() && Config.IsLocalIngestionConfigured())
+            else if (Config.IsCacheLocationPreConfigured() && Config.IsIngestionLocal)
             {
                 files = GetFilesWithNecessaryExtension(files, Config.LocalPath);
 
@@ -455,7 +455,7 @@ namespace CollectSFData
 
             Instance.TotalFilesEnumerated += files.Count;
 
-            if (Config.IsLocalIngestionConfigured())
+            if (Config.IsIngestionLocal)
             {
                 List<FileObject> fileObjects = PrepareFiles(files);
                 foreach (FileObject fileObject in fileObjects)
