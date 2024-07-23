@@ -124,15 +124,13 @@ namespace CollectSFData.Kusto
         {
             Endpoint = new KustoEndpoint(_config);
             Endpoint.Authenticate();
+            _failureQueryTime = _instance.StartTime.ToUniversalTime();
 
             if (_config.IsIngestionLocal)
             {
                 Endpoint.CreateDatabase(Endpoint.DatabaseName);
             }
-
-            _failureQueryTime = _instance.StartTime.ToUniversalTime();
-
-            if (!_config.IsIngestionLocal)
+            else
             {
                 if (!PopulateQueueEnumerators())
                 {

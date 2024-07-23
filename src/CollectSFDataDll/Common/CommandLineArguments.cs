@@ -410,12 +410,14 @@ namespace CollectSFData.Common
                     CommandOptionType.SingleValue);
 
             DatabasePersistence = CmdLineApp.Option("-dp|--databasePersistence",
-                    "[bool] default false to create a volatile database. a value of true will persist the database a given path in your container.",
+                    "[bool] default false to create a volatile database. a value of true will" + 
+                    $"{newLine} persist the database a given path in your container.",
                     CommandOptionType.SingleValue);
 
             DatabasePersistencePath = CmdLineApp.Option("-dpp|--databasePersistencePath",
                     $"[string] path where you want your database to be persisted in for local ingestion." +
-                    $"{newLine} path much be in the format: '@'c:\\...\\..',@'c:\\...\\..''",
+                    $"{newLine} path must be in the format: '@'c:\\...\\..',@'c:\\...\\..''" + 
+                    $"{newLine} example: '@'C:\\kustodata\\MyDatabaseName\\md',@'C:\\kustodata\\MyDatabaseName\\data''",
                     CommandOptionType.SingleValue);
 
             DeleteCache = CmdLineApp.Option("-dc|--deleteCache",
