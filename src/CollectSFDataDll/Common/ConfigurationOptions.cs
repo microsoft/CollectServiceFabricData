@@ -28,7 +28,6 @@ namespace CollectSFData.Common
         private static bool _cmdLineExecuted;
         private static string[] _commandlineArguments = new string[0];
         private static ConfigurationOptions _defaultConfig;
-        private static bool? _localPathPreconfigured = null;
         private static object _singleLock = new Object();
         private static ConfigurationOptions _singleton;// = new ConfigurationOptions();
         private readonly string _tempName = "csfd";
