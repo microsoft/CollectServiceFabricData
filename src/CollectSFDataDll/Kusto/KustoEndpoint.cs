@@ -135,7 +135,9 @@ namespace CollectSFData.Kusto
             }
             else
             {
-                // use federated security to connect to kusto directly and use kusto identity token instead of arm token
+                // use kusto federated security to connect to kusto directly and use kusto identity token instead of arm token
+                Log.Info($"connecting to kusto with kusto federated authentication.");
+
                 IngestConnection = new KustoConnectionStringBuilder(ClusterIngestUrl)
                 {
                     FederatedSecurity = true,
