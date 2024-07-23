@@ -5,6 +5,48 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": ".NET462 Launch with Args (console)",
+            "type": "clr",
+            "request": "launch",
+            "requireExactSource": false,
+            "program": "${workspaceFolder}/src/bin/Debug/net462/CollectSFData.exe",
+            "args": [
+                //"${input:args}"
+                "-type",
+                "trace",
+                "-krt",
+                "1",
+                "-t",
+                "1",
+                // "-l",
+                // "1"
+            ],
+            "cwd": "${workspaceFolder}/src/bin/Debug/net8.0",
+            "stopAtEntry": false,
+            "console": "internalConsole",
+        },
+        {
+            "name": ".NET48 Launch with Args (console)",
+            "type": "clr",
+            "request": "launch",
+            "requireExactSource": false,
+            "program": "${workspaceFolder}/src/bin/Debug/net48/CollectSFData.exe",
+            "args": [
+                //"${input:args}"
+                "-type",
+                "trace",
+                "-krt",
+                "1",
+                "-t",
+                "1",
+                // "-l",
+                // "1"
+            ],
+            "cwd": "${workspaceFolder}/src/bin/Debug/net8.0",
+            "stopAtEntry": false,
+            "console": "internalConsole",
+        },
+        {
             "name": ".NET 8 Launch with Args (console)",
             "type": "coreclr",
             "request": "launch",
