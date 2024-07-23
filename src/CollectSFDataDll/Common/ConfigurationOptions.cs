@@ -602,6 +602,7 @@ namespace CollectSFData.Common
             options.Remove("Examples");
             options.Remove("ExePath");
             options.Remove("FileType");
+            options.Remove("IsARMValid");
             options.Remove("IsValid");
             options.Remove("NeedsValidation");
             options.Remove("SasEndpointInfo");
