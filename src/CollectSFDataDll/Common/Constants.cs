@@ -32,7 +32,7 @@ namespace CollectSFData.Common
         public const string InstanceMetaDataRestUri = "http://169.254.169.254/metadata/instance?api-version=2017-08-01"; //DevSkim: ignore DS137138 as is used on internal az network for instance metadata
         public const string JsonExtension = ".json";
         public const string KustoUrlPattern = "https://(?<ingest>ingest-){1}(?<clusterName>.+?)\\.(?<location>.+?){0,1}\\.(?<domainName>.+?)/(?<databaseName>.+?){1}(/|$)";
-        public const string LocalWebServerPattern = @"^http:\/\/localhost:(?<port>\d){1,5}\/(?<databaseName>.+?)$";
+        public const string LocalWebServerPattern = @"^http://localhost:(?<port>\d){1,5}/(?<databaseName>.+?)$";
         public const string LogExtension = ".log";
         public const string ManagementAzureCom = "https://management.azure.com";
         public const int MaxCsvTransmitBytes = 1024 * 1024 * 100;

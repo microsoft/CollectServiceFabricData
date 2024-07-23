@@ -243,7 +243,7 @@ namespace CollectSFData.Kusto
         private void IngestLocally(FileObject fileObject)
         {
             string ingestionMapping = SetIngestionMapping(fileObject);
-            // After the files get formatted, they are in a zip file format. To read the stream's contents, the file must be decompressed
+            // As part of the file formatting process, the files are compressed into a zip file format. To read the stream's contents, the file must be decompressed
             fileObject.Stream.Decompress();
             string traces = fileObject.Stream.ReadToEnd();
             if (traces.Length != 0)
