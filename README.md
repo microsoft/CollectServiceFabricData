@@ -140,6 +140,10 @@ Options:
                                          type collectsfdata.exe -save default.json to create a default file.
                                          if collectsfdata.options.json exists, it will be used for configuration.
   -cf|--containerFilter              [string] string / regex to filter container names
+  -dp|--databasePersistence          [bool] default false to create a volatile database. a value of true will persist 
+                                          the database a given   path in your container.
+  -dpp|--databasePersistencePath     [string] path where you want your database to be persisted in for local ingestion.
+                                         path much be in the format: "@'C:\\kustodata\\MyDatabaseName\\md',@'C:\\kustodata\\MyDatabaseName\\data'"
   -dc|--deleteCache                  [bool] delete downloaded blobs from local disk at end of execution.
   -to|--stop                         [DateTime] end time range to collect data to. default is now.
                                          example: "03/22/2023 18:24:01 -04:00"
@@ -170,6 +174,7 @@ Options:
                                          service fabric 6.5+ dtr files are compliant.
   -kim|--kustoUseIngestMessage       [bool] for kusto ingestion message tracking.
   -l|--list                          [bool] list files instead of downloading
+  -lp|--localPath                    [string] path to original files and indicates local ingestion e.g. 'C:\Perfcounters\Output'
   -lac|--logAnalyticsCreate          [bool] create new log analytics workspace.
                                          requires LogAnalyticsWorkspaceName, AzureResourceGroup,
                                          AzureResourceGroupLocation, and AzureSubscriptionId
