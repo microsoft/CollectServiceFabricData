@@ -43,6 +43,7 @@ namespace CollectSFData.Kusto
         private Timer _adminIngestTimer { get; set; }
         private Timer _adminTimer { get; set; }
         private Timer _queryTimer { get; set; }
+        private object _lockObj = new object();
 
         public KustoEndpoint(ConfigurationOptions config)
         {
@@ -162,9 +163,12 @@ namespace CollectSFData.Kusto
             Log.Info($"command:{command}", ConsoleColor.Blue);
             return await _kustoTasks.TaskFunction((responseList) =>
             {
-                ICslAdminProvider adminClient = CreateAdminClient();
-                List<string> results = EnumerateResultsCsv(adminClient.ExecuteControlCommand(command));
-                return results;
+                // ingest commands are limited by cluster ingest capacity
+                lock (_lockObj)
+                {
+                    ICslAdminProvider adminClient = CreateAdminClient();
+                    return EnumerateResultsCsv(adminClient.ExecuteControlCommand(command));
+                }
             }) as List<string>;
         }
 
