@@ -370,14 +370,7 @@ namespace CollectSFData
             {
                 if (Config.IsKustoConfigured())
                 {
-                    if (!Config.IsIngestionLocal)
-                    {
-                        Instance.TaskManager.QueueTaskAction(() => Instance.Kusto.AddFile(fileObject));
-                    }
-                    else
-                    {
-                        Instance.Kusto.AddFile(fileObject);
-                    }
+                    Instance.TaskManager.QueueTaskAction(() => Instance.Kusto.AddFile(fileObject));
                 }
 
                 if (Config.IsLogAnalyticsConfigured())
