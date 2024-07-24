@@ -441,7 +441,7 @@ namespace CollectSFData.Common
 
         public bool IsLocalIngestionConfigured()
         {
-            return Regex.IsMatch(KustoCluster, Constants.LocalWebServerPattern) & HasValue(LocalPath);
+            return HasValue(KustoCluster) && Regex.IsMatch(KustoCluster, Constants.LocalWebServerPattern) && HasValue(LocalPath);
         }
 
         public bool IsKustoConfigured()
@@ -610,6 +610,7 @@ namespace CollectSFData.Common
             options.Remove("Examples");
             options.Remove("ExePath");
             options.Remove("FileType");
+            options.Remove("IsIngestionLocal");
             options.Remove("IsValid");
             options.Remove("NeedsValidation");
             options.Remove("SasEndpointInfo");
@@ -888,19 +889,19 @@ namespace CollectSFData.Common
                 UseMemoryStream = false;
             }
 
-            if (Regex.IsMatch(KustoCluster, Constants.KustoUrlPattern) && HasValue(LocalPath))
+            if (HasValue(KustoCluster) && Regex.IsMatch(KustoCluster, Constants.KustoUrlPattern) && HasValue(LocalPath))
             {
                 Log.Error($"local and remote ingestion *cannot* both be enabled. please either remove input for LocalPath field or provide a local web server url instead.");
                 retval = false;
             }
 
-            if (Regex.IsMatch(KustoCluster, Constants.LocalWebServerPattern) && !HasValue(LocalPath))
+            if (HasValue(KustoCluster) && Regex.IsMatch(KustoCluster, Constants.LocalWebServerPattern) && !HasValue(LocalPath))
             {
                 Log.Error($"if connecting to a local web server, please provide a value for the LocalPath field.");
                 retval = false;
             }
 
-            if (Regex.IsMatch(KustoCluster, Constants.KustoUrlPattern) && (DatabasePersistence || HasValue(DatabasePersistencePath)))
+            if (HasValue(KustoCluster) && Regex.IsMatch(KustoCluster, Constants.KustoUrlPattern) && (DatabasePersistence || HasValue(DatabasePersistencePath)))
             {
                 Log.Error($"persistent database creation is only available for local ingestion.");
                 retval = false;

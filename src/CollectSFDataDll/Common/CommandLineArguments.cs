@@ -411,7 +411,7 @@ namespace CollectSFData.Common
 
             DatabasePersistence = CmdLineApp.Option("-dp|--databasePersistence",
                     "[bool] default false to create a volatile database. a value of true will" + 
-                    $"{newLine} persist the database a given path in your container.",
+                    $"{newLine} persist the database on a given path in your container.",
                     CommandOptionType.SingleValue);
 
             DatabasePersistencePath = CmdLineApp.Option("-dpp|--databasePersistencePath",
