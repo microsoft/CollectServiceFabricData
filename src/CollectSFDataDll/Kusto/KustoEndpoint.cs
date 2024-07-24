@@ -43,6 +43,7 @@ namespace CollectSFData.Kusto
         private Timer _adminIngestTimer { get; set; }
         private Timer _adminTimer { get; set; }
         private Timer _queryTimer { get; set; }
+        private object _lockObj = new object();
 
         public KustoEndpoint(ConfigurationOptions config)
         {
@@ -144,7 +145,9 @@ namespace CollectSFData.Kusto
             }
             else if (Regex.IsMatch(_config.KustoCluster, Constants.KustoUrlPattern))
             {
-                // use federated security to connect to kusto directly and use kusto identity token instead of arm token
+                // use kusto federated security to connect to kusto directly and use kusto identity token instead of arm token
+                Log.Info($"connecting to kusto with kusto federated authentication.");
+
                 IngestConnection = new KustoConnectionStringBuilder(ClusterIngestUrl)
                 {
                     FederatedSecurity = true,
@@ -185,9 +188,12 @@ namespace CollectSFData.Kusto
             Log.Info($"command:{command}", ConsoleColor.Blue);
             return await _kustoTasks.TaskFunction((responseList) =>
             {
-                ICslAdminProvider adminClient = CreateAdminClient();
-                List<string> results = EnumerateResultsCsv(adminClient.ExecuteControlCommand(command));
-                return results;
+                // ingest commands are limited by cluster ingest capacity
+                lock (_lockObj)
+                {
+                    ICslAdminProvider adminClient = CreateAdminClient();
+                    return EnumerateResultsCsv(adminClient.ExecuteControlCommand(command));
+                }
             }) as List<string>;
         }
 
