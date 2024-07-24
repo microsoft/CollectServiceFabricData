@@ -968,7 +968,15 @@ namespace CollectSFData.Common
                 Log.Error($"sasKey, fileUris, or cacheLocation should be populated as file source.");
                 retval = false;
             }
+            if (HasValue(CacheLocation) && HasValue(LocalPath)) {
+                LocalPath = FileManager.NormalizePath(LocalPath);
 
+                if (LocalPath.Equals(CacheLocation))
+                {
+                    Log.Error("CacheLocation and LocalPath should be different directories in order to perform local ingestion.");
+                    retval = false;
+                }
+            }   
             return retval;
         }
 
