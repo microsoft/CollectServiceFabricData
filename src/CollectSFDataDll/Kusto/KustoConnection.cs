@@ -128,7 +128,10 @@ namespace CollectSFData.Kusto
 
             if (_config.IsIngestionLocal)
             {
-                Endpoint.CreateDatabase(Endpoint.DatabaseName);
+                if (!Endpoint.CreateDatabase(Endpoint.DatabaseName))
+                {
+                    return false;
+                }
             }
             else
             {
