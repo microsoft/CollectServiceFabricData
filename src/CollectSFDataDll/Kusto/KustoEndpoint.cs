@@ -296,7 +296,15 @@ namespace CollectSFData.Kusto
                 }
                 else
                 {
-                    return CommandAsync($".create database {databaseName} volatile").Result.Count > 0;
+                    try
+                    {
+                        return CommandAsync($".create database {databaseName} volatile").Result.Count > 0;
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Exception($"{ex}");
+                        return false;
+                    }
                 }
             }
             return true;
