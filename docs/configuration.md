@@ -39,9 +39,9 @@ Options:
                                          if collectsfdata.options.json exists, it will be used for configuration.
   -cf|--containerFilter              [string] string / regex to filter container names
   -dp|--databasePersistence          [bool] default false to create a volatile database. a value of true will persist 
-                                          the database a given   path in your container.
+                                          the database on a given path in your container.
   -dpp|--databasePersistencePath     [string] path where you want your database to be persisted in for local ingestion.
-                                         path much be in the format: "@'C:\\kustodata\\MyDatabaseName\\md',@'C:\\kustodata\\MyDatabaseName\\data'"
+                                         path must be in the format: "@'C:\\kustodata\\MyDatabaseName\\md',@'C:\\kustodata\\MyDatabaseName\\data'"
   -dc|--deleteCache                  [bool] delete downloaded blobs from local disk at end of execution.
   -to|--stop                         [DateTime] end time range to collect data to. default is now.
                                          example: "06/01/2021 09:01:23 -04:00"
