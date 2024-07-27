@@ -34,6 +34,10 @@ namespace CollectSFData.Common
 
         public string ContainerFilter { get; set; }
 
+        public bool DatabasePersistence { get; set; } = false;
+
+        public string DatabasePersistencePath { get; set; }
+
         public bool DeleteCache { get; set; }
 
         public string EndTimeStamp { get; set; }

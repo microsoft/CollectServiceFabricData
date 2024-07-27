@@ -37,6 +37,10 @@ namespace CollectSFData.Common
 
         public CommandOption ContainerFilter { get; set; }
 
+        public CommandOption DatabasePersistence { get; set; }
+
+        public CommandOption DatabasePersistencePath { get; set; }
+
         public CommandOption DeleteCache { get; set; }
 
         public CommandOption EndTimeStamp { get; set; }
@@ -405,6 +409,17 @@ namespace CollectSFData.Common
                     "[string] string / regex to filter container names",
                     CommandOptionType.SingleValue);
 
+            DatabasePersistence = CmdLineApp.Option("-dp|--databasePersistence",
+                    "[bool] default false to create a volatile database. a value of true will" + 
+                    $"{newLine} persist the database on a given path in your container.",
+                    CommandOptionType.SingleValue);
+
+            DatabasePersistencePath = CmdLineApp.Option("-dpp|--databasePersistencePath",
+                    $"[string] path where you want your database to be persisted in for local ingestion." +
+                    $"{newLine} path must be in the format: '@'c:\\...\\..',@'c:\\...\\..''" + 
+                    $"{newLine} example: '@'C:\\kustodata\\MyDatabaseName\\md',@'C:\\kustodata\\MyDatabaseName\\data''",
+                    CommandOptionType.SingleValue);
+
             DeleteCache = CmdLineApp.Option("-dc|--deleteCache",
                     "[bool] delete downloaded blobs from local disk at end of execution. ",
                     CommandOptionType.SingleValue);
@@ -445,7 +460,8 @@ namespace CollectSFData.Common
 
             KustoCluster = CmdLineApp.Option("-kc|--kustoCluster",
                     $"[string] ingest url for kusto." +
-                    $"{newLine} ex: https://ingest-{{clusterName}}.{{location}}.kusto.windows.net/{{databaseName}}",
+                    $"{newLine} ex: https://ingest-{{clusterName}}.{{location}}.kusto.windows.net/{{databaseName}}" + 
+                    $"{newLine} ex: http://localhost:{{port}}/{{databaseName}}",
                     CommandOptionType.SingleValue);
 
             KustoPurge = CmdLineApp.Option("-kp|--KustoPurge",
