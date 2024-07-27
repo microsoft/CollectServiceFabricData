@@ -159,6 +159,29 @@
       ],
       "pattern": "^(.+)$"
     },
+    "DatabasePersistence": {
+      "$id": "#/properties/DatabasePersistence",
+      "type": "boolean",
+      "title": "DatabasePersistence",
+      "description": "true to create a local persistent database.",
+      "default": false,
+      "examples": [
+        false,
+        true
+      ]
+    },
+    "DatabasePersistencePath": {
+      "$id": "#/properties/DatabasePersistencePath",
+      "type": "string",
+      "title": "DatabasePersistencePath",
+      "description": "local device database path if a local kusto url is provided.",
+      "default": null,
+      "examples": [
+        null,
+        "@'C:\\kustodata\\MyDatabaseName\\md',@'C:\\kustodata\\MyDatabaseName\\data'"
+      ],
+      "pattern": "^(.+)$"
+    },
     "DeleteCache": {
       "$id": "#/properties/DeleteCache",
       "type": "boolean",
@@ -344,6 +367,18 @@
         false,
         true
       ]
+    },
+    "LocalPath": {
+      "$id": "#/properties/LocalPath",
+      "type": "string",
+      "title": "LocalPath",
+      "description": "local device path containing source trace files for ingestion.",
+      "default": null,
+      "examples": [
+        null,
+        "c:\\kustodata\\dbs\\"
+      ],
+      "pattern": "^(.+)$"
     },
     "LogAnalyticsCreate": {
       "$id": "#/properties/LogAnalyticsCreate",

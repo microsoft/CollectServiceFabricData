@@ -38,6 +38,10 @@ Options:
                                          type collectsfdata.exe -save default.json to create a default file.
                                          if collectsfdata.options.json exists, it will be used for configuration.
   -cf|--containerFilter              [string] string / regex to filter container names
+  -dp|--databasePersistence          [bool] default false to create a volatile database. a value of true will persist 
+                                          the database a given   path in your container.
+  -dpp|--databasePersistencePath     [string] path where you want your database to be persisted in for local ingestion.
+                                         path much be in the format: "@'C:\\kustodata\\MyDatabaseName\\md',@'C:\\kustodata\\MyDatabaseName\\data'"
   -dc|--deleteCache                  [bool] delete downloaded blobs from local disk at end of execution.
   -to|--stop                         [DateTime] end time range to collect data to. default is now.
                                          example: "06/01/2021 09:01:23 -04:00"
@@ -68,6 +72,7 @@ Options:
                                          service fabric 6.5+ dtr files are compliant.
   -kim|--kustoUseIngestMessage       [bool] for kusto ingestion message tracking.
   -l|--list                          [bool] list files instead of downloading
+  -lp|--localPath                    [string] path to original files and indicates local ingestion e.g. 'C:\Perfcounters\Output'
   -lac|--logAnalyticsCreate          [bool] create new log analytics workspace.
                                          requires LogAnalyticsWorkspaceName, AzureResourceGroup,
                                          AzureResourceGroupLocation, and AzureSubscriptionId
@@ -122,6 +127,8 @@ To use a default configuration file without having to specify on the command lin
 
 - **CacheLocation** - required. string. path to blob download location. this path depending on configuration may need to have many GB free and should be premium / fast ssd disk for best performance. **NOTE:** this path should be as short as possible as downloaded file names lengths are close to MAX_PATH.
 - **ContainerFilter** - optional. string / regex. default null. if populated, pattern will be used to filter which containers are enumerated for blob download.
+- **DatabasePersistance** - bool. default false. to create a volatile local database. a value of true will persist the database a given path in your container.
+- **DatabasePersistencePath** - string. path where you want your database to be persisted in for local ingestion. path must be in the format: '@'c:\...\..',@'c:\...\..''
 - **DeleteCache** - bool. default false. if true, blobs downloaded from storage account into 'cacheLocation' will be deleted at end after successful formatting and ingestion.
 - **EndTimeStamp** - datetime string. default is now. example format: "10/31/2018 22:00:00 +00:00".
 - **EtwManifestsCache** - required. string. default is ./manifests. local path where manifest (.man) files are located for parsing .etl files to .csv.
@@ -135,6 +142,7 @@ To use a default configuration file without having to specify on the command lin
   - **trace** - 'trace' will enumerate service fabric diagnostic logs (.dtr) zip blobs from 'fabriclogs*'
   - **any** - 'any' without other filters will enumerate all containers for blobs matching criteria.
 - **List** - bool. default false. if true, lists the blobs meeting all criteria for download but does not download the file.
+- **LocalPath** - string. local path to original files and indicates local ingestion e.g. 'C:\Perfcounters\Output'
 - **LogDebug** - int. default 4. if > 0, logs additional 'debug' output to console for troubleshooting. 0-disabled, 1-exception, 2-error, 3-warning, 4-info, 5-debug.
 - **LogFile** - optional. string. default null. if populated with file and path, will log all console output to specified file. file is recreated every execution if exists. can optionally specify .net datetime format specifier inside '<>'. example: collectsfdata-\<yyyy-MM-dd-HH-mm-ss\>.log.
 - **NodeFilter** -  optional. string / regex. if populated uses client side searching for blobs after enumeration before download.

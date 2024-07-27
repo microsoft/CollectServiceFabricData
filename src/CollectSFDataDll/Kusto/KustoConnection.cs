@@ -58,14 +58,22 @@ namespace CollectSFData.Kusto
                 Log.Warning($"file already ingested. skipping: {fileObject.RelativeUri}");
                 return;
             }
-
-            if (_config.KustoUseBlobAsSource && fileObject.IsSourceFileLinkCompliant())
+            
+            if (!_config.IsIngestionLocal && _config.KustoUseBlobAsSource && fileObject.IsSourceFileLinkCompliant())
             {
                 IngestSingleFile(fileObject);
             }
-            else
+            else if (!_config.IsIngestionLocal)
             {
                 IngestMultipleFiles(_instance.FileMgr.ProcessFile(fileObject));
+            }
+            else
+            {
+                // format the trace files
+                FileObjectCollection fileObjectCollection = _instance.FileMgr.ProcessFile(fileObject);
+
+                // ingest the trace files
+                fileObjectCollection.ForEach(x => IngestLocally(x));
             }
         }
 
@@ -75,9 +83,13 @@ namespace CollectSFData.Kusto
             {
                 Log.Info("finished. cancelling", ConsoleColor.White);
                 _tokenSource.Cancel();
-                _monitorTask.Wait();
-                _monitorTask.Dispose();
 
+                if (!_config.IsIngestionLocal)
+                {
+                    _monitorTask.Wait();
+                    _monitorTask.Dispose();
+                }
+                
                 if (_appendingToExistingTableUnique
                     && _config.FileType == FileTypesEnum.table
                     && _instance.FileObjects.Any(FileStatus.succeeded))
@@ -114,11 +126,21 @@ namespace CollectSFData.Kusto
             Endpoint.Authenticate();
             _failureQueryTime = _instance.StartTime.ToUniversalTime();
 
-            if (!PopulateQueueEnumerators())
+            if (_config.IsIngestionLocal)
             {
-                return false;
+                if (!Endpoint.CreateDatabase(Endpoint.DatabaseName))
+                {
+                    return false;
+                }
             }
-
+            else
+            {
+                if (!PopulateQueueEnumerators())
+                {
+                    return false;
+                }
+            }
+            
             if (_config.IsKustoPurgeRequested())
             {
                 Purge();
@@ -126,14 +148,17 @@ namespace CollectSFData.Kusto
             }
             else if (_config.KustoRecreateTable)
             {
-                PurgeMessages(Endpoint.TableName);
+                if (!_config.IsIngestionLocal)
+                {
+                    PurgeMessages(Endpoint.TableName);
+                }
 
                 if (!Endpoint.DropTable(Endpoint.TableName))
                 {
                     return false;
                 }
             }
-            else if (_config.Unique && Endpoint.HasTable(Endpoint.TableName))
+            else if (!_config.IsIngestionLocal && _config.Unique && Endpoint.HasTable(Endpoint.TableName))
             {
                 _appendingToExistingTableUnique = true;
                 List<string> existingUploads = Endpoint.QueryAsCsvAsync($"['{Endpoint.TableName}']|distinct RelativeUri").Result;
@@ -145,10 +170,13 @@ namespace CollectSFData.Kusto
 
             IngestResourceIdKustoTableMapping();
 
-            // monitor for new files to be uploaded
-            if (_monitorTask == null)
+            if (!_config.IsIngestionLocal)
             {
-                _monitorTask = Task.Run((Action)QueueMonitor, _tokenSource.Token);
+                // monitor for new files to be uploaded
+                if (_monitorTask == null)
+                {
+                    _monitorTask = Task.Run((Action)QueueMonitor, _tokenSource.Token);
+                }
             }
 
             return true;
@@ -211,6 +239,22 @@ namespace CollectSFData.Kusto
             string cleanUri = Regex.Replace(relativeUri, $"\\.?\\d*?({Constants.ZipExtension}|{Constants.TableExtension})", "");
             FileObject fileObject = _instance.FileObjects.FindByUriFirstOrDefault(cleanUri);
             return fileObject.Status != FileStatus.existing;
+        }
+
+        private void IngestLocally(FileObject fileObject)
+        {
+            string ingestionMapping = SetIngestionMapping(fileObject);
+            // As part of the file formatting process, the files are compressed into a zip file format. To read the stream's contents, the file must be decompressed
+            fileObject.Stream.Decompress();
+            string traces = fileObject.Stream.ReadToEnd();
+            if (traces.Length != 0)
+            {
+                Endpoint.IngestInlineWithMapping(_config.KustoTable, ingestionMapping, traces);
+            }
+            else
+            {
+                Log.Error($"Length of file {fileObject.BaseUri} is 0. Please provide non-empty files for ingestion.");
+            }
         }
 
         private void IngestMultipleFiles(FileObjectCollection fileObjectCollection)
