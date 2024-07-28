@@ -43,6 +43,7 @@ namespace CollectSFData.Kusto
         private Timer _adminIngestTimer { get; set; }
         private Timer _adminTimer { get; set; }
         private Timer _queryTimer { get; set; }
+        private object _lockObj = new object();
 
         public KustoEndpoint(ConfigurationOptions config)
         {
@@ -70,6 +71,15 @@ namespace CollectSFData.Kusto
                 ClusterIngestUrl = $"https://{ingestPrefix}{ClusterName}.{location}.{domainName}";
                 RestMgmtUri = $"{ClusterIngestUrl}/v1/rest/mgmt";
                 RestQueryUri = $"{ManagementUrl}/v1/rest/query";
+            }
+            else if (Regex.IsMatch(_config.KustoCluster, Constants.LocalWebServerPattern))
+            {
+                Match matches = Regex.Match(_config.KustoCluster, Constants.LocalWebServerPattern);
+                DatabaseName = matches.Groups["databaseName"].Value;
+                TableName = _config.KustoTable;
+                ClusterName = _config.KustoCluster;
+                ManagementUrl = ClusterName;
+                ClusterIngestUrl = ClusterName;
             }
             else
             {
@@ -133,7 +143,7 @@ namespace CollectSFData.Kusto
                     };
                 }
             }
-            else
+            else if (Regex.IsMatch(_config.KustoCluster, Constants.KustoUrlPattern))
             {
                 // use kusto federated security to connect to kusto directly and use kusto identity token instead of arm token
                 Log.Info($"connecting to kusto with kusto federated authentication.");
@@ -152,9 +162,25 @@ namespace CollectSFData.Kusto
                     Authority = _config.AzureTenantId
                 };
             }
+            else
+            {
+                // set up connection to localhost server
+                IngestConnection = new KustoConnectionStringBuilder(ClusterIngestUrl)
+                {
+                    InitialCatalog = DatabaseName
+                };
 
-            IdentityToken = RetrieveKustoIdentityToken();
-            IngestionResources = RetrieveIngestionResources();
+                ManagementConnection = new KustoConnectionStringBuilder(ManagementUrl)
+                {
+                    InitialCatalog = DatabaseName
+                };
+            }
+
+            if (!_config.IsIngestionLocal)
+            {
+                IdentityToken = RetrieveKustoIdentityToken();
+                IngestionResources = RetrieveIngestionResources();
+            }
         }
 
         public async Task<List<string>> CommandAsync(string command)
@@ -162,9 +188,12 @@ namespace CollectSFData.Kusto
             Log.Info($"command:{command}", ConsoleColor.Blue);
             return await _kustoTasks.TaskFunction((responseList) =>
             {
-                ICslAdminProvider adminClient = CreateAdminClient();
-                List<string> results = EnumerateResultsCsv(adminClient.ExecuteControlCommand(command));
-                return results;
+                // ingest commands are limited by cluster ingest capacity
+                lock (_lockObj)
+                {
+                    ICslAdminProvider adminClient = CreateAdminClient();
+                    return EnumerateResultsCsv(adminClient.ExecuteControlCommand(command));
+                }
             }) as List<string>;
         }
 
@@ -227,6 +256,60 @@ namespace CollectSFData.Kusto
             return true;
         }
 
+        public bool CreateDatabase(string databaseName)
+        {
+            if (!HasDatabase(databaseName))
+            {
+                Log.Info($"creating database: {databaseName}");
+                
+                if (_config.DatabasePersistence && string.IsNullOrEmpty(_config.DatabasePersistencePath))
+                {
+                    try
+                    {
+                        return CommandAsync($".create database {databaseName} persist ( {string.Format("@'{0}',@'{1}'", $"{Constants.StartOfDefaultDatabasePersistencePath}{databaseName}\\md", $"{Constants.StartOfDefaultDatabasePersistencePath}{databaseName}\\data")} )").Result.Count > 0;
+                    }
+                    catch (Exception ex)
+                    {
+                        if (ex.InnerException.Message.Contains("DirectoryNotFoundException"))
+                        {
+                            Log.Error($"Directory {Constants.StartOfDefaultDatabasePersistencePath} doesn't exist in docker container");
+                        }
+                        Log.Exception($"{ex}");
+                        return false;
+                    }
+                }
+                else if (_config.DatabasePersistence)
+                {
+                    try
+                    {
+                        return CommandAsync($".create database {databaseName} persist ( {_config.DatabasePersistencePath} )").Result.Count > 0;
+                    }
+                    catch (Exception ex)
+                    {
+                        if (ex.InnerException.Message.Contains("DirectoryNotFoundException"))
+                        {
+                            Log.Error($"Directory {_config.DatabasePersistencePath} isn't valid. Please provide a valid path in the container's C drive. example: '@'c:\\kustodata\\dbs\\customfolder\\DatabaseName\\md',@'c:\\kustodata\\dbs\\customfolder\\DatabaseName\\data''");
+                        }
+                        Log.Exception($"{ex}");
+                        return false;
+                    }
+                }
+                else
+                {
+                    try
+                    {
+                        return CommandAsync($".create database {databaseName} volatile").Result.Count > 0;
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Exception($"{ex}");
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+
         public bool DropTable(string tableName)
         {
             if (HasTable(tableName))
@@ -245,9 +328,26 @@ namespace CollectSFData.Kusto
             return cursor;
         }
 
+        public bool HasDatabase(string databaseName)
+        {
+            bool caseInsensitiveResult = QueryAsCsvAsync($".show databases | project DatabaseName | where DatabaseName =~ '{databaseName}'").Result.Count() > 0;
+            bool caseSensitiveResult = QueryAsCsvAsync($".show databases | project DatabaseName | where DatabaseName == '{databaseName}'").Result.Count() > 0;
+
+            if (caseInsensitiveResult && !caseSensitiveResult)
+            {
+                Log.Warning($"database names are treated as case insensitive by default. a database with the name of '{databaseName}' with different capitalization already exists. the program will continue by using the pre-existing database.");
+            }
+            return caseInsensitiveResult;
+        }
+
         public bool HasTable(string tableName)
         {
             return QueryAsCsvAsync($".show tables | project TableName | where TableName == '{tableName}'").Result.Count > 0;
+        }
+
+        public bool IngestInlineWithMapping(string tableName, string mapping, string stream)
+        {
+            return CommandAsync($".ingest inline into table ['{tableName}'] with (format='csv', ingestionMapping = '{mapping}') <| {stream}").Result.Count > 0;
         }
 
         public bool IngestInline(string tableName, string csv)
@@ -445,6 +545,6 @@ namespace CollectSFData.Kusto
 
             Log.Info($"identityToken:{identityToken}");
             return identityToken;
-        }
+        } 
     }
 }

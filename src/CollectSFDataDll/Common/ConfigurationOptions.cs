@@ -72,6 +72,8 @@ namespace CollectSFData.Common
 
         public bool IsValid { get; set; }
 
+        public bool IsIngestionLocal { get; set; }
+
         public bool NeedsValidation { get; set; } = true;
 
         public new string StartTimeStamp
@@ -130,6 +132,7 @@ namespace CollectSFData.Common
             {
                 Validate();
             }
+            IsIngestionLocal = IsLocalIngestionConfigured();
         }
 
         public static ConfigurationOptions Singleton()
@@ -436,6 +439,11 @@ namespace CollectSFData.Common
             return Guid.TryParse(guid, out testGuid);
         }
 
+        public bool IsLocalIngestionConfigured()
+        {
+            return HasValue(KustoCluster) && Regex.IsMatch(KustoCluster, Constants.LocalWebServerPattern) && HasValue(LocalPath);
+        }
+
         public bool IsKustoConfigured()
         {
             return (!FileType.Equals(FileTypesEnum.any) & HasValue(KustoCluster) & HasValue(KustoTable));
@@ -603,6 +611,7 @@ namespace CollectSFData.Common
             options.Remove("ExePath");
             options.Remove("FileType");
             options.Remove("IsARMValid");
+            options.Remove("IsIngestionLocal");
             options.Remove("IsValid");
             options.Remove("NeedsValidation");
             options.Remove("SasEndpointInfo");
@@ -672,6 +681,7 @@ namespace CollectSFData.Common
                     }
 
                     retval &= ValidateDestination();
+                    retval &= ValidateDatabasePersistencePaths();
 
                     if (retval)
                     {
@@ -780,6 +790,19 @@ namespace CollectSFData.Common
             return retval;
         }
 
+        public bool ValidateDatabasePersistencePaths()
+        {
+            bool retval = true;
+
+            if (HasValue(DatabasePersistencePath) && !Regex.IsMatch(DatabasePersistencePath, Constants.CustomDatabasePersistencePathPattern))
+            {
+                string errMessage = $"invalid paths. input should match pattern and include one path each for metadata and data. pattern: {Constants.CustomDatabasePersistencePathPattern}\r\nexample: '@'c:\\kustodata\\dbs\\customfolder\\DatabaseName\\md',@'c:\\kustodata\\dbs\\customfolder\\DatabaseName\\data''";
+                Log.Error(errMessage);
+                retval = false;
+            }
+            return retval;
+        }
+
         public bool ValidateDestination()
         {
             bool retval = true;
@@ -794,9 +817,9 @@ namespace CollectSFData.Common
                     retval = IsKustoConfigured();
                 }
 
-                if (!Regex.IsMatch(KustoCluster, Constants.KustoUrlPattern))
+                if (!Regex.IsMatch(KustoCluster, Constants.KustoUrlPattern) && !Regex.IsMatch(KustoCluster, Constants.LocalWebServerPattern))
                 {
-                    string errMessage = $"invalid kusto url. should match pattern {Constants.KustoUrlPattern}\r\nexample: https://ingest-{{kustocluster}}.{{optional location}}.kusto.windows.net/{{kustodatabase}}";
+                    string errMessage = $"invalid url. should match either Kusto or local web server pattern. Kusto pattern: {Constants.KustoUrlPattern}\r\nexample: https://ingest-{{kustocluster}}.{{optional location}}.kusto.windows.net/{{kustodatabase}} \n Local web server pattern: {Constants.LocalWebServerPattern}\r\nexample: http://localhost:{{port}}/{{databaseName}}";
                     Log.Error(errMessage);
                     retval = false;
                 }
@@ -881,6 +904,30 @@ namespace CollectSFData.Common
                 UseMemoryStream = false;
             }
 
+            if (HasValue(KustoCluster) && Regex.IsMatch(KustoCluster, Constants.KustoUrlPattern) && HasValue(LocalPath))
+            {
+                Log.Error($"local and remote ingestion *cannot* both be enabled. please either remove input for LocalPath field or provide a local web server url instead.");
+                retval = false;
+            }
+
+            if (HasValue(KustoCluster) && Regex.IsMatch(KustoCluster, Constants.LocalWebServerPattern) && !HasValue(LocalPath))
+            {
+                Log.Error($"if connecting to a local web server, please provide a value for the LocalPath field.");
+                retval = false;
+            }
+
+            if (HasValue(KustoCluster) && Regex.IsMatch(KustoCluster, Constants.KustoUrlPattern) && (DatabasePersistence || HasValue(DatabasePersistencePath)))
+            {
+                Log.Error($"persistent database creation is only available for local ingestion.");
+                retval = false;
+            }
+
+            if (!DatabasePersistence && HasValue(DatabasePersistencePath))
+            {
+                Log.Error($"cannot provide a database persistence path if database persistence is not enabled.");
+                retval = false;
+            }
+
             return retval;
         }
 
@@ -936,7 +983,15 @@ namespace CollectSFData.Common
                 Log.Error($"sasKey, fileUris, or cacheLocation should be populated as file source.");
                 retval = false;
             }
+            if (HasValue(CacheLocation) && HasValue(LocalPath)) {
+                LocalPath = FileManager.NormalizePath(LocalPath);
 
+                if (LocalPath.Equals(CacheLocation))
+                {
+                    Log.Error("CacheLocation and LocalPath should be different directories in order to perform local ingestion.");
+                    retval = false;
+                }
+            }   
             return retval;
         }
 
