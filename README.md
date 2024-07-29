@@ -161,8 +161,9 @@ Options:
                                         setup
                                         any
   -kz|--kustoCompressed              [bool] compress upload to kusto ingest.
-  -kc|--kustoCluster                 [string] ingest url for kusto.
-                                         ex: https://ingest-{clusterName}.{location}.kusto.windows.net/{databaseName}
+  -kc|--kustoCluster                 [string] remote or local ingest url for kusto.
+                                         remote ingestion ex: https://ingest-{clusterName}.{location}.kusto.windows.net/{databaseName}
+                                         local ingestion ex: http://localhost:{{port}}/{{databaseName}}
   -kp|--KustoPurge                   [string] 'true' to purge 'KustoTable' table from Kusto
                                          or 'list' to list tables from Kusto.
                                          or {tableName} to drop from Kusto.
@@ -246,6 +247,12 @@ collectsfdata.exe -type trace -s "<% sasKey %>" -kc "https://<% kusto ingest nam
 collectsfdata.exe -type trace -s "https://sflogsxxxxxxxxxxxxx.blob.core.windows.net/?sv=2017-11-09&ss=bfqt&srt=sco&sp=rwdlacup&se=2018-12-05T23:51:08Z&st=2018-11-05T15:51:08Z&spr=https&sig=VYT1J9Ene1NktyCgsu1gEH%2FN%2BNH9zRhJO05auUPQkSA%3D" -kc https://ingest-kustodb.eastus.kusto.windows.net/serviceFabricDB -kt "fabric_traces"
 ```
 
+### Example ingestion to Kusto emulator with minimal arguments
+```text
+collectsfdata.exe -type setup -kc "http://localhost:<% port %>/<%database name %>" -kt "<% kusto table name %>" -lp "<% local path directory %>" -cache "<% cache location path %>"
+collectsfdata.exe -type setup -kc "http://localhost:8060/Mydbbb" -kt "MyCoolTable" -lp "c:\\testTraces" -cache "c:\\testCacheLocation"
+```
+
 ### Example JSON configuration file options
 
 #### example clean configuration with Kusto
@@ -273,6 +280,19 @@ collectsfdata.exe -type trace -s "https://sflogsxxxxxxxxxxxxx.blob.core.windows.
   "LogAnalyticsId" : "<% oms workspace id %>",
   "LogAnalyticsKey" : "<% oms primary / secondary key %>",
   "LogAnalyticsName" : "<% oms tag / name for ingest %>"
+}
+```
+
+#### example clean configuration with Kusto emulator
+```json
+{
+  "CacheLocation": "c:\\traceCopies",
+  "EndTimeStamp": "10/31/2018 22:30:00 +00:00",
+  "GatherType": "setup",
+  "KustoCluster": "http://localhost:8080/MyDatabaseName",
+  "KustoTable": "MyTableName",
+  "LocalPath": "c:\\originalTraces",
+  "StartTimeStamp": "10/31/2018 20:00:00 +00:00",
 }
 ```
 

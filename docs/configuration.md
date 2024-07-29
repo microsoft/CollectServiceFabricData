@@ -59,8 +59,9 @@ Options:
                                         setup
                                         any
   -kz|--kustoCompressed              [bool] compress upload to kusto ingest.
-  -kc|--kustoCluster                 [string] ingest url for kusto.
-                                         ex: https://ingest-{clusterName}.{location}.kusto.windows.net/{databaseName}
+  -kc|--kustoCluster                 [string] remote or local ingest url for kusto.
+                                         remote ingestion ex: https://ingest-{clusterName}.{location}.kusto.windows.net/{databaseName}
+                                         local ingestion ex: http://localhost:{{port}}/{{databaseName}}
   -kp|--KustoPurge                   [string] 'true' to purge 'KustoTable' table from Kusto
                                          or 'list' to list tables from Kusto.
                                          or {tableName} to drop from Kusto.
@@ -125,7 +126,7 @@ To use a default configuration file without having to specify on the command lin
 
 #### collectsfdata general arguments
 
-- **CacheLocation** - required. string. path to blob download location. this path depending on configuration may need to have many GB free and should be premium / fast ssd disk for best performance. **NOTE:** this path should be as short as possible as downloaded file names lengths are close to MAX_PATH.
+- **CacheLocation** - required. string. path to blob download location. this path depending on configuration may need to have many GB free and should be premium / fast ssd disk for best performance. **NOTE:** this path should be as short as possible as downloaded file names lengths are close to MAX_PATH. For local ingestion, this file path is where the copies of files downloaded from LocalPath are put to get formatted and ingested.
 - **ContainerFilter** - optional. string / regex. default null. if populated, pattern will be used to filter which containers are enumerated for blob download.
 - **DatabasePersistance** - bool. default false. to create a volatile local database. a value of true will persist the database a given path in your container.
 - **DatabasePersistencePath** - string. path where you want your database to be persisted in for local ingestion. path must be in the format: '@'c:\...\..',@'c:\...\..''
@@ -158,7 +159,7 @@ To use a default configuration file without having to specify on the command lin
 #### collectsfdata azure arguments (optional)
 #### collectsfdata kusto arguments
 
-- **KustoCluster** - required. uri. kusto cluster ingest url found in properties in azure portal. example: https://ingest-{{cluster}}[.{{location}}].kusto.windows.net/{{database}}
+- **KustoCluster** - required. uri. for remote ingestion, kusto cluster ingest url found in properties in azure portal. example: https://ingest-{{cluster}}[.{{location}}].kusto.windows.net/{{database}}. for local ingestion into kusto emulator, provide url with localhost port and database name. example: http://localhost:{{port}}/{{databaseName}}
 - **KustoCompressed** - optional. bool. default true. if enabled, will compress (zip) files before sending to kusto saving network bandwidth.
 - **KustoPurge** - optional. bool. default false. if enabled, will attempt to remove data from Kusto database.
 - **KustoRecreateTable** - bool. default false. if true, will drop (recreate) table before ingesting new data regardless if table is currently populated.
@@ -424,7 +425,7 @@ NOTE: for standalone clusters a central diagnostic store must be configured
 }
 ```
 
-#### **configuration for downloading service fabric diagnostic trace logs and uploading to kusto**
+#### **configuration for downloading service fabric diagnostic trace logs and uploading to remote kusto cluster**
 
 ```json
 {
@@ -468,6 +469,44 @@ NOTE: for standalone clusters a central diagnostic store must be configured
 }
 ```
 
+#### **configuration for downloading service fabric trace files and uploading to non-persistent database in kusto emulator (local ingestion)
+```json
+{
+  "CacheLocation": "c:\\traceCopies",
+  "DatabasePersistence": false,
+  "DatabasePersistencePath": null,
+  "EndTimeStamp": "10/31/2018 22:30:00 +00:00",
+  "GatherType": "setup",
+  "KustoCluster": "http://localhost:8080/MyDatabaseName",
+  "KustoRecreateTable": true,
+  "KustoTable": "MyTableName",
+  "LocalPath": "c:\\originalTraces",
+  "LogDebug": 4,
+  "SasKey": null,
+  "StartTimeStamp": "10/31/2018 20:00:00 +00:00",
+  "Threads": 8
+}
+```
+
+#### **configuration for downloading service fabric trace files and uploading to persistent database in kusto emulator (local ingestion)
+```json
+{
+  "CacheLocation": "c:\\traceCopies",
+  "DatabasePersistence": true,
+  "DatabasePersistencePath": "@'c:\\kustodata\\dbs\\MyDatabaseName\\md',@'c:\\kustodata\\dbs\\MyDatabaseName\\data'",
+  "EndTimeStamp": "10/31/2018 22:30:00 +00:00",
+  "GatherType": "setup",
+  "KustoCluster": "http://localhost:8080/MyDatabaseName",
+  "KustoRecreateTable": true,
+  "KustoTable": "MyTableName",
+  "LocalPath": "c:\\originalTraces",
+  "LogDebug": 4,
+  "SasKey": null,
+  "StartTimeStamp": "10/31/2018 20:00:00 +00:00",
+  "Threads": 8
+}
+```
+
 #### **default configuration generated from collectsfdata -save collectsfdata.options.json**
 
 ```json
@@ -481,6 +520,8 @@ NOTE: for standalone clusters a central diagnostic store must be configured
   "AzureTenantId": null,
   "CacheLocation": "C:/Users/user/AppData/Local/Temp",
   "ContainerFilter": null,
+  "DatabasePersistence": false,
+  "DatabasePersistencePath": null,
   "DeleteCache": false,
   "EndTimeStamp": "10/25/2019 08:05 -04:00",
   "GatherType": "unknown",
@@ -491,6 +532,7 @@ NOTE: for standalone clusters a central diagnostic store must be configured
   "KustoTable": null,
   "KustoUseBlobAsSource": false,
   "List": false,
+  "LocalPath": null,
   "LogAnalyticsCreate": false,
   "LogAnalyticsId": null,
   "LogAnalyticsKey": null,
