@@ -6,8 +6,6 @@
 using CollectSFData.Common;
 using CollectSFData.DataFile;
 using Azure;
-using Azure.Storage.Blobs;
-using Azure.Storage.Blobs.Models;
 using Azure.Storage.Queues;
 using Azure.Storage.Queues.Models;
 using Newtonsoft.Json;
@@ -60,14 +58,22 @@ namespace CollectSFData.Kusto
                 Log.Warning($"file already ingested. skipping: {fileObject.RelativeUri}");
                 return;
             }
-
-            if (_config.KustoUseBlobAsSource && fileObject.IsSourceFileLinkCompliant())
+            
+            if (!_config.IsIngestionLocal && _config.KustoUseBlobAsSource && fileObject.IsSourceFileLinkCompliant())
             {
                 IngestSingleFile(fileObject);
             }
-            else
+            else if (!_config.IsIngestionLocal)
             {
                 IngestMultipleFiles(_instance.FileMgr.ProcessFile(fileObject));
+            }
+            else
+            {
+                // format the trace files
+                FileObjectCollection fileObjectCollection = _instance.FileMgr.ProcessFile(fileObject);
+
+                // ingest the trace files
+                fileObjectCollection.ForEach(x => IngestLocally(x));
             }
         }
 
@@ -77,9 +83,13 @@ namespace CollectSFData.Kusto
             {
                 Log.Info("finished. cancelling", ConsoleColor.White);
                 _tokenSource.Cancel();
-                _monitorTask.Wait();
-                _monitorTask.Dispose();
 
+                if (!_config.IsIngestionLocal)
+                {
+                    _monitorTask.Wait();
+                    _monitorTask.Dispose();
+                }
+                
                 if (_appendingToExistingTableUnique
                     && _config.FileType == FileTypesEnum.table
                     && _instance.FileObjects.Any(FileStatus.succeeded))
@@ -93,7 +103,7 @@ namespace CollectSFData.Kusto
                     string command = $".set-or-replace {_config.KustoTable} <| {_config.KustoTable} | summarize min(RelativeUri) by {names}";
                     Log.Info(command);
 
-                    Endpoint.Command(command);
+                    Endpoint.CommandAsync(command).Wait();
                     Log.Info("removed duplicate records", ConsoleColor.White);
                 }
 
@@ -116,11 +126,21 @@ namespace CollectSFData.Kusto
             Endpoint.Authenticate();
             _failureQueryTime = _instance.StartTime.ToUniversalTime();
 
-            if (!PopulateQueueEnumerators())
+            if (_config.IsIngestionLocal)
             {
-                return false;
+                if (!Endpoint.CreateDatabase(Endpoint.DatabaseName))
+                {
+                    return false;
+                }
             }
-
+            else
+            {
+                if (!PopulateQueueEnumerators())
+                {
+                    return false;
+                }
+            }
+            
             if (_config.IsKustoPurgeRequested())
             {
                 Purge();
@@ -128,17 +148,20 @@ namespace CollectSFData.Kusto
             }
             else if (_config.KustoRecreateTable)
             {
-                PurgeMessages(Endpoint.TableName);
+                if (!_config.IsIngestionLocal)
+                {
+                    PurgeMessages(Endpoint.TableName);
+                }
 
                 if (!Endpoint.DropTable(Endpoint.TableName))
                 {
                     return false;
                 }
             }
-            else if (_config.Unique && Endpoint.HasTable(Endpoint.TableName))
+            else if (!_config.IsIngestionLocal && _config.Unique && Endpoint.HasTable(Endpoint.TableName))
             {
                 _appendingToExistingTableUnique = true;
-                List<string> existingUploads = Endpoint.Query($"['{Endpoint.TableName}']|distinct RelativeUri");
+                List<string> existingUploads = Endpoint.QueryAsCsvAsync($"['{Endpoint.TableName}']|distinct RelativeUri").Result;
                 foreach (string existingUpload in existingUploads)
                 {
                     _instance.FileObjects.Add(new FileObject(existingUpload) { Status = FileStatus.existing });
@@ -147,10 +170,13 @@ namespace CollectSFData.Kusto
 
             IngestResourceIdKustoTableMapping();
 
-            // monitor for new files to be uploaded
-            if (_monitorTask == null)
+            if (!_config.IsIngestionLocal)
             {
-                _monitorTask = Task.Run((Action)QueueMonitor, _tokenSource.Token);
+                // monitor for new files to be uploaded
+                if (_monitorTask == null)
+                {
+                    _monitorTask = Task.Run((Action)QueueMonitor, _tokenSource.Token);
+                }
             }
 
             return true;
@@ -215,6 +241,22 @@ namespace CollectSFData.Kusto
             return fileObject.Status != FileStatus.existing;
         }
 
+        private void IngestLocally(FileObject fileObject)
+        {
+            string ingestionMapping = SetIngestionMapping(fileObject);
+            // As part of the file formatting process, the files are compressed into a zip file format. To read the stream's contents, the file must be decompressed
+            fileObject.Stream.Decompress();
+            string traces = fileObject.Stream.ReadToEnd();
+            if (traces.Length != 0)
+            {
+                Endpoint.IngestInlineWithMapping(_config.KustoTable, ingestionMapping, traces);
+            }
+            else
+            {
+                Log.Error($"Length of file {fileObject.BaseUri} is 0. Please provide non-empty files for ingestion.");
+            }
+        }
+
         private void IngestMultipleFiles(FileObjectCollection fileObjectCollection)
         {
             fileObjectCollection.ForEach(x => IngestSingleFile(x));
@@ -259,19 +301,16 @@ namespace CollectSFData.Kusto
 
         private void IngestStatusFailQuery()
         {
-            Endpoint.Query($".show ingestion failures" +
+            KustoRestRecords failedRecords = Endpoint.QueryAsListAsync($".show ingestion failures" +
                 $"| where Table == '{Endpoint.TableName}'" +
                 $"| where FailedOn >= todatetime('{_failureQueryTime}')" +
-                $"| order by FailedOn asc");
-
-            KustoRestRecords failedRecords = Endpoint.PrimaryResultTable.Records();
+                $"| order by FailedOn asc").Result;
 
             foreach (KustoRestRecord record in failedRecords)
             {
                 string uriFile = record["IngestionSourcePath"].ToString();
                 Log.Debug($"checking failed ingested for failed relativeuri: {uriFile}");
                 FileObject fileObject = _instance.FileObjects.FindByUriFirstOrDefault(uriFile);
-
                 fileObject.Status = FileStatus.failed;
 
                 if (fileObject.IsPopulated)
@@ -290,13 +329,18 @@ namespace CollectSFData.Kusto
 
         private void IngestStatusSuccessQuery()
         {
+            long queryTime = DateTime.Now.Ticks;
+
             List<string> successUris = new List<string>();
-            successUris.AddRange(Endpoint.Query($"['{Endpoint.TableName}']" +
+            successUris.AddRange(Endpoint.QueryAsCsvAsync($"['{Endpoint.TableName}']" +
                 $"| where cursor_after('{_ingestCursor}')" +
                 $"| where ingestion_time() > todatetime('{_instance.StartTime.ToUniversalTime().ToString("o")}')" +
-                $"| distinct RelativeUri"));
-
-            _ingestCursor = !_instance.FileObjects.Any(FileStatus.succeeded) ? "" : Endpoint.Cursor;
+                $"| distinct RelativeUri").Result);
+            if (successUris.Count > 0)
+            {
+                // to avoid time gaps between query and ingestion
+                _ingestCursor = Math.Min(queryTime, Convert.ToInt64(Endpoint.GetCursor())).ToString();
+            }
             Log.Debug($"files ingested:{successUris.Count}");
 
             foreach (string uriFile in successUris)
@@ -419,11 +463,11 @@ namespace CollectSFData.Kusto
 
                 if (_config.KustoPurge.ToLower().Split(' ').Length > 1)
                 {
-                    results = Endpoint.Query($".show tables | where TableName contains {_config.KustoPurge.ToLower().Split(' ')[1]} | project TableName");
+                    results = Endpoint.QueryAsCsvAsync($".show tables | where TableName contains {_config.KustoPurge.ToLower().Split(' ')[1]} | project TableName").Result;
                 }
                 else
                 {
-                    results = Endpoint.Query(".show tables | project TableName");
+                    results = Endpoint.QueryAsCsvAsync(".show tables | project TableName").Result;
                 }
 
                 Log.Info($"current table list:", results);

@@ -8,7 +8,10 @@ param(
     [string]$kustoDatabase = '',
     [switch]$test,
     [switch]$force,
-    [string]$kustoDir = "$psscriptroot\..\kusto\functions"
+    [string]$kustoDir = "$psscriptroot\..\kusto\functions",
+    [string]$clientId,
+    [string]$clientSecret,
+    [string]$tenantId
 )
 
 $ErrorActionPreference = 'continue'
@@ -19,8 +22,17 @@ $scriptSuccess = [collections.arraylist]::new()
 function main() {
     $error.clear()
 
+    $kustoParams = @{
+        cluster  = $kustoCluster
+        database = $kustoDatabase
+    }
+
+    if ($clientId) { $kustoParams.clientId = $clientId }
+    if ($clientSecret) { $kustoParams.clientSecret = $clientSecret }
+    if ($tenantId) { $kustoParams.tenantId = $tenantId }
+
     if (!$kusto -or $force) {
-        . .\kusto-rest.ps1 -cluster $kustoCluster -database $kustoDatabase
+        . .\kusto-rest.ps1 @kustoParams
     }
 
     foreach ($script in $kustoScripts) {

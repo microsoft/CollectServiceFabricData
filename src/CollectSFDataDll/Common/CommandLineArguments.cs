@@ -29,11 +29,17 @@ namespace CollectSFData.Common
 
         public CommandOption CacheLocation { get; set; }
 
+        public CommandOption CheckForUpdates { get; set; }
+
         public CommandLineApplication CmdLineApp { get; private set; }
 
         public CommandOption ConfigurationFile { get; set; }
 
         public CommandOption ContainerFilter { get; set; }
+
+        public CommandOption DatabasePersistence { get; set; }
+
+        public CommandOption DatabasePersistencePath { get; set; }
 
         public CommandOption DeleteCache { get; set; }
 
@@ -62,6 +68,8 @@ namespace CollectSFData.Common
         public CommandOption KustoUseIngestMessage { get; set; }
 
         public CommandOption List { get; set; }
+
+        public CommandOption LocalPath { get; set; }
 
         public CommandOption LogAnalyticsCreate { get; set; }
 
@@ -386,6 +394,11 @@ namespace CollectSFData.Common
                      "[string] Write files to this output location. e.g. \"C:\\Perfcounters\\Output\" ",
                      CommandOptionType.SingleValue);
 
+            CheckForUpdates = CmdLineApp.Option("-cfu|--checkForUpdates",
+                    $"[int] 0-disabled." +
+                    $"{newLine} use checkForUpdates for specifying / disabling utility update checks in days.",
+                    CommandOptionType.SingleValue);
+
             ConfigurationFile = CmdLineApp.Option("-config|--configurationFile",
                     $"[string] json file containing configuration options." +
                     $"{newLine} type collectsfdata.exe -save default.json to create a default file." +
@@ -394,6 +407,17 @@ namespace CollectSFData.Common
 
             ContainerFilter = CmdLineApp.Option("-cf|--containerFilter",
                     "[string] string / regex to filter container names",
+                    CommandOptionType.SingleValue);
+
+            DatabasePersistence = CmdLineApp.Option("-dp|--databasePersistence",
+                    "[bool] default false to create a volatile database. a value of true will" + 
+                    $"{newLine} persist the database on a given path in your container.",
+                    CommandOptionType.SingleValue);
+
+            DatabasePersistencePath = CmdLineApp.Option("-dpp|--databasePersistencePath",
+                    $"[string] path where you want your database to be persisted in for local ingestion." +
+                    $"{newLine} path must be in the format: '@'c:\\...\\..',@'c:\\...\\..''" + 
+                    $"{newLine} example: '@'C:\\kustodata\\MyDatabaseName\\md',@'C:\\kustodata\\MyDatabaseName\\data''",
                     CommandOptionType.SingleValue);
 
             DeleteCache = CmdLineApp.Option("-dc|--deleteCache",
@@ -436,7 +460,8 @@ namespace CollectSFData.Common
 
             KustoCluster = CmdLineApp.Option("-kc|--kustoCluster",
                     $"[string] ingest url for kusto." +
-                    $"{newLine} ex: https://ingest-{{clusterName}}.{{location}}.kusto.windows.net/{{databaseName}}",
+                    $"{newLine} ex: https://ingest-{{clusterName}}.{{location}}.kusto.windows.net/{{databaseName}}" + 
+                    $"{newLine} ex: http://localhost:{{port}}/{{databaseName}}",
                     CommandOptionType.SingleValue);
 
             KustoPurge = CmdLineApp.Option("-kp|--KustoPurge",
@@ -466,6 +491,10 @@ namespace CollectSFData.Common
 
             List = CmdLineApp.Option("-l|--list",
                     "[bool] list files instead of downloading",
+                    CommandOptionType.SingleValue);
+
+            LocalPath = CmdLineApp.Option("-lp|--localPath",
+                    @"[string] path to original files and indicates local ingestion e.g. 'C:\Perfcounters\Output'",
                     CommandOptionType.SingleValue);
 
             LogAnalyticsCreate = CmdLineApp.Option("-lac|--logAnalyticsCreate",

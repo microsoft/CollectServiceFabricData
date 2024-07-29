@@ -20,63 +20,72 @@
     <tags>servicefabric</tags>
     <dependencies>
       <group targetFramework=".NETFramework4.6.2">
-        <dependency id="Azure.Security.KeyVault.Certificates" version="4.5.1" exclude="Build,Analyzers" />
+        <dependency id="Azure.Data.Tables" version="12.8.1" exclude="Build,Analyzers" />
+        <dependency id="Azure.Identity" version="1.11.0" exclude="Build,Analyzers" />
         <dependency id="Azure.Security.KeyVault.Keys" version="4.5.0" exclude="Build,Analyzers" />
         <dependency id="Azure.Security.KeyVault.Secrets" version="4.5.0" exclude="Build,Analyzers" />
         <dependency id="Azure.Storage.Blobs" version="12.18.0" exclude="Build,Analyzers" />
         <dependency id="Azure.Storage.Queues" version="12.16.0" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Azure.Kusto.Data" version="11.3.4" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Extensions.CommandLineUtils" version="1.1.1" exclude="Build,Analyzers" />
-        <dependency id="Azure.Identity" version="1.10.2" exclude="Build,Analyzers" />
-        <dependency id="Microsoft.Identity.Client.Extensions.Msal" version="4.56.0" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.Identity.Client" version="4.60.1" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.Identity.Client.Extensions.Msal" version="4.60.1" exclude="Build,Analyzers" />
         <dependency id="Newtonsoft.Json" version="13.0.3" exclude="Build,Analyzers" />
         <dependency id="System.CodeDom" version="4.7.0" exclude="Build,Analyzers" />
         <dependency id="System.Diagnostics.DiagnosticSource" version="7.0.2" exclude="Build,Analyzers" />
+        <dependency id="System.Memory" version="4.5.5" exclude="Build,Analyzers" />
         <dependency id="System.Reactive" version="4.0.0" exclude="Build,Analyzers" />
       </group>
       <group targetFramework=".NETFramework4.8.0">
-        <dependency id="Azure.Security.KeyVault.Certificates" version="4.5.1" exclude="Build,Analyzers" />
+        <dependency id="Azure.Data.Tables" version="12.8.1" exclude="Build,Analyzers" />
+        <dependency id="Azure.Identity" version="1.11.0" exclude="Build,Analyzers" />
         <dependency id="Azure.Security.KeyVault.Keys" version="4.5.0" exclude="Build,Analyzers" />
         <dependency id="Azure.Security.KeyVault.Secrets" version="4.5.0" exclude="Build,Analyzers" />
         <dependency id="Azure.Storage.Blobs" version="12.18.0" exclude="Build,Analyzers" />
         <dependency id="Azure.Storage.Queues" version="12.16.0" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Azure.Kusto.Data" version="11.3.4" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Extensions.CommandLineUtils" version="1.1.1" exclude="Build,Analyzers" />
-        <dependency id="Azure.Identity" version="1.10.2" exclude="Build,Analyzers" />
-        <dependency id="Microsoft.Identity.Client.Extensions.Msal" version="4.56.0" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.Identity.Client" version="4.60.1" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.Identity.Client.Extensions.Msal" version="4.60.1" exclude="Build,Analyzers" />
         <dependency id="Newtonsoft.Json" version="13.0.3" exclude="Build,Analyzers" />
         <dependency id="System.CodeDom" version="4.7.0" exclude="Build,Analyzers" />
+        <dependency id="System.Diagnostics.DiagnosticSource" version="7.0.2" exclude="Build,Analyzers" />
+        <dependency id="System.Memory" version="4.5.5" exclude="Build,Analyzers" />
         <dependency id="System.Reactive" version="4.0.0" exclude="Build,Analyzers" />
         <dependency id="System.Security.Cryptography.Cng" version="4.7.0" exclude="Build,Analyzers" />
       </group>
       <group targetFramework=".net6.0">
-        <dependency id="Azure.Security.KeyVault.Certificates" version="4.5.1" exclude="Build,Analyzers" />
+        <dependency id="Azure.Data.Tables" version="12.8.1" exclude="Build,Analyzers" />
+        <dependency id="Azure.Identity" version="1.11.0" exclude="Build,Analyzers" />
         <dependency id="Azure.Security.KeyVault.Keys" version="4.5.0" exclude="Build,Analyzers" />
         <dependency id="Azure.Security.KeyVault.Secrets" version="4.5.0" exclude="Build,Analyzers" />
         <dependency id="Azure.Storage.Blobs" version="12.18.0" exclude="Build,Analyzers" />
         <dependency id="Azure.Storage.Queues" version="12.16.0" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Azure.Kusto.Data" version="11.3.4" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Extensions.CommandLineUtils" version="1.1.1" exclude="Build,Analyzers" />
-        <dependency id="Azure.Identity" version="1.10.2" exclude="Build,Analyzers" />
-        <dependency id="Microsoft.Identity.Client.Extensions.Msal" version="4.56.0" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.Identity.Client" version="4.60.1" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.Identity.Client.Extensions.Msal" version="4.60.1" exclude="Build,Analyzers" />
         <dependency id="Newtonsoft.Json" version="13.0.3" exclude="Build,Analyzers" />
         <dependency id="System.CodeDom" version="4.7.0" exclude="Build,Analyzers" />
         <dependency id="System.Diagnostics.DiagnosticSource" version="7.0.2" exclude="Build,Analyzers" />
+        <dependency id="System.Memory" version="4.5.5" exclude="Build,Analyzers" />
         <dependency id="System.Reactive" version="4.0.0" exclude="Build,Analyzers" />
       </group>
       <group targetFramework=".net8.0">
-        <dependency id="Azure.Security.KeyVault.Certificates" version="4.5.1" exclude="Build,Analyzers" />
+        <dependency id="Azure.Data.Tables" version="12.8.1" exclude="Build,Analyzers" />
+        <dependency id="Azure.Identity" version="1.11.0" exclude="Build,Analyzers" />
         <dependency id="Azure.Security.KeyVault.Keys" version="4.5.0" exclude="Build,Analyzers" />
         <dependency id="Azure.Security.KeyVault.Secrets" version="4.5.0" exclude="Build,Analyzers" />
         <dependency id="Azure.Storage.Blobs" version="12.18.0" exclude="Build,Analyzers" />
         <dependency id="Azure.Storage.Queues" version="12.16.0" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Azure.Kusto.Data" version="11.3.4" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Extensions.CommandLineUtils" version="1.1.1" exclude="Build,Analyzers" />
-        <dependency id="Azure.Identity" version="1.10.2" exclude="Build,Analyzers" />
-        <dependency id="Microsoft.Identity.Client.Extensions.Msal" version="4.56.0" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.Identity.Client" version="4.60.1" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.Identity.Client.Extensions.Msal" version="4.60.1" exclude="Build,Analyzers" />
         <dependency id="Newtonsoft.Json" version="13.0.3" exclude="Build,Analyzers" />
         <dependency id="System.CodeDom" version="4.7.0" exclude="Build,Analyzers" />
         <dependency id="System.Diagnostics.DiagnosticSource" version="7.0.2" exclude="Build,Analyzers" />
+        <dependency id="System.Memory" version="4.5.5" exclude="Build,Analyzers" />
         <dependency id="System.Reactive" version="4.0.0" exclude="Build,Analyzers" />
       </group>
     </dependencies>
@@ -115,6 +124,7 @@
     <file src="..\bin\$configuration$\net462\*.pdb" target="lib\net462" />
     <file src="..\bin\$configuration$\net462\Etlreader.dll" target="lib\net462" />
     <file src="..\bin\$configuration$\net462\System.Fabric.Strings.dll" target="lib\net462" />
+        <file src="..\..\configurationFiles\collectsfdata.options.json" target="lib\net462" />
     <!-- net48 tools -->
     <!-- <file src="..\bin\$configuration$\net48\*.exe" target="tools\net48" />
     <file src="..\bin\$configuration$\net48\*.dll" target="tools\net48" />
@@ -129,6 +139,7 @@
     <file src="..\bin\$configuration$\net48\*.pdb" target="lib\net48" />
     <file src="..\bin\$configuration$\net48\Etlreader.dll" target="lib\net48" />
     <file src="..\bin\$configuration$\net48\System.Fabric.Strings.dll" target="lib\net48" />
+    <file src="..\..\configurationFiles\collectsfdata.options.json" target="lib\net48" />
     <!-- net6.0 tools -->
     <!-- <file src="..\bin\$configuration$\net6.0\*.exe" target="tools\net6.0" />
     <file src="..\bin\$configuration$\net6.0\*.runtimeconfig.json" target="tools\net6.0" />
@@ -144,6 +155,7 @@
     <file src="..\bin\$configuration$\net6.0\*.pdb" target="lib\net6.0" />
     <file src="..\bin\$configuration$\net6.0\Etlreader.dll" target="lib\net6.0" />
     <file src="..\bin\$configuration$\net6.0\System.Fabric.Strings.dll" target="lib\net6.0" />
+    <file src="..\..\configurationFiles\collectsfdata.options.json" target="lib\net6.0" />
     <!-- net8.0 tools -->
     <file src="..\bin\$configuration$\net8.0\*.exe" target="tools\net8.0" />
     <file src="..\bin\$configuration$\net8.0\*.runtimeconfig.json" target="tools\net8.0" />
@@ -159,6 +171,7 @@
     <file src="..\bin\$configuration$\net8.0\*.pdb" target="lib\net8.0" />
     <file src="..\bin\$configuration$\net8.0\Etlreader.dll" target="lib\net8.0" />
     <file src="..\bin\$configuration$\net8.0\System.Fabric.Strings.dll" target="lib\net8.0" />
+    <file src="..\..\configurationFiles\collectsfdata.options.json" target="lib\net8.0" />
     <!-- icon -->
     <file src="..\FabricSupport.png" target="images\" />
   </files>

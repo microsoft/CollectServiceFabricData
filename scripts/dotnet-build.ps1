@@ -108,8 +108,8 @@ function main() {
 }
 
 function build-configuration($configuration) {
-    write-host "dotnet list $csproj package"
-    dotnet list $csproj package
+    write-host "dotnet list $csproj package  --include-transitive"
+    dotnet list $csproj package  --include-transitive
 
     write-host "dotnet build $csproj -c $configuration" -ForegroundColor Magenta
     dotnet build $csproj -c $configuration

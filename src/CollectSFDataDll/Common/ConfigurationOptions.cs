@@ -14,7 +14,6 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Net.Http;
 using System.Reflection;
 using System.Security.Cryptography.X509Certificates;
 using System.Text.RegularExpressions;
@@ -25,26 +24,14 @@ namespace CollectSFData.Common
     public class ConfigurationOptions : ConfigurationProperties
     {
         private static readonly CommandLineArguments _cmdLineArgs = new CommandLineArguments();
-        private static bool _cmdLineExecuted;
         private static bool? _cacheLocationPreconfigured = null;
+        private static bool _cmdLineExecuted;
         private static string[] _commandlineArguments = new string[0];
         private static ConfigurationOptions _defaultConfig;
+        private static object _singleLock = new Object();
         private static ConfigurationOptions _singleton;// = new ConfigurationOptions();
         private readonly string _tempName = "csfd";
         private string _tempPath;
-        private static object _singleLock = new Object();
-
-        public static ConfigurationOptions Singleton()
-        {
-                lock (_singleLock)
-                {
-                    if(_singleton == null) {
-                        _singleton = new ConfigurationOptions();
-                    }
-                    return _singleton;
-                }
-        }
-
         public X509Certificate2 ClientCertificate { get; set; }
 
         public new string EndTimeStamp
@@ -81,7 +68,11 @@ namespace CollectSFData.Common
             }
         }
 
+        public bool IsARMValid { get; set; } = false;
+
         public bool IsValid { get; set; }
+
+        public bool IsIngestionLocal { get; set; }
 
         public bool NeedsValidation { get; set; } = true;
 
@@ -105,6 +96,7 @@ namespace CollectSFData.Common
         }
 
         public string Version { get; } = $"{Process.GetCurrentProcess().MainModule?.FileVersionInfo.FileVersion}";
+
         private bool _defaultConfigLoaded => HasValue(_defaultConfig);
 
         static ConfigurationOptions()
@@ -140,6 +132,45 @@ namespace CollectSFData.Common
             {
                 Validate();
             }
+            IsIngestionLocal = IsLocalIngestionConfigured();
+        }
+
+        public static ConfigurationOptions Singleton()
+        {
+            lock (_singleLock)
+            {
+                if (_singleton == null)
+                {
+                    _singleton = new ConfigurationOptions();
+                }
+                return _singleton;
+            }
+        }
+
+        public bool CheckLogFile()
+        {
+            if (LogDebug == LoggingLevel.Verbose && !HasValue(LogFile))
+            {
+                LogFile = $"{CacheLocation}/{_tempName}.log";
+                Log.Warning($"LogDebug 5 (Verbose) requires log file. setting LogFile:{LogFile}");
+            }
+
+            if (HasValue(LogFile))
+            {
+                LogFile = FileManager.NormalizePath(LogFile);
+
+                if (Regex.IsMatch(LogFile, @"<.+>"))
+                {
+                    string timePattern = Regex.Match(LogFile, @"<(.+?)>").Groups[1].Value;
+                    LogFile = Regex.Replace(LogFile, @"<.+?>", DateTime.Now.ToString(timePattern));
+                    Log.Info($"replaced datetime token {timePattern}: new LogFile name:{LogFile}");
+                }
+
+                Log.Info($"setting output log file to: {LogFile}");
+                return FileManager.CreateDirectory(Path.GetDirectoryName(LogFile));
+            }
+
+            return true;
         }
 
         public void CheckPublicIp()
@@ -168,6 +199,33 @@ namespace CollectSFData.Common
 
         public void CheckReleaseVersion()
         {
+            Log.Info($"CheckReleaseVersionDays:{CheckForUpdates}");
+
+            if (CheckForUpdates < 1)
+            {
+                Log.Warning($"CheckReleaseVersionDays disabled. skipping version check.");
+                return;
+            }
+
+            string lastUpdateCheck = Constants.AppDataFolder + "\\lastupdatecheck.txt";
+            if (File.Exists(lastUpdateCheck))
+            {
+                string lastCheck = File.ReadAllText(lastUpdateCheck);
+                if (DateTime.Now.Subtract(Convert.ToDateTime(lastCheck)).TotalDays < CheckForUpdates)
+                {
+                    Log.Info($"last update check was less than {CheckForUpdates} days ago. skipping version check.");
+                    return;
+                }
+            }
+            else if (!FileManager.CreateDirectory(Constants.AppDataFolder))
+            {
+                Log.Warning($"unable to create directory {Constants.AppDataFolder}. skipping version check.");
+                return;
+            }
+
+            Log.Info($"writing last update check date to {lastUpdateCheck}");
+            File.WriteAllText(lastUpdateCheck, DateTime.Now.ToString(Constants.DefaultDatePattern));
+
             string response = $"\r\n\tlocal running version: {Version}";
             Http http = Http.ClientFactory();
 
@@ -381,6 +439,11 @@ namespace CollectSFData.Common
             return Guid.TryParse(guid, out testGuid);
         }
 
+        public bool IsLocalIngestionConfigured()
+        {
+            return HasValue(KustoCluster) && Regex.IsMatch(KustoCluster, Constants.LocalWebServerPattern) && HasValue(LocalPath);
+        }
+
         public bool IsKustoConfigured()
         {
             return (!FileType.Equals(FileTypesEnum.any) & HasValue(KustoCluster) & HasValue(KustoTable));
@@ -401,6 +464,17 @@ namespace CollectSFData.Common
         public bool IsLogAnalyticsPurgeRequested()
         {
             return HasValue(LogAnalyticsPurge);
+        }
+
+        public bool IsTenantValid()
+        {
+            if (!HasValue(AzureTenantId) || AzureTenantId.Length > Constants.MaxStringLength)
+            {
+                Log.Error($"invalid tenant id value:'{AzureTenantId}' expected:guid, domain name, or 'common'");
+                return false;
+            }
+
+            return true;
         }
 
         public bool IsUploadConfigured()
@@ -536,6 +610,8 @@ namespace CollectSFData.Common
             options.Remove("Examples");
             options.Remove("ExePath");
             options.Remove("FileType");
+            options.Remove("IsARMValid");
+            options.Remove("IsIngestionLocal");
             options.Remove("IsValid");
             options.Remove("NeedsValidation");
             options.Remove("SasEndpointInfo");
@@ -572,6 +648,11 @@ namespace CollectSFData.Common
             _defaultConfig = configurationOptions;
         }
 
+        public bool ShouldAuthenticateToArm()
+        {
+            return IsClientIdConfigured() | IsLogAnalyticsConfigured();
+        }
+
         public bool Validate()
         {
             try
@@ -593,8 +674,14 @@ namespace CollectSFData.Common
                     retval &= ValidateFileType();
                     retval &= ValidateTime();
                     retval &= ValidateSource();
+
+                    if (ShouldAuthenticateToArm())
+                    {
+                        retval &= IsARMValid = ValidateAad();
+                    }
+
                     retval &= ValidateDestination();
-                    retval &= ValidateAad();
+                    retval &= ValidateDatabasePersistencePaths();
 
                     if (retval)
                     {
@@ -623,8 +710,7 @@ namespace CollectSFData.Common
             AzureResourceManager arm = new AzureResourceManager(this);
             bool retval = true;
             bool clientIdConfigured = IsClientIdConfigured();
-            bool usingAad = clientIdConfigured | IsKustoConfigured() | IsKustoPurgeRequested();
-            usingAad |= LogAnalyticsCreate | LogAnalyticsRecreate | IsLogAnalyticsPurgeRequested() | IsLogAnalyticsConfigured();
+            bool usingAad = clientIdConfigured | LogAnalyticsCreate | LogAnalyticsRecreate | IsLogAnalyticsPurgeRequested() | IsLogAnalyticsConfigured();
 
             if (HasValue(AzureClientId) && !IsGuid(AzureClientId))
             {
@@ -638,9 +724,9 @@ namespace CollectSFData.Common
                 retval &= false;
             }
 
-            if (HasValue(AzureTenantId) && !IsGuid(AzureTenantId))
+            if (!HasValue(AzureTenantId) | AzureTenantId.Length > Constants.MaxStringLength)
             {
-                Log.Error($"invalid tenant id value:{AzureTenantId} expected:guid");
+                Log.Error($"invalid tenant id value:{AzureTenantId} expected:guid, domain name, or 'common'");
                 retval &= false;
             }
 
@@ -654,6 +740,8 @@ namespace CollectSFData.Common
             {
                 if (clientIdConfigured && HasValue(AzureClientCertificate) && !HasValue(ClientCertificate))
                 {
+                    retval &= IsTenantValid();
+
                     if (HasValue(AzureClientSecret))
                     {
                         certificateUtilities.SetSecurePassword(AzureClientSecret);
@@ -675,11 +763,6 @@ namespace CollectSFData.Common
                         retval &= false;
                     }
                 }
-                // else
-                // {
-                //     Log.Error("Failed certificate to find certificate");
-                //     retval &= false;
-                // }
 
                 retval &= arm.Authenticate();
 
@@ -707,6 +790,19 @@ namespace CollectSFData.Common
             return retval;
         }
 
+        public bool ValidateDatabasePersistencePaths()
+        {
+            bool retval = true;
+
+            if (HasValue(DatabasePersistencePath) && !Regex.IsMatch(DatabasePersistencePath, Constants.CustomDatabasePersistencePathPattern))
+            {
+                string errMessage = $"invalid paths. input should match pattern and include one path each for metadata and data. pattern: {Constants.CustomDatabasePersistencePathPattern}\r\nexample: '@'c:\\kustodata\\dbs\\customfolder\\DatabaseName\\md',@'c:\\kustodata\\dbs\\customfolder\\DatabaseName\\data''";
+                Log.Error(errMessage);
+                retval = false;
+            }
+            return retval;
+        }
+
         public bool ValidateDestination()
         {
             bool retval = true;
@@ -721,9 +817,9 @@ namespace CollectSFData.Common
                     retval = IsKustoConfigured();
                 }
 
-                if (!Regex.IsMatch(KustoCluster, Constants.KustoUrlPattern))
+                if (!Regex.IsMatch(KustoCluster, Constants.KustoUrlPattern) && !Regex.IsMatch(KustoCluster, Constants.LocalWebServerPattern))
                 {
-                    string errMessage = $"invalid kusto url. should match pattern {Constants.KustoUrlPattern}\r\nexample: https://ingest-{{kustocluster}}.{{optional location}}.kusto.windows.net/{{kustodatabase}}";
+                    string errMessage = $"invalid url. should match either Kusto or local web server pattern. Kusto pattern: {Constants.KustoUrlPattern}\r\nexample: https://ingest-{{kustocluster}}.{{optional location}}.kusto.windows.net/{{kustodatabase}} \n Local web server pattern: {Constants.LocalWebServerPattern}\r\nexample: http://localhost:{{port}}/{{databaseName}}";
                     Log.Error(errMessage);
                     retval = false;
                 }
@@ -774,6 +870,22 @@ namespace CollectSFData.Common
                 }
             }
 
+            if ((IsKustoConfigured() | IsLogAnalyticsConfigured()) & !IsTenantValid())
+            {
+                Log.Error("tenant id value expected for this configuration.");
+                retval = false;
+            }
+
+#if NET462
+            // if net462, this is not supported and will throw an exception
+            if (IsKustoConfigured() && !IsARMValid)
+            {
+                string errorMessage = "kusto federated security not supported in .net framework 4.6.2. use different framework or configure 'AzureClientId'";
+                Log.Error(errorMessage);
+                throw new NotSupportedException(errorMessage);
+            }
+#endif
+
             if (IsKustoConfigured() & IsLogAnalyticsConfigured())
             {
                 Log.Error($"kusto and log analytics *cannot* both be enabled. remove configuration for one");
@@ -790,6 +902,30 @@ namespace CollectSFData.Common
             {
                 Log.Warning($"kusto or log analytics must be configured for UseMemoryStream. setting UseMemoryStream to false.");
                 UseMemoryStream = false;
+            }
+
+            if (HasValue(KustoCluster) && Regex.IsMatch(KustoCluster, Constants.KustoUrlPattern) && HasValue(LocalPath))
+            {
+                Log.Error($"local and remote ingestion *cannot* both be enabled. please either remove input for LocalPath field or provide a local web server url instead.");
+                retval = false;
+            }
+
+            if (HasValue(KustoCluster) && Regex.IsMatch(KustoCluster, Constants.LocalWebServerPattern) && !HasValue(LocalPath))
+            {
+                Log.Error($"if connecting to a local web server, please provide a value for the LocalPath field.");
+                retval = false;
+            }
+
+            if (HasValue(KustoCluster) && Regex.IsMatch(KustoCluster, Constants.KustoUrlPattern) && (DatabasePersistence || HasValue(DatabasePersistencePath)))
+            {
+                Log.Error($"persistent database creation is only available for local ingestion.");
+                retval = false;
+            }
+
+            if (!DatabasePersistence && HasValue(DatabasePersistencePath))
+            {
+                Log.Error($"cannot provide a database persistence path if database persistence is not enabled.");
+                retval = false;
             }
 
             return retval;
@@ -847,7 +983,15 @@ namespace CollectSFData.Common
                 Log.Error($"sasKey, fileUris, or cacheLocation should be populated as file source.");
                 retval = false;
             }
+            if (HasValue(CacheLocation) && HasValue(LocalPath)) {
+                LocalPath = FileManager.NormalizePath(LocalPath);
 
+                if (LocalPath.Equals(CacheLocation))
+                {
+                    Log.Error("CacheLocation and LocalPath should be different directories in order to perform local ingestion.");
+                    retval = false;
+                }
+            }   
             return retval;
         }
 
@@ -955,32 +1099,6 @@ namespace CollectSFData.Common
                 FileManager.CreateDirectory(EtwManifestsCache);
                 DownloadEtwManifests();
             }
-        }
-
-        public bool CheckLogFile()
-        {
-            if (LogDebug == LoggingLevel.Verbose && !HasValue(LogFile))
-            {
-                LogFile = $"{CacheLocation}/{_tempName}.log";
-                Log.Warning($"LogDebug 5 (Verbose) requires log file. setting LogFile:{LogFile}");
-            }
-
-            if (HasValue(LogFile))
-            {
-                LogFile = FileManager.NormalizePath(LogFile);
-
-                if(Regex.IsMatch(LogFile,@"<.+>")) 
-                {
-                    string timePattern = Regex.Match(LogFile, @"<(.+?)>").Groups[1].Value;
-                    LogFile = Regex.Replace(LogFile, @"<.+?>", DateTime.Now.ToString(timePattern));
-                    Log.Info($"replaced datetime token {timePattern}: new LogFile name:{LogFile}");
-                }
-
-                Log.Info($"setting output log file to: {LogFile}");
-                return FileManager.CreateDirectory(Path.GetDirectoryName(LogFile));
-            }
-
-            return true;
         }
 
         private string CleanTableName(string tableName, bool withGatherType = false)

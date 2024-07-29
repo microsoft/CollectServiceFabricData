@@ -3,7 +3,6 @@
 // Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
-using System;
 using System.Collections.Generic;
 
 namespace CollectSFData.Common
@@ -11,14 +10,14 @@ namespace CollectSFData.Common
     public class Total
     {
         public int Converted;
-        public int Downloading;
         public int Downloaded;
+        public int Downloading;
         public int Enumerated;
-        public int Formatting;
-        public int Existing;
         public int Errors;
+        public int Existing;
         public int Failed;
         public int Formatted;
+        public int Formatting;
         public int Matched;
         public int Queued;
         public int Records;
@@ -50,23 +49,23 @@ namespace CollectSFData.Common
 
         public override int GetHashCode()
         {
-            Dictionary<string,int> hash = new Dictionary<string,int>();
-            hash.Add("Converted",Converted);
-            hash.Add("Downloading",Downloading);
-            hash.Add("Downloaded",Downloaded);
-            hash.Add("Enumerated",Enumerated);
-            hash.Add("Formatting",Formatting);
-            hash.Add("Existing",Existing);
-            hash.Add("Errors",Errors);
-            hash.Add("Failed",Failed);
-            hash.Add("Formatted",Formatted);
-            hash.Add("Matched",Matched);
-            hash.Add("Queued",Queued);
-            hash.Add("Records",Records);
-            hash.Add("Skipped",Skipped);
-            hash.Add("Succeeded",Succeeded);
-            hash.Add("Unknown",Unknown);
-            hash.Add("Uploading",Uploading);
+            Dictionary<string, int> hash = new Dictionary<string, int>();
+            hash.Add("Converted", Converted);
+            hash.Add("Downloading", Downloading);
+            hash.Add("Downloaded", Downloaded);
+            hash.Add("Enumerated", Enumerated);
+            hash.Add("Formatting", Formatting);
+            hash.Add("Existing", Existing);
+            hash.Add("Errors", Errors);
+            hash.Add("Failed", Failed);
+            hash.Add("Formatted", Formatted);
+            hash.Add("Matched", Matched);
+            hash.Add("Queued", Queued);
+            hash.Add("Records", Records);
+            hash.Add("Skipped", Skipped);
+            hash.Add("Succeeded", Succeeded);
+            hash.Add("Unknown", Unknown);
+            hash.Add("Uploading", Uploading);
             return hash.GetHashCode();
         }
     }

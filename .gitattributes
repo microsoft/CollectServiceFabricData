@@ -1,0 +1,3 @@
+# fix incorrect Roff programming language tag in github repo
+*.man -linguist-language
+#*.man linguist-language=xml

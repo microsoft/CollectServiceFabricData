@@ -24,13 +24,19 @@ namespace CollectSFData.Common
 
         public string AzureSubscriptionId { get; set; }
 
-        public string AzureTenantId { get; set; }
+        public string AzureTenantId { get; set; } = "common";
 
         public string CacheLocation { get; set; }
+
+        public int CheckForUpdates { get; set; } = 30;
 
         public string ConfigurationFile { get; set; }
 
         public string ContainerFilter { get; set; }
+
+        public bool DatabasePersistence { get; set; } = false;
+
+        public string DatabasePersistencePath { get; set; }
 
         public bool DeleteCache { get; set; }
 
@@ -61,6 +67,8 @@ namespace CollectSFData.Common
         public bool KustoUseIngestMessage { get; set; }
 
         public bool List { get; set; } = false;
+
+        public string LocalPath { get; set; }
 
         public bool LogAnalyticsCreate { get; set; }
 
@@ -108,7 +116,6 @@ namespace CollectSFData.Common
 
         public bool UseMemoryStream { get; set; } = true;
 
-        public bool UseTx { get; set; } = true;
 
         public bool VersionOption { get; set; }
 

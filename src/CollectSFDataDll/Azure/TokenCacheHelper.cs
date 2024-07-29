@@ -6,7 +6,6 @@
 using CollectSFData.Common;
 using CollectSFData.DataFile;
 using Microsoft.Identity.Client;
-using System;
 using System.IO;
 using System.Security.Cryptography;
 
@@ -17,20 +16,16 @@ namespace CollectSFData.Azure
         public static readonly string CacheFilePath;
 
         private static readonly object _fileLock = new object();
-        private static string _appDataFolder;
-        private static string _friendlyName;
-        public static bool HasTokens { get; set; }
-        
+
         // Create byte array for additional entropy when using Protect method.
-        static byte [] s_additionalEntropy = { 9, 8, 7, 6, 5, 4 };
+        private static byte[] s_additionalEntropy = { 9, 8, 7, 6, 5, 4 };
+
+        public static bool HasTokens { get; set; }
 
         static TokenCacheHelper()
         {
-            _friendlyName = Path.GetFileNameWithoutExtension(Constants.ApplicationName);
-            _appDataFolder = $"{Environment.GetEnvironmentVariable("LOCALAPPDATA")}\\{_friendlyName}";
-            CacheFilePath = $"{_appDataFolder}\\{_friendlyName}.msalcache.bin3";
-
-            FileManager.CreateDirectory(_appDataFolder);
+            CacheFilePath = $"{Constants.AppDataFolder}\\{Constants.ApplicationName}.msalcache.bin3";
+            FileManager.CreateDirectory(Constants.AppDataFolder);
         }
 
         public static void AfterAccessNotification(TokenCacheNotificationArgs args)

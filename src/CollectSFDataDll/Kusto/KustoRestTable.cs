@@ -7,50 +7,84 @@ using CollectSFData.Common;
 using Kusto.Cloud.Platform.Utils;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Globalization;
 using System.Linq;
 
 namespace CollectSFData.Kusto
 {
-    public class KustoRestRecord : Dictionary<string, object> { }
+    public class KustoRestRecord : Dictionary<string, object>
+    { }
 
-    public class KustoRestRecords : List<KustoRestRecord> { }
+    public class KustoRestRecords : List<KustoRestRecord>
+    { }
 
-    public class KustoRestTable : KustoRestResponseTableV1
+    public class KustoRestTable : DataTable
     {
-        public KustoRestTable(KustoRestResponseTableV1 table = null)
+        private IDataReader _reader;
+
+        public KustoRestTable(IDataReader reader) : base()
         {
-            if (table != null)
+            _reader = reader;
+            DataTable schemaTable = reader.GetSchemaTable();
+
+            if (schemaTable == null)
             {
-                TableName = table.TableName;
-                Columns = table.Columns;
-                Rows = table.Rows;
+                Log.Error("no schema table");
+                return;
+            }
+
+            TableName = schemaTable.TableName;
+
+            if (schemaTable.Columns.Count < 1)
+            {
+                Log.Error("no columns in table");
+                return;
+            }
+
+            for (int i = 0; i < reader.FieldCount; i++)
+            {
+                DataColumn newColumn = new DataColumn();
+                newColumn.ColumnName = reader.GetName(i);
+                newColumn.DataType = reader.GetFieldType(i);
+                Columns.Add(newColumn);
+            }
+
+            while (reader.Read())
+            {
+                object[] rowValues = new object[reader.FieldCount];
+                reader.GetValues(rowValues);
+                foreach (object value in rowValues)
+                {
+                    Log.Info(value.ToString());
+                }
+                Rows.Add(rowValues);
             }
         }
 
         public KustoRestRecords Records()
         {
             KustoRestRecords records = new KustoRestRecords();
-            if (Rows?.Length < 1)
+            if (Rows?.Count < 1)
             {
                 Log.Info("no rows in table", ConsoleColor.White);
                 return records;
             }
 
-            for (int r = 0; r < Rows.Length; r++)
+            for (int r = 0; r < Rows.Count; r++)
             {
                 KustoRestRecord record = new KustoRestRecord();
-                object[] rowFields = Rows[r];
+                object[] rowFields = Rows[r].ItemArray;
 
-                if (rowFields.Length != Columns.Length)
+                if (rowFields.Length != Columns.Count)
                 {
-                    Log.Error($"mismatch in column count and row count {rowFields.Count()} {Columns.Length}");
+                    Log.Error($"mismatch in column count and row count {rowFields.Count()} {Columns.Count}");
                     return records;
                 }
 
                 for (int f = 0; f < rowFields.Length; f++)
                 {
-                    string columnType = Columns[f].DataType.ToLower();
+                    string columnType = Columns[f].DataType.ToString().ToLower();
                     string columnName = Columns[f].ColumnName;
 
                     if (columnType.Contains("string"))
@@ -105,15 +139,45 @@ namespace CollectSFData.Kusto
         {
             List<string> results = new List<string>();
 
-            if (Rows?.Length < 1)
+            if (Rows?.Count < 1)
             {
                 Log.Info("no rows in table", ConsoleColor.White);
                 return results;
             }
 
-            Rows.ForEach(r => results.Add(string.Join(",", (Array.ConvertAll(r, ra => ra.ToString())))));
+            foreach (DataRow row in Rows)
+            {
+                results.Add(string.Join(",", (Array.ConvertAll<object, string>(row.ItemArray, ra => ra.ToString()))));
+            }
+
             Log.Info($"returning {results.Count} record csv's", ConsoleColor.Cyan);
             return results;
+        }
+
+        public KustoRestRecords RecordsList()
+        {
+            KustoRestRecords list = new KustoRestRecords();
+
+            if (Rows?.Count < 1)
+            {
+                Log.Info("no rows in table", ConsoleColor.White);
+                return list;
+            }
+
+            for (int i = 0; i < Rows.Count; i++)
+            {
+                KustoRestRecord row = new KustoRestRecord();
+
+                for (int j = 0; j < Columns.Count; j++)
+                {
+                    row.Add(Columns[j].ColumnName, Rows[i][j]);
+                }
+
+                list.Add(row);
+            }
+
+            Log.Info($"returning {list.Count} records", ConsoleColor.Cyan);
+            return list;
         }
     }
 }

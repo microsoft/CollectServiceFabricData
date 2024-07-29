@@ -103,8 +103,9 @@
       "type": "string",
       "title": "AzureTenantId",
       "description": "azure tenant id guid for certain non-default azure operations",
-      "default": null,
+      "default": "common",
       "examples": [
+        "common",
         null,
         "123456578-1234-1234-1234-123456789012"
       ],
@@ -122,6 +123,30 @@
       ],
       "pattern": "^(.+)$"
     },
+    "CheckForUpdates": {
+      "$id": "#/properties/CheckForUpdates",
+      "type": "integer",
+      "title": "CheckForUpdates",
+      "description": "0-disabled, else check for new utility updates every n days",
+      "default": 30,
+      "enum": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "examples": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "pattern": "^(\\d{0,3})$"
+    },
     "ContainerFilter": {
       "$id": "#/properties/ContainerFilter",
       "type": "string",
@@ -131,6 +156,29 @@
       "examples": [
         null,
         "fabriclogs-e5106617-a3aa-4211-a802-e2729597d5fe"
+      ],
+      "pattern": "^(.+)$"
+    },
+    "DatabasePersistence": {
+      "$id": "#/properties/DatabasePersistence",
+      "type": "boolean",
+      "title": "DatabasePersistence",
+      "description": "true to create a local persistent database.",
+      "default": false,
+      "examples": [
+        false,
+        true
+      ]
+    },
+    "DatabasePersistencePath": {
+      "$id": "#/properties/DatabasePersistencePath",
+      "type": "string",
+      "title": "DatabasePersistencePath",
+      "description": "local device database path if a local kusto url is provided.",
+      "default": null,
+      "examples": [
+        null,
+        "@'C:\\kustodata\\MyDatabaseName\\md',@'C:\\kustodata\\MyDatabaseName\\data'"
       ],
       "pattern": "^(.+)$"
     },
@@ -319,6 +367,18 @@
         false,
         true
       ]
+    },
+    "LocalPath": {
+      "$id": "#/properties/LocalPath",
+      "type": "string",
+      "title": "LocalPath",
+      "description": "local device path containing source trace files for ingestion.",
+      "default": null,
+      "examples": [
+        null,
+        "c:\\kustodata\\dbs\\"
+      ],
+      "pattern": "^(.+)$"
     },
     "LogAnalyticsCreate": {
       "$id": "#/properties/LogAnalyticsCreate",

@@ -6,7 +6,6 @@
 using CollectSFData.Common;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -103,63 +102,6 @@ namespace CollectSFData.DataFile
             }
         }
 
-        public IList<CsvCounterRecord> ExtractPerfRelogCsvData(FileObject fileObject)
-        {
-            List<CsvCounterRecord> csvRecords = new List<CsvCounterRecord>();
-            string counterPattern = @"\\\\.+?\\(?<object>.+?)(?<instance>\(.*?\)){0,1}\\(?<counter>.+)";
-
-            try
-            {
-                IList<string> allLines = fileObject.Stream.Read();
-                MatchCollection matchList = Regex.Matches(allLines[0], "\"(.+?)\"");
-                string[] headers = matchList.Cast<Match>().Select(match => match.Value).ToArray();
-
-                for (int csvRecordIndex = 1; csvRecordIndex < allLines.Count; csvRecordIndex++)
-                {
-                    string[] counterValues = allLines[csvRecordIndex].Split(',');
-
-                    for (int headerIndex = 1; headerIndex < headers.Length; headerIndex++)
-                    {
-                        if (counterValues.Length > headerIndex)
-                        {
-                            string stringValue = counterValues[headerIndex].Trim('"').Trim(' ');
-                            Match counterInfo = Regex.Match(headers[headerIndex], counterPattern);
-
-                            if (!string.IsNullOrEmpty(stringValue))
-                            {
-                                try
-                                {
-                                    csvRecords.Add(new CsvCounterRecord()
-                                    {
-                                        Timestamp = Convert.ToDateTime(counterValues[0].Trim('"').Trim(' ')),
-                                        CounterName = headers[headerIndex].Replace("\"", "").Trim(),
-                                        CounterValue = Decimal.Parse(stringValue, NumberStyles.AllowExponent | NumberStyles.AllowDecimalPoint),
-                                        Object = counterInfo.Groups["object"].Value.Replace("\"", "").Trim(),
-                                        Counter = counterInfo.Groups["counter"].Value.Replace("\"", "").Trim(),
-                                        Instance = Regex.Replace(counterInfo.Groups["instance"].Value, @"^\(|\)$", "").Trim(),
-                                        NodeName = fileObject.NodeName,
-                                        FileType = fileObject.FileDataType.ToString(),
-                                        RelativeUri = fileObject.RelativeUri
-                                    });
-                                }
-                                catch (Exception ex)
-                                {
-                                    Log.Exception($"stringValue:{stringValue} exception:{ex}");
-                                }
-                            }
-                        }
-                    }
-                }
-
-                return csvRecords;
-            }
-            catch (Exception e)
-            {
-                Log.Exception($"{e}", csvRecords);
-                return csvRecords;
-            }
-        }
-
         public FileObjectCollection FormatCounterFile(FileObject fileObject)
         {
             Log.Debug($"enter:{fileObject.FileUri}");
@@ -169,25 +111,11 @@ namespace CollectSFData.DataFile
             fileObject.Stream.SaveToFile();
             DeleteFile(outputFile);
             Log.Info($"Writing {outputFile}");
-
-            if (_config.UseTx)
-            {
-                result = TxBlg(fileObject, outputFile);
-            }
-            else
-            {
-                result = RelogBlg(fileObject, outputFile);
-            }
+            result = TxBlg(fileObject, outputFile);
 
             if (result)
             {
                 _instance.TotalFilesConverted++;
-
-                if (!_config.UseTx)
-                {
-                    fileObject.Stream.ReadFromFile(outputFile);
-                    fileObject.Stream.Write<CsvCounterRecord>(ExtractPerfRelogCsvData(fileObject));
-                }
             }
             else
             {
@@ -225,13 +153,6 @@ namespace CollectSFData.DataFile
             if (result)
             {
                 _instance.TotalFilesConverted++;
-
-                // if (!Config.UseTx)
-                // {
-                //     fileObject.Stream.ReadFromFile(outputFile);
-                //     fileObject.Stream.Write<CsvCounterRecord>(ExtractPerfRelogCsvData(fileObject));
-                // }
-
                 return PopulateCollection<DtrTraceRecord>(fileObject);
             }
 
@@ -291,7 +212,7 @@ namespace CollectSFData.DataFile
             List<string> files = new List<string>();
             SearchOption subDirectories = includeSubDirectories ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
 
-            if(Directory.Exists(filePath)) 
+            if (Directory.Exists(filePath))
             {
                 files.AddRange(Directory.GetFiles(filePath, $"*{fileExtensionPattern}", subDirectories));
             }
@@ -299,7 +220,7 @@ namespace CollectSFData.DataFile
             {
                 Log.Warning($"directory does not exist:filePath{filePath}");
             }
-            
+
             Log.Info($"exit:filePath{filePath} subdir:{includeSubDirectories} files:", files);
             return files;
         }
@@ -507,39 +428,6 @@ namespace CollectSFData.DataFile
             double recordsPerSecond = recordsCount / (totalMs * .001);
             Log.Info($"complete:{waitResult} total ms:{totalMs} total records:{recordsCount} records per second:{recordsPerSecond}");
             return observer;
-        }
-
-        public bool RelogBlg(FileObject fileObject, string outputFile)
-        {
-            bool result = true;
-            string csvParams = fileObject.FileUri + " -f csv -o " + outputFile;
-            Log.Info($"relog.exe {csvParams}");
-            ProcessStartInfo startInfo = new ProcessStartInfo("relog.exe", csvParams)
-            {
-                CreateNoWindow = true,
-                UseShellExecute = false,
-                RedirectStandardError = true,
-                RedirectStandardOutput = true
-            };
-
-            Process convertFileProc = Process.Start(startInfo);
-
-            if (!convertFileProc.HasExited)
-            {
-                if (convertFileProc.StandardOutput.Peek() > -1)
-                {
-                    Log.Info($"{convertFileProc.StandardOutput.ReadToEnd()}");
-                }
-
-                if (convertFileProc.StandardError.Peek() > -1)
-                {
-                    Log.Error($"{convertFileProc.StandardError.ReadToEnd()}");
-                    result = false;
-                }
-            }
-
-            convertFileProc.WaitForExit();
-            return result;
         }
 
         public void SaveToCache(FileObject fileObject, bool force = false)
