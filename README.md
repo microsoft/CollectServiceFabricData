@@ -250,7 +250,7 @@ collectsfdata.exe -type trace -s "https://sflogsxxxxxxxxxxxxx.blob.core.windows.
 ### Example ingestion to Kusto emulator with minimal arguments
 ```text
 collectsfdata.exe -type setup -kc "http://localhost:<% port %>/<%database name %>" -kt "<% kusto table name %>" -lp "<% local path directory %>" -cache "<% cache location path %>"
-collectsfdata.exe -type setup -kc "http://localhost:8060/Mydbbb" -kt "MyCoolTable" -lp "c:\\testTraces" -cache "c:\\testCacheLocation"
+collectsfdata.exe -type setup -kc "http://localhost:8060/MyDatabase" -kt "MyTable" -lp "c:\\localPath" -cache "c:\\cacheLocation"
 ```
 
 ### Example JSON configuration file options
