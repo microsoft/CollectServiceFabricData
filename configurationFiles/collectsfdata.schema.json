@@ -283,9 +283,11 @@
       "examples": [
         "https://ingest-{{kusto cluster}}.{{optional location}}.kusto.windows.net/{{kusto database}}",
         "https://ingest-sfcluster.eastus.kusto.windows.net/sflogdatabase",
-        "https://ingest-sfcluster.kusto.windows.net/sflogdatabase"
+        "https://ingest-sfcluster.kusto.windows.net/sflogdatabase",
+        "http://localhost:{{port}}/{{databaseName}}",
+        "http://localhost:8080/MyDatabaseName"
       ],
-      "pattern": "^(https://ingest-.+?.kusto.windows.net/.+)$"
+      "pattern": "^(https://ingest-.+?.kusto.windows.net/.+)|(http://localhost:\\d{1,5}/.+)$"
     },
     "KustoCompressed": {
       "$id": "#/properties/KustoCompressed",
