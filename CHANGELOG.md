@@ -1,5 +1,11 @@
 # Change log
 
+## 08/11/2024
+
+- (vchin) add support for 'LocalPath' ingestion into kusto emulator for testing
+- add configuration to allow kusto msal federated authentication for all targets except .net462.
+  This allows for ingestion into kusto without a configured app registration.
+
 ## 06/03/2024
 
 - add configuration option to specify / disable utility update check in days 'CheckForUpdates' #25
@@ -32,7 +38,7 @@
   - add publish
   - set publish on merge to master
 - only add net framework / core versions to zip for release
- 
+
 ## 03/16/2024
 
 - add all target frameworks to zip for release

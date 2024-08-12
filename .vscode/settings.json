@@ -1,7 +1,4 @@
 {
     "dotnet-test-explorer.testProjectPath": "**/*Test.csproj",
-    "dotnet.defaultSolution": "src\\CollectSFData.sln",
-    "accessibility.signalOptions": {
-        "volume": 0
-    }
+    "dotnet.defaultSolution": "src\\CollectSFData.sln"
 }
