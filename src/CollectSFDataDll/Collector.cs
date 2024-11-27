@@ -546,7 +546,8 @@ namespace CollectSFData
 
                 default:
                     Log.Warning($"configured filetype:{Config.FileType} not valid for cache upload. returning.");
-                    return null;
+
+                    break;
             }
             return files;
         }
