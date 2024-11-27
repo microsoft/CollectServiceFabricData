@@ -16,9 +16,10 @@ namespace CollectSFData.DataFile
         queued = 4,
         downloading = 8,
         formatting = 16,
-        uploading = 32,
-        failed = 64,
-        succeeded = 128,
-        all = 256
+        formatted = 32,
+        uploading = 64,
+        failed = 128,
+        succeeded = 256,
+        all = 512
     }
 }
