@@ -170,7 +170,7 @@ namespace CollectSFData.Azure
 
         public List<BlobClient> EnumerateContainerBlobPages(BlobContainerClient containerClient, string prefix = "")
         {
-            Log.Info($"enter containerUri: {containerClient.Name}");
+            Log.Info($"enter containerUri: {containerClient.Name} prefix: {prefix}");
             string continuationToken = "";
             bool moreResultsAvailable = true;
             List<BlobClient> blobItems = new List<BlobClient>();
@@ -253,7 +253,7 @@ namespace CollectSFData.Azure
 
         private void DownloadBlobsFromDirectory(BlobContainerClient containerDirectory, string prefix = "")
         {
-            Log.Info($"enumerating:{containerDirectory}", ConsoleColor.Cyan);
+            Log.Info($"enumerating:{containerDirectory.Name} prefix:{prefix}", ConsoleColor.Cyan);
             _blobTasks.QueueTaskAction(() => QueueBlobSegmentDownload(EnumerateContainerBlobPages(containerDirectory, prefix)));
         }
 
