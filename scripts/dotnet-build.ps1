@@ -60,7 +60,7 @@ function main() {
         $csproj = create-tempProject -projectFile $csproj
         $dllcsproj = create-tempProject -projectFile $dllcsproj
         $nuspecFile = create-nuspec $targetFrameworks
-        rename-nugetConfig
+       # rename-nugetConfig
         
         $error.Clear()
         write-host "dotnet restore $csproj" -ForegroundColor Green
@@ -119,8 +119,13 @@ function build-configuration($configuration) {
         dotnet publish $csproj -f $targetFrameworks -r $runtimeIdentifier -c $configuration --self-contained $true -p:PublishSingleFile=true -p:PublishedTrimmed=true
     }
 
-    $nugetFile = "$projectDir/bin/$configuration/*.nupkg"
-    $nugetFile = (resolve-path $nugetFile)[-1]
+    write-host "searching for nupkg in $projectDir/bin/$configuration/*.nupkg" -ForegroundColor Green
+    $nugetFile = @(get-childItem "$projectDir/bin/$configuration/*.nupkg")
+    write-host "nugetFile results: $($nugetFile | out-string)" -ForegroundColor Green
+    if (!$nugetFile) {
+        return
+    }
+    $nugetFile = (resolve-path $nugetFile)[-1].FullName
     $nugetFunctions = "$pwd/nuget-functions.ps1"
 
     if ((test-path $nugetFile)) {
