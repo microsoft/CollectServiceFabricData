@@ -2,6 +2,7 @@
 
 ## 08/20/2025
 
+- fix deprecated GitHub Actions: upgrade upload-artifact from v1 to v4 and checkout from v1 to v4
 - update GitHub Actions dependency: bump actions/download-artifact from 1 to 4.1.7 in /.github/workflows
 - fix incorrect Roff programming language tag in github repo
 
