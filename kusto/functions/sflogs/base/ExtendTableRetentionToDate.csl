@@ -1,0 +1,11 @@
+.create-or-alter function with (docstring = "[tableName:string] - Name of the table to modify retention for, [extensionDate:datetime] - Specific date until which to retain data. Usage: sflogs.base.ExtendTableRetentionToDate('MyTable', datetime('2025-12-31'))", folder = "sflogs/base")
+    ExtendTableRetentionToDate(tableName:string, extensionDate:datetime) {
+    let currentTime = now();    
+    // Generate the management command
+    print strcat(
+        ".alter table ['", tableName, "'] policy retention ",
+        "```{\"SoftDeletePeriod\": \"", 
+        format_timespan(extensionDate - currentTime, "d.hh:mm:ss"),
+        "\", \"Recoverability\": \"Enabled\"}```"
+    )
+}
