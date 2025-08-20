@@ -1,5 +1,32 @@
 # Change log
 
+## 08/20/2025
+
+- fix deprecated GitHub Actions: upgrade upload-artifact from v1 to v4 and checkout from v1 to v4
+- update GitHub Actions dependency: bump actions/download-artifact from 1 to 4.1.7 in /.github/workflows
+- fix incorrect Roff programming language tag in github repo
+
+## 01/31/2025
+
+- dependency vulnerabilities updates for .NET 8.0 target framework
+- add log when collection is finished
+- remove nuget.config management from script
+- add prefix in logging output
+
+## 11/27/2024
+
+- fix NullReferenceException in Collector.UploadCacheData() method
+- remove deprecated Azure DevOps artifacts feed
+- add 'formatted' as a file status
+
+## 09/03/2024
+
+- update GitHub Actions workflow dependencies for security compliance
+
+## 08/12/2024 v3.0.2408.11213
+
+- release version 3.0.2408.11213
+
 ## 08/11/2024
 
 - (vchin) add support for 'LocalPath' ingestion into kusto emulator for testing

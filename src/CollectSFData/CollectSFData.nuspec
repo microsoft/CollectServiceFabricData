@@ -21,15 +21,15 @@
     <dependencies>
       <group targetFramework=".NETFramework4.6.2">
         <dependency id="Azure.Data.Tables" version="12.8.1" exclude="Build,Analyzers" />
-        <dependency id="Azure.Identity" version="1.11.0" exclude="Build,Analyzers" />
+        <dependency id="Azure.Identity" version="1.11.4" exclude="Build,Analyzers" />
         <dependency id="Azure.Security.KeyVault.Keys" version="4.5.0" exclude="Build,Analyzers" />
         <dependency id="Azure.Security.KeyVault.Secrets" version="4.5.0" exclude="Build,Analyzers" />
         <dependency id="Azure.Storage.Blobs" version="12.18.0" exclude="Build,Analyzers" />
         <dependency id="Azure.Storage.Queues" version="12.16.0" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Azure.Kusto.Data" version="11.3.4" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Extensions.CommandLineUtils" version="1.1.1" exclude="Build,Analyzers" />
-        <dependency id="Microsoft.Identity.Client" version="4.60.1" exclude="Build,Analyzers" />
-        <dependency id="Microsoft.Identity.Client.Extensions.Msal" version="4.60.1" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.Identity.Client" version="4.61.3" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.Identity.Client.Extensions.Msal" version="4.61.3" exclude="Build,Analyzers" />
         <dependency id="Newtonsoft.Json" version="13.0.3" exclude="Build,Analyzers" />
         <dependency id="System.CodeDom" version="4.7.0" exclude="Build,Analyzers" />
         <dependency id="System.Diagnostics.DiagnosticSource" version="7.0.2" exclude="Build,Analyzers" />
@@ -38,15 +38,15 @@
       </group>
       <group targetFramework=".NETFramework4.8.0">
         <dependency id="Azure.Data.Tables" version="12.8.1" exclude="Build,Analyzers" />
-        <dependency id="Azure.Identity" version="1.11.0" exclude="Build,Analyzers" />
+        <dependency id="Azure.Identity" version="1.11.4" exclude="Build,Analyzers" />
         <dependency id="Azure.Security.KeyVault.Keys" version="4.5.0" exclude="Build,Analyzers" />
         <dependency id="Azure.Security.KeyVault.Secrets" version="4.5.0" exclude="Build,Analyzers" />
         <dependency id="Azure.Storage.Blobs" version="12.18.0" exclude="Build,Analyzers" />
         <dependency id="Azure.Storage.Queues" version="12.16.0" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Azure.Kusto.Data" version="11.3.4" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Extensions.CommandLineUtils" version="1.1.1" exclude="Build,Analyzers" />
-        <dependency id="Microsoft.Identity.Client" version="4.60.1" exclude="Build,Analyzers" />
-        <dependency id="Microsoft.Identity.Client.Extensions.Msal" version="4.60.1" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.Identity.Client" version="4.61.3" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.Identity.Client.Extensions.Msal" version="4.61.3" exclude="Build,Analyzers" />
         <dependency id="Newtonsoft.Json" version="13.0.3" exclude="Build,Analyzers" />
         <dependency id="System.CodeDom" version="4.7.0" exclude="Build,Analyzers" />
         <dependency id="System.Diagnostics.DiagnosticSource" version="7.0.2" exclude="Build,Analyzers" />
@@ -56,15 +56,15 @@
       </group>
       <group targetFramework=".net6.0">
         <dependency id="Azure.Data.Tables" version="12.8.1" exclude="Build,Analyzers" />
-        <dependency id="Azure.Identity" version="1.11.0" exclude="Build,Analyzers" />
+        <dependency id="Azure.Identity" version="1.11.4" exclude="Build,Analyzers" />
         <dependency id="Azure.Security.KeyVault.Keys" version="4.5.0" exclude="Build,Analyzers" />
         <dependency id="Azure.Security.KeyVault.Secrets" version="4.5.0" exclude="Build,Analyzers" />
         <dependency id="Azure.Storage.Blobs" version="12.18.0" exclude="Build,Analyzers" />
         <dependency id="Azure.Storage.Queues" version="12.16.0" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Azure.Kusto.Data" version="11.3.4" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Extensions.CommandLineUtils" version="1.1.1" exclude="Build,Analyzers" />
-        <dependency id="Microsoft.Identity.Client" version="4.60.1" exclude="Build,Analyzers" />
-        <dependency id="Microsoft.Identity.Client.Extensions.Msal" version="4.60.1" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.Identity.Client" version="4.61.3" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.Identity.Client.Extensions.Msal" version="4.61.3" exclude="Build,Analyzers" />
         <dependency id="Newtonsoft.Json" version="13.0.3" exclude="Build,Analyzers" />
         <dependency id="System.CodeDom" version="4.7.0" exclude="Build,Analyzers" />
         <dependency id="System.Diagnostics.DiagnosticSource" version="7.0.2" exclude="Build,Analyzers" />
@@ -73,15 +73,15 @@
       </group>
       <group targetFramework=".net8.0">
         <dependency id="Azure.Data.Tables" version="12.8.1" exclude="Build,Analyzers" />
-        <dependency id="Azure.Identity" version="1.11.0" exclude="Build,Analyzers" />
+        <dependency id="Azure.Identity" version="1.11.4" exclude="Build,Analyzers" />
         <dependency id="Azure.Security.KeyVault.Keys" version="4.5.0" exclude="Build,Analyzers" />
         <dependency id="Azure.Security.KeyVault.Secrets" version="4.5.0" exclude="Build,Analyzers" />
         <dependency id="Azure.Storage.Blobs" version="12.18.0" exclude="Build,Analyzers" />
         <dependency id="Azure.Storage.Queues" version="12.16.0" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Azure.Kusto.Data" version="11.3.4" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Extensions.CommandLineUtils" version="1.1.1" exclude="Build,Analyzers" />
-        <dependency id="Microsoft.Identity.Client" version="4.60.1" exclude="Build,Analyzers" />
-        <dependency id="Microsoft.Identity.Client.Extensions.Msal" version="4.60.1" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.Identity.Client" version="4.61.3" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.Identity.Client.Extensions.Msal" version="4.61.3" exclude="Build,Analyzers" />
         <dependency id="Newtonsoft.Json" version="13.0.3" exclude="Build,Analyzers" />
         <dependency id="System.CodeDom" version="4.7.0" exclude="Build,Analyzers" />
         <dependency id="System.Diagnostics.DiagnosticSource" version="7.0.2" exclude="Build,Analyzers" />

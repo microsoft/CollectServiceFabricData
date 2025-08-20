@@ -230,6 +230,7 @@ namespace CollectSFData.DataFile
             FileObjectCollection collection = new FileObjectCollection() { fileObject };
             _instance.TotalFilesFormatted++;
             _instance.TotalRecords += fileObject.RecordCount;
+            fileObject.Status = FileStatus.formatted;
 
             if (_config.IsKustoConfigured())
             {

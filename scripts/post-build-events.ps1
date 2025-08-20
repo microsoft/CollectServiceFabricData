@@ -60,6 +60,9 @@ function main() {
         write-host "copying default options file $defaultOptionsFile"
         Copy-Item $defaultOptionsFile $outDir
     }
+
+    write-host "finished post-build-event.ps1"
+    return 0
 }
 
 main
