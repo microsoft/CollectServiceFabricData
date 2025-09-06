@@ -1,5 +1,11 @@
 # Change log
 
+## 09/05/2025
+
+- add support for container-scoped user delegation SAS (skip account-level container enumeration to prevent 403 AuthorizationFailure)
+- parse and expose user delegation key parameters (skt, ske, sktid, skoid) in `SasParameters`
+- adjust `BlobManager.Connect` / `EnumerateContainers` logic to validate single container when using user delegation SAS
+
 ## 08/20/2025
 
 - fix deprecated GitHub Actions: upgrade upload-artifact from v1 to v4 and checkout from v1 to v4

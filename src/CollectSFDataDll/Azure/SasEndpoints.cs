@@ -112,6 +112,12 @@ namespace CollectSFData.Azure
                 Log.Error("Sas is not time valid", Parameters);
                 retval = false;
             }
+            if (Parameters.SignedKeyStartUtc > DateTime.Now.ToUniversalTime()
+                | Parameters.SignedKeyExpiryUtc < DateTime.Now.ToUniversalTime())
+            {
+                Log.Error("Sas signed key is not time valid", Parameters);
+                retval = false;
+            }
             else if (Parameters.SignedExpiryUtc.AddHours(-1) < DateTime.Now.ToUniversalTime())
             {
                 Log.Warning("Sas expiring in less than 1 hour", Parameters);
@@ -129,6 +135,15 @@ namespace CollectSFData.Azure
                     & !Parameters.SignedServices.Contains("t"))
                 {
                     Log.Error("Sas does not contain blob or table signed services", Parameters);
+                    retval = false;
+                }
+            }
+
+            if(Parameters.IsUserDelegationKey)
+            {
+                if (string.IsNullOrEmpty(Parameters.SignedKeyId) | string.IsNullOrEmpty(Parameters.SignedKeyObjectId))
+                {
+                    Log.Error("Sas user delegation key missing signed key id or object id", Parameters);
                     retval = false;
                 }
             }

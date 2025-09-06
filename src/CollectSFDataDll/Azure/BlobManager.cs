@@ -270,6 +270,22 @@ namespace CollectSFData.Azure
 
             try
             {
+                // If we are using a user delegation SAS (container-level), skip attempting to enumerate at the account level.
+                if (_config.SasEndpointInfo?.Parameters?.IsUserDelegationKey == true)
+                {
+                    Log.Info("skipping account-level container enumeration for user delegation sas");
+                    if (!string.IsNullOrEmpty(_config.SasEndpointInfo.AbsolutePath))
+                    {
+                        BlobContainerClient single = _blobServiceClient.GetBlobContainerClient(_config.SasEndpointInfo.AbsolutePath);
+                        AddContainerToList(single.Name);
+                    }
+                    else
+                    {
+                        Log.Warning("no absolute path specified for user delegation sas. unable to enumerate containers.");
+                    }
+                    return ContainerList;
+                }
+
                 Log.Info("account sas");
                 Log.Info($"containerPrefix:{containerPrefix} containerFilter:{containerFilter}");
                 blobContainers = _blobServiceClient.GetBlobContainers(BlobContainerTraits.Metadata,
