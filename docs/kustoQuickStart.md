@@ -1,39 +1,38 @@
 # CollectSFData Quickstart for Kusto Cluster
 
-## Outline  
+## Outline
 
-[Overview](#use-these-steps-to-setup-and-ingest-service-fabric-diagnostic-data-into-kusto-database)  
-[Generating Shared Access Signature (Sas Uri / Saskey)](#generating-shared-access-signature-(sas-uri-/-saskey))  
+[Overview](#use-these-steps-to-setup-and-ingest-service-fabric-diagnostic-data-into-kusto-database)[Generating Shared Access Signature (Sas Uri / Saskey)](#generating-shared-access-signature-(sas-uri-/-saskey))
 
-- [Azure Portal](#azure-portal)  
+- [Azure Portal](#azure-portal)
 
-[CollectSFData GatherTypes](#collectsfdata-gathertypes)  
+[CollectSFData GatherTypes](#collectsfdata-gathertypes)
 
-- [counter](#gathertype-counter)  
-- [exception](#gathertype-exception)  
-- [setup](#gathertype-setup)  
-- [table](#gathertype-table)  
-- [trace](#gathertype-trace)  
-- [any](#gathertype-any)  
+- [counter](#gathertype-counter)
+- [exception](#gathertype-exception)
+- [setup](#gathertype-setup)
+- [table](#gathertype-table)
+- [trace](#gathertype-trace)
+- [any](#gathertype-any)
 
-[Download](#download)  
-[Execute](#execute)  
-[collectsfdata.options.json](#collectsfdata.options.json)  
-[Cleanup](#cleanup)  
-[Kusto Commands](#kusto-commands)  
-[Troubleshooting](#Troubleshooting)  
-[Reference](#Reference)  
+[Download](#download)
+[Execute](#execute)
+[collectsfdata.options.json](#collectsfdata.options.json)
+[Cleanup](#cleanup)
+[Kusto Commands](#kusto-commands)
+[Troubleshooting](#Troubleshooting)
+[Reference](#Reference)
 
-## Use these steps to setup and ingest service fabric diagnostic data into kusto database  
+## Use these steps to setup and ingest service fabric diagnostic data into kusto database
 
 1. download and extract latest release of [collectsfdata](https://github.com/microsoft/CollectServiceFabricData/releases/latest)
-1. open cmd/powershell prompt and navigate to extracted directory
-1. save [configuration](#collectsfdata.options.json) to extracted directory or generate new config with .\collectsfdata.exe -save collectsfdata.options.json or pass arguments on command line
-1. modify saskey, starttimestamp, endtimestamp, kustocluster, kustotable, and gathertype  
-    * service fabric kusto cluster ingest url: `https://ingest-{{cluster}}.{{location}}.kusto.windows.net/{{database}}`
-    * 30 minutes is always added to EndTimeUtc due to the way sf uploads traces to storage account.  
-1. execute utility.
-1. analyze data `https://dataexplorer.azure.com/clusters/{{cluster}}/databases/{{database}}`
+2. open cmd/powershell prompt and navigate to extracted directory
+3. save [configuration](#collectsfdata.options.json) to extracted directory or generate new config with .\collectsfdata.exe -save collectsfdata.options.json or pass arguments on command line
+4. modify saskey, starttimestamp, endtimestamp, kustocluster, kustotable, and gathertype
+   * service fabric kusto cluster ingest url: `https://ingest-{{cluster}}.{{location}}.kusto.windows.net/{{database}}`
+   * 30 minutes is always added to EndTimeUtc due to the way sf uploads traces to storage account.
+5. execute utility.
+6. analyze data `https://dataexplorer.azure.com/clusters/{{cluster}}/databases/{{database}}`
 
 ## Generating Shared Access Signature (Sas Uri / Saskey)
 
@@ -41,57 +40,64 @@ CollectSFData uses a sas uri similar to Traceviewer to connect to the 'sflogs' s
 
 ### Azure portal
 
-From Azure portal https://portal.azure.com navigate to service fabric cluster resource. There will typically be two storage accounts created for service fabric. One is for windows azure diagnostics (wad) and the other for service fabric diagnostic logs and events. The service fabric storage account is usually prefixed with 'sflogs'. If not, the correct account can be verified by determining which storage account has the three containers: 
+From Azure portal https://portal.azure.com navigate to service fabric cluster resource. There will typically be two storage accounts created for service fabric. One is for windows azure diagnostics (wad) and the other for service fabric diagnostic logs and events. The service fabric storage account is usually prefixed with 'sflogs'. If not, the correct account can be verified by determining which storage account has the three containers:
 
 - fabriccounters-*
 - fabriccrashdumps-*
 - fabriclogs-*
-
 - ![](media/azure.portal.1.png)
-
 - ![](media/azure.portal.2.png)
+
+#### Account Shared Access signature
 
 Once correct storage account is identified, select 'Shared access signature' and then 'Generate SAS and connection string'. Copy 'Blob service SAS URL' or 'Connection Sting'. This is the value that will be used for CollectSFData argument 'SasKey'.
 
 Ensure at least the following permissions are selected:
 
 - Allowed Services
+
   - Blob
   - Table
-
 - Allowed Resource Types
+
   - Service
   - Container
   - Object
-
 - Allowed Permissions
+
   - Read
   - List
+- ![img](media/azure.portal.3.png)
+- ![img](media/azure.portal.4.png)
 
-- ![](media/azure.portal.3.png)
+#### User Delegation Key
 
-- ![](media/azure.portal.4.png)
+Alternatively, a user delegation key can be generated for the storage account. This requires that the user has been granted the 'Storage Blob Data Contributor' role for the storage account. The user delegation key can be generated from the Azure portal or programmatically using Azure SDKs. The user delegation key will have a start time and expiry time that must be specified when generating the key. User delegation keys are useful for scenarios where a more granular level of access control is needed or when Shared Key has been disabled.
 
-## CollectSFData GatherTypes  
+This is only available on blob containers and has to be generated from the container view.
 
-All gather types ingest into Kusto or Log Analytics as a single table per gather type except for gather type 'any'. Any will download files locally. The gather type is also prepended to the table name during ingestion. This is to allow different gather types to be collected without having to change configuration for table name and for table naming constraints.  
+![user delegation key](media/azure.portal.5.png)
 
-Example: configured table name 'jagilber_0000000000000001' would be prepended with 'counter_' for gather type counter 'counter_jagilber_0000000000000001'. 
+## CollectSFData GatherTypes
 
-### GatherType counter  
+All gather types ingest into Kusto or Log Analytics as a single table per gather type except for gather type 'any'. Any will download files locally. The gather type is also prepended to the table name during ingestion. This is to allow different gather types to be collected without having to change configuration for table name and for table naming constraints.
 
-#### data type: sf node performance monitor .blg files.  
+Example: configured table name 'jagilber_0000000000000001' would be prepended with 'counter_' for gather type counter 'counter_jagilber_0000000000000001'.
 
-#### time range: can typically gather 6 - 24+ hours without issue.  
+### GatherType counter
 
-#### start here:  
+#### data type: sf node performance monitor .blg files.
 
-- use [perfmon kusto query](https://github.com/microsoft/CollectServiceFabricData/blob/master/KustoQueries/sfcounters-general.csl) from [azure data explorer](https://dataexplorer.azure.com) to graph results  
-    * change value in query from '['counter_serviceFabricLogs']' to '['counter_<%user%>_<%case%>']' for table name to be graphed.
+#### time range: can typically gather 6 - 24+ hours without issue.
+
+#### start here:
+
+- use [perfmon kusto query](https://github.com/microsoft/CollectServiceFabricData/blob/master/KustoQueries/sfcounters-general.csl) from [azure data explorer](https://dataexplorer.azure.com) to graph results
+  * change value in query from '['counter_serviceFabricLogs']' to '['counter_<%user%>_<%case%>']' for table name to be graphed.
 - to view results, uncomment one counter line in query and execute.
-    * // | where CounterName contains "Avg. Disk Queue Length" and CounterName contains "c:"
-    * | where CounterName contains "Avg. Disk Queue Length" and CounterName contains "c:"
-  
+  * // | where CounterName contains "Avg. Disk Queue Length" and CounterName contains "c:"
+  * | where CounterName contains "Avg. Disk Queue Length" and CounterName contains "c:"
+
 #### counter record
 
 ```text
@@ -105,13 +111,13 @@ Example: configured table name 'jagilber_0000000000000001' would be prepended wi
 }
 ```
 
-### GatherType exception  
+### GatherType exception
 
-- sf fabric*.exe dumps.  
+- sf fabric*.exe dumps.
 - adds 'exception_' prefix to table name.
-- creates table with records containing url, pid, and process name for dumps from storage account.  
-- console output lists download url with sas.  
-- can run for any time range.  
+- creates table with records containing url, pid, and process name for dumps from storage account.
+- console output lists download url with sas.
+- can run for any time range.
 
 #### example exception record
 
@@ -143,11 +149,11 @@ https://dataexplorer.azure.com
 1:Execute:total execution time in minutes: 0.41
 ```
 
-### GatherType setup  
+### GatherType setup
 
-- sf install .trace files.  
-- adds 'setup_' prefix to table name. 
-- can run for any time range as data is small but typically only needed for time of issue. 
+- sf install .trace files.
+- adds 'setup_' prefix to table name.
+- can run for any time range as data is small but typically only needed for time of issue.
 
 #### setup record
 
@@ -164,20 +170,20 @@ https://dataexplorer.azure.com
 }
 ```
 
-### GatherType table  
+### GatherType table
 
-#### data type: sf cluster and node storage account table events. same as available in sfx explorer events.  
+#### data type: sf cluster and node storage account table events. same as available in sfx explorer events.
 
-#### time range: can typically gather 2 - 7+ days without issue.  
+#### time range: can typically gather 2 - 7+ days without issue.
 
-#### start here:  
+#### start here:
 
 - best viewed with kusto function 'TableView('table_%user%_%case%')'.
-- Example: 
-    * TableView('table_jagilber_000000000000001') | facet by TaskName
-    * TableView('table_jagilber_000000000000001') | where TaskName contains "hosting"
+- Example:
+  * TableView('table_jagilber_000000000000001') | facet by TaskName
+  * TableView('table_jagilber_000000000000001') | where TaskName contains "hosting"
 
-#### table record with TableView where TaskName is 'Hosting':  
+#### table record with TableView where TaskName is 'Hosting':
 
 ```text
 {
@@ -208,7 +214,7 @@ https://dataexplorer.azure.com
 }
 ```
 
-#### table record without TableView:  
+#### table record without TableView:
 
 ```text
 {
@@ -223,40 +229,38 @@ https://dataexplorer.azure.com
 }
 ```
 
-### GatherType trace  
+### GatherType trace
 
-#### data type: sf node sflog .etl/.dtr/.zip files. same data as traceviewer  
+#### data type: sf node sflog .etl/.dtr/.zip files. same data as traceviewer
 
-#### time range: can typically gather 2 - 4+ hours without issue.  
+#### time range: can typically gather 2 - 4+ hours without issue.
 
-#### best practice:  
+#### best practice:
 
 - use 'KustoUseBlobAsSource' for fastest ingest.
 - use 'KustoCompressed' to reduce network traffic
 - use 'UriFilter' and set to 'fabric_' for fabric only traces
 - use 'UriFilter' and set to 'lease_' for lease only traces
 - use 'NodeFilter' to ingest only certain nodes
-- use regex / string based 'NodeFilter' and add name of node(s) to gather from if all nodes are not needed.  
-examples:
-    * NodeFilter: "\_nt_0" to collect data for only node 0
-    * NodeFilter: "\_nt_0|_nt_1" to collect data for only nodes 0 and 1
-    * NodeFilter: "\_nt_0|_nt_1|_nt_2" to collect data for only nodes 0 - 2
-    * NodeFilter: "\_nt_[0-1]" to collect data for only nodes 0 - 1
-    * NodeFilter: "\_nt_[135]" to collect data for only nodes 1, 3, and 5
-    * NodeFilter: "\_nt_" to collect data for only nodes for nodetype 'nt'
+- use regex / string based 'NodeFilter' and add name of node(s) to gather from if all nodes are not needed.examples:
+  * NodeFilter: "\_nt_0" to collect data for only node 0
+  * NodeFilter: "\_nt_0|_nt_1" to collect data for only nodes 0 and 1
+  * NodeFilter: "\_nt_0|_nt_1|_nt_2" to collect data for only nodes 0 - 2
+  * NodeFilter: "\_nt_[0-1]" to collect data for only nodes 0 - 1
+  * NodeFilter: "\_nt_[135]" to collect data for only nodes 1, 3, and 5
+  * NodeFilter: "\_nt_" to collect data for only nodes for nodetype 'nt'
 
 #### start here:
-- use kusto functions. functions are viewable in tree view from azure data explorer or by typing '.show functions'  
-from [azure data explorer](https://dataexplorer.azure.com) console, type the name of the function and pass name of table in single quotes.
 
-- Example: TraceSummary('trace_jagilber_000000000000001')  
+- use kusto functions. functions are viewable in tree view from azure data explorer or by typing '.show functions'from [azure data explorer](https://dataexplorer.azure.com) console, type the name of the function and pass name of table in single quotes.
+- Example: TraceSummary('trace_jagilber_000000000000001')
 
-  ![kusto-function-tree-view.png](./media/kusto-function-tree-view.png)  
+  ![kusto-function-tree-view.png](./media/kusto-function-tree-view.png)
+- use [kusto queries](https://github.com/microsoft/CollectServiceFabricData/blob/master/KustoQueries/kusto-example-queries.csl) from [azure data explorer](https://dataexplorer.azure.com) to view results
 
-- use [kusto queries](https://github.com/microsoft/CollectServiceFabricData/blob/master/KustoQueries/kusto-example-queries.csl) from [azure data explorer](https://dataexplorer.azure.com) to view results  
-    * change value in queries from '%kusto table name%' to 'trace_<%user%>_<%case%>' for trace table name to be viewed.
+  * change value in queries from '%kusto table name%' to 'trace_<%user%>_<%case%>' for trace table name to be viewed.
 
-#### trace record:  
+#### trace record:
 
 ```text
 {
@@ -273,18 +277,18 @@ from [azure data explorer](https://dataexplorer.azure.com) console, type the nam
 
 ```
 
-### GatherType any  
+### GatherType any
 
-#### data type: any blob file.  
+#### data type: any blob file.
 
-#### time range: can typically gather 6 - 24+ hours without issue.  
+#### time range: can typically gather 6 - 24+ hours without issue.
 
-#### best practice:  
+#### best practice:
 
 - use 'StartTimeUtc' and 'EndTimeUtc'
 - use 'UriFilter' to filter files
 - use 'NodeFilter' to ingest only certain nodes
-- use regex / string based 'NodeFilter' and add name of node(s) to gather from if all nodes are not needed.  
+- use regex / string based 'NodeFilter' and add name of node(s) to gather from if all nodes are not needed.
 
 ## download
 
@@ -397,32 +401,28 @@ pause
 ### collectsfdata.exe commands to delete / drop table when no longer needed
 
 1. to view all tables: collectsfdata.exe -kp list
-1. to drop table: collectsfdata.exe -kp <%table name%>  
-     ex: collectsfdata.exe -kp trace_jagilber_0000000000000001
-1. to verify table has been deleted / dropped (not necessary): collectsfdata.exe -kp list
+2. to drop table: collectsfdata.exe -kp <%table name%>ex: collectsfdata.exe -kp trace_jagilber_0000000000000001
+3. to verify table has been deleted / dropped (not necessary): collectsfdata.exe -kp list
 
 ### kusto commands to delete / drop table when no longer needed
 
 1. open url: https://dataexplorer.azure.com
-1. to view all tables: .show tables
-1. to view all tables with name match: .show tables | where TableName contains "<%filter%>"  
-     ex: .show tables | where TableName contains "jagilber"
-1. to drop table: .drop table <%table name%>  
-     ex: .drop table trace_jagilber_0000000000000001  
-     note: on success, output will display all tables remaining
-1. to verify table has been deleted / dropped (not necessary): .show table <%table name%>
+2. to view all tables: .show tables
+3. to view all tables with name match: .show tables | where TableName contains "<%filter%>"ex: .show tables | where TableName contains "jagilber"
+4. to drop table: .drop table <%table name%>ex: .drop table trace_jagilber_0000000000000001note: on success, output will display all tables remaining
+5. to verify table has been deleted / dropped (not necessary): .show table <%table name%>
 
 ## kusto commands
 
-- to show all tables: .show tables  
-- query to display previous queries: .show queries  
+- to show all tables: .show tables
+- query to display previous queries: .show queries
 - drop table: .drop table <%table name%>
 - ingestion failures: .show ingestion failures
 - table ingestion time: <%table name%> | top 1 by Timestamp asc | project ingestion_time()
 
-## troubleshooting  
+## troubleshooting
 
-1. E_WRONG_NUBER_OF_FIELDS. this can be caused by setting 'UseKustoBlobAsSource' to true. some events are still not csv compliant. to resolve, set  'UseKustoBlobAsSource' to false.  
+1. E_WRONG_NUBER_OF_FIELDS. this can be caused by setting 'UseKustoBlobAsSource' to true. some events are still not csv compliant. to resolve, set  'UseKustoBlobAsSource' to false.
 
 ```text
     5:QueueMonitor:error: Ingestion error total:(46): {
@@ -474,16 +474,16 @@ pause
 
 ```
 
-4. Microsoft.Identity.Client.MsalServiceException.  
-    Verify configuration settings are correct:
-    - azureClientId
-    - azureTenantId
-    - azureClientSecret
-    - azureClientCertificate
+4. Microsoft.Identity.Client.MsalServiceException.Verify configuration settings are correct:
 
-    .net framework will use ADAL and .net core will use MSAL.  
-    If using .net framework (net462), use cmd.exe or powershell.exe to execute collectsfdata.exe.  
-    If using .net core (net6.0+), use pwsh.exe (powershell core) to execute collectsfdata.exe.
+   - azureClientId
+   - azureTenantId
+   - azureClientSecret
+   - azureClientCertificate
+
+   .net framework will use ADAL and .net core will use MSAL.
+   If using .net framework (net462), use cmd.exe or powershell.exe to execute collectsfdata.exe.
+   If using .net core (net6.0+), use pwsh.exe (powershell core) to execute collectsfdata.exe.
 
 ```text
 Authenticate:exception: AggregateException:System.AggregateException: One or more errors occurred. ---> Microsoft.Identity.Client.MsalServiceException: 
