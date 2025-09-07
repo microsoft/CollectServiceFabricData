@@ -1,0 +1,12 @@
+.create-or-alter function with (docstring = "[tableName:string] - Name of the table to modify retention for, [daysToExtend:int] - Number of days to extend retention from current date. Usage: sflogs.base.ExtendTableRetentionByDays('MyTable', 30)", folder = "sflogs/base")
+    ExtendTableRetentionByDays(tableName:string, daysToExtend:int) {
+    let currentTime = now();
+    let retentionDate = currentTime + (daysToExtend * 1d);
+    // Generate the management command
+    print strcat(
+        ".alter table ['", tableName, "'] policy retention ",
+        "```{\"SoftDeletePeriod\": \"", 
+        format_timespan(retentionDate - currentTime, "d.hh:mm:ss"),
+        "\", \"Recoverability\": \"Enabled\"}```"
+    )
+}

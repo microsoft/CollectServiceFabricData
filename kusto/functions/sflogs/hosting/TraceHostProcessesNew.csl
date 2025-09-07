@@ -1,0 +1,395 @@
+.create-or-alter function with (docstring = "[T:string] where T=table name. function to search service fabric sflogs for host and guest process id's and names", folder = "sflogs/hosting")
+    TraceHostProcessesNew(T:string) {
+     let minTimestamp = toscalar(table(T) | top 1 by Timestamp asc | project Timestamp);
+     let maxTimestamp = toscalar(table(T) | top 1 by Timestamp desc | project Timestamp);
+     let allPids = materialize(
+        table(T)
+        | where isnotempty(PID) and PID != "0"
+        | extend userProcess = toint(PID)
+        | where isnotempty(userProcess) and userProcess > 0
+        | summarize 
+            minTime=min(Timestamp), 
+            maxTime=max(Timestamp), 
+            logCount=count(),
+            sampleTypes=take_any(Type, 3),
+            sampleText=take_any(Text, 1)
+            by userProcess, NodeName
+        | order by userProcess
+        );
+     let processPatterns = materialize(
+        table(T) 
+        | where isnotempty(PID) and PID != "0"
+        | extend userProcess = toint(PID)
+        | where userProcess > 0
+        | summarize 
+            logCount=count(),
+            sampleText=take_any(Text, 2)
+            by Type
+        | where logCount > 10
+        | order by logCount desc
+        );
+     let fabricHostStart = materialize(
+        table(T)
+        | where Type startswith 'Hosting.Hosted' 
+            or Type startswith 'Hosting.CertificateAclingManager' 
+            or Type startswith 'Hosting.FabricActivator'
+            or Type startswith 'Hosting.ActivationManager'
+            or Type contains 'FabricHost'
+        | extend userProcess = toint(PID)
+        | where userProcess > 0
+        | extend processName = case(
+                           Type contains 'FabricActivator',
+                           'FabricActivator',
+                           Type contains 'ActivationManager',
+                           'FabricActivationManager', 
+                           'FabricHost'
+                       )
+        | summarize Timestamp=min(Timestamp) by userProcess, processName, NodeName
+        | project startTimestamp=Timestamp, userProcess, processName, NodeName, Timestamp);
+     let fabricHostEnd = materialize(
+        table(T)
+        | where Type startswith 'Hosting.Hosted' 
+            or Type startswith 'Hosting.CertificateAclingManager' 
+            or Type startswith 'Hosting.FabricActivator'
+            or Type startswith 'Hosting.ActivationManager'
+            or Type contains 'FabricHost'
+            or Type contains 'ProcessExit'
+            or Type contains 'ProcessTerminated'
+        | extend userProcess = toint(PID)
+        | where userProcess > 0
+        | extend processName = case(
+                           Type contains 'FabricActivator',
+                           'FabricActivator',
+                           Type contains 'ActivationManager',
+                           'FabricActivationManager', 
+                           'FabricHost'
+                       )
+        | summarize Timestamp=max(Timestamp) by userProcess, processName, NodeName
+        | project endTimestamp=Timestamp, userProcess, NodeName, Timestamp);
+     let fabricServiceStart = materialize(
+        table(T)
+        | where Type startswith 'Hosting.HostedServiceActivated'
+            or (Type startswith 'Hosting' and Text has 'activated successfully with ProcessId')
+            or (Type startswith 'Hosting' and Text has 'ProcessId')
+            or Type startswith 'Hosting.ApplicationServiceActivated'
+        | extend userProcess = toint(
+                           coalesce(
+    extract(@".+ProcessId[:\s=]+(\d+)", 1, Text),
+    extract(@".+process[:\s]+id[:\s=]+(\d+)", 1, Text),
+    extract(@".+pid[:\s=]+(\d+)", 1, Text)
+)
+                       )
+        | where userProcess > 0
+        | extend processName = coalesce(
+                           extract(@".+_(.+?) activated successfully", 1, Text),
+                           extract(@".+ExeName[:\s=]+([^,\s]+)", 1, Text),
+                           extract(@".+ProcessName[:\s=]+([^,\s]+)", 1, Text),
+                           extract(@".+ServiceName[:\s=]+([^,\s]+)", 1, Text)
+                       )
+        | where isnotempty(processName)
+        | project startTimestamp=Timestamp, userProcess, processName, NodeName, Timestamp);
+     let fabricServiceEnd = materialize(
+        table(T)
+        | where Type startswith 'Hosting.ApplicationService' 
+            or Type startswith 'Hosting.HostedServiceDeactivated'
+            or (Type startswith 'Hosting' and Text has 'process id')
+            or Type contains 'ProcessExit'
+            or Type contains 'ProcessTerminated'
+            or Type contains 'ServiceDeactivated'
+        | extend userProcess = toint(
+                           coalesce(
+    extract(@".+process[:\s]+id[:\s=]+(\d+)", 1, Text),
+    extract(@".+ProcessId[:\s=]+(\d+)", 1, Text),
+    extract(@".+pid[:\s=]+(\d+)", 1, Text)
+)
+                       )
+        | where userProcess > 0
+        | summarize endTimestamp=max(Timestamp) by userProcess, NodeName, Timestamp
+        | project endTimestamp, userProcess, NodeName, Timestamp);
+     let userStart = materialize(
+        table(T)
+        | where Type startswith 'Hosting.ApplicationService'
+            or Type startswith 'Hosting.ProcessActivated'
+            or (Type startswith 'Hosting' and Text has 'was activated with process id')
+            or (Type startswith 'Hosting' and Text has 'ProcessId' and Text has 'ExeName')
+            or Type contains 'ServiceActivated'
+            or Type contains 'ProcessStart'
+        | extend userProcess = toint(
+                           coalesce(
+    extract(@".+process[:\s]+id[:\s=]+(\d+)", 1, Text),
+    extract(@".+ProcessId[:\s=]+(\d+)", 1, Text),
+    extract(@".+pid[:\s=]+(\d+)", 1, Text)
+)
+                       )
+        | where userProcess > 0
+        | extend processName = coalesce(
+                           extract(@"ExeName[:\s=]+([^,\s]+)", 1, Text),
+                           extract(@"ProcessName[:\s=]+([^,\s]+)", 1, Text),
+                           extract(@"ServiceName[:\s=]+([^,\s]+)", 1, Text),
+                           extract(@"ApplicationName[:\s=]+([^,\s]+)", 1, Text),
+                           extract(@".+\\([^\\]+?)\.exe", 1, Text)
+                       )
+        | where isnotempty(processName)
+        | project startTimestamp=Timestamp, userProcess, processName, NodeName, Timestamp);
+     let userEnd = materialize(
+        table(T)
+        | where Type contains "Hosting._ApplicationsOps_ProcessExitedOperational" 
+            or Type == 'Lease.ProcessCleanup' 
+            or Type == 'Lease.CleanupApplication'
+            or Type contains 'ProcessExit'
+            or Type contains 'ProcessTerminated'
+            or Type contains 'ServiceDeactivated'
+            or Type contains 'ApplicationTerminated'
+            or (Type startswith 'Hosting' and Text has 'process')
+            or Text has 'exit code'
+            or Text has 'terminated'
+        | extend userProcess = toint(
+                           coalesce(
+    extract(@"ProcessId[:\s=]+(\d+)", 1, Text),
+    extract(@"PID[:\s=]+(\d+)", 1, Text),
+    extract(@"process[:\s]+id[:\s=]+(\d+)", 1, Text),
+    extract(@"pid[:\s=]+(\d+)", 1, Text),
+    extract(@".+CtrlCSender.+?(\d+?)\.", 1, Text)
+)
+                       )
+        | where userProcess > 0
+        | extend processName = coalesce(
+                           extract(@"ExeName[:\s=]+([^,\s]+)", 1, Text),
+                           extract(@"ProcessName[:\s=]+([^,\s]+)", 1, Text),
+                           extract(@"ServiceName[:\s=]+([^,\s]+)", 1, Text),
+                           extract(@"ApplicationName[:\s=]+([^,\s]+)", 1, Text)
+                       )
+        | summarize endTimestamp=max(Timestamp), processNames=make_set(processName) by userProcess, NodeName, Timestamp
+        | extend processName = tostring(processNames[0])
+        | project endTimestamp, userProcess, processName, NodeName, Timestamp);
+     let userStartJoin = materialize (
+        userStart
+        | join kind=leftouter (
+            userEnd 
+            | extend joinKey = strcat(userProcess, "|", NodeName)
+            )
+            on $left.userProcess == $right.userProcess, $left.NodeName == $right.NodeName
+        | where isempty(endTimestamp) or (endTimestamp >= startTimestamp and endTimestamp <= startTimestamp + 1d)
+        | project
+            Timestamp=startTimestamp,
+            startTimestamp,
+            endTimestamp,
+            userProcess,
+            processName,
+            NodeName);
+     let userEndJoin = materialize (
+        userEnd
+        | join kind=leftouter (
+            userStart
+            | extend joinKey = strcat(userProcess, "|", NodeName)  
+            )
+            on $left.userProcess == $right.userProcess, $left.NodeName == $right.NodeName
+        | where isempty(startTimestamp) or (startTimestamp <= endTimestamp and startTimestamp >= endTimestamp - 1d)
+        | project
+            Timestamp=endTimestamp,
+            startTimestamp,
+            endTimestamp,
+            userProcess,
+            processName=coalesce(processName, processName1),
+            NodeName);
+     let fabricHostStartJoin = materialize (
+        fabricHostStart
+        | join kind=leftouter (
+            fabricHostEnd
+            | extend joinKey = strcat(userProcess, "|", NodeName)
+            )
+            on $left.userProcess == $right.userProcess, $left.NodeName == $right.NodeName
+        | where isempty(endTimestamp) or (endTimestamp >= startTimestamp and endTimestamp <= startTimestamp + 1d)
+        | project
+            Timestamp=startTimestamp,
+            startTimestamp,
+            endTimestamp,
+            userProcess,
+            processName,
+            NodeName);
+     let fabricHostEndJoin = materialize (
+        fabricHostEnd
+        | join kind=leftouter (
+            fabricHostStart
+            | extend joinKey = strcat(userProcess, "|", NodeName)
+            )
+            on $left.userProcess == $right.userProcess, $left.NodeName == $right.NodeName
+        | where isempty(startTimestamp) or (startTimestamp <= endTimestamp and startTimestamp >= endTimestamp - 1d)
+        | project
+            Timestamp=endTimestamp,
+            startTimestamp,
+            endTimestamp,
+            userProcess,
+            processName,
+            NodeName);
+     let fabricServiceStartJoin = materialize (
+        fabricServiceStart
+        | join kind=leftouter (
+            fabricServiceEnd
+            | extend joinKey = strcat(userProcess, "|", NodeName)
+            )
+            on $left.userProcess == $right.userProcess, $left.NodeName == $right.NodeName
+        | where isempty(endTimestamp) or (endTimestamp >= startTimestamp and endTimestamp <= startTimestamp + 1d)
+        | project
+            Timestamp=startTimestamp,
+            startTimestamp,
+            endTimestamp,
+            userProcess,
+            processName,
+            NodeName);
+     let fabricServiceEndJoin = materialize (
+        fabricServiceEnd
+        | join kind=leftouter (
+            fabricServiceStart
+            | extend joinKey = strcat(userProcess, "|", NodeName)
+            )
+            on $left.userProcess == $right.userProcess, $left.NodeName == $right.NodeName
+        | where isempty(startTimestamp) or (startTimestamp <= endTimestamp and startTimestamp >= endTimestamp - 1d)
+        | project
+            Timestamp=endTimestamp,
+            startTimestamp,
+            endTimestamp,
+            userProcess,
+            processName,
+            NodeName);
+     union
+        fabricHostStartJoin,
+        fabricHostEndJoin,
+        fabricServiceStartJoin,
+        fabricServiceEndJoin,
+        userStartJoin,
+        userEndJoin
+    | where isnotempty(processName)
+    | extend processName = trim(@"[^\w\.]", processName)
+    | extend processName = case(
+                           processName endswith ".exe",
+                           substring(processName, 0, strlen(processName) - 4),
+                           processName
+                       )
+    | union (
+        table(T)
+        | where isnotempty(PID) and PID != "0"
+        | extend userProcess = toint(PID)
+        | where userProcess > 0
+        | extend processHint = case(
+                           userProcess == 4,
+                           "System",
+                           Type contains "FabricHost",
+                           "FabricHost",
+                           Type contains "BackupRestore",
+                           "BackupRestoreService",
+                           Type contains "Fabric",
+                           "FabricService", 
+                           Type contains "DCA",
+                           "DiagnosticsCollectorAgent",
+                           Type contains "FileStoreService",
+                           "FileStoreService",
+                           Type contains "EventStore",
+                           "EventStoreService",
+                           Type contains "RepairManager",
+                           "RepairManagerService",
+                           Type contains "CentralSecretService",
+                           "CentralSecretService",
+                           Type contains "System",
+                           "SystemService",
+                           Text has ".exe",
+                           extract(@"([^\\]+?)\.exe", 1, Text),
+                           "UnknownProcess"
+                       )
+        | where processHint != "UnknownProcess"
+        | summarize startTimestamp=min(Timestamp), endTimestamp=max(Timestamp) by userProcess, NodeName, processHint
+        | project
+            Timestamp=startTimestamp,
+            startTimestamp,
+            endTimestamp,
+            userProcess,
+            processName=processHint,
+            NodeName
+        | join kind=leftanti (
+            union
+                fabricHostStartJoin,
+                fabricHostEndJoin,
+                fabricServiceStartJoin,
+                fabricServiceEndJoin,
+                userStartJoin,
+                userEndJoin
+            | where isnotempty(processName)
+            )
+            on userProcess, NodeName
+        )
+    | project-away Timestamp
+    | sort by userProcess, NodeName, startTimestamp
+    | extend
+        prevEndTime = prev(endTimestamp, 1), 
+        prevPid = prev(userProcess, 1),
+        prevNode = prev(NodeName, 1)
+    | extend isNewInstance = case(
+                             userProcess != prevPid or NodeName != prevNode,
+                             true,
+                             isempty(prevEndTime) or isempty(startTimestamp),
+                             true,
+                             startTimestamp > prevEndTime + 5m,
+                             true,
+                             false
+                         )
+    | extend processInstanceId = row_cumsum(case(isNewInstance, 1, 0))
+    | summarize 
+        startTime=min(startTimestamp), 
+        endTime=max(endTimestamp), 
+        processNames=make_set(processName),
+        logSources=make_set(case(isnotempty(startTimestamp), "start", "end")),
+        recordCount=count()
+        by userProcess, NodeName, processInstanceId
+    | extend 
+        duration = case(isnotempty(endTime) and isnotempty(startTime), endTime - startTime, timespan(null)),
+        hasStart = logSources has "start",
+        hasEnd = logSources has "end"
+    | extend processName = case(
+                           array_length(processNames) == 1,
+                           tostring(processNames[0]),
+                           // Prioritize specific service names over generic ones
+                           processNames has "BackupRestoreService",
+                           "BackupRestoreService",
+                           processNames has "DiagnosticsCollectorAgent",
+                           "DiagnosticsCollectorAgent", 
+                           processNames has "FileStoreService",
+                           "FileStoreService",
+                           processNames has "EventStoreService",
+                           "EventStoreService",
+                           processNames has "RepairManagerService",
+                           "RepairManagerService",
+                           processNames has "CentralSecretService",
+                           "CentralSecretService",
+                           processNames has "FabricHost",
+                           "FabricHost",
+                           processNames has "FabricService",
+                           "FabricService",
+                           // Default to first non-generic name
+                           tostring(processNames[0])
+                       )
+    | extend processStatus = case(
+                             hasStart and hasEnd,
+                             "Complete",
+                             hasStart and not(hasEnd),
+                             "Running/NoExit", 
+                             not(hasStart) and hasEnd,
+                             "Orphaned/NoStart",
+                             "Unknown"
+                         )
+    | order by userProcess, NodeName, processInstanceId
+    | extend 
+        nextStartTime = next(startTime, 1),
+        nextPid = next(userProcess, 1),
+        nextNode = next(NodeName, 1)
+    | project 
+        userProcess,
+        NodeName, 
+        processInstanceId,
+        processName,
+        startTime,
+        endTime,
+        duration,
+        processStatus,
+        recordCount
+    | order by userProcess, NodeName, processInstanceId
+ }

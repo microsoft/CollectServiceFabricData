@@ -1,0 +1,8 @@
+.create-or-alter function with (docstring = "[tableName:string] - Name of the table to query retention policy for. Returns JSON with key retention fields. Usage: sflogs.base.GetTableRetentionCommand('MyTable')", folder = "sflogs/base")
+    GetTableRetentionCommand(tableName:string) {
+    // Generate KQL query that returns JSON with essential retention info
+    print KQLQuery = strcat(
+        ".show table ['", tableName, "'] details | project MinExtentsCreationTime, RetentionPolicy;\n"
+    ),
+    Note = "Copy and run the KQLQuery to get response with Creation and Expiration Days. Use ExtendTableRetentionToDate or ExtendTableRetentionByDays to modify"
+}

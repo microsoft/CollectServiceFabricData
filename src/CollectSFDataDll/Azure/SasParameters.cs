@@ -11,34 +11,25 @@ namespace CollectSFData.Azure
     public class SasParameters
     {
         public string ApiVersion { get; set; }
-
         public bool IsServiceSas { get; set; }
-
+        public bool IsUserDelegationKey { get; set; }
         public string SasToken { get; private set; }
         public string Signature { get; set; }
-
         public string SignedExpiry { get; set; }
-
-        public DateTime SignedExpiryLocal { get; set; } = DateTime.MinValue;
-
-        public DateTime SignedExpiryUtc { get; set; } = DateTime.MinValue;
-
+        public DateTime SignedExpiryLocal { get; set; } = DateTime.MaxValue;
+        public DateTime SignedExpiryUtc { get; set; } = DateTime.MaxValue;
         public string SignedIp { get; set; }
-
+        public DateTime SignedKeyStartUtc { get; set; } = DateTime.MinValue;
+        public DateTime SignedKeyExpiryUtc { get; set; } = DateTime.MaxValue;
+        public string SignedKeyId { get; set; }
+        public string SignedKeyObjectId { get; set; }
         public string SignedPermission { get; set; }
-
         public string SignedProtocol { get; set; }
-
         public string SignedResourceTypes { get; set; }
-
         public string SignedServices { get; set; }
-
         public string SignedStart { get; set; }
-
         public DateTime SignedStartLocal { get; set; } = DateTime.MinValue;
-
         public DateTime SignedStartUtc { get; set; } = DateTime.MinValue;
-
         public string SignedVersion { get; set; }
 
         public SasParameters()
@@ -83,6 +74,16 @@ namespace CollectSFData.Azure
                 {
                     IsServiceSas = true;
                 }
+
+                if (paramName.Equals("skt") | paramName.Equals("ske") | paramName.Equals("sktid") | paramName.Equals("skoid"))
+                {
+                    IsUserDelegationKey = true;
+                }
+                if (paramName.Equals("skt")) { SignedKeyStartUtc = ParseDate(paramValue); }
+                if (paramName.Equals("ske")) { SignedKeyExpiryUtc = ParseDate(paramValue); }
+                if (paramName.Equals("sktid")) { SignedKeyId = paramValue; }
+                if (paramName.Equals("skoid")) { SignedKeyObjectId = paramValue; }
+
             }
         }
 
