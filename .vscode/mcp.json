@@ -1,0 +1,12 @@
+{
+	"servers": {
+		"powershell-mcp-server": {
+			"type": "stdio",
+			"command": "node",
+			"args": [
+				"c:\\github\\jagilber\\powershell-mcp-server\\dist\\server.js"
+			]
+		}
+	},
+	"inputs": []
+}

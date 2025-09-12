@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net462;net48;net6.0;net8.0</TargetFrameworks>
+    <ImplicitUsings Condition="'$(TargetFramework)' != 'net462' AND '$(TargetFramework)' != 'net48'">enable</ImplicitUsings>
+    <Nullable Condition="'$(TargetFramework)' != 'net462' AND '$(TargetFramework)' != 'net48'">enable</Nullable>
+    <LangVersion Condition="'$(TargetFramework)' == 'net462' OR '$(TargetFramework)' == 'net48'">7.3</LangVersion>
+    <SignAssembly>false</SignAssembly>
+
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" Version="6.0.0">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="FluentAssertions" Version="6.12.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
+    <PackageReference Include="xunit" Version="2.5.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.5.3" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' != 'net462' AND '$(TargetFramework)' != 'net48'">
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CollectSFDataDll\CollectSFDataDll.csproj" />
+  </ItemGroup>
+
+</Project>
