@@ -265,7 +265,99 @@ data ingestion uri: https://ingest-collectsfdataunittest.eastus.kusto.windows.ne
 
 ## Testing
 
-todo
+### Test Project Targets
+
+The test project multi-targets: `net462; net48; net6.0; net8.0`. Modern language features and nullable are enabled only for non-full-framework targets via conditional properties.
+
+### Running Tests (Quick Start)
+
+```powershell
+# Fast run for latest framework only
+dotnet test src/CollectSFData.Tests/CollectSFData.Tests.csproj -f net8.0
+
+# Run all frameworks (slower)
+dotnet test src/CollectSFData.Tests/CollectSFData.Tests.csproj
+
+# Use custom runsettings (stabilizes host & disables parallelization)
+dotnet test src/CollectSFData.Tests/CollectSFData.Tests.csproj -f net8.0 --settings src/CollectSFData.Tests/CollectSFData.Tests.runsettings
+
+# Filter to a subset (example new process tests)
+dotnet test src/CollectSFData.Tests/CollectSFData.Tests.csproj -f net8.0 --settings src/CollectSFData.Tests/CollectSFData.Tests.runsettings --filter "FullyQualifiedName~FileManagerProcessTests"
+```
+
+### Runsettings Rationale
+
+`CollectSFData.Tests.runsettings` was added to mitigate intermittent file locking and PowerShell runspace errors by:
+
+- Disabling AppDomain reuse (`DisableAppDomain=true`) so each run uses a clean test host.
+- Forcing single-threaded execution (`MaxCpuCount=1`, xUnit parallelization off) to avoid simultaneous copies of large dependent assemblies.
+- Increasing session timeout to allow slower PowerShell-invoking tests to complete without abrupt host termination.
+
+Enable code coverage later by uncommenting the `XPlat code coverage` collector block inside the runsettings file.
+
+### File Lock (MSB3021 / MSB3027) Mitigation Guide
+
+Symptoms:
+
+- Build warnings `MSB3026` escalating to errors `MSB3027` / `MSB3021` mentioning `CollectSFDataDll.dll` locked by `testhost`.
+- Subsequent builds for the same TFM fail until the locking process exits.
+
+Root Causes:
+
+- Parallel test executions across target frameworks holding open file handles.
+- Post-build PowerShell scripts executing while the prior testhost still loads the DLL.
+
+Mitigations (apply in order):
+
+1. Use single target with `--framework net8.0` while iterating.
+2. Add `--no-build` when re-running quickly after a successful build.
+3. Use the provided runsettings to disable parallelization & AppDomain reuse.
+4. If locks persist, close IDE test sessions or manually terminate `testhost.exe` processes (outside constrained environments).
+5. For CI: run target frameworks sequentially (`dotnet test -f net6.0` then `-f net8.0`) instead of simultaneous matrix on a single workspace if locks reappear.
+
+### PowerShell Runspace Exception
+
+Error: `System.Management.Automation.PSInvalidOperationException: There is no Runspace available…`
+
+Causes & Remedies:
+
+- Host teardown while a timer in a PowerShell-invoking component still references a disposed runspace.
+- Long-running or asynchronous PowerShell script triggered during test cleanup.
+
+Workarounds implemented:
+
+- Longer `TestSessionTimeout` (10 minutes) to reduce abrupt cancellation.
+- Serial execution eliminating overlapping teardown phases.
+
+### Adding New Tests – Guidelines
+
+Focus areas still needing coverage:
+
+- Serialization chunking thresholds (CSV & JSON) for large collections.
+- Compression branches (when configuration enables compression).
+- Observer/ETL timeout & error pathways.
+- Ingestion mode branching (Kusto vs Log Analytics vs none) with mocked dependencies.
+- Concurrency safety of collection modifications under simulated parallel enumeration.
+
+Use patterns already present (FluentAssertions + xUnit). Prefer small, fast unit tests; only integrate PowerShell/IO when asserting critical behaviors.
+
+### Traits / Filtering (Optional Enhancement)
+
+Introduce `[Trait("Category","Fast")]` vs `"Integration"` on future tests to enable:
+
+```powershell
+dotnet test --filter "Category=Fast"
+```
+
+### Coverage (Future)
+
+Once stable, enable coverage collection:
+
+```powershell
+dotnet test -f net8.0 --settings src/CollectSFData.Tests/CollectSFData.Tests.runsettings /p:CollectCoverage=true
+```
+
+Or uncomment the coverage collector in runsettings for portable output formats (cobertura, lcov, opencover).
 
 ## Creating pull requests
 
