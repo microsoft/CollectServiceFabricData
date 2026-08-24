@@ -24,7 +24,7 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
       - name: environment
         shell: cmd
@@ -73,7 +73,7 @@ jobs:
         run: dir "$($env:artifacts_path)" -recurse
 
       - name: upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: Release
           path: ${{ env.artifacts_path }}
@@ -88,14 +88,14 @@ jobs:
 
     steps:
       - name: checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
       - name: environment
         shell: cmd
         run: set
 
       - name: download artifact
-        uses: actions/download-artifact@v4.1.7
+        uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
         with:
           name: Release
           path: ${{ env.release_path }}
@@ -136,7 +136,7 @@ jobs:
       # https://github.com/marketplace/actions/gh-release
       - name: create release
         id: create_release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2.6.2
         with:
           files: |
             **/${{ env.project_name }}.zip
