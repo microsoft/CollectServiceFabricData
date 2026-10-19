@@ -4,6 +4,42 @@
 
 To report issue with collectsfdata, create a new issue in github repo [new issue](https://github.com/microsoft/CollectServiceFabricData/issues/new/choose)
 
+## GitHub Actions and event policy
+
+[CI CollectSFData](../.github/workflows/workflow.yml) builds pull requests targeting
+`main` or `master` on opening, reopening, and subsequent updates with a read-only
+contents token and no persisted checkout credentials. The existing documentation,
+configuration, and Kusto path exclusions still apply.
+
+Pushes to `main` or `master` build the exact pushed commit independently of PR
+artifacts. A release is published only after that build succeeds and the GitHub
+API identifies a merged PR whose merge commit, base repository, and base branch
+match the push. The PR must have the `Release` or `Pre-release` label at the time
+of the metadata check; `Pre-release` takes precedence if both labels are present.
+Direct pushes and unlabelled merges build without publishing. Set release labels
+before merging. Squash, merge-commit, and rebase merges rely on GitHub reporting
+the pushed commit as the PR's merge commit. Pushes containing multiple merges
+consider only the PR matching the pushed tip.
+
+Only the release job receives `contents: write`. It downloads artifacts from its
+own trusted push run, never from a pull request run, and targets the pushed commit
+when creating a release tag.
+
+Automatic PR labeling has been removed. Maintainers apply labels manually.
+No workflow uses `pull_request_target`, so the November 2, 2026 restriction on
+that event does not require a workflow exception, JIT administrator action, or
+the exception-specific CodeQL/security approval process. This does not waive
+any other repository security requirements. The changes must be merged into
+the upstream repository's default branch to take effect there.
+
+Actions are pinned to immutable commit SHAs. Dependabot checks action updates
+weekly; review those updates before merging.
+
+For local validation, run `actionlint` against the CI workflow and
+`node --test .github\tests\release-policy.test.cjs` to exercise the release
+eligibility script directly from the workflow without publishing anything.
+These checks do not replace live GitHub validation.
+
 ## Building
 
 ### CollectSFData / CollectSFDataDll
@@ -234,10 +270,75 @@ todo
 ## Creating pull requests
 
 Fork repo and create pull request as normal across forks.
-Labeling will be applied by git actions.
+Maintainers apply labels manually; there is no automatic labeler.
 If executable changes, git actions will build.
 
 ## Creating Releases
 
-To create a release, merge into master, and add 'Pre-release' or 'Release' label before merge.
-Release will build signed exe and nuget package, and publish release to repo.
+### Build without publishing
+
+1. Open a PR targeting `main` or `master` and include a change outside the
+   excluded `docs/`, `configurationFiles/`, and `kusto/` paths.
+2. In the PR checks, open **CI CollectSFData** and wait for the `build` job to
+   succeed. It builds with the `Release` configuration and packs the NuGet
+   package; it cannot publish a GitHub release.
+3. Open the run summary under **Actions > CI CollectSFData** and download the
+   `Release` artifact to inspect the build output.
+4. To merge without publishing, leave both release labels off the PR. The
+   resulting push build also uploads a `Release` artifact.
+
+A `Release` configuration build or an artifact named `Release` does not by
+itself publish a release.
+
+### Publish a release or prerelease
+
+1. Ensure the migrated workflow is present on the upstream repository's default
+   branch and Actions is enabled. Use the upstream repository, not a fork, to
+   publish the official release.
+2. Prepare a PR targeting `main` or `master`, including a change outside the
+   excluded paths. Documentation-, configuration-, or Kusto-only changes do not
+   trigger this workflow, even when the PR has a release label.
+3. Review and validate the PR. Before merging, use the PR's **Labels** control
+   to apply exactly one of the following labels (create it under the
+   repository's **Issues > Labels** page if it does not exist):
+   - `Release`: publish a stable GitHub release.
+   - `Pre-release`: publish a GitHub prerelease.
+   Label names are case-sensitive. If both are present, prerelease takes
+   precedence. These labels must be applied manually; no labeler is required.
+4. Merge the approved PR into `main` or `master`. Do not use a direct push as a
+   release trigger. For a push containing multiple merged PRs, only the PR
+   matching the pushed tip is considered.
+5. Under **Actions > CI CollectSFData**, open the **push** run for that merge,
+   not the PR run. Verify:
+   - `build` succeeds and uploads the `Release` artifact.
+   - `release_metadata` succeeds and identifies the matching merged,
+     release-labelled PR.
+   - `release` succeeds after both jobs complete.
+6. Open the repository's **Releases** page. Verify the release/prerelease
+   designation, commit/tag, generated notes, `CollectSFData.zip`, and NuGet
+   package attachments.
+
+The tag is `v` followed by the built executable's file version. That version is
+generated from UTC build time by
+[CollectSFData.csproj](../src/CollectSFData/CollectSFData.csproj), so rebuilding
+the same commit later can produce a different version. The workflow attaches
+the NuGet package to the GitHub release; it does not publish to NuGet.org.
+The executable is strong-name signed, which is not an Authenticode signature.
+
+### Troubleshooting a release build
+
+- **No workflow run:** check the target branch and path exclusions. Adding a
+  label after merging does not start a workflow.
+- **Release skipped:** check that the matching merged PR has the exact release
+  label and that its merge commit matches the pushed SHA. A successful
+  unlabelled build or direct push intentionally does not publish.
+- **Metadata check failed:** inspect the job's GitHub API error. API failures
+  and ambiguous merged-PR matches fail explicitly rather than publishing.
+- **Build or publication failed:** fix the reported failure and follow the
+  normal reviewed-PR process. For a transient failure, use GitHub's **Re-run
+  jobs** control on the original push run after checking the labels and any
+  existing release/tag. Reruns read current labels, and a full rebuild may
+  generate a new version; inspect existing assets before retrying publication.
+
+Live publication must be verified on GitHub after deployment. Local linting and
+release-policy tests do not prove a release has been published.

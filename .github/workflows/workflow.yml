@@ -6,11 +6,18 @@ env:
   artifacts_path: ${{ github.workspace }}\\src\\bin\\artifacts
   release_path: ${{ github.workspace }}\\src\\bin\\Release
   release_config: ${{ github.workspace }}\\configurationFiles\\collectsfdata.options.json
-  github_owner: ${{ github.event.repository.owner.name }}
 
 on:
-  pull_request_target:
-    types: [closed, opened]
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths-ignore:
+      - "docs/**"
+      - "configurationFiles/**"
+      - "kusto/**"
+    branches:
+      - master
+      - main
+  push:
     paths-ignore:
       - "docs/**"
       - "configurationFiles/**"
@@ -19,17 +26,27 @@ on:
       - master
       - main
 
+permissions: {}
+
 jobs:
   build:
+    permissions:
+      contents: read
     runs-on: windows-latest
+    timeout-minutes: 30
     steps:
       - name: checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+
+      - name: Validate release policy
+        shell: cmd
+        run: node --test .github\tests\release-policy.test.cjs
 
       - name: environment
         shell: cmd
         run: |
-          set
           dotnet --info
           dotnet nuget locals all --clear
 
@@ -48,20 +65,18 @@ jobs:
       - name: dotnet build / pack
         shell: cmd
         run: |
-          set
           dotnet build %project_root%\%project_name%\%project_name%.csproj -v detailed -c Release
+          if errorlevel 1 exit /b %errorlevel%
           dir
 
       - name: build output
         shell: cmd
         run: |
-          set
           dir /s
 
       - name: copy artifacts
         shell: powershell
         run: |
-          [environment]::GetEnvironmentVariables()
           write-host "copy "$($env:release_path)" "$($env:artifacts_path)" -recurse -force"
           copy "$($env:release_path)" "$($env:artifacts_path)" -recurse -force
           write-host "copy "$($env:release_config)" "$($env:artifacts_path)" -recurse -force"
@@ -77,23 +92,51 @@ jobs:
         with:
           name: Release
           path: ${{ env.artifacts_path }}
+          if-no-files-found: error
+
+  release_metadata:
+    if: github.event_name == 'push'
+    runs-on: windows-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      publish: ${{ steps.release_policy.outputs.publish }}
+      prerelease: ${{ steps.release_policy.outputs.prerelease }}
+    steps:
+      - name: Check merged pull request release labels
+        id: release_policy
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
+        with:
+          script: |
+            const pullRequests = await github.paginate(
+              github.rest.repos.listPullRequestsAssociatedWithCommit,
+              { ...context.repo, commit_sha: context.sha, per_page: 100 }
+            );
+            const branch = context.ref.replace(/^refs\/heads\//, '');
+            const mergedPullRequests = pullRequests.filter(pr =>
+              pr.merged_at &&
+              pr.merge_commit_sha === context.sha &&
+              pr.base.repo.id === context.payload.repository.id &&
+              pr.base.ref === branch
+            );
+            if (mergedPullRequests.length > 1) {
+              throw new Error('Multiple merged pull requests match the pushed commit.');
+            }
+            const labels = mergedPullRequests[0]?.labels.map(label => label.name) ?? [];
+            core.setOutput('publish', labels.includes('Release') || labels.includes('Pre-release'));
+            core.setOutput('prerelease', labels.includes('Pre-release'));
 
   release:
-    if: success() && github.event.pull_request.merged == true && github.event.action == 'closed' && (contains(github.event.pull_request.labels.*.name, 'Release') || contains(github.event.pull_request.labels.*.name, 'Pre-release'))
-    needs: build
+    if: github.event_name == 'push' && needs.release_metadata.outputs.publish == 'true'
+    needs: [build, release_metadata]
     runs-on: windows-latest
+    timeout-minutes: 10
     permissions:
       contents: write
-      packages: write
 
     steps:
-      - name: checkout
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
-
-      - name: environment
-        shell: cmd
-        run: set
-
       - name: download artifact
         uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
         with:
@@ -130,8 +173,6 @@ jobs:
           echo "file_version=v$fileVersion" >> $env:GITHUB_OUTPUT
           write-host "dir $env:release_path -recurse"
           dir $env:release_path -recurse
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # https://github.com/marketplace/actions/gh-release
       - name: create release
@@ -142,8 +183,9 @@ jobs:
             **/${{ env.project_name }}.zip
             **/*${{ env.project_name }}*.nupkg
           tag_name: ${{ steps.prepare_release_asset.outputs.file_version }}
+          target_commitish: ${{ github.sha }}
           name: ${{ env.project_name }}
           draft: false
-          token: ${{ secrets.GITHUB_TOKEN }}
-          prerelease: ${{ contains(github.event.pull_request.labels.*.name, 'Pre-release') }}
+          token: ${{ github.token }}
+          prerelease: ${{ needs.release_metadata.outputs.prerelease == 'true' }}
           generate_release_notes: true
