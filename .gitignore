@@ -339,3 +339,5 @@ coverage.info
 # Potential crash / blame dumps
 *.dmp
 
+# IDE language-service caches
+*.lscache
