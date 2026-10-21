@@ -9,7 +9,9 @@ To report issue with collectsfdata, create a new issue in github repo [new issue
 [CI CollectSFData](../.github/workflows/workflow.yml) builds pull requests targeting
 `main` or `master` on opening, reopening, and subsequent updates with a read-only
 contents token and no persisted checkout credentials. The existing documentation,
-configuration, and Kusto path exclusions still apply.
+configuration, and Kusto path exclusions still apply. After the build, CI runs the
+`CollectSFData.Tests` project on net8.0 and net48 in the Release configuration;
+a test failure fails the run.
 
 Pushes to `main` or `master` build the exact pushed commit independently of PR
 artifacts. A release is published only after that build succeeds and the GitHub
@@ -294,6 +296,12 @@ dotnet test src/CollectSFData.Tests/CollectSFData.Tests.csproj -f net8.0 --setti
 - Increasing session timeout to allow slower PowerShell-invoking tests to complete without abrupt host termination.
 
 Enable code coverage later by uncommenting the `XPlat code coverage` collector block inside the runsettings file.
+
+### Test Audit Output (opt-in)
+
+Set `COLLECTSFDATA_TEST_AUDIT=1` to have the test run write per-run metadata
+(run id, OS, framework, git commit, coverage and TRX summaries) under the
+gitignored `test-audits/` folder. Without the variable nothing is written.
 
 ### File Lock (MSB3021 / MSB3027) Mitigation Guide
 
