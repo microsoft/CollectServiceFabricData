@@ -73,9 +73,7 @@ namespace CollectSFData.Tests
         {
             // Test: CustomTaskManager TaskAction method with Action parameter
             var taskManager = new CustomTaskManager();
-            bool actionExecuted = false;
-            
-            Action testAction = () => { actionExecuted = true; };
+            Action testAction = () => { };
 
             // Test: Call TaskAction with Action parameter
             var result = taskManager.TaskAction(testAction);

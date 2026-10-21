@@ -11,6 +11,11 @@ namespace CollectSFData.Tests
         [Fact]
         public void AuditLatestJsonExists()
         {
+            if (!TestAuditFixture.Enabled)
+            {
+                return; // audit output is opt-in, nothing to verify
+            }
+
             // Discover repo root similarly to fixture logic (climb for .git or solution)
             var dir = new DirectoryInfo(AppContext.BaseDirectory);
             DirectoryInfo? solutionRoot = null;

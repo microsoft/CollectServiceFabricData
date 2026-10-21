@@ -8,18 +8,26 @@ using System.Text.Json;
 using System.Xml.Linq;
 using Xunit;
 
-// Assembly-level fixture to emit a lightweight audit metadata file once per test run.
+// Collection fixture that emits a lightweight audit metadata file once per test run.
+// Opt in by setting COLLECTSFDATA_TEST_AUDIT=1; otherwise it writes nothing.
 public class TestAuditFixture : IDisposable
 {
+    /// <summary>True when COLLECTSFDATA_TEST_AUDIT=1 is set; audit output is opt-in.</summary>
+    public static bool Enabled => string.Equals(Environment.GetEnvironmentVariable("COLLECTSFDATA_TEST_AUDIT"), "1", StringComparison.Ordinal);
+
     private string? _resultsDir;
     private string? _auditFile;
     private readonly Stopwatch _sw = Stopwatch.StartNew();
     private readonly string _runId = Guid.NewGuid().ToString("N");
     private string? _repoRoot; // folder containing .git (preferred) else solution root
-    private string? _trxPath;
 
     public TestAuditFixture()
     {
+        if (!Enabled)
+        {
+            return;
+        }
+
         // First locate a solution; keep climbing further to prefer a folder containing .git.
         var dir = new DirectoryInfo(AppContext.BaseDirectory);
         DirectoryInfo? solutionRoot = null;
@@ -72,7 +80,6 @@ public class TestAuditFixture : IDisposable
                 runId = _runId,
                 timestampUtc = DateTime.UtcNow,
                 durationMs = _sw.ElapsedMilliseconds,
-                machine = Environment.MachineName,
                 osDescription = RuntimeInformation.OSDescription,
                 osArchitecture = RuntimeInformation.OSArchitecture.ToString(),
                 processArchitecture = RuntimeInformation.ProcessArchitecture.ToString(),
@@ -81,7 +88,6 @@ public class TestAuditFixture : IDisposable
                 git,
                 environment = new
                 {
-                    username = Environment.UserName,
                     ci = Environment.GetEnvironmentVariable("CI") ?? "false",
                     buildId = Environment.GetEnvironmentVariable("BUILD_BUILDID"),
                     buildDefinition = Environment.GetEnvironmentVariable("BUILD_DEFINITIONNAME")

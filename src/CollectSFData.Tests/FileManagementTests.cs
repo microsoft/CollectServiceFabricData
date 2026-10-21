@@ -139,11 +139,11 @@ namespace CollectSFData.Tests
             var fileObject = new FileObject("async-test.csv");
             
             // Simulate async file processing
-            await Task.Run(() =>
+            await Task.Run(async () =>
             {
                 fileObject.Status = FileStatus.downloading;
                 // Simulate processing time
-                Task.Delay(10).Wait();
+                await Task.Delay(10);
                 fileObject.Status = FileStatus.formatted;
             });
 
