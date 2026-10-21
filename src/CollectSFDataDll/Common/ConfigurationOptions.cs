@@ -266,7 +266,7 @@ namespace CollectSFData.Common
             return (ConfigurationOptions)MemberwiseClone();
         }
 
-        public DateTime ConvertToUtcTime(string timeString)
+        public virtual DateTime ConvertToUtcTime(string timeString)
         {
             DateTimeOffset dateTimeOffset;
 

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RunSettings>
+  <RunConfiguration>
+    <DisableAppDomain>true</DisableAppDomain>
+    <MaxCpuCount>1</MaxCpuCount>
+    <TargetFrameworkVersion>.NETCoreApp,Version=v8.0</TargetFrameworkVersion>
+    <TestSessionTimeout>600000</TestSessionTimeout>
+    <CollectSourceInformation>true</CollectSourceInformation>
+    <ResultsDirectory>TestResults</ResultsDirectory>
+    <TreatNoTestsAsError>false</TreatNoTestsAsError>
+    <!-- Increase console verbosity for richer audit trail in CI logs -->
+    <ConsoleLoggerParameters>verbosity=detailed</ConsoleLoggerParameters>
+  </RunConfiguration>
+  <RunConfiguration>
+    <!-- legacy element duplication avoided by single block; ensuring minimal host reuse issues -->
+  </RunConfiguration>
+  <Loggers>
+    <!-- Standard TRX logger (default) plus an explicit console logger config -->
+    <Logger friendlyName="trx" enabled="true" />
+    <Logger friendlyName="console" enabled="true" />
+  </Loggers>
+  <DataCollectionRunSettings>
+    <DataCollectors>
+      <DataCollector friendlyName="XPlat code coverage">
+        <Configuration>
+          <Format>cobertura,lcov,opencover</Format>
+        </Configuration>
+      </DataCollector>
+      <DataCollector friendlyName="blame" enabled="true">
+        <Configuration>
+          <CollectDump DumpType="mini" CollectAlways="false" />
+        </Configuration>
+      </DataCollector>
+    </DataCollectors>
+  </DataCollectionRunSettings>
+  <xunit>
+    <ParallelizeTestCollections>false</ParallelizeTestCollections>
+    <ParallelizeAssemblies>false</ParallelizeAssemblies>
+    <MaxParallelThreads>1</MaxParallelThreads>
+  </xunit>
+</RunSettings>

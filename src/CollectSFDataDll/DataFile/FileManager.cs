@@ -227,6 +227,10 @@ namespace CollectSFData.DataFile
 
         public FileObjectCollection PopulateCollection<T>(FileObject fileObject) where T : IRecord
         {
+            if (fileObject == null)
+            {
+                throw new ArgumentNullException(nameof(fileObject));
+            }
             FileObjectCollection collection = new FileObjectCollection() { fileObject };
             _instance.TotalFilesFormatted++;
             _instance.TotalRecords += fileObject.RecordCount;

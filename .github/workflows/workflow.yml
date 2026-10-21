@@ -69,6 +69,17 @@ jobs:
           if errorlevel 1 exit /b %errorlevel%
           dir
 
+      - name: dotnet test
+        shell: powershell
+        run: |
+          $testProject = "$env:project_root\CollectSFData.Tests\CollectSFData.Tests.csproj"
+          $runSettings = "$env:project_root\CollectSFData.Tests\CollectSFData.Tests.runsettings"
+          foreach ($framework in @("net8.0", "net48")) {
+            write-host "dotnet test $testProject -c Release -f $framework --settings $runSettings"
+            dotnet test $testProject -c Release -f $framework --settings $runSettings --logger "console;verbosity=normal"
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
+
       - name: build output
         shell: cmd
         run: |

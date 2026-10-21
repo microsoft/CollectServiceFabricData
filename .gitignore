@@ -329,3 +329,15 @@ ASALocalRun/
 # MFractors (Xamarin productivity tool) working folder 
 .mfractor/
 **/tst/*
+# Test audit & coverage artifacts (added by automated test auditing fixture)
+test-audits/
+latest.json
+coverage.opencover.xml
+coverage.cobertura.xml
+coverage.info
+*.trx
+# Potential crash / blame dumps
+*.dmp
+
+# IDE language-service caches
+*.lscache
