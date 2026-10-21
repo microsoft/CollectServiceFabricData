@@ -20,8 +20,8 @@ namespace CollectSFData.Tests
         /// <param name="timeProvider">Time provider for date/time operations</param>
         /// <param name="fileSystem">File system abstraction for file operations</param>
         public TestableConfigurationOptions(
-            ITimeProvider timeProvider = null,
-            IFileSystemAbstraction fileSystem = null)
+            ITimeProvider? timeProvider = null,
+            IFileSystemAbstraction? fileSystem = null)
         {
             _timeProvider = timeProvider ?? new SystemTimeProvider();
             _fileSystem = fileSystem ?? new FileSystemAbstraction();

@@ -48,7 +48,9 @@ namespace CollectSFData.Tests
     {
         private static FileObject BuildCsvFile(int recordCount, int recordPayloadBytes, Instance instance)
         {
-            var fileObject = new FileObject("synthetic.csv")
+            // Use a relative path with directories: a bare file name makes FileObject call
+            // Path.GetDirectoryName on an empty string once compressed, which throws on .NET Framework.
+            var fileObject = new FileObject("synthetic/_nt0_0/synthetic.csv")
             {
                 FileDataType = FileDataTypesEnum.counter, // triggers Csv path when Kusto configured
                 Status = FileStatus.enumerated

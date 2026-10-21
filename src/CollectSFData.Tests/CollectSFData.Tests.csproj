@@ -1,10 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net462;net48;net6.0;net8.0</TargetFrameworks>
-    <ImplicitUsings Condition="'$(TargetFramework)' != 'net462' AND '$(TargetFramework)' != 'net48'">enable</ImplicitUsings>
-    <Nullable Condition="'$(TargetFramework)' != 'net462' AND '$(TargetFramework)' != 'net48'">enable</Nullable>
-    <LangVersion Condition="'$(TargetFramework)' == 'net462' OR '$(TargetFramework)' == 'net48'">7.3</LangVersion>
+    <!-- One full-framework and one modern target cover both runtime families of CollectSFDataDll. -->
+    <TargetFrameworks>net48;net8.0</TargetFrameworks>
+    <LangVersion>latest</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
     <SignAssembly>false</SignAssembly>
 
     <IsPackable>false</IsPackable>
@@ -23,7 +24,11 @@
     <PackageReference Include="xunit.runner.visualstudio" Version="2.5.3" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' != 'net462' AND '$(TargetFramework)' != 'net48'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net48'">
+    <PackageReference Include="System.Text.Json" Version="8.0.5" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Using Include="Xunit" />
   </ItemGroup>
 

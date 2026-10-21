@@ -52,7 +52,7 @@ namespace CollectSFData.Tests
         /// </summary>
         /// <param name="path">The file path</param>
         /// <returns>FileInfo object or null if file doesn't exist</returns>
-        FileInfo GetFileInfo(string path);
+        FileInfo? GetFileInfo(string path);
     }
 
     /// <summary>
@@ -77,6 +77,6 @@ namespace CollectSFData.Tests
         public string[] GetDirectories(string path) => Directory.GetDirectories(path);
 
         /// <inheritdoc />
-        public FileInfo GetFileInfo(string path) => File.Exists(path) ? new FileInfo(path) : null;
+        public FileInfo? GetFileInfo(string path) => File.Exists(path) ? new FileInfo(path) : null;
     }
 }

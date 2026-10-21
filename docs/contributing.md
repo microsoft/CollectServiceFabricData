@@ -269,7 +269,7 @@ data ingestion uri: https://ingest-collectsfdataunittest.eastus.kusto.windows.ne
 
 ### Test Project Targets
 
-The test project multi-targets: `net462; net48; net6.0; net8.0`. Modern language features and nullable are enabled only for non-full-framework targets via conditional properties.
+The test project targets `net48` and `net8.0`, one full-framework and one modern runtime, with C# latest, nullable and implicit usings enabled for both.
 
 ### Running Tests (Quick Start)
 
@@ -321,7 +321,7 @@ Mitigations (apply in order):
 2. Add `--no-build` when re-running quickly after a successful build.
 3. Use the provided runsettings to disable parallelization & AppDomain reuse.
 4. If locks persist, close IDE test sessions or manually terminate `testhost.exe` processes (outside constrained environments).
-5. For CI: run target frameworks sequentially (`dotnet test -f net6.0` then `-f net8.0`) instead of simultaneous matrix on a single workspace if locks reappear.
+5. For CI: run target frameworks sequentially (`dotnet test -f net48` then `-f net8.0`) instead of simultaneous matrix on a single workspace if locks reappear.
 
 ### PowerShell Runspace Exception
 
