@@ -2,7 +2,7 @@
 
 using System;
 
-namespace CollectSFData.Common
+namespace CollectSFData.Tests
 {
     /// <summary>
     /// Provides time-related operations for dependency injection and testing.

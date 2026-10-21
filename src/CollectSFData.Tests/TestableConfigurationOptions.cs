@@ -1,8 +1,9 @@
 // Licensed under the MIT License.
 
 using System;
+using CollectSFData.Common;
 
-namespace CollectSFData.Common
+namespace CollectSFData.Tests
 {
     /// <summary>
     /// Test-friendly wrapper for ConfigurationOptions that supports dependency injection.

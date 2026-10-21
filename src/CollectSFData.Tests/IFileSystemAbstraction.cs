@@ -3,7 +3,7 @@
 using System.Collections.Generic;
 using System.IO;
 
-namespace CollectSFData.Common
+namespace CollectSFData.Tests
 {
     /// <summary>
     /// Abstracts file system operations for dependency injection and testing.
